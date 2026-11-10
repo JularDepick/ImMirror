@@ -177,6 +177,9 @@ bool GlesDevice::RenderFrame(double elapsedSeconds) {
     glViewport(0, 0, width_, height_);
     glClearColor(kClearRed, kClearGreen, kClearBlue, kClearAlpha);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (sceneCallback_ != nullptr) {
+        sceneCallback_(sceneUser_);
+    }
     if (eglSwapBuffers(display_, surface_) != EGL_TRUE) {
         if (!swapFailureLogged_) {
             IM_LOGE(kTag, "eglSwapBuffers failed, error=0x%x", eglGetError());
@@ -189,6 +192,11 @@ bool GlesDevice::RenderFrame(double elapsedSeconds) {
 
 bool GlesDevice::Ready() const {
     return ready_;
+}
+
+void GlesDevice::SetSceneCallback(SceneCallback callback, void* user) {
+    sceneCallback_ = callback;
+    sceneUser_ = user;
 }
 
 const char* GlesDevice::BackendName() const {

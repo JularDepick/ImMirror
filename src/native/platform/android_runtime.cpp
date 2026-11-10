@@ -5,11 +5,14 @@
 #include <utility>
 #include <vector>
 
+#include <android/asset_manager.h>
 #include <android/native_window.h>
+#include <android_native_app_glue.h>
 
 #include "core/app_loop.h"
 #include "core/frame_stats.h"
 #include "core/log.h"
+#include "game/game_shell.h"
 #include "jni/engine_host.h"
 #include "platform/app_bridge.h"
 #include "render/render_device.h"
@@ -62,7 +65,9 @@ std::string Lookup(const ProfileEntries& entries, const char* key) {
 class Runtime final : public core::LoopHost, public AppLifecycleListener {
 public:
     explicit Runtime(android_app* app)
-        : bridge_(app, this), device_(render::CreateDefaultDevice()) {}
+        : bridge_(app, this),
+          device_(render::CreateDefaultDevice()),
+          shell_(std::make_unique<game::GameShell>()) {}
 
     void Run();
     void Shutdown();
@@ -85,9 +90,12 @@ private:
     void CheckStartGate();
     /* 设备画像到达时间不确定, 首帧之后才可能拿到, 因此按需补记一次. */
     void LogDeviceProfileOnce();
+    /* 渲染设备在清屏后回调本函数绘制场景. */
+    static void SceneCallbackThunk(void* user);
 
     AppBridge bridge_;
     std::unique_ptr<render::Device> device_;
+    std::unique_ptr<game::GameShell> shell_;
     core::FrameStats stats_{kReportWindowFrames};
     ProfileEntries profile_;
     std::string abi_;
@@ -132,6 +140,10 @@ bool Runtime::IsActive() const {
 void Runtime::Tick(double fixedDeltaSeconds) {
     elapsedSeconds_ += fixedDeltaSeconds;
     CheckStartGate();
+    if (!started_ || shell_ == nullptr) {
+        return;
+    }
+    shell_->Update(fixedDeltaSeconds, bridge_.Input());
 }
 
 void Runtime::Render(double frameDeltaSeconds) {
@@ -190,11 +202,33 @@ void Runtime::OnWindowCreated(ANativeWindow* window) {
         return;
     }
     stats_.ResetWindow();
+    if (shell_ != nullptr) {
+        shell_->SetViewportSize(device_->Width(), device_->Height());
+        AAssetManager* assets = nullptr;
+        if (bridge_.Handle() != nullptr && bridge_.Handle()->activity != nullptr) {
+            assets = bridge_.Handle()->activity->assetManager;
+        }
+        shell_->OnSurfaceReady(assets);
+        device_->SetSceneCallback(&Runtime::SceneCallbackThunk, shell_.get());
+    }
     IM_LOGI(kTag, "render surface ready, %s %dx%d", device_->BackendName(), device_->Width(),
             device_->Height());
 }
 
+void Runtime::SceneCallbackThunk(void* user) {
+    auto* shell = static_cast<game::GameShell*>(user);
+    if (shell != nullptr) {
+        shell->RenderScene();
+    }
+}
+
 void Runtime::OnWindowDestroyed() {
+    if (device_ != nullptr) {
+        device_->SetSceneCallback(nullptr, nullptr);
+    }
+    if (shell_ != nullptr) {
+        shell_->OnSurfaceLost();
+    }
     if (device_ != nullptr) {
         device_->Shutdown();
     }
@@ -204,6 +238,9 @@ void Runtime::OnWindowDestroyed() {
 void Runtime::OnWindowResized(int32_t width, int32_t height) {
     if (device_ != nullptr) {
         device_->Resize(width, height);
+    }
+    if (shell_ != nullptr) {
+        shell_->SetViewportSize(width, height);
     }
 }
 

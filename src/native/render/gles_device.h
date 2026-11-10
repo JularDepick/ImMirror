@@ -27,6 +27,7 @@ public:
     bool RenderFrame(double elapsedSeconds) override;
 
     bool Ready() const override;
+    void SetSceneCallback(SceneCallback callback, void* user) override;
     const char* BackendName() const override;
     const char* DriverName() const override;
     int32_t Width() const override;
@@ -45,6 +46,8 @@ private:
     int32_t clientVersion_ = 0;
     bool ready_ = false;
     bool swapFailureLogged_ = false;
+    SceneCallback sceneCallback_ = nullptr;
+    void* sceneUser_ = nullptr;
     std::string renderer_;
     std::string version_;
     std::string driver_;

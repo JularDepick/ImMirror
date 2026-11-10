@@ -18,6 +18,14 @@ target_include_directories(immirror_app_glue PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/android_native_app_glue/include
 )
 
+# 各子系统在自己的目录里收集源文件, 汇总后统一编入库
+set(IMMIRROR_MODULE_SOURCES "")
+add_subdirectory(voxel)
+add_subdirectory(world)
+add_subdirectory(render)
+add_subdirectory(player)
+add_subdirectory(game)
+
 # 引擎运行时: 基础库, 平台适配, 渲染后端与 JNI 导出
 add_library(immirror_core SHARED
     $<TARGET_OBJECTS:immirror_app_glue>
@@ -29,7 +37,7 @@ add_library(immirror_core SHARED
     jni/native_entry.cpp
     platform/android_runtime.cpp
     platform/app_bridge.cpp
-    render/gles_device.cpp
+    ${IMMIRROR_MODULE_SOURCES}
 )
 
 target_include_directories(immirror_core PRIVATE

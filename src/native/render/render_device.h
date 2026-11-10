@@ -29,6 +29,13 @@ public:
 
     virtual bool Ready() const = 0;
 
+    /*
+     * 场景绘制回调: 在清屏之后, 交换缓冲之前调用.
+     * 传空指针表示不绘制场景, 仅保留清屏行为.
+     */
+    using SceneCallback = void (*)(void* user);
+    virtual void SetSceneCallback(SceneCallback callback, void* user) = 0;
+
     /* 后端名称, 例如 gles3. */
     virtual const char* BackendName() const = 0;
 

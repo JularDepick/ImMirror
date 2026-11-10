@@ -9,6 +9,7 @@
 src/
 ├── .gitignore                  # 源码目录级忽略规则
 ├── README.md                   # 本文件
+├── assets/                     # 随包资源 (方块贴图等, 从原版资源复制的部分在 blocks/)
 ├── android/                    # Gradle 工程 (Java 平台桥接层)
 │   ├── settings.gradle.kts     # 模块声明与仓库配置
 │   ├── build.gradle.kts        # 插件版本声明
@@ -171,3 +172,35 @@ Copyright &copy; 2026 JularDepick, 详见 [COPYRIGHT](../COPYRIGHT)。
 ## 许可证
 
 本仓库采用 [Apache-2.0 许可证](../LICENSE)。
+
+## 六、体素世界
+
+| 模块 | 职责 |
+|:---:|:---|
+| `native/voxel/` | 方块注册表, 16x256x16 区块列, 值噪声地形生成, 面剔除网格构建 |
+| `native/world/` | 区块流式加载与卸载, 方块读写, 相邻列网格修补 |
+| `native/render/` | 纹理图集加载, 区块顶点缓冲增量同步, 区块绘制 |
+| `native/player/` | 第一人称相机, 触摸输入映射, AABB 碰撞, 视线射线拾取 |
+| `native/game/` | 装配层, 把世界与玩家接到主循环 |
+
+### 6.1 资源与图集
+
+方块贴图来自 `src/assets/blocks/` (从原版资源复制的部分), 由 `scripts/build_atlas.py` 合成为
+`android/app/src/main/assets/generated/atlas.rgba` (1024x1024 RGBA8, 16x16 格, 每格 64 像素)。
+图集产物不进入版本库, 构建前先执行脚本。
+
+### 6.2 操作
+
+| 手势 | 行为 |
+|:---:|:---|
+| 左半屏按下拖动 | 移动摇杆 |
+| 左半屏双击 | 跳跃 |
+| 右半屏拖动 | 转动视角 |
+| 右半屏短按 | 破坏准星命中的方块 |
+| 右半屏长按 | 在命中面外侧放置方块 |
+
+### 6.3 当前限制
+
+1. 世界不落盘, 退出即重置
+2. 水面按不透明渲染, 未做透明排序
+3. 只有一种方块材质, 尚未接入物品栏与合成
