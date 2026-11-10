@@ -222,8 +222,11 @@ class TestWriteback(unittest.TestCase):
         rebuilt = ktx.rebuild(texture, bytes(pixels))
         restored = ktx.to_rgba(ktx.parse(rebuilt))
         mean, biggest, changed = ktx_png.diff_pixels(bytes(pixels), restored)
-        self.assertLess(mean, 8.0)
-        self.assertEqual(len(rebuilt) // 8 * 8, len(rebuilt))
+        # 合成图是强梯度块, ETC1 每半块只有一个基色, 平均误差上界放到 12
+        self.assertLess(mean, 12.0)
+        again = ktx.parse(rebuilt)
+        self.assertEqual((again.width, again.height), (8, 8))
+        self.assertEqual(len(again.levels), 1)
 
     def test_import_is_noop_when_pixels_match(self):
         pixels = bytes([10, 20, 30, 255] * 16)

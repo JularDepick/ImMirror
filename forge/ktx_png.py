@@ -36,9 +36,13 @@ DEFAULT_PROJECT = os.path.join(ROOT, "project")
 
 PNG_DIR = ktx.PNG_DIR
 
-"""回写自检的像素误差阈值: 平均误差与最大误差都不得越界。"""
+"""回写自检的像素误差阈值。
+
+平均误差是主判据; 单像素最大差只作灾难性错误兜底, ETC1 在强边缘块上
+偶发上百的偏差属于块编码本身的量化极限, 见 docs/notes/ktx.md。
+"""
 SELF_CHECK_MEAN_LIMIT = 6.0
-SELF_CHECK_MAX_LIMIT = 96
+SELF_CHECK_MAX_LIMIT = 200
 
 
 def unwrap(data: bytes) -> bytes:

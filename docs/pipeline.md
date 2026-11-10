@@ -53,6 +53,7 @@ assets/
 │   ├── source.py          # 源树定位与镜像重建
 │   ├── verify.py          # 工程树与索引的一致性校验
 │   ├── roundtrip.py       # 分层抽样与端到端往返验证
+│   ├── ktx_png.py         # KTX 与 PNG 互转, 回写自检
 │   ├── census.py          # 素材清点
 │   ├── codecs/            # 各格式编解码器
 │   └── util/              # 编码探测与文本工具
@@ -68,7 +69,7 @@ assets/
 
 | 目录 | 内容 | 重建命令 |
 |:---:|:---|:---|
-| `project/` | 明文工程文件树与视图 | `forge unpack` |
+| `project/` | 明文工程文件树与视图 (`_view` 结构, `_png` 像素) | `forge unpack` |
 | `build/` `build-original/` | 明文产物与校验产物 | `forge pack` |
 | `build-source/` | 源树镜像 (硬链接加回写) | `forge mirror` |
 | `temp/` | 抽样验证工作区与临时脚本 | - |
@@ -96,6 +97,15 @@ python -m forge.cli roundtrip    # 分层抽样 200 个做逐字节往返
 | `verify` | `--deep` `--source` `--limit` `--json` | 终端结论, 可写 JSON | 任一问题为 1 |
 | `roundtrip` | `--samples` `--seed` `--project` `--out` `--csv` | 报告与明细 | 有失败为 1 |
 
+纹理像素互转走独立入口 (与主命令共用同一份工程树与索引):
+
+```bash
+python -m forge.ktx_png stats     # 源树里 KTX 的格式与尺寸分布
+python -m forge.ktx_png export    # 批量导出 PNG 旁挂文件
+python -m forge.ktx_png import    # 以 PNG 为准回写工程树里的 KTX
+python -m forge.ktx_png check     # 回写自检, 报告像素误差
+```
+
 常用组合:
 
 ```bash
@@ -114,7 +124,8 @@ python -m forge.cli roundtrip --samples 200 --seed 0
 3. 文本载荷以 UTF-8 写入 `project/<rel>`, 原始编码, BOM, 换行写入索引。
 4. 二进制载荷原样写入 `project/<rel>`。
 5. 若编解码器提供视图, 写入 `project/_view/<rel>.json`。
-6. 追加一条索引记录。
+6. 派生像素视图由 `forge/ktx_png.py` 旁挂到 `project/_png/<rel>.png`, 路径记入 `side_files`。
+7. 追加一条索引记录。
 
 ## 六. 索引字段
 

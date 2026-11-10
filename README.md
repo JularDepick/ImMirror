@@ -109,7 +109,7 @@ python -m forge.cli pack --out build
 |:---:|:---:|:---:|:---|
 | 文本族 | `ffd9ffd7` | 已解, 逐字节往返通过 | `container-text-xor16-zlib` |
 | 二进制族 | `ffd9ffd8` | 已解, 逐字节往返通过 | `container-binary-xor16-head` |
-| KTX 11 纹理 | `ab4b5458` | 头字段已出视图, 像素待解 (全量为 ETC1_RGB8) | `ktx11` |
+| KTX 11 纹理 | `ab4b5458` | 头字段与 PNG 像素视图已出, 回写为重新压缩 (全量 ETC1_RGB8) | `ktx11` |
 | 命名区块容器 | `89674523` | 块序列与字段已出视图, 块写出器待做 | `named-block` |
 | VMOF 体素模型 | `564d4f46` | 待接入 | - |
 | CUST 自定义模型 | `43555354` | 载荷为异或加 FlatBuffers, 待接入 | - |

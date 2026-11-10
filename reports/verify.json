@@ -13,6 +13,8 @@
  "ok": true,
  "project_files": 23541,
  "records": 23541,
+ "side_missing": [],
+ "side_missing_total": 0,
  "source": null,
  "view_missing": [],
  "view_missing_total": 0

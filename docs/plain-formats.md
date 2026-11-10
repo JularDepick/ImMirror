@@ -147,24 +147,27 @@
 |:---:|:---|
 | 规模 | 8736 个, 372.5 MiB, 其中 4368 个套二进制族, 4368 个是裸 KTX 11 |
 | 内部格式 | 全量实测只有 `ETC1_RGB8` (0x8D64), 4x4 块 8 字节 |
-| 现状 | 头部字段视图可用 (4368/4368), 像素未解 |
-| 目标明文格式 | 每 mip 一张 PNG 预览加一份原始压缩块, 见下 |
-| 回写 | 未支持 |
+| 明文格式 | 载荷原样加 `_view/<rel>.json` 头字段视图, 加 `_png/<rel>.png` 的 0 级像素图 |
+| 回写 | 像素未改时原样回写; 像素改动后重压块并重算 mip 链 |
+| 命令 | `python -m forge.ktx_png stats\|export\|import\|check` |
 
-目标目录形式 (待实现, 定稿即按此接入):
+旁挂路径示例:
 
 ```
-project/media/ktx/ui/mobile/texture0/main_lobby.ktx     当前: 原始 KTX 字节
-project/media/ktx/ui/mobile/texture0/main_lobby/        目标: 目录
-├── manifest.json       # 格式, 尺寸, mip 数, 面数, 端序, 每级块数与偏移
-├── mip0.png            # ETC1 解出的 RGBA 预览, 供人看与改图
-├── mip0.etc1.bin       # 原始压缩块, 回写权威
-└── mip1.png  mip1.etc1.bin
+project/media/ktx/ui/mobile/texture0/main_lobby.ktx      原始 KTX 载荷
+project/_view/media/ktx/ui/mobile/texture0/main_lobby.ktx.json   头字段视图
+project/_png/media/ktx/ui/mobile/texture0/main_lobby.png        0 级像素 (RGBA)
 ```
 
-两级设计的原因: ETC1 是有损压缩, PNG 改图后重新压缩无法保证与原块逐字节相同,
-因此把「人看的图」和「回写用的原块」分开保存; 只改 PNG 时回写产物与源不同 (等价于重新压缩),
-只保留原块时回写逐字节一致。回写 PNG 需要 ETC1 编码器, 属未支持项。
+回写规则与代价:
+
+1. 只解 0 级 mip 到 PNG; 低层 mip 与原始文件不再有独立副本。
+2. 回写时先比较 PNG 像素与 KTX 解出的像素: 完全一致则保留原字节 (`untouched`),
+   有差异才重压块, 并用盒式滤波重算低层 mip (`rebuilt`)。
+3. ETC1 是有损压缩, 重压后无法保证与原块逐字节相同, 因此像素级回写属「近似回写」;
+   自检命令 `forge.ktx_png check` 报告平均误差与最大误差, 阈值见 `SELF_CHECK_MEAN_LIMIT`。
+4. 要求逐字节一致的场景, 走 `--target original` 且不改 PNG: 载荷原样, 天然一致。
+
 校验锚点: 引擎另有 33 字节自定义纹理头, 摘要为 `MD5("miniw20150320\x00" + 正文 + "\x00")`,
 可用于验证回写结果。
 
@@ -185,7 +188,7 @@ Ogg 是公开格式, 不做结构改写。要换音频就是整文件替换, 之
 | 项 | 内容 |
 |:---:|:---|
 | 规模 | `ui/` 5352 个文件 188.4 MiB, 其中 `.ktx` 3841, `.lua` 1026, `.xml` 449, 另有 gif 14, omod 6 |
-| 纹理页 | 与 3.3 同一条规范, 图集页 `ui/mobile/texture<N>/<page>.ktx` |
+| 纹理页 | 与 3.3 同一条规范, 图集页 `ui/mobile/texture<N>/<page>.ktx`, 像素图在 `_png/` 下 |
 | 布局 | `.xml` 走 3.7 (明文或二进制 Android XML) 与 3.1 同类的文本规范; `.lua` 走文本规范 |
 | 回写 | xml 与 lua 按索引编码还原; ktx 原样 |
 
@@ -263,9 +266,9 @@ VMOF 目标格式 (版本 100 与 200 共用, 版本 200 多一个尾块):
 | 数据表 csv | UTF-8 文本 | 支持 | 支持 (按原编码转回) | `lossless-edit` |
 | 文本 (lua / xml / txt / 着色器) | UTF-8 文本 | 支持 | 支持 | `lossless-edit` |
 | 命名区块容器 | 二进制加 JSON 视图 | 支持 | 未支持 (缺块写出器) | `lossless-passthrough` |
-| 纹理 ktx | 二进制加头视图 | 支持 | 未支持 (缺 ETC1 编码器) | `lossless-passthrough` |
+| 纹理 ktx | 二进制加头视图加 PNG | 支持 | 支持 (像素级近似, 重压块) | `lossless-passthrough` |
 | 音频 ogg | 二进制加头视图 | 支持 | 支持 (整文件替换) | `lossless-passthrough` |
-| 图标集 (ui) | 文本加二进制 | 支持 | 未支持 (依赖 ktx) | `lossless-passthrough` |
+| 图标集 (ui) | 文本加二进制加 PNG | 支持 | 支持 (纹理页随 ktx, 布局随 xml) | `lossless-passthrough` |
 | 体素与世界存档 | 二进制 | 支持 | 未支持 | `lossless-passthrough` |
 | 二进制 Android XML | 二进制加 XML 视图 | 支持 | 未支持 | `lossless-passthrough` |
 | 公开标准格式 | 二进制加头视图 | 支持 | 支持 (整文件替换) | `lossless-passthrough` |
