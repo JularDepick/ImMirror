@@ -135,6 +135,8 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         return;
     }
     surfaceReady_ = true;
+    /* 表面重建后旧的指针快照已经失效, 复位输入状态, 不把退出前的按住带进新画面. */
+    ResetInputState();
     PrepareSavePath(dataPath);
 
     /*
@@ -160,6 +162,24 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     hud_.Initialize(renderer_->AtlasTexture());
     IM_LOGI(kTag, "game shell ready, chunks=%d fov=%.0f", world_->LoadedChunkCount(),
             static_cast<double>(kFovYDegrees));
+}
+
+void GameShell::ResetInputState() {
+    lastInput_ = platform::InputSnapshot{};
+    previousDownMask_ = 0ull;
+    lastProcessedTouchEvents_ = -1;
+    jumpPointerId_ = -1;
+    jumpHeld_ = false;
+    slotPointerId_ = -1;
+    slotHoldIndex_ = -1;
+    slotHoldSeconds_ = 0.0;
+    slotNameShown_ = false;
+    editPointerId_ = -1;
+    editDownX_ = 0.0f;
+    editDownY_ = 0.0f;
+    editLastX_ = 0.0f;
+    editLastY_ = 0.0f;
+    editDownSeconds_ = 0.0;
 }
 
 void GameShell::PrepareSavePath(const char* dataPath) {

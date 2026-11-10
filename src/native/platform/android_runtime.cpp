@@ -111,8 +111,12 @@ void Runtime::Run() {
             device_ != nullptr ? device_->BackendName() : "none");
     core::AppLoop loop(core::LoopConfig{});
     loop.Run(*this);
-    IM_LOGI(kTag, "engine runtime left main loop, frames=%lld",
-            static_cast<long long>(stats_.TotalFrames()));
+    /*
+     * 只有 Activity 销毁时循环才会结束, 因此这里把销毁标志一并打出来:
+     * 冷启动与重进的日志可以据此区分“正常退出”与“被上一次会话的状态踢出”.
+     */
+    IM_LOGI(kTag, "engine runtime left main loop, frames=%lld, destroyRequested=%d",
+            static_cast<long long>(stats_.TotalFrames()), bridge_.DestroyRequested() ? 1 : 0);
     jni::EngineHost::Instance().MarkRuntimeActive(false);
 }
 
@@ -123,14 +127,22 @@ void Runtime::Shutdown() {
 }
 
 bool Runtime::PumpEvents(int32_t timeoutMillis) {
-    if (!bridge_.PumpEvents(timeoutMillis)) {
-        return false;
-    }
-    return !jni::EngineHost::Instance().StopRequested();
+    /*
+     * 事件泵只反映胶水层的状态. Java 侧的停止请求不参与这里的判断:
+     * 它是上一次会话留下的进程级标记, 一旦据此返回 false,
+     * 新的 Activity 会话就再没有线程处理窗口与输入命令.
+     */
+    return bridge_.PumpEvents(timeoutMillis);
 }
 
 bool Runtime::ShouldExit() const {
-    return bridge_.DestroyRequested() || jni::EngineHost::Instance().StopRequested();
+    /*
+     * 主循环的退出条件只跟 Activity 的生命周期绑定:
+     * 胶水层收到 APP_CMD_DESTROY 才会置位 destroyRequested,
+     * 此时 Activity 正在销毁并等待本线程返回; 进程内存活期间进入与退出游戏
+     * 都只是重建 Activity 与线程, 不再影响循环的生死.
+     */
+    return bridge_.DestroyRequested();
 }
 
 bool Runtime::IsActive() const {
@@ -168,7 +180,20 @@ void Runtime::Render(double frameDeltaSeconds) {
 }
 
 void Runtime::CheckStartGate() {
-    if (started_ || !jni::EngineHost::Instance().StartRequested()) {
+    auto& host = jni::EngineHost::Instance();
+    /*
+     * Java 侧请求结束游戏时只关闭玩法, 事件循环继续运转:
+     * 随后的窗口销毁与 Activity 销毁命令仍要由本线程处理, 否则
+     * 胶水层会在主线程上等待这些命令, 表现为退出游戏时的输入派发超时.
+     */
+    if (host.StopRequested()) {
+        if (started_) {
+            started_ = false;
+            IM_LOGI(kTag, "engine gameplay stopped by java, loop keeps pumping events");
+        }
+        return;
+    }
+    if (started_ || !host.StartRequested()) {
         return;
     }
     started_ = true;

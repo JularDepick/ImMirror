@@ -10,6 +10,11 @@ namespace immirror::jni {
  * Java 线程与原生主线程之间的共享状态容器.
  * Java 侧只在进入与退出游戏时写入一次;
  * 原生主线程逐帧只读取原子标量, 因此逐帧路径上没有任何 JNI 调用.
+ *
+ * 生命周期约定: 启动与停止请求描述的是当前这一次 Activity 会话的玩法状态,
+ * 不负责结束原生事件循环. 事件循环只能由胶水层的销毁请求终止
+ * (android_app.destroyRequested), 否则上一次会话留在进程内的停止标记
+ * 会让下一次进入时新的主循环在第一帧就退出.
  */
 class EngineHost {
 public:
@@ -24,7 +29,11 @@ public:
     /* 取设备画像副本; 尚未设置时返回空串. */
     std::string CopyDeviceProfile() const;
 
-    /* Java 侧请求启动与停止原生主循环. */
+    /*
+     * Java 侧请求进入与离开游戏.
+     * 进入时清除上一次会话遗留的停止标记;
+     * 离开时只关闭玩法, 事件循环继续处理窗口与 Activity 命令.
+     */
     void RequestStart();
     void RequestStop();
     bool StartRequested() const;

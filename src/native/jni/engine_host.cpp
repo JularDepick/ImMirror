@@ -29,12 +29,20 @@ std::string EngineHost::CopyDeviceProfile() const {
 }
 
 void EngineHost::RequestStart() {
+    /*
+     * 每次 Activity 进入游戏都会走到这里, 因此清除上一次会话的停止标记,
+     * 只影响玩法开关, 不影响已经存在的事件循环.
+     */
     stopRequested_.store(false);
     startRequested_.store(true);
     IM_LOGI(kTag, "start requested by java");
 }
 
 void EngineHost::RequestStop() {
+    /*
+     * 停止请求只关闭玩法: 随后 Activity 的窗口销毁与销毁命令
+     * 仍由同一条原生线程处理, 循环不能在这里提前退出.
+     */
     startRequested_.store(false);
     stopRequested_.store(true);
     IM_LOGI(kTag, "stop requested by java");

@@ -101,6 +101,9 @@ private:
     /* 组装存档路径, 必要时创建目录. */
     void PrepareSavePath(const char* dataPath);
 
+    /* 表面重建后复位指针快照与手势持有的状态. */
+    void ResetInputState();
+
     std::unique_ptr<world::World> world_;
     std::unique_ptr<player::PlayerController> player_;
     std::unique_ptr<render::ChunkRenderer> renderer_;

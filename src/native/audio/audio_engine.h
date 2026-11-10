@@ -2,6 +2,8 @@
 
 #include <jni.h>
 
+#include <mutex>
+
 namespace immirror::audio {
 
 /* 方块交互音效, 按材质分族. 顺序与 Java 侧加载顺序一致. */
@@ -65,6 +67,12 @@ public:
 private:
     /* 播放需要 JNIEnv, 原生线程首次使用时附加到虚拟机. */
     JNIEnv* CurrentEnv();
+
+    /*
+     * 挂接与解除在 Java 主线程, 播放与就绪判定在原生线程:
+     * 两边同时发生会读到已经释放的全局引用, 因此共用同一把锁.
+     */
+    mutable std::mutex mutex_;
 
     JavaVM* vm_ = nullptr;
     jobject soundPool_ = nullptr;
