@@ -96,6 +96,8 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         player_->Spawn(*world_, 8.0f, 8.0f);
     }
     world_->Update(player_->Position(), viewDistanceChunks_);
+    hud_.SetViewport(width_, height_);
+    hud_.Initialize();
     IM_LOGI(kTag, "game shell ready, chunks=%d", world_->LoadedChunkCount());
 }
 
@@ -129,6 +131,7 @@ void GameShell::OnSurfaceLost() {
         return;
     }
     SaveWorld();
+    hud_.Shutdown();
     renderer_->Shutdown();
     surfaceReady_ = false;
     IM_LOGI(kTag, "game shell surface released");
@@ -136,9 +139,10 @@ void GameShell::OnSurfaceLost() {
 
 void GameShell::SetQualityFromGrade(const char* grade) {
     qualityGrade_ = (grade != nullptr && grade[0] != '\0') ? grade : "high";
+    /* 平台侧分级取值为 high / mid / low, 同时兼容 medium 写法. */
     if (std::strcmp(qualityGrade_, "low") == 0) {
         viewDistanceChunks_ = kViewDistanceLow;
-    } else if (std::strcmp(qualityGrade_, "medium") == 0) {
+    } else if (std::strcmp(qualityGrade_, "mid") == 0 || std::strcmp(qualityGrade_, "medium") == 0) {
         viewDistanceChunks_ = kViewDistanceMedium;
     } else {
         viewDistanceChunks_ = kViewDistanceHigh;
@@ -149,6 +153,7 @@ void GameShell::SetQualityFromGrade(const char* grade) {
 void GameShell::SetViewportSize(int32_t width, int32_t height) {
     width_ = width;
     height_ = height;
+    hud_.SetViewport(width, height);
 }
 
 void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input) {
@@ -156,6 +161,7 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
         return;
     }
     elapsedSeconds_ += deltaSeconds;
+    lastInput_ = input;
     const core::Vec3 position = player_->Position();
     world_->Update(position, viewDistanceChunks_);
     player_->Update(deltaSeconds, input, *world_);
@@ -218,6 +224,18 @@ void GameShell::RenderScene() {
     renderer_->SetViewProjection(viewProjection, camera);
     renderer_->Sync(*world_);
     renderer_->Draw();
+
+    /* 摇杆只在左半屏按下时显示, 量值由触点相对摇杆中心的偏移近似. */
+    float stickX = 0.0f;
+    float stickY = 0.0f;
+    const bool stickActive = lastInput_.pointerDown && lastInput_.pointerX < 0.5f;
+    if (stickActive) {
+        stickX = (lastInput_.pointerX - 0.26f) / 0.14f;
+        stickY = (0.58f - lastInput_.pointerY) / 0.14f;
+        stickX = stickX < -1.0f ? -1.0f : (stickX > 1.0f ? 1.0f : stickX);
+        stickY = stickY < -1.0f ? -1.0f : (stickY > 1.0f ? 1.0f : stickY);
+    }
+    hud_.Render(stickX, stickY, stickActive);
 }
 
 void GameShell::LogStatus(double deltaSeconds) {

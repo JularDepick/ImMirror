@@ -5,6 +5,8 @@
 #include <string>
 
 #include "audio/audio_engine.h"
+#include "platform/input_state.h"
+#include "ui/hud_renderer.h"
 
 struct AAssetManager;
 
@@ -72,6 +74,8 @@ private:
     std::unique_ptr<world::World> world_;
     std::unique_ptr<player::PlayerController> player_;
     std::unique_ptr<render::ChunkRenderer> renderer_;
+    ui::HudRenderer hud_;
+    platform::InputSnapshot lastInput_;
 
     int32_t width_ = 0;
     int32_t height_ = 0;
