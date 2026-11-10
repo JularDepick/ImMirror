@@ -1,0 +1,6 @@
+# pnpm 10 及以上版本把设置集中到本文件 (.npmrc 只保留 registry 类配置)
+# 扁平链接: 服务端含原生模块 better-sqlite3, 扁平 node_modules 便于 Node 直接解析依赖
+nodeLinker: hoisted
+# 允许 better-sqlite3 执行安装脚本 (下载或编译原生绑定)
+onlyBuiltDependencies:
+  - better-sqlite3

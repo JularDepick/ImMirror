@@ -1,0 +1,28 @@
+{
+  "name": "immirror-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ImMirror 我之镜界 服务端 (纯 JSON API)",
+  "author": "JularDepick",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "start": "node .output/server/index.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "fastify": "^5.6.1",
+    "nodemailer": "^7.0.9",
+    "nuxt": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.10.0",
+    "@types/nodemailer": "^7.0.3",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

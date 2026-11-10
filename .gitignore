@@ -1,0 +1,16 @@
+# 本文件为服务端仓库根级忽略规则, 与 src/.gitignore 各自独立维护,
+# 不共用也不跨仓库复制; 此处只忽略仓库根下的产物, 避免误伤 src 内的源码目录
+
+/node_modules/
+/dist/
+/build/
+*.tsbuildinfo
+
+/temp/
+/tmp/
+/*.log
+
+/.vscode/
+/.idea/
+.DS_Store
+Thumbs.db
