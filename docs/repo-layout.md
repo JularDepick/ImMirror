@@ -33,13 +33,12 @@ ImMirror/
 client/
 ├── .gitignore
 ├── README.md
-├── src/
-│   ├── android/    # Gradle 工程
-│   ├── native/     # C++ 引擎
-│   ├── assets/     # 运行时资源子集
-│   ├── scripts/    # 构建与资源脚本
-│   └── README.md
-└── temp/           # 临时产物 (忽略)
+└── src/
+    ├── android/    # Gradle 工程
+    ├── native/     # C++ 引擎
+    ├── assets/     # 运行时资源子集
+    ├── scripts/    # 构建与资源脚本
+    └── README.md
 ```
 
 ### server
@@ -48,11 +47,10 @@ client/
 server/
 ├── .gitignore
 ├── README.md
-├── src/
-│   ├── server/     # 路由, 服务, 数据层
-│   ├── docs/       # 接口与部署文档
-│   └── README.md
-└── temp/           # 临时产物 (忽略)
+└── src/
+    ├── server/     # 路由, 服务, 数据层
+    ├── docs/       # 接口与部署文档
+    └── README.md
 ```
 
 ### assets
@@ -64,15 +62,13 @@ assets/
 ├── forge/          # 管线工具代码
 ├── docs/           # 管线文档与格式结论
 ├── tests/          # 管线单元测试
-├── reports/        # 清点与验证报告
-├── project/        # 解码工程树 (忽略, 按需重建)
-└── temp/           # 构建中间产物 (忽略)
+└── reports/        # 清点与验证报告
 ```
 
 ## 四、规则
 
 1. 每个仓库的根目录只放 README, 许可证类文件, 忽略规则与一级目录, 不放散落的构建产物
-2. 构建中间产物一律落 `temp/`, 解码工程树落 `project/`, 两者都不进版本库
+2. 构建中间产物与解码产物都不进版本库, 按需重建
 3. 源码只放在各自仓库的 `src/` 或 `forge/` 下, 脚本只放在 `scripts/` 下
 4. 不允许在业务仓库内部出现 `single-branch/` 嵌套目录
 5. 业务仓库之间不互相复制目录; 资源由 `assets` 管线生成后复制文件, 不复制整棵目录树

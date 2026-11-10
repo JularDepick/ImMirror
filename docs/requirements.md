@@ -1,0 +1,65 @@
+# 需求基线
+
+需求基线是用户确认的约束集合, 后续设计与实现不得违背。编号固定为 R1 至 R18, 其他文档按编号引用, 不新增重复条目, 不复用已废弃的编号。
+
+## 一、需求条目
+
+| 编号 | 约束 | 落地位置 |
+|:---:|:---:|:---:|
+| R1 | 重制体素沙盒客户端, 兼容 Android 7 及以上 | 客户端 `build.gradle.kts` 的 `minSdk 24` 与 `targetSdk 36` |
+| R2 | 客户端去除原厂署名相关内容, 含启动图, Logo, 关于页与版权字符串 | 界面文案集中在 `res/values/strings.xml`; 版权行由账号界面主题常量统一给出 |
+| R3 | 登录方式仅两种: 邮箱或 UID 加密码; 邮箱加验证码 | 服务端 `server/api/v1/auth/login.ts`; 客户端 `account/ApiClient.java` |
+| R4 | 必须支持忘记密码, 通过邮箱验证码重置密码 | 接口 `/auth/password/reset/code` 与 `/auth/password/reset`; 客户端找回密码页 |
+| R5 | 注册必须使用邮箱, 注册成功后由服务端分配 UID | 接口 `/auth/register`; `services/auth.ts` 随机生成 8 位十进制 UID |
+| R6 | 允许 UID 用户换绑新邮箱, 需验证新邮箱 | 接口 `/auth/email/rebind/code` 与 `/auth/email/rebind` |
+| R7 | 去除充值体系, 保留货币体系; 货币数据只存服务端 | 服务端 `wallets` 与 `wallet_ledger` 表; 客户端只读展示余额 |
+| R8 | 货币通过签到获取, 签到以自然月为周期 | 服务端 `services/wallet.ts` 与 `checkins` 表 |
+| R9 | 服务端只提供接口, 不提供在线网页 | `nuxt.config.ts` 关闭页面渲染, 业务路由全部由 Fastify 承担 |
+| R10 | 所有美术资源随客户端安装包下发, 服务端只存用户数据等非资源数据 | 客户端 `src/assets/`; 服务端不注册任何静态资源路由 |
+| R11 | 客户端资源不需要加密 | 运行期资源为 PNG, Ogg 与 JPEG 明文容器 |
+| R12 | APK 签名使用 V1 加 V2 加 V3, 需要新建密钥对 | 发布工程阶段落地; 密钥与签名产物不进入仓库 |
+| R13 | 先做服务端, 再做客户端 | 过程约束; 里程碑顺序与仓库提交内容均按此推进 |
+| R14 | 服务端位于独立 git 仓库 | `single-branch/server` 仓库 |
+| R15 | 服务端框架 Nuxt.js, HTTP 层用 Fastify 自写; 数据库 better-sqlite3; 包管理器 pnpm | 服务端 `package.json`, `nuxt.config.ts` 与 `pnpm-workspace.yaml` |
+| R16 | 客户端原生核心 C++ (`-std=c++17`), Java, Node 24; 运行脚本用自有 DSL 或字节码, 不嵌入第三方脚本语言 | `native/CMakeLists.txt` 固定 C++17; 自有脚本运行时属于后续里程碑 |
+| R17 | Java 不进入每帧热路径, JNI 只用于低频交互 | `PlayActivity` 继承 NativeActivity, 主循环与输入全部在原生线程 |
+| R18 | 美术资源文件名, 游戏物品名称与代码标识符一律使用本项目自写名称 | `src/shared/naming/resource-map.tsv` 提供原版到本项目的逐文件映射 |
+
+R16 中的 Java 指平台桥接层可用的语言版本。客户端当前语言级别为 17, 构建期使用 JDK 21, 与需求表述的差异记录在 [decisions.md](decisions.md) 的 D-14。
+
+## 二、明确剔除项
+
+| 剔除项 | 具体含义 | 保留内容 |
+|:---:|:---:|:---:|
+| 充值体系 | 不提供付费充值, 内购与支付入口; 货币只能通过签到获得 | 货币体系, 钱包余额与变动流水保留 |
+| 原厂署名 | 启动图, Logo, 关于页与版权字符串不出现原厂名称与品牌词 | 素材内容本身经改名后复用 |
+| 原版命名 | 资源文件名, 目录名, 物品名与代码标识符一律自写, 不沿用原版用词 | 原版到本项目的对应关系只保留在映射表内 |
+| 资源加密 | 客户端不实现原版的加密容器加载链, 直接读取明文容器 | 素材管线保留逐字节还原能力, 仅用于校验 |
+| 服务端在线网页 | 服务端只提供 JSON 接口, 任意路径都不返回 HTML | 接口与部署说明以仓库内文档形式提供 |
+
+## 三、平台与兼容性约束
+
+| 项 | 取值 | 依据 |
+|:---:|:---:|:---:|
+| 最低系统版本 | Android 7.0 (API 24) | 客户端 `minSdk 24` |
+| 目标系统版本 | API 36 | 客户端 `targetSdk 36` |
+| 编译平台 | `android-36.1` 与 build-tools 36.1.0 | 客户端 `compileSdkVersion` 与 `buildToolsVersion` |
+| ABI | arm64-v8a 与 armeabi-v7a 为主, x86_64 供模拟器 | 客户端 `abiFilters` |
+| 屏幕方向 | 横屏 | 清单中三个 Activity 的 `screenOrientation` |
+| 图形接口 | GLES 3.0 必需, Vulkan 作为可选能力探测 | 清单 `uses-feature` 与 `DeviceProfile` |
+| 联调网络 | 允许明文 HTTP 直连服务端 | 清单 `usesCleartextTraffic` |
+| 服务端运行 | Node 24 单进程, 默认监听 `0.0.0.0:61110` | 服务端 `utils/config.ts` |
+
+## 四、非目标
+
+- 网页端, 社区与聊天功能
+- 内购, 广告与任何付费入口
+- 服务端托管素材或提供资源下载
+- 嵌入 Lua 等第三方脚本语言运行时
+- 竖屏布局
+
+## 五、需求变更
+
+- 需求由用户确认; 变更时同步本文件与相关设计文档, 已生效的编号保持不变
+- 新增需求追加编号, 不复用已删除或已合并的编号
+- 文档与代码冲突时, 先核对代码事实, 再决定修正文档还是修正代码
