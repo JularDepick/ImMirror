@@ -381,11 +381,12 @@ def fb_string(buf: bytes, off: int):
         length = fb_u32(buf, off)
     except struct.error:
         return None
-    if length == 0 or length > 4096 or off + 4 + length > len(buf):
+    if length == 0 or length > 4096 or off + 4 + length >= len(buf):
+        return None
+    """FlatBuffers 字符串以 NUL 收尾, 长度不计 NUL; 该判据能挡掉把向量计数当长度。"""
+    if buf[off + 4 + length] != 0:
         return None
     raw = buf[off + 4 : off + 4 + length]
-    if raw[-1:] == b"\x00":
-        raw = raw[:-1]
     for encoding in ("utf-8", "gbk"):
         try:
             text = raw.decode(encoding)
@@ -422,26 +423,35 @@ def fb_uoffset_target(buf: bytes, at: int):
 
 
 def fb_describe_slot(buf: bytes, field_off: int) -> dict:
-    """尽力把字段解释成字符串/表/向量或数值, 供只读视图使用。"""
+    """尽力把字段解释成字符串/表/向量或数值, 供只读视图使用。
+
+    同一偏移可能有多种自洽解释 (例如长度为 1 的向量与两字符串在字节上重叠),
+    因此全部候选写进 alternatives, 主解释按 表 > 字符串 > 向量 的置信度取第一条。
+    """
     info = {"offset": field_off, "hex": buf[field_off : field_off + 8].hex()}
     if field_off + 4 > len(buf):
         return info
     target = fb_uoffset_target(buf, field_off)
     if target is not None:
+        alternatives = []
         text = fb_string(buf, target)
         if text is not None:
-            info.update({"type": "string", "value": text})
-            return info
+            alternatives.append({"type": "string", "value": text})
         try:
             table = fb_table(buf, target)
         except ScaffoldError:
             table = None
         if table is not None and 8 <= table["vlen"] <= 512 and table["tlen"] >= 4:
-            info.update({"type": "table", "table": table})
-            return info
+            alternatives.append({"type": "table", "table": table})
         vector = fb_vector(buf, target)
         if vector is not None and vector["count"] < 1 << 24:
-            info.update({"type": "vector", "count": vector["count"]})
+            alternatives.append({"type": "vector", "count": vector["count"]})
+        if alternatives:
+            order = {"table": 0, "string": 1, "vector": 2}
+            alternatives.sort(key=lambda item: order.get(item["type"], 9))
+            info["type"] = alternatives[0]["type"]
+            info.update({key: value for key, value in alternatives[0].items() if key != "type"})
+            info["alternatives"] = alternatives
             return info
     raw = buf[field_off : field_off + 8].ljust(8, b"\x00")
     info["numbers"] = {

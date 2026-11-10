@@ -1,0 +1,129 @@
+{
+  "project": "immirror-scaffold",
+  "version": 1,
+  "category": "textures",
+  "format": "ktx11",
+  "source": {
+    "name": "dotted.ktx",
+    "stem": "dotted",
+    "extension": ".ktx",
+    "size": 212,
+    "sha256": "7300735f5e52de64eacb1959f022ac3e3e5deba57e6a9d4045534202b35a62df"
+  },
+  "envelope": {
+    "container": "binary-family",
+    "enc_prefix": 64
+  },
+  "endianness": "little",
+  "header": {
+    "glType": 0,
+    "glTypeSize": 1,
+    "glFormat": 0,
+    "glInternalFormat": 36196,
+    "glBaseInternalFormat": 6407,
+    "pixelWidth": 17,
+    "pixelHeight": 6,
+    "pixelDepth": 0,
+    "numberOfArrayElements": 0,
+    "numberOfFaces": 1,
+    "numberOfMipmapLevels": 5,
+    "bytesOfKeyValueData": 0
+  },
+  "key_value_data": {
+    "encoding": "base64",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "base64": "",
+    "note": "KTX 键值区原样字节"
+  },
+  "pixel": {
+    "internal_format": 36196,
+    "format_name": "ETC1_RGB8",
+    "codec": "etc1"
+  },
+  "mips": [
+    {
+      "level": 0,
+      "width": 17,
+      "height": 6,
+      "size": 80,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 80,
+        "sha256": "961c8bdf4e5b611b513c41e6c0c5067cb43820eb61a139e3cbf4667fd5bbff54",
+        "base64": "CAgIHPD///+AgID+D/D//4CAgOD/D///gICA/vDw//8AAAAC/////wgICBzw////gICA/g/w//+AgIDg/w///4CAgP7w8P//AAAAAv////8=",
+        "note": "压缩块原样字节, 未改 PNG 时按此回写"
+      }
+    },
+    {
+      "level": 1,
+      "width": 8,
+      "height": 3,
+      "size": 16,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 16,
+        "sha256": "932fc48b2cb11e465233ae5fe6460f97075f2fbf1d2974ceb3dbc64ab0ec6140",
+        "base64": "SEhIjgAP8P9sbGwy8PD//w==",
+        "note": "压缩块原样字节, 未改 PNG 时按此回写"
+      }
+    },
+    {
+      "level": 2,
+      "width": 4,
+      "height": 1,
+      "size": 8,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 8,
+        "sha256": "346ed9adc1244d266a949e82acba8ce8db9d646b40f1d756821d1f5d8c0f796e",
+        "base64": "d3d3bP//8A8=",
+        "note": "压缩块原样字节, 未改 PNG 时按此回写"
+      }
+    },
+    {
+      "level": 3,
+      "width": 2,
+      "height": 1,
+      "size": 8,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 8,
+        "sha256": "8fea74080118b210432800b094044c338f163f1e2f506823c0f14e029c588279",
+        "base64": "UFBQAgAA//8=",
+        "note": "压缩块原样字节, 未改 PNG 时按此回写"
+      }
+    },
+    {
+      "level": 4,
+      "width": 1,
+      "height": 1,
+      "size": 8,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 8,
+        "sha256": "8fea74080118b210432800b094044c338f163f1e2f506823c0f14e029c588279",
+        "base64": "UFBQAgAA//8=",
+        "note": "压缩块原样字节, 未改 PNG 时按此回写"
+      }
+    }
+  ],
+  "trailing": {
+    "encoding": "base64",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "base64": "",
+    "note": "最后一级之后的残余字节"
+  },
+  "pixels": {
+    "file": "mip0.png",
+    "width": 17,
+    "height": 6,
+    "rgba_sha256": "6a913d547e1da062df0c55eab39b3d7a4ccfa453769ec424dc1ac37d65a54878",
+    "note": "PNG 是 0 级像素的可编辑视图; 像素与压缩块解码结果不一致时以 PNG 为准重压块"
+  },
+  "files": [
+    "manifest.json",
+    "mip0.png"
+  ]
+}

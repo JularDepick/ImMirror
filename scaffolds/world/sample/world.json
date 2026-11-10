@@ -1,0 +1,32 @@
+{
+  "project": "immirror-scaffold",
+  "version": 1,
+  "category": "world",
+  "format": "vmof",
+  "source": {
+    "name": "baozishuding.vmo",
+    "stem": "baozishuding",
+    "extension": ".vmo",
+    "size": 200,
+    "sha256": "48b5f697ac7560d8853f6488a07573716c7be55bda9797f93f12c35b4e2de940"
+  },
+  "header": {
+    "magic": "VMOF",
+    "version": 100,
+    "size": [
+      6,
+      3,
+      5
+    ]
+  },
+  "voxels": {
+    "encoding": "base64",
+    "bytes": 180,
+    "sha256": "f056c24145a4161a6edd595b178ceb88f127731f4514b6d9a4b355eb726e3c38",
+    "base64": "AAAAAAAABgEAAAAAAAAAAAYBAAAGAQAAAAAGAQAAAAAAAAYBAAAAAAYBAAAGAQAAAAAAAAAABgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgEAAAAAAAAAAAYBAAAGAQAAAAAAAAAABgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "note": "u16le 体素数组, 行优先 x 变化最快; 改尺寸必须同步改数组长度",
+    "count": 90,
+    "nonzero": 13,
+    "distinct_values": 2
+  }
+}

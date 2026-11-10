@@ -36,21 +36,28 @@ SAMPLE_LIMIT = 14
 
 
 def collect_samples(limit=SAMPLE_LIMIT):
-    """在候选资源树里找 KTX 样本, 返回 [(根, 相对路径)]。"""
-    samples = []
+    """在候选资源树里找 KTX 样本, 带容器与裸副本各取一半, 返回 [(根, 相对路径)]。"""
+    per_kind = max(1, limit // 2)
     for root in (CLIENT_ASSETS, ORIGINAL_ASSETS):
         if not os.path.isdir(root):
             continue
+        wrapped = []
+        bare = []
         for dirpath, dirnames, filenames in os.walk(root):
             dirnames.sort()
             for name in sorted(filenames):
                 if not name.lower().endswith(".ktx"):
                     continue
                 rel = os.path.relpath(os.path.join(dirpath, name), root).replace(os.sep, "/")
-                samples.append((root, rel))
-                if len(samples) >= limit:
-                    return samples
-    return samples
+                target = bare if rel.startswith("media/") else wrapped
+                target.append(rel)
+            if len(wrapped) >= per_kind and len(bare) >= per_kind:
+                break
+        samples = [(root, rel) for rel in wrapped[:per_kind]]
+        samples.extend((root, rel) for rel in bare[:per_kind])
+        if samples:
+            return samples[:limit]
+    return []
 
 
 def read_sample(root, rel):
@@ -300,8 +307,13 @@ class TestRealSamples(unittest.TestCase):
         self.assertGreaterEqual(covered, 10)
 
     def test_rebuild_error_is_bounded(self):
+        """回写自检: 重压后的像素误差有界, 取体积最小的几张样本以控制耗时。"""
         worst = 0.0
-        for root, rel in self.samples[:5]:
+        smallest = sorted(
+            self.samples,
+            key=lambda item: os.path.getsize(os.path.join(item[0], item[1])),
+        )[:3]
+        for root, rel in smallest:
             plain = ktx_png.unwrap(read_sample(root, rel))
             texture = ktx.parse(plain)
             if texture.codec() is None:

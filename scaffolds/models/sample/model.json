@@ -1,0 +1,53 @@
+{
+  "project": "immirror-scaffold",
+  "version": 1,
+  "category": "models",
+  "format": "named-block",
+  "source": {
+    "name": "1002.ent",
+    "stem": "1002",
+    "extension": ".ent",
+    "size": 59,
+    "sha256": "8587da0129dac59a3db89234bc8d7b2db4cbc53a3ee8805b58180ff4afb8995c"
+  },
+  "envelope": null,
+  "container": {
+    "magic": "89674523",
+    "version": 100,
+    "header_flag": 1,
+    "note": "version 恒为 100, header_flag 实测恒为 1, 语义未定, 原样保留"
+  },
+  "blocks": [
+    {
+      "index": 0,
+      "name": "EntityData",
+      "type_id": 100,
+      "mode": "closed",
+      "form": "形态 b: 10 加 1 组路径",
+      "payload": {
+        "encoding": "base64",
+        "bytes": 34,
+        "sha256": "f6256fda6fa550b42b4e5fe7a1aa1e33cbfe4c438fbb5e8f825c496e18142354",
+        "base64": "AAAAAAAAAQAAABYAcmVzXHBhcnRpY2xlc1wxMDAyLmVtbw==",
+        "note": "区块载荷原样字节, 改它就等于改块内容"
+      },
+      "fields": {
+        "form": "b",
+        "u16_0": 0,
+        "u32_2": 0,
+        "path_count": 1,
+        "sample_paths": [
+          "res\\particles\\1002.emo"
+        ]
+      }
+    }
+  ],
+  "coverage": {
+    "size": 59,
+    "header_bytes": 12,
+    "block_bytes": 47,
+    "tiles_to_eof": true,
+    "blocks": 1,
+    "closed_blocks": 1
+  }
+}

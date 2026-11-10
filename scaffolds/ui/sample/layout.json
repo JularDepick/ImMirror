@@ -1,0 +1,130 @@
+{
+  "project": "immirror-scaffold",
+  "version": 1,
+  "category": "ui",
+  "format": "axml",
+  "source": {
+    "name": "accelerate_cubic.xml",
+    "stem": "accelerate_cubic",
+    "extension": ".xml",
+    "size": 284,
+    "sha256": "1b54e6052f5dd8690e19819bf0b0222abee4903ccb2a854bf4f9bab529a63eb6"
+  },
+  "header": {
+    "type": 3,
+    "header_size": 8,
+    "size": 284
+  },
+  "chunks": [
+    {
+      "index": 0,
+      "type": 1,
+      "type_name": "RES_STRING_POOL",
+      "header_size": 28,
+      "size": 136,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 136,
+        "sha256": "ae5bfe28df4e042837d37cb7a47826615f4815169d884a72ecc90caf3c1c8608",
+        "base64": "AQAcAIgAAAAEAAAAAAAAAAABAAAsAAAAAAAAAAAAAAAJAAAAIgAAACwAAAAGBmZhY3RvcgAWFmFjY2VsZXJhdGVJbnRlcnBvbGF0b3IABwdhbmRyb2lkACoqaHR0cDovL3NjaGVtYXMuYW5kcm9pZC5jb20vYXBrL3Jlcy9hbmRyb2lkAAAAAA==",
+        "note": "块原样字节, 含块头"
+      }
+    },
+    {
+      "index": 1,
+      "type": 384,
+      "type_name": "RES_XML_RESOURCE_MAP",
+      "header_size": 8,
+      "size": 12,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 12,
+        "sha256": "701eb972faec9bb282b4061ff14a262a3de49b290295f22b68c59e009d2069d7",
+        "base64": "gAEIAAwAAADTAQEB",
+        "note": "块原样字节, 含块头"
+      }
+    },
+    {
+      "index": 2,
+      "type": 256,
+      "type_name": "START_NAMESPACE",
+      "header_size": 16,
+      "size": 24,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 24,
+        "sha256": "aed0c28d0a24f6271c6b4f4582bdb563937eb75ab08d9fcebb83d524385ec577",
+        "base64": "AAEQABgAAAAUAAAA/////wIAAAADAAAA",
+        "note": "块原样字节, 含块头"
+      }
+    },
+    {
+      "index": 3,
+      "type": 258,
+      "type_name": "START_ELEMENT",
+      "header_size": 16,
+      "size": 56,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 56,
+        "sha256": "dd0dbb3bd05a63753edd24f4cec896aee8edab1ddb3bba789e548c017e4ca56a",
+        "base64": "AgEQADgAAAAUAAAA//////////8BAAAAFAAUAAEAAAAAAAAAAwAAAAAAAAD/////CAAABAAAwD8=",
+        "note": "块原样字节, 含块头"
+      }
+    },
+    {
+      "index": 4,
+      "type": 259,
+      "type_name": "END_ELEMENT",
+      "header_size": 16,
+      "size": 24,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 24,
+        "sha256": "31b995ae3a1584903ebd9397ae3502b2b857c2de489352ac8fbe5e7273216c3e",
+        "base64": "AwEQABgAAAAUAAAA//////////8BAAAA",
+        "note": "块原样字节, 含块头"
+      }
+    },
+    {
+      "index": 5,
+      "type": 257,
+      "type_name": "END_NAMESPACE",
+      "header_size": 16,
+      "size": 24,
+      "payload": {
+        "encoding": "base64",
+        "bytes": 24,
+        "sha256": "c3332c65f46276acbafa2ccc678efd6159b72cb1effc03d24356a96131f486af",
+        "base64": "AQEQABgAAAAUAAAA/////wIAAAADAAAA",
+        "note": "块原样字节, 含块头"
+      }
+    }
+  ],
+  "coverage": {
+    "bytes": 284,
+    "chunk_bytes": 276,
+    "tiles_to_eof": true,
+    "header_size_declared": 284,
+    "header_size_actual": 284,
+    "chunks": 6
+  },
+  "string_pool": {
+    "encoding": "utf-8",
+    "count": 4,
+    "note": "字符串池是块内派生的只读视图, 回写以块原样字节为准"
+  },
+  "stats": {
+    "elements": 1,
+    "attributes": 1,
+    "texts": 0,
+    "namespaces": 1,
+    "xml_chars": 63,
+    "truncated": false
+  },
+  "xml": {
+    "file": "layout.xml",
+    "sha256": "c3e25a2e1e1aea6ed5a3b5158c21b20b9a5f0c9547788ea73fc597da35398b84",
+    "note": "可读布局, 仅供阅读与对照; 改它不会改变回写结果"
+  }
+}

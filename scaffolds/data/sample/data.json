@@ -1,0 +1,30 @@
+{
+  "project": "immirror-scaffold",
+  "version": 1,
+  "category": "data",
+  "format": "text-table",
+  "source": {
+    "name": "ARstylesetting.csv",
+    "stem": "ARstylesetting",
+    "extension": ".csv",
+    "size": 180,
+    "sha256": "f17e153df69a6c15fdd3e702b9bdc4c85567031d591f4ff3e7c7513dc168a584"
+  },
+  "codec": "container-text-xor16-zlib",
+  "encoding": "gbk",
+  "bom": false,
+  "eol": "crlf",
+  "text_file": "ARstylesetting.csv",
+  "text_size": 212,
+  "text_sha256": "598d33ff43ad5b686adad7406c45ef305287325159ea575302e892cf97768b59",
+  "line_count": 6,
+  "columns": [
+    "风格名称ID",
+    "色相",
+    "饱和度",
+    "明度",
+    "锐化",
+    "立体感（否0，是1）",
+    "着色（否0，是1）"
+  ]
+}
