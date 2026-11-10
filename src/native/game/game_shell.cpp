@@ -19,8 +19,10 @@ namespace {
 
 constexpr const char* kTag = "ImMirrorGame";
 
-/* 视距: 以区块列为单位, 4 表示 9x9 列. */
-constexpr int32_t kViewDistanceChunks = 4;
+/* 视距: 以区块列为单位, 按设备分级在 2 到 4 之间取值. */
+constexpr int32_t kViewDistanceHigh = 4;
+constexpr int32_t kViewDistanceMedium = 3;
+constexpr int32_t kViewDistanceLow = 2;
 
 /* 相机参数. */
 constexpr float kFovYDegrees = 70.0f;
@@ -90,10 +92,10 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         IM_LOGI(kTag, "world loaded from save, chunks=%d", world_->LoadedChunkCount());
     } else {
         /* 先让中心区块生成地形, 再按地表高度放置玩家, 否则出生点会落在虚空. */
-        world_->Update(core::Vec3{8.0f, 0.0f, 8.0f}, kViewDistanceChunks);
+        world_->Update(core::Vec3{8.0f, 0.0f, 8.0f}, viewDistanceChunks_);
         player_->Spawn(*world_, 8.0f, 8.0f);
     }
-    world_->Update(player_->Position(), kViewDistanceChunks);
+    world_->Update(player_->Position(), viewDistanceChunks_);
     IM_LOGI(kTag, "game shell ready, chunks=%d", world_->LoadedChunkCount());
 }
 
@@ -132,6 +134,18 @@ void GameShell::OnSurfaceLost() {
     IM_LOGI(kTag, "game shell surface released");
 }
 
+void GameShell::SetQualityFromGrade(const char* grade) {
+    qualityGrade_ = (grade != nullptr && grade[0] != '\0') ? grade : "high";
+    if (std::strcmp(qualityGrade_, "low") == 0) {
+        viewDistanceChunks_ = kViewDistanceLow;
+    } else if (std::strcmp(qualityGrade_, "medium") == 0) {
+        viewDistanceChunks_ = kViewDistanceMedium;
+    } else {
+        viewDistanceChunks_ = kViewDistanceHigh;
+    }
+    IM_LOGI(kTag, "quality grade=%s view distance=%d", qualityGrade_, viewDistanceChunks_);
+}
+
 void GameShell::SetViewportSize(int32_t width, int32_t height) {
     width_ = width;
     height_ = height;
@@ -143,7 +157,7 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     }
     elapsedSeconds_ += deltaSeconds;
     const core::Vec3 position = player_->Position();
-    world_->Update(position, kViewDistanceChunks);
+    world_->Update(position, viewDistanceChunks_);
     player_->Update(deltaSeconds, input, *world_);
     HandleTapActions(input);
     LogStatus(deltaSeconds);

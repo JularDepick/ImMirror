@@ -190,6 +190,9 @@ void Runtime::LogDeviceProfileOnce() {
         IM_LOGI(kTag, "device profile %s=%s", entry.first.c_str(), entry.second.c_str());
     }
     profileLogged_ = true;
+    if (shell_ != nullptr) {
+        shell_->SetQualityFromGrade(grade_.c_str());
+    }
 }
 
 void Runtime::OnWindowCreated(ANativeWindow* window) {

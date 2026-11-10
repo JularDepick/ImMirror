@@ -47,6 +47,9 @@ public:
 
     void SetViewportSize(int32_t width, int32_t height);
 
+    /* 按设备分级 (high/medium/low) 调整视距等画质参数. */
+    void SetQualityFromGrade(const char* grade);
+
     void Update(double deltaSeconds, const platform::InputSnapshot& input);
 
     /* 在图形上下文中绘制一帧场景; 由渲染设备在清屏后回调. */
@@ -81,6 +84,8 @@ private:
     double logAccumulator_ = 0.0;
     double saveAccumulator_ = 0.0;
     std::string savePath_;
+    int32_t viewDistanceChunks_ = 4;
+    const char* qualityGrade_ = "high";
 };
 
 }  /* namespace game */

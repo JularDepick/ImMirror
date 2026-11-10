@@ -17,3 +17,12 @@
 *.db binary
 *.zip binary
 *.apk binary
+*.omod binary
+*.otex binary
+*.emo binary
+*.ent binary
+*.fcm binary
+*.vmo binary
+*.vox binary
+*.oanim binary
+*.thumb binary
