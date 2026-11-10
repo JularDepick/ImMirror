@@ -1,0 +1,20 @@
+# 原生外置构建目录
+native/build/
+
+# 原生库二进制由 scripts/build-native.sh 生成, 只保留目录占位
+android/app/src/main/jniLibs/**/*.so
+
+# Gradle 与 Android 构建产物
+android/.gradle/
+android/build/
+android/app/build/
+android/.cxx/
+android/captures/
+android/.idea/
+android/*.iml
+android/local.properties
+
+# 临时目录与日志
+temp/
+tmp/
+*.log

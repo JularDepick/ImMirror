@@ -1,20 +1,10 @@
-# Agent Runtime
-AGENTS.md
-.agent/
-.agents/
-
-# Temp
+# 临时目录与构建产物
 temp/
 tmp/
-
-# Build
 build/
 dist/
 release/
 releases/
-
-# Other
-single-branch/
 
 # Android / Gradle
 .gradle/
