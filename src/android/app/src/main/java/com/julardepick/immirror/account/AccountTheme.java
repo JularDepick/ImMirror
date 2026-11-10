@@ -28,21 +28,21 @@ public final class AccountTheme {
     /* 作者信息显示名, 页面底部统一由此常量生成. */
     public static final String AUTHOR_NAME = "JularDepick";
 
-    public static final int COLOR_PAGE = 0xFF0B1220;
-    public static final int COLOR_SCRIM = 0x8C05090F;
-    public static final int COLOR_CARD = 0xF2141E30;
-    public static final int COLOR_CARD_STROKE = 0x1F7FD3C4;
-    public static final int COLOR_FIELD = 0xFF0C1524;
-    public static final int COLOR_FIELD_STROKE = 0xFF24354E;
-    public static final int COLOR_ACCENT = 0xFF5FD3C4;
-    public static final int COLOR_ACCENT_TEXT = 0xFF06231F;
-    public static final int COLOR_ACCENT_SOFT = 0x2E5FD3C4;
-    public static final int COLOR_TEXT = 0xFFF1F6FB;
-    public static final int COLOR_TEXT_MUTED = 0xFF94A5BA;
-    public static final int COLOR_TEXT_FAINT = 0xFF5C6D82;
+    public static final int COLOR_PAGE = 0xFF1A1209;
+    public static final int COLOR_SCRIM = 0x8C0D0906;
+    public static final int COLOR_CARD = 0xF2281C10;
+    public static final int COLOR_CARD_STROKE = 0x3FC08A4E;
+    public static final int COLOR_FIELD = 0xFF1F150C;
+    public static final int COLOR_FIELD_STROKE = 0xFF5A4028;
+    public static final int COLOR_ACCENT = 0xFFC88A4A;
+    public static final int COLOR_ACCENT_TEXT = 0xFF2A1B0C;
+    public static final int COLOR_ACCENT_SOFT = 0x2EC88A4A;
+    public static final int COLOR_TEXT = 0xFFF5EEDC;
+    public static final int COLOR_TEXT_MUTED = 0xFFB8A88C;
+    public static final int COLOR_TEXT_FAINT = 0xFF7A6A52;
     public static final int COLOR_ERROR = 0xFFFF8A80;
-    public static final int COLOR_SUCCESS = 0xFF6EE7A8;
-    public static final int COLOR_DANGER = 0xFFE07070;
+    public static final int COLOR_SUCCESS = 0xFF8FC46A;
+    public static final int COLOR_DANGER = 0xFFD9603C;
 
     /* 卡片最大宽度, 横向大屏时避免表单被拉得过宽. */
     public static final int CARD_MAX_WIDTH_DP = 560;

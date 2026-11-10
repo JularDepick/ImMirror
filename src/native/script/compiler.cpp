@@ -151,7 +151,9 @@ bool Compiler::Error(uint32_t line, const std::string& message) {
 uint32_t Compiler::EmitABC(Op op, uint32_t a, uint32_t b, uint32_t c, uint32_t line) {
     Proto& proto = *Fs().proto;
     proto.code.push_back(EncodeABC(op, a, b, c));
-    proto.lines.push_back(options_.stripLineInfo ? 0u : line);
+    if (!options_.stripLineInfo) {
+        proto.lines.push_back(line);
+    }
     currentLine_ = line;
     return static_cast<uint32_t>(proto.code.size() - 1);
 }
@@ -159,7 +161,9 @@ uint32_t Compiler::EmitABC(Op op, uint32_t a, uint32_t b, uint32_t c, uint32_t l
 uint32_t Compiler::EmitABx(Op op, uint32_t a, uint32_t bx, uint32_t line) {
     Proto& proto = *Fs().proto;
     proto.code.push_back(EncodeABx(op, a, bx));
-    proto.lines.push_back(options_.stripLineInfo ? 0u : line);
+    if (!options_.stripLineInfo) {
+        proto.lines.push_back(line);
+    }
     currentLine_ = line;
     return static_cast<uint32_t>(proto.code.size() - 1);
 }
@@ -167,7 +171,9 @@ uint32_t Compiler::EmitABx(Op op, uint32_t a, uint32_t bx, uint32_t line) {
 uint32_t Compiler::EmitAsBx(Op op, uint32_t a, int32_t sbx, uint32_t line) {
     Proto& proto = *Fs().proto;
     proto.code.push_back(EncodeAsBx(op, a, sbx));
-    proto.lines.push_back(options_.stripLineInfo ? 0u : line);
+    if (!options_.stripLineInfo) {
+        proto.lines.push_back(line);
+    }
     currentLine_ = line;
     return static_cast<uint32_t>(proto.code.size() - 1);
 }
@@ -959,7 +965,9 @@ bool Compiler::CompileFunctionInto(uint32_t protoIndex, const ast::FunctionDef& 
             break;
         }
     }
-    proto.lines.push_back(options_.stripLineInfo ? 0u : def.line);
+    if (!options_.stripLineInfo) {
+        proto.lines.push_back(def.line);
+    }
     proto.code.push_back(EncodeABC(Op::ReturnZero, 0, 0, 0));
     if (fs->maxRegs < 1) {
         fs->maxRegs = 1;
@@ -1006,7 +1014,9 @@ CompileResult Compiler::Run(const ast::Module& module, const std::string& chunkN
         }
     }
 
-    mainProto.lines.push_back(1);
+    if (!options_.stripLineInfo) {
+        mainProto.lines.push_back(1);
+    }
     mainProto.code.push_back(EncodeABC(Op::ReturnZero, 0, 0, 0));
     mainProto.numRegs = static_cast<uint32_t>(Fs().maxRegs < 1 ? 1 : Fs().maxRegs);
     stack_.clear();

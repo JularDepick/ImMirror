@@ -27,6 +27,8 @@ private:
     bool Check(TokenType type) const;
     bool Match(TokenType type);
     bool Expect(TokenType type, const char* what);
+    /* 读取标识符并前进, 名字通过 out 返回 */
+    bool ExpectIdentifier(std::string& out, const char* what);
     void Advance();
     void ReportError(uint32_t line, uint32_t column, const std::string& message);
     void Synchronize();

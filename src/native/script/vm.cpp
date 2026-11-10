@@ -760,6 +760,11 @@ void Vm::Run() {
                     break;
                 }
                 regs[a] = value;
+                if (sandbox_.MemoryExceeded()) {
+                    error_ = VmError::MemoryQuota;
+                    errorMessage_ = "内存配额超限";
+                    break;
+                }
                 break;
             }
             case Op::Unm: {
@@ -863,6 +868,14 @@ void Vm::Run() {
                         break;
                     }
                     if (!PlaceResults(resultAbs, c, produced, static_cast<uint32_t>(count))) {
+                        break;
+                    }
+                    if (error_ != VmError::None) {
+                        break;
+                    }
+                    if (sandbox_.MemoryExceeded()) {
+                        error_ = VmError::MemoryQuota;
+                        errorMessage_ = "内存配额超限";
                         break;
                     }
                     if (c == 0) {

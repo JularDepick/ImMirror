@@ -137,8 +137,12 @@ adb -s <设备序列号> shell am start -n com.julardepick.immirror/.LauncherAct
 | 时机 | 调用 | 频率 |
 |:---:|:---|:---:|
 | 进入游戏 | `nativeOnDeviceProfile(payload)` | 一次 |
+| 进入游戏 | `nativeSettingsInit(dataPath)` | 一次 |
+| 进入游戏 | `nativeAttachAudio(pool, ids)` | 一次 |
 | 进入游戏 | `nativeStart()` | 一次 |
-| 退出游戏 | `nativeStop()` | 一次 |
+| 设置界面 | `nativeSettingsGetInt` `nativeSettingsSetInt` `nativeSettingsExport` `nativeSettingsDescribe` `nativeSettingsReset` | 低频 |
+| 进入后台 | `nativeSettingsFlush()` | 一次 |
+| 退出游戏 | `nativeDetachAudio()` `nativeSettingsFlush()` `nativeStop()` | 各一次 |
 
 设备画像以扁平键值文本下发, 每行一个 `key=value`, 原生侧无需引入 JSON 解析依赖。
 逐帧路径上没有任何 JNI 调用: 输入由胶水层直接解析为原生快照, 渲染与统计全部在原生线程内完成。
@@ -146,7 +150,7 @@ adb -s <设备序列号> shell am start -n com.julardepick.immirror/.LauncherAct
 ### 4.3 日志
 
 ```bash
-adb logcat -s ImMirrorCore ImMirrorPlatform ImMirrorRender ImMirrorHost ImMirrorJni ImMirrorLauncher
+adb logcat -s ImMirrorCore ImMirrorPlatform ImMirrorRender ImMirrorHost ImMirrorJni ImMirrorGame ImMirrorAudio ImMirrorSettings ImMirrorLauncher
 ```
 
 | 标签 | 来源 |
@@ -156,6 +160,9 @@ adb logcat -s ImMirrorCore ImMirrorPlatform ImMirrorRender ImMirrorHost ImMirror
 | `ImMirrorRender` | GLES 后端, 上下文创建与释放 |
 | `ImMirrorHost` | Java 与原生共享状态 |
 | `ImMirrorJni` | JNI 导出入口 |
+| `ImMirrorGame` | 装配层, 状态行与设置生效结果 |
+| `ImMirrorAudio` | 音效池绑定与播放音量 |
+| `ImMirrorSettings` | 设置的载入, 裁剪与落盘 |
 | `ImMirrorLauncher` | 入口界面的设备采集结果与账号资料刷新 |
 | `ImMirrorLogin` | 登录界面的接口失败记录 (错误码与服务端描述) |
 
@@ -206,6 +213,7 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 | `native/game/` | 装配层, 把世界, 玩家, 渲染与音频接到主循环 |
 | `native/audio/` | 方块交互音效, 经平台音频池播放 |
 | `native/ui/` | 游戏内界面覆盖层, 准星, 虚拟摇杆与跳跃按钮 |
+| `native/settings/` | 设置键表与默认值, 单例快照, 键值文件持久化, 设置到玩法参数的换算 |
 
 ### 5.1 资源与图集
 
@@ -236,7 +244,36 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 
 ### 5.4 画质分级
 
-平台侧按设备给出 high / mid / low 三级, 原生侧据此调整视距为 4 / 3 / 2 区块列。
+平台侧按设备给出 high / mid / low 三级, 原生侧只在首次运行且设置文件里没有 `view_distance` 时,
+按 3 / 2 / 1 播种视野距离档位; 用户调整过以后以设置为准, 不再被分级覆盖。
+
+### 5.5 设置
+
+设置项的键名, 默认值与取值范围取自原版 `setting.lua` 的默认表, 共 31 项, 与原版 `setGameData` 的键名逐字一致。
+键表, 换算常量与持久化集中在 `native/settings/`, 新增或调整设置项只需改键表的一行。
+
+| 项 | 取值 |
+|:---:|:---|
+| 存储位置 | 应用内部存储的 `settings/immirror-settings.cfg`, 一行一个 `key=value` |
+| 写入方式 | 原生侧写入后置脏, 主循环低频落盘; 先写临时文件再改名, 掉电不会留下半个文件 |
+| 读取方式 | 原生侧持有原子快照, 逐帧路径无锁, 也无 JNI 调用 |
+| 取值范围 | 写入即裁剪; 视野距离吸附到 1 / 2 / 3 / 5 / 8 五档; 经典模式与摇杆模式互斥 |
+| Java 接口 | `NativeBridge` 的 `initSettings` 与 `getSetting` 与 `setSetting` 与 `exportSettings` 与 `describeSettings` 与 `resetSetting` 与 `flushSettings` |
+
+已接入玩法的项:
+
+| 设置项 | 作用点 |
+|:---:|:---|
+| `sensitivity` | 视角速度, 灵敏度 50 对应横向拖满屏宽 150 度, 系数范围 0.2 至 1.8 |
+| `view_distance` | 区块加载半径, 取值即区块列数 |
+| `volume` 与 `soundopen` | 音效播放增益与开关 |
+| `autojump` | 前方一格台阶且持续前推时自动起跳 |
+| `classical` 与 `rocker` | 经典固定摇杆与浮动摇杆 |
+| `reversalY` | 反转视角纵向拖动 |
+| `camerashake` | 镜头摇晃 |
+| `hideui` | 隐藏界面覆盖层 |
+
+其余项只做存取, 待对应系统 (光影, 雾效, 树形, 限帧, 震动, 雷达转向, 语音等) 落地后接入。
 
 ## 六、已知限制
 

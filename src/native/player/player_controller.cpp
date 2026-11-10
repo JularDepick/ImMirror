@@ -446,6 +446,9 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     if (jumpRequested_ && onGround_) {
         velocity_.y = kJumpSpeed;
         onGround_ = false;
+        /* 跳跃真正生效的时刻打一条日志, 便于区分按钮, 双击与键盘三条来源. */
+        IM_LOGI(kTag, "jump applied vy=%.2f feet=%.2f", static_cast<double>(velocity_.y),
+                static_cast<double>(position_.y));
     }
     jumpRequested_ = false;
 

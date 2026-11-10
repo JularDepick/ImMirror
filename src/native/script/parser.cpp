@@ -81,6 +81,21 @@ bool Parser::Expect(TokenType type, const char* what) {
     return false;
 }
 
+bool Parser::ExpectIdentifier(std::string& out, const char* what) {
+    if (!Check(TokenType::Identifier)) {
+        const Token& token = Current();
+        std::string message = "期望 ";
+        message += what;
+        message += ", 实际得到 ";
+        message += TokenTypeName(token.type);
+        ReportError(token.line, token.column, message);
+        return false;
+    }
+    out = Current().text;
+    Advance();
+    return true;
+}
+
 /*
  * 错误恢复: 跳过当前语句的剩余部分, 停在分号或右花括号之后,
  * 使后续语句仍能被解析.
@@ -110,9 +125,14 @@ bool Parser::ParseModule(ast::Module& module, std::vector<Diagnostic>& errors) {
         if (Match(TokenType::Semicolon)) {
             continue;
         }
+        const size_t startIndex = index_;
         ast::StmtPtr statement;
         if (!ParseStatement(statement)) {
             Synchronize();
+            /* 恢复过程没有任何前进时强制跳过当前单元, 避免死循环 */
+            if (index_ == startIndex) {
+                Advance();
+            }
             continue;
         }
         if (statement) {
@@ -179,9 +199,13 @@ bool Parser::ParseBlock(std::vector<ast::StmtPtr>& out) {
         if (Match(TokenType::Semicolon)) {
             continue;
         }
+        const size_t startIndex = index_;
         ast::StmtPtr statement;
         if (!ParseStatement(statement)) {
             Synchronize();
+            if (index_ == startIndex) {
+                Advance();
+            }
             continue;
         }
         if (statement) {
@@ -199,17 +223,16 @@ bool Parser::ParseVarDecl(ast::StmtPtr& out, bool expectSemicolon) {
     ast::StmtPtr stmt = MakeStmt(ast::StmtKind::VarDecl, keyword.line);
     stmt->isConst = isConst;
 
-    if (!Expect(TokenType::Identifier, "变量名")) {
+    std::string name;
+    if (!ExpectIdentifier(name, "变量名")) {
         return false;
     }
-    stmt->names.push_back(Current().text);
-    Advance();
+    stmt->names.push_back(name);
     while (Match(TokenType::Comma)) {
-        if (!Expect(TokenType::Identifier, "变量名")) {
+        if (!ExpectIdentifier(name, "变量名")) {
             return false;
         }
-        stmt->names.push_back(Current().text);
-        Advance();
+        stmt->names.push_back(name);
     }
 
     if (Match(TokenType::Assign)) {
@@ -228,26 +251,26 @@ bool Parser::ParseFunctionDecl(ast::StmtPtr& out) {
     const Token& keyword = Current();
     Advance();
 
-    if (!Expect(TokenType::Identifier, "函数名")) {
+    std::string name;
+    if (!ExpectIdentifier(name, "函数名")) {
         return false;
     }
     ast::StmtPtr stmt = MakeStmt(ast::StmtKind::FunctionDecl, keyword.line);
     stmt->func.reset(new ast::FunctionDef());
-    stmt->func->name = Current().text;
+    stmt->func->name = name;
     stmt->func->line = keyword.line;
-    stmt->names.push_back(stmt->func->name);
-    Advance();
+    stmt->names.push_back(name);
 
     if (!Expect(TokenType::LParen, "(")) {
         return false;
     }
     if (!Check(TokenType::RParen)) {
         for (;;) {
-            if (!Expect(TokenType::Identifier, "参数名")) {
+            std::string param;
+            if (!ExpectIdentifier(param, "参数名")) {
                 return false;
             }
-            stmt->func->params.push_back(Current().text);
-            Advance();
+            stmt->func->params.push_back(param);
             if (!Match(TokenType::Comma)) {
                 break;
             }
@@ -663,13 +686,14 @@ bool Parser::ParsePostfix(ast::ExprPtr& out) {
     }
     for (;;) {
         if (Match(TokenType::Dot)) {
-            if (!Expect(TokenType::Identifier, "字段名")) {
+            const uint32_t fieldLine = Current().line;
+            std::string fieldName;
+            if (!ExpectIdentifier(fieldName, "字段名")) {
                 return false;
             }
-            ast::ExprPtr field = MakeExpr(ast::ExprKind::Field, Current().line);
+            ast::ExprPtr field = MakeExpr(ast::ExprKind::Field, fieldLine);
             field->a = std::move(out);
-            field->stringValue = Current().text;
-            Advance();
+            field->stringValue = fieldName;
             out = std::move(field);
             continue;
         }
@@ -826,11 +850,11 @@ bool Parser::ParseFunctionExpression(ast::ExprPtr& out) {
     }
     if (!Check(TokenType::RParen)) {
         for (;;) {
-            if (!Expect(TokenType::Identifier, "参数名")) {
+            std::string param;
+            if (!ExpectIdentifier(param, "参数名")) {
                 return false;
             }
-            expr->func->params.push_back(Current().text);
-            Advance();
+            expr->func->params.push_back(param);
             if (!Match(TokenType::Comma)) {
                 break;
             }

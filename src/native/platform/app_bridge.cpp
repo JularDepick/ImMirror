@@ -378,7 +378,13 @@ void AppBridge::AccumulateMotion(PointerState& track, float x, float y) {
     const float deltaY = y - track.y;
     track.x = x;
     track.y = y;
-    if (std::fabs(deltaX) < kPointerJumpLimit && std::fabs(deltaY) < kPointerJumpLimit) {
+    /*
+     * 跟踪表里存的是设备像素, 跳变阈值按屏宽折算成像素再比较;
+     * 超过阈值的单步位移视为触点位置跳变, 不参与累计.
+     */
+    const int32_t width = SurfaceWidth();
+    const float limit = kPointerJumpLimit * static_cast<float>(width > 0 ? width : 1);
+    if (std::fabs(deltaX) < limit && std::fabs(deltaY) < limit) {
         track.motionX += deltaX;
         track.motionY += deltaY;
     }
