@@ -24,3 +24,4 @@ android/app/src/main/assets/generated/
 
 # 由 scripts/pack_assets.py 复制到安装包的资源子集
 android/app/src/main/assets/sounds/
+android/app/src/main/assets/ui/

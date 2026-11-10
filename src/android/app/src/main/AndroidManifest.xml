@@ -38,6 +38,14 @@
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- 设置界面: 从账号面板进入, 键表与取值范围由原生设置层动态下发 -->
+        <activity
+            android:name=".settings.SettingsActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/settings_title"
+            android:screenOrientation="sensorLandscape" />
+
         <!-- 游戏界面: NativeActivity, 主循环与输入全部在原生线程内完成 -->
         <activity
             android:name=".PlayActivity"

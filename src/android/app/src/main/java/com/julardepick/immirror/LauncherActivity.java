@@ -23,6 +23,7 @@ import com.julardepick.immirror.account.LoginActivity;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
 import com.julardepick.immirror.device.DeviceProfile;
+import com.julardepick.immirror.settings.SettingsActivity;
 
 import java.util.List;
 
@@ -293,6 +294,15 @@ public final class LauncherActivity extends Activity {
         logoutParams.leftMargin = AccountTheme.dp(this, 10f);
         actions.addView(logoutButton, logoutParams);
         card.addView(actions, AccountTheme.block(this, 14f));
+
+        /*
+         * 设置入口放在账号面板: 游戏内是原生 HUD, 不承载 Java 界面,
+         * 因此所有设置改动都从本页进入, 返回后按需重新进入游戏.
+         */
+        Button settings = AccountTheme.outlineButton(this, getString(R.string.launcher_settings),
+                AccountTheme.COLOR_ACCENT);
+        settings.setOnClickListener(view -> startActivity(new Intent(this, SettingsActivity.class)));
+        card.addView(settings, AccountTheme.block(this, 10f));
         return card;
     }
 

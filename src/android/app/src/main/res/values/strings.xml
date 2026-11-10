@@ -15,6 +15,24 @@
     <string name="launcher_logout">退出登录</string>
     <string name="launcher_logout_confirm">再按一次退出登录</string>
     <string name="launcher_session_invalid">登录状态已失效, 请重新登录</string>
+    <string name="launcher_settings">设置</string>
+
+    <string name="settings_title">设置</string>
+    <string name="settings_subtitle">改动即时生效, 返回时写入本地</string>
+    <string name="settings_summary_format">共 %1$d 项, 已生效 %2$d 项, 暂未生效 %3$d 项</string>
+    <string name="settings_legend">标注暂未生效的项会照常保存, 原生侧接线后自动起作用</string>
+    <string name="settings_group_count_format">%1$d 项</string>
+    <string name="settings_badge_unwired">暂未生效</string>
+    <string name="settings_value_on">开</string>
+    <string name="settings_value_off">关</string>
+    <string name="settings_choice_format">%1$s (%2$d)</string>
+    <string name="settings_reset">恢复默认</string>
+    <string name="settings_reset_confirm">再按一次恢复默认</string>
+    <string name="settings_back">返回</string>
+    <string name="settings_notice_saved_format">已保存 %1$s = %2$s</string>
+    <string name="settings_notice_reset">已恢复默认设置</string>
+    <string name="settings_notice_unavailable">原生设置层未就绪, 暂时无法读取设置</string>
+    <string name="settings_notice_unknown_key">该设置项不被原生层识别, 本次改动未生效</string>
 
     <string name="account_tab_login">登录</string>
     <string name="account_tab_register">注册</string>
