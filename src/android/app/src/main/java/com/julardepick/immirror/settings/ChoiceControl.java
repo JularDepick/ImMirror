@@ -67,7 +67,7 @@ public final class ChoiceControl extends SettingControl {
     }
 
     private void style(TextView segment, boolean selected) {
-        segment.setTextColor(selected ? AccountTheme.COLOR_ACCENT_TEXT : AccountTheme.COLOR_TEXT_MUTED);
+        segment.setTextColor(selected ? AccountTheme.COLOR_TEXT : AccountTheme.COLOR_TEXT_MUTED);
         segment.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
         if (selected) {
             segment.setBackground(AccountTheme.pressed(0x33000000, AccountTheme.rounded(context,

@@ -20,6 +20,7 @@ import com.julardepick.immirror.account.ApiClient;
 import com.julardepick.immirror.account.ApiException;
 import com.julardepick.immirror.account.ErrorMessages;
 import com.julardepick.immirror.account.LoginActivity;
+import com.julardepick.immirror.account.NoticeBar;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
 import com.julardepick.immirror.device.DeviceProfile;
@@ -58,6 +59,7 @@ public final class LauncherActivity extends Activity {
     private TextView accountEmail;
     private TextView accountBalance;
     private TextView noticeView;
+    private NoticeBar noticeBar;
     private Button logoutButton;
 
     /* 本次进入是否已自动打开游戏, 避免从游戏返回后再次自动进入. */
@@ -183,15 +185,11 @@ public final class LauncherActivity extends Activity {
     }
 
     private void showNotice(CharSequence message, int color) {
-        noticeView.setText(message);
-        noticeView.setTextColor(color);
-        noticeView.setBackground(AccountTheme.rounded(this, 0x1FFF8A80, 8f));
-        noticeView.setVisibility(View.VISIBLE);
+        noticeBar.show(message, color);
     }
 
     private void clearNotice() {
-        noticeView.setText("");
-        noticeView.setVisibility(View.GONE);
+        noticeBar.clear();
     }
 
     private void logProfile(DeviceProfile deviceProfile) {
@@ -229,8 +227,7 @@ public final class LauncherActivity extends Activity {
         deviceCard.setOrientation(LinearLayout.VERTICAL);
         int innerPadding = AccountTheme.dp(this, 18f);
         deviceCard.setPadding(innerPadding, innerPadding, innerPadding, innerPadding);
-        deviceCard.setBackground(AccountTheme.stroked(this, AccountTheme.COLOR_CARD,
-                AccountTheme.CARD_RADIUS_DP, AccountTheme.COLOR_CARD_STROKE, 1f));
+        deviceCard.setBackground(AccountTheme.panelBackground(this));
 
         TextView deviceHeader = AccountTheme.body(this, getString(R.string.launcher_device_header),
                 AccountTheme.COLOR_TEXT, 14f);
@@ -258,8 +255,7 @@ public final class LauncherActivity extends Activity {
         card.setOrientation(LinearLayout.VERTICAL);
         int padding = AccountTheme.dp(this, 18f);
         card.setPadding(padding, padding, padding, padding);
-        card.setBackground(AccountTheme.stroked(this, AccountTheme.COLOR_CARD,
-                AccountTheme.CARD_RADIUS_DP, AccountTheme.COLOR_CARD_STROKE, 1f));
+        card.setBackground(AccountTheme.panelBackground(this));
 
         card.addView(AccountTheme.label(this, getString(R.string.launcher_account_header)));
 
@@ -274,10 +270,8 @@ public final class LauncherActivity extends Activity {
                 AccountTheme.COLOR_ACCENT, 14f);
         card.addView(accountBalance, AccountTheme.block(this, 6f));
 
-        noticeView = AccountTheme.body(this, "", AccountTheme.COLOR_ERROR, 13f);
-        int noticePadding = AccountTheme.dp(this, 10f);
-        noticeView.setPadding(noticePadding, noticePadding, noticePadding, noticePadding);
-        noticeView.setVisibility(View.GONE);
+        noticeView = AccountTheme.notice(this);
+        noticeBar = new NoticeBar(noticeView);
         card.addView(noticeView, AccountTheme.block(this, 10f));
 
         LinearLayout actions = new LinearLayout(this);

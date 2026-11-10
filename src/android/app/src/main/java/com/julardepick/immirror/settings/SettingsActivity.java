@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.julardepick.immirror.R;
 import com.julardepick.immirror.account.AccountTheme;
+import com.julardepick.immirror.account.NoticeBar;
 import com.julardepick.immirror.bridge.NativeBridge;
 
 import java.util.ArrayList;
@@ -38,16 +39,13 @@ public final class SettingsActivity extends Activity implements SettingControl.L
     /* 恢复默认的二次确认等待时长, 超时回到初始按钮状态. */
     private static final long CONFIRM_TIMEOUT_MS = 3000L;
 
-    /* 页面内提示条的停留时长. */
-    private static final long NOTICE_TIMEOUT_MS = 4000L;
-
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Map<String, SettingControl> controls = new LinkedHashMap<>();
 
     private List<SettingsItem> items = new ArrayList<>();
     private LinearLayout groupsHost;
     private TextView summaryView;
-    private TextView noticeBar;
+    private NoticeBar noticeBar;
     private Button resetButton;
 
     private boolean resetPending;
@@ -59,15 +57,6 @@ public final class SettingsActivity extends Activity implements SettingControl.L
             resetPending = false;
             if (resetButton != null) {
                 resetButton.setText(R.string.settings_reset);
-            }
-        }
-    };
-
-    private final Runnable noticeTimeout = new Runnable() {
-        @Override
-        public void run() {
-            if (noticeBar != null) {
-                noticeBar.setVisibility(View.GONE);
             }
         }
     };
@@ -95,7 +84,9 @@ public final class SettingsActivity extends Activity implements SettingControl.L
     @Override
     protected void onDestroy() {
         handler.removeCallbacks(resetTimeout);
-        handler.removeCallbacks(noticeTimeout);
+        if (noticeBar != null) {
+            noticeBar.clear();
+        }
         NativeBridge.flushSettings();
         super.onDestroy();
     }
@@ -159,8 +150,7 @@ public final class SettingsActivity extends Activity implements SettingControl.L
         int horizontal = AccountTheme.dp(this, 18f);
         int vertical = AccountTheme.dp(this, 14f);
         card.setPadding(horizontal, vertical, horizontal, vertical);
-        card.setBackground(AccountTheme.stroked(this, AccountTheme.COLOR_CARD,
-                AccountTheme.CARD_RADIUS_DP, AccountTheme.COLOR_CARD_STROKE, 1f));
+        card.setBackground(AccountTheme.panelBackground(this));
 
         LinearLayout titleRow = new LinearLayout(this);
         titleRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -202,7 +192,7 @@ public final class SettingsActivity extends Activity implements SettingControl.L
 
     private View buildDivider() {
         View line = new View(this);
-        line.setBackgroundColor(0x26C08A4E);
+        line.setBackgroundColor((AccountTheme.COLOR_CARD_STROKE & 0x00FFFFFF) | 0x33000000);
         line.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 Math.max(1, AccountTheme.dp(this, 0.5f))));
         return line;
@@ -248,19 +238,11 @@ public final class SettingsActivity extends Activity implements SettingControl.L
         showNotice(getString(R.string.settings_notice_reset), AccountTheme.COLOR_ACCENT);
     }
 
+    /* 提示条由 AccountTheme 的提示条工厂生成, 动效与其它页面共用 NoticeBar. */
     private void showNotice(CharSequence message, int color) {
-        handler.removeCallbacks(noticeTimeout);
-        noticeBar.setText(message);
-        noticeBar.setTextColor(color);
-        noticeBar.setBackground(AccountTheme.stroked(this, tint(color),
-                AccountTheme.FIELD_RADIUS_DP, color, 1f));
-        noticeBar.setVisibility(View.VISIBLE);
-        handler.postDelayed(noticeTimeout, NOTICE_TIMEOUT_MS);
-    }
-
-    /* 提示条底色取提示文字的同色半透明版本. */
-    private static int tint(int color) {
-        return (color & 0x00FFFFFF) | 0x26000000;
+        if (noticeBar != null) {
+            noticeBar.show(message, color);
+        }
     }
 
     private String describeValue(SettingsItem item, int value) {
@@ -342,16 +324,14 @@ public final class SettingsActivity extends Activity implements SettingControl.L
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
 
-        noticeBar = AccountTheme.body(this, "", AccountTheme.COLOR_SUCCESS, 13f);
-        noticeBar.setVisibility(View.GONE);
-        int noticePadding = AccountTheme.dp(this, 10f);
-        noticeBar.setPadding(noticePadding, noticePadding, noticePadding, noticePadding);
+        TextView noticeView = AccountTheme.notice(this);
+        noticeBar = new NoticeBar(noticeView);
         FrameLayout.LayoutParams noticeParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.BOTTOM);
         int margin = AccountTheme.dp(this, 16f);
         noticeParams.setMargins(margin, 0, margin, margin);
-        root.addView(noticeBar, noticeParams);
+        root.addView(noticeView, noticeParams);
         return root;
     }
 

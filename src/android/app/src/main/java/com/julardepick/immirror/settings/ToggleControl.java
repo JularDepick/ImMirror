@@ -15,8 +15,8 @@ import com.julardepick.immirror.account.AccountTheme;
  */
 public final class ToggleControl extends SettingControl {
 
-    /* 开关关闭时的轨道色, 取自卡片底色与描边之间的中间调. */
-    private static final int TRACK_OFF = 0x593A2A18;
+    /* 开关关闭时的轨道色, 由主题描边色降透明度得到, 换肤时自动跟随. */
+    private static final int TRACK_OFF = (AccountTheme.COLOR_FIELD_STROKE & 0x00FFFFFF) | 0x59000000;
 
     private final Switch toggle;
 
