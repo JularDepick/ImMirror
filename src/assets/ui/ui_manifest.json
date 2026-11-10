@@ -1,0 +1,1730 @@
+{
+ "generated_by": "single-branch/client/temp/ui_extract/ui_extract.py",
+ "assets": [
+  {
+   "path": "button/alert_orange.png",
+   "width": 158,
+   "height": 61,
+   "category": "button",
+   "purpose": "提醒按钮 158x61, 橙底黑边",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_orange",
+   "source_rect": [
+    183,
+    574,
+    158,
+    61
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 45,
+    "top": 0,
+    "right": 46,
+    "bottom": 0
+   },
+   "template": "TemplateBkg4"
+  },
+  {
+   "path": "button/circle_blue.png",
+   "width": 50,
+   "height": 53,
+   "category": "button",
+   "purpose": "圆形按钮 50x53",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_circle_blue",
+   "source_rect": [
+    242,
+    455,
+    50,
+    53
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "button/circle_gray.png",
+   "width": 41,
+   "height": 44,
+   "category": "button",
+   "purpose": "圆形按钮灰态",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_circle_gray",
+   "source_rect": [
+    424,
+    978,
+    41,
+    44
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "button/compact_blue.png",
+   "width": 40,
+   "height": 43,
+   "category": "button",
+   "purpose": "小号按钮 40x43, 蓝底",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_blue",
+   "source_rect": [
+    466,
+    785,
+    40,
+    43
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 15,
+    "top": 0,
+    "right": 15,
+    "bottom": 0
+   },
+   "template": "TemplateBkg15"
+  },
+  {
+   "path": "button/compact_orange.png",
+   "width": 40,
+   "height": 43,
+   "category": "button",
+   "purpose": "小号按钮 40x43, 橙底黑边",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_orange",
+   "source_rect": [
+    176,
+    92,
+    40,
+    43
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 15,
+    "top": 0,
+    "right": 15,
+    "bottom": 0
+   },
+   "template": "TemplateBkg5"
+  },
+  {
+   "path": "button/danger_red.png",
+   "width": 182,
+   "height": 61,
+   "category": "button",
+   "purpose": "危险操作按钮 182x61, 红底黑边",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_red",
+   "source_rect": [
+    195,
+    392,
+    182,
+    61
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 45,
+    "top": 0,
+    "right": 46,
+    "bottom": 0
+   },
+   "template": "TemplateBkg3_1"
+  },
+  {
+   "path": "button/ghost_white.png",
+   "width": 96,
+   "height": 61,
+   "category": "button",
+   "purpose": "空底按钮 96x61, 灰白描边",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_empty",
+   "source_rect": [
+    66,
+    2,
+    96,
+    61
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 35,
+    "top": 0,
+    "right": 35,
+    "bottom": 0
+   },
+   "template": "TemplateBkg27"
+  },
+  {
+   "path": "button/medium_blue.png",
+   "width": 130,
+   "height": 50,
+   "category": "button",
+   "purpose": "中号按钮 130x50, 蓝底",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_blue",
+   "source_rect": [
+    506,
+    915,
+    130,
+    50
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 57,
+    "top": 0,
+    "right": 57,
+    "bottom": 0
+   },
+   "template": "TemplateBkg24"
+  },
+  {
+   "path": "button/medium_gold.png",
+   "width": 130,
+   "height": 50,
+   "category": "button",
+   "purpose": "中号按钮 130x50, 金黄底",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_yellow",
+   "source_rect": [
+    335,
+    455,
+    130,
+    50
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 57,
+    "top": 0,
+    "right": 57,
+    "bottom": 0
+   },
+   "template": "TemplateBkg23"
+  },
+  {
+   "path": "button/medium_red.png",
+   "width": 130,
+   "height": 50,
+   "category": "button",
+   "purpose": "中号按钮 130x50, 红底",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_red",
+   "source_rect": [
+    374,
+    926,
+    130,
+    50
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 57,
+    "top": 0,
+    "right": 57,
+    "bottom": 0
+   },
+   "template": "TemplateBkg40"
+  },
+  {
+   "path": "button/primary_blue.png",
+   "width": 96,
+   "height": 61,
+   "category": "button",
+   "purpose": "主行动按钮 182x61, 蓝底黑边",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_blue",
+   "source_rect": [
+    66,
+    65,
+    96,
+    61
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 35,
+    "top": 0,
+    "right": 35,
+    "bottom": 0
+   },
+   "template": "TemplateBkg2"
+  },
+  {
+   "path": "button/primary_gold.png",
+   "width": 182,
+   "height": 61,
+   "category": "button",
+   "purpose": "次级行动按钮 182x61, 金黄底黑边",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_yellow",
+   "source_rect": [
+    144,
+    511,
+    182,
+    61
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 45,
+    "top": 0,
+    "right": 46,
+    "bottom": 0
+   },
+   "template": "TemplateBkg3"
+  },
+  {
+   "path": "button/wide_blue.png",
+   "width": 70,
+   "height": 81,
+   "category": "button",
+   "purpose": "超宽按钮 70x81 九宫",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_blue",
+   "source_rect": [
+    66,
+    429,
+    70,
+    81
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 30,
+    "top": 0,
+    "right": 30,
+    "bottom": 0
+   },
+   "template": "TemplateBkg56"
+  },
+  {
+   "path": "dialog/body_white.png",
+   "width": 300,
+   "height": 90,
+   "category": "dialog",
+   "purpose": "对话框主体 300x90, 九宫 100x30",
+   "source_page": "texture2/messagebox.ktx",
+   "source_sprite": "board_clip",
+   "source_rect": [
+    2,
+    71,
+    300,
+    90
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 100,
+    "top": 30,
+    "right": 100,
+    "bottom": 30
+   },
+   "template": "TemplateBkg1"
+  },
+  {
+   "path": "dialog/tips_arrow.png",
+   "width": 10,
+   "height": 17,
+   "category": "dialog",
+   "purpose": "提示条指向箭头 10x17",
+   "source_page": "texture2/messagebox.ktx",
+   "source_sprite": "board_tips_arrow",
+   "source_rect": [
+    398,
+    2,
+    10,
+    17
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "dialog/tips_body.png",
+   "width": 30,
+   "height": 30,
+   "category": "dialog",
+   "purpose": "提示条底 30x30, 九宫 10",
+   "source_page": "texture2/messagebox.ktx",
+   "source_sprite": "board_tips_icon",
+   "source_rect": [
+    334,
+    2,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBigBkg19"
+  },
+  {
+   "path": "dialog/tips_explain.png",
+   "width": 30,
+   "height": 30,
+   "category": "dialog",
+   "purpose": "悬浮说明底 30x30",
+   "source_page": "texture2/messagebox.ktx",
+   "source_sprite": "board_tips_explain",
+   "source_rect": [
+    366,
+    2,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBigBkg20"
+  },
+  {
+   "path": "dialog/title_bar.png",
+   "width": 330,
+   "height": 67,
+   "category": "dialog",
+   "purpose": "对话框标题条 330x67",
+   "source_page": "texture2/messagebox.ktx",
+   "source_sprite": "board_clip_title",
+   "source_rect": [
+    2,
+    2,
+    330,
+    67
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 110,
+    "top": 0,
+    "right": 110,
+    "bottom": 0
+   },
+   "template": "TemplateBigBkg31"
+  },
+  {
+   "path": "icon/arrow_down.png",
+   "width": 89,
+   "height": 91,
+   "category": "icon",
+   "purpose": "向下 89x91",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_down",
+   "source_rect": [
+    2,
+    686,
+    89,
+    91
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/arrow_left.png",
+   "width": 45,
+   "height": 32,
+   "category": "icon",
+   "purpose": "上一页 45x32",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_last",
+   "source_rect": [
+    873,
+    494,
+    45,
+    32
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/arrow_right.png",
+   "width": 45,
+   "height": 32,
+   "category": "icon",
+   "purpose": "下一页 45x32",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_next",
+   "source_rect": [
+    873,
+    460,
+    45,
+    32
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/arrow_up.png",
+   "width": 89,
+   "height": 91,
+   "category": "icon",
+   "purpose": "向上 89x91",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_up",
+   "source_rect": [
+    574,
+    245,
+    89,
+    91
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/backpack.png",
+   "width": 54,
+   "height": 51,
+   "category": "icon",
+   "purpose": "背包入口 54x51",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_backpack",
+   "source_rect": [
+    879,
+    300,
+    54,
+    51
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/chat.png",
+   "width": 37,
+   "height": 37,
+   "category": "icon",
+   "purpose": "聊天入口 37x37",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_chat",
+   "source_rect": [
+    184,
+    304,
+    37,
+    37
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/close.png",
+   "width": 36,
+   "height": 46,
+   "category": "icon",
+   "purpose": "关闭按钮 36x46",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_close",
+   "source_rect": [
+    667,
+    771,
+    36,
+    46
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/create.png",
+   "width": 38,
+   "height": 38,
+   "category": "icon",
+   "purpose": "新建 38x38",
+   "source_page": "texture2/common_icon.ktx",
+   "source_sprite": "icon_create_b",
+   "source_rect": [
+    160,
+    82,
+    38,
+    38
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/download.png",
+   "width": 38,
+   "height": 38,
+   "category": "icon",
+   "purpose": "下载 38x38",
+   "source_page": "texture2/common_icon.ktx",
+   "source_sprite": "icon_download_b",
+   "source_rect": [
+    120,
+    48,
+    38,
+    38
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/dropdown.png",
+   "width": 20,
+   "height": 20,
+   "category": "icon",
+   "purpose": "下拉箭头 20x20",
+   "source_page": "texture2/common_icon.ktx",
+   "source_sprite": "icon_dropdown_blue",
+   "source_rect": [
+    200,
+    109,
+    20,
+    20
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/expression.png",
+   "width": 51,
+   "height": 49,
+   "category": "icon",
+   "purpose": "表情入口 51x49",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_expression",
+   "source_rect": [
+    509,
+    478,
+    51,
+    49
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/female.png",
+   "width": 25,
+   "height": 25,
+   "category": "icon",
+   "purpose": "性别女 25x25",
+   "source_page": "texture2/common_icon.ktx",
+   "source_sprite": "icon_female",
+   "source_rect": [
+    200,
+    82,
+    25,
+    25
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/heart.png",
+   "width": 20,
+   "height": 16,
+   "category": "icon",
+   "purpose": "血量图标 20x16",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_heart",
+   "source_rect": [
+    760,
+    431,
+    20,
+    16
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/help.png",
+   "width": 26,
+   "height": 37,
+   "category": "icon",
+   "purpose": "帮助按钮",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_help",
+   "source_rect": [
+    2,
+    985,
+    26,
+    37
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/horn.png",
+   "width": 31,
+   "height": 33,
+   "category": "icon",
+   "purpose": "喇叭 31x33",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_horn",
+   "source_rect": [
+    180,
+    526,
+    31,
+    33
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/joystick.png",
+   "width": 92,
+   "height": 92,
+   "category": "icon",
+   "purpose": "摇杆底盘 92x92",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_rocker",
+   "source_rect": [
+    694,
+    244,
+    92,
+    92
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/joystick_core.png",
+   "width": 74,
+   "height": 74,
+   "category": "icon",
+   "purpose": "摇杆杆头 74x74",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_rocker_circle",
+   "source_rect": [
+    93,
+    632,
+    74,
+    74
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/jump.png",
+   "width": 117,
+   "height": 119,
+   "category": "icon",
+   "purpose": "跳跃键 117x119",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_jump",
+   "source_rect": [
+    816,
+    123,
+    117,
+    119
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/like.png",
+   "width": 38,
+   "height": 38,
+   "category": "icon",
+   "purpose": "点赞 38x38",
+   "source_page": "texture2/common_icon.ktx",
+   "source_sprite": "icon_like_b",
+   "source_rect": [
+    212,
+    42,
+    38,
+    38
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/link.png",
+   "width": 44,
+   "height": 44,
+   "category": "icon",
+   "purpose": "链接 44x44",
+   "source_page": "texture2/common_icon.ktx",
+   "source_sprite": "icon_link",
+   "source_rect": [
+    126,
+    2,
+    44,
+    44
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/male.png",
+   "width": 25,
+   "height": 25,
+   "category": "icon",
+   "purpose": "性别男 25x25",
+   "source_page": "texture2/common_icon.ktx",
+   "source_sprite": "icon_male",
+   "source_rect": [
+    42,
+    83,
+    25,
+    25
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/more.png",
+   "width": 36,
+   "height": 10,
+   "category": "icon",
+   "purpose": "更多 36x10",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_more",
+   "source_rect": [
+    184,
+    343,
+    36,
+    10
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/picture.png",
+   "width": 44,
+   "height": 44,
+   "category": "icon",
+   "purpose": "图片 44x44",
+   "source_page": "texture2/common_icon.ktx",
+   "source_sprite": "icon_picture",
+   "source_rect": [
+    80,
+    2,
+    44,
+    44
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/record.png",
+   "width": 38,
+   "height": 38,
+   "category": "icon",
+   "purpose": "录制 38x38",
+   "source_page": "texture2/common_icon.ktx",
+   "source_sprite": "icon_record_b",
+   "source_rect": [
+    212,
+    2,
+    38,
+    38
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/settings.png",
+   "width": 35,
+   "height": 34,
+   "category": "icon",
+   "purpose": "设置 35x34",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_set",
+   "source_rect": [
+    184,
+    392,
+    35,
+    34
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/steering_wheel.png",
+   "width": 193,
+   "height": 193,
+   "category": "icon",
+   "purpose": "方向盘 193x193",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "operating_steering_wheel",
+   "source_rect": [
+    228,
+    2,
+    193,
+    193
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/switch.png",
+   "width": 45,
+   "height": 32,
+   "category": "icon",
+   "purpose": "切换箭头 45x32",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_switch",
+   "source_rect": [
+    514,
+    444,
+    45,
+    32
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/voice.png",
+   "width": 25,
+   "height": 34,
+   "category": "icon",
+   "purpose": "语音 25x34",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "icon_voice",
+   "source_rect": [
+    665,
+    300,
+    25,
+    34
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "misc/bar_fill_green.png",
+   "width": 3,
+   "height": 3,
+   "category": "misc",
+   "purpose": "绿色进度条 3x3",
+   "source_page": "texture2/modlib.ktx",
+   "source_sprite": "img_bar_green",
+   "source_rect": [
+    2,
+    121,
+    3,
+    3
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 1,
+    "top": 1,
+    "right": 1,
+    "bottom": 1
+   },
+   "template": "TemplateBkg32"
+  },
+  {
+   "path": "misc/bar_fill_orange.png",
+   "width": 12,
+   "height": 12,
+   "category": "misc",
+   "purpose": "橙色进度条 12x12",
+   "source_page": "texture0/common.ktx",
+   "source_sprite": "img_bar_orange",
+   "source_rect": [
+    159,
+    346,
+    12,
+    12
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 4,
+    "top": 4,
+    "right": 4,
+    "bottom": 4
+   },
+   "template": "TemplateBkg17"
+  },
+  {
+   "path": "misc/bar_hp.png",
+   "width": 15,
+   "height": 16,
+   "category": "misc",
+   "purpose": "血条红色段 15x16",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "img_blood_strip_red",
+   "source_rect": [
+    308,
+    477,
+    15,
+    16
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "misc/bar_hp_track.png",
+   "width": 15,
+   "height": 15,
+   "category": "misc",
+   "purpose": "血条底槽 15x15",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "img_blood_strip_board",
+   "source_rect": [
+    308,
+    530,
+    15,
+    15
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 5,
+    "top": 5,
+    "right": 5,
+    "bottom": 5
+   },
+   "template": "TemplateBkg61"
+  },
+  {
+   "path": "misc/bar_track.png",
+   "width": 6,
+   "height": 6,
+   "category": "misc",
+   "purpose": "进度条轨道 6x6",
+   "source_page": "texture0/common.ktx",
+   "source_sprite": "img_board_bar",
+   "source_rect": [
+    780,
+    112,
+    6,
+    6
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 2,
+    "top": 2,
+    "right": 2,
+    "bottom": 2
+   },
+   "template": "TemplateBkg16"
+  },
+  {
+   "path": "misc/hud_pad.png",
+   "width": 88,
+   "height": 88,
+   "category": "misc",
+   "purpose": "HUD 方形底座 88x88",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "operating_board_square",
+   "source_rect": [
+    783,
+    430,
+    88,
+    88
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "misc/line_dark.png",
+   "width": 6,
+   "height": 1,
+   "category": "misc",
+   "purpose": "深色横线 6x1",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_line_drak",
+   "source_rect": [
+    159,
+    929,
+    6,
+    1
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 1,
+    "top": 0,
+    "right": 1,
+    "bottom": 0
+   },
+   "template": "TemplateBkg36"
+  },
+  {
+   "path": "misc/line_light.png",
+   "width": 6,
+   "height": 2,
+   "category": "misc",
+   "purpose": "浅灰横线",
+   "source_page": "texture0/common.ktx",
+   "source_sprite": "img_line_gary",
+   "source_rect": [
+    780,
+    124,
+    6,
+    2
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 2,
+    "top": 0,
+    "right": 2,
+    "bottom": 0
+   },
+   "template": "TemplateBkg20_H1"
+  },
+  {
+   "path": "misc/line_sink.png",
+   "width": 6,
+   "height": 3,
+   "category": "misc",
+   "purpose": "内凹横线 6x2",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_line_sink",
+   "source_rect": [
+    137,
+    929,
+    6,
+    3
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 2,
+    "top": 0,
+    "right": 2,
+    "bottom": 0
+   },
+   "template": "TemplateBkg20"
+  },
+  {
+   "path": "misc/line_vertical.png",
+   "width": 2,
+   "height": 6,
+   "category": "misc",
+   "purpose": "竖直分隔线",
+   "source_page": "texture0/common.ktx",
+   "source_sprite": "img_line_gary_v",
+   "source_rect": [
+    1020,
+    224,
+    2,
+    6
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 2,
+    "top": 0,
+    "right": 2,
+    "bottom": 0
+   },
+   "template": "TemplateBkg20_H1_V"
+  },
+  {
+   "path": "misc/progress_step.png",
+   "width": 9,
+   "height": 8,
+   "category": "misc",
+   "purpose": "分段进度 9x8",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "img_progress_bar",
+   "source_rect": [
+    514,
+    418,
+    9,
+    8
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 3,
+    "top": 0,
+    "right": 3,
+    "bottom": 0
+   },
+   "template": "TemplateLevelBarBkg1"
+  },
+  {
+   "path": "misc/solid_white.png",
+   "width": 16,
+   "height": 16,
+   "category": "misc",
+   "purpose": "纯白 16x16, 纯色与遮罩用",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "white",
+   "source_rect": [
+    308,
+    441,
+    16,
+    16
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "panel/surface_blue.png",
+   "width": 30,
+   "height": 30,
+   "category": "panel",
+   "purpose": "蓝色底板 30x30",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_blue",
+   "source_rect": [
+    737,
+    771,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBigBkg1"
+  },
+  {
+   "path": "panel/surface_blue_large.png",
+   "width": 60,
+   "height": 60,
+   "category": "panel",
+   "purpose": "大号蓝色底板 60x60, 九宫 20",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_blue_big",
+   "source_rect": [
+    355,
+    832,
+    60,
+    60
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 20,
+    "top": 20,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg1Big"
+  },
+  {
+   "path": "panel/surface_gray.png",
+   "width": 30,
+   "height": 30,
+   "category": "panel",
+   "purpose": "白色底板 30x30, 九宫 10",
+   "source_page": "texture0/common.ktx",
+   "source_sprite": "board_more",
+   "source_rect": [
+    986,
+    897,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg50"
+  },
+  {
+   "path": "panel/surface_list_row.png",
+   "width": 30,
+   "height": 30,
+   "category": "panel",
+   "purpose": "列表条目底色",
+   "source_page": "texture0/common.ktx",
+   "source_sprite": "board_map_info",
+   "source_rect": [
+    479,
+    774,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBigBkg6"
+  },
+  {
+   "path": "panel/surface_round_blue.png",
+   "width": 30,
+   "height": 30,
+   "category": "panel",
+   "purpose": "圆角蓝色板 30x30",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_blue_r",
+   "source_rect": [
+    739,
+    835,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBigBkg8"
+  },
+  {
+   "path": "panel/surface_scrim.png",
+   "width": 15,
+   "height": 15,
+   "category": "panel",
+   "purpose": "半透明黑底, 弹窗遮罩",
+   "source_page": "texture0/common.ktx",
+   "source_sprite": "img_bd_black50",
+   "source_rect": [
+    629,
+    834,
+    15,
+    15
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 5,
+    "top": 5,
+    "right": 5,
+    "bottom": 5
+   },
+   "template": "TemplateBigBkg18"
+  },
+  {
+   "path": "panel/surface_white.png",
+   "width": 30,
+   "height": 30,
+   "category": "panel",
+   "purpose": "白色底板, 黑边 3 像素",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_white",
+   "source_rect": [
+    579,
+    875,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBigBkg2"
+  },
+  {
+   "path": "slot/avatar_frame.png",
+   "width": 30,
+   "height": 30,
+   "category": "slot",
+   "purpose": "头像选择框",
+   "source_page": "texture0/common.ktx",
+   "source_sprite": "sel_icon_custom",
+   "source_rect": [
+    986,
+    865,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg11"
+  },
+  {
+   "path": "slot/check_off.png",
+   "width": 24,
+   "height": 24,
+   "category": "slot",
+   "purpose": "勾选框 24x24 未选",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_check",
+   "source_rect": [
+    313,
+    637,
+    24,
+    24
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 8,
+    "top": 8,
+    "right": 8,
+    "bottom": 8
+   },
+   "template": "TemplateBkg8"
+  },
+  {
+   "path": "slot/check_on.png",
+   "width": 24,
+   "height": 24,
+   "category": "slot",
+   "purpose": "勾选框 24x24 已选",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_check_select_",
+   "source_rect": [
+    261,
+    637,
+    24,
+    24
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 8,
+    "top": 8,
+    "right": 8,
+    "bottom": 8
+   },
+   "template": "TemplateBkg28"
+  },
+  {
+   "path": "slot/item_frame.png",
+   "width": 30,
+   "height": 30,
+   "category": "slot",
+   "purpose": "物品槽 30x30",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "img_item_box",
+   "source_rect": [
+    655,
+    395,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg64"
+  },
+  {
+   "path": "slot/item_frame_on.png",
+   "width": 30,
+   "height": 30,
+   "category": "slot",
+   "purpose": "物品槽选中 30x30",
+   "source_page": "texture0/operate.ktx",
+   "source_sprite": "img_item_box_selected",
+   "source_rect": [
+    655,
+    363,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg67"
+  },
+  {
+   "path": "tab/bar_blue.png",
+   "width": 30,
+   "height": 30,
+   "category": "tab",
+   "purpose": "页签条底色 30x30",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_tab_blue",
+   "source_rect": [
+    611,
+    870,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBigBkg3"
+  },
+  {
+   "path": "tab/leaf_active.png",
+   "width": 30,
+   "height": 30,
+   "category": "tab",
+   "purpose": "页签选中 30x30, 九宫 10",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray",
+   "source_rect": [
+    508,
+    785,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg7"
+  },
+  {
+   "path": "tab/leaf_flat.png",
+   "width": 30,
+   "height": 30,
+   "category": "tab",
+   "purpose": "页签常态无高光 30x30",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_n_flat",
+   "source_rect": [
+    483,
+    883,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg6_1"
+  },
+  {
+   "path": "tab/leaf_hover.png",
+   "width": 40,
+   "height": 43,
+   "category": "tab",
+   "purpose": "页签高亮 30x30",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_b",
+   "source_rect": [
+    374,
+    787,
+    40,
+    43
+   ],
+   "draw": "three_slice",
+   "insets": {
+    "left": 15,
+    "top": 0,
+    "right": 15,
+    "bottom": 0
+   },
+   "template": "TemplateBkg84"
+  },
+  {
+   "path": "tab/leaf_normal.png",
+   "width": 30,
+   "height": 30,
+   "category": "tab",
+   "purpose": "页签常态 30x30, 九宫 10",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_n",
+   "source_rect": [
+    515,
+    883,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 10,
+    "top": 10,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg6"
+  }
+ ]
+}

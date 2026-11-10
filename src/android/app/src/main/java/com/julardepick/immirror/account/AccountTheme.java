@@ -28,21 +28,24 @@ public final class AccountTheme {
     /* 作者信息显示名, 页面底部统一由此常量生成. */
     public static final String AUTHOR_NAME = "JularDepick";
 
-    public static final int COLOR_PAGE = 0xFF1A1209;
-    public static final int COLOR_SCRIM = 0x8C0D0906;
-    public static final int COLOR_CARD = 0xF2281C10;
-    public static final int COLOR_CARD_STROKE = 0x3FC08A4E;
-    public static final int COLOR_FIELD = 0xFF1F150C;
-    public static final int COLOR_FIELD_STROKE = 0xFF5A4028;
-    public static final int COLOR_ACCENT = 0xFFC88A4A;
-    public static final int COLOR_ACCENT_TEXT = 0xFF2A1B0C;
-    public static final int COLOR_ACCENT_SOFT = 0x2EC88A4A;
-    public static final int COLOR_TEXT = 0xFFF5EEDC;
-    public static final int COLOR_TEXT_MUTED = 0xFFB8A88C;
-    public static final int COLOR_TEXT_FAINT = 0xFF7A6A52;
-    public static final int COLOR_ERROR = 0xFFFF8A80;
-    public static final int COLOR_SUCCESS = 0xFF8FC46A;
-    public static final int COLOR_DANGER = 0xFFD9603C;
+    public static final int COLOR_PAGE = 0xFF2E4A63;
+    public static final int COLOR_SCRIM = 0xCC000000;
+    public static final int COLOR_CARD = 0xFFF3F3F3;
+    public static final int COLOR_CARD_STROKE = 0xFF000000;
+    public static final int COLOR_FIELD = 0xFFFFFFFF;
+    public static final int COLOR_FIELD_STROKE = 0xFFB9B9B9;
+    public static final int COLOR_ACCENT = 0xFF68D3FC;
+    public static final int COLOR_ACCENT_TEXT = 0xFFFFFFFF;
+    public static final int COLOR_ACCENT_SOFT = 0x3368D3FC;
+    public static final int COLOR_TEXT = 0xFF3D4546;
+    public static final int COLOR_TEXT_MUTED = 0xFF6B7476;
+    public static final int COLOR_TEXT_FAINT = 0xFFB9B9B9;
+    public static final int COLOR_ERROR = 0xFFD61919;
+    public static final int COLOR_SUCCESS = 0xFF5FCB6A;
+    public static final int COLOR_DANGER = 0xFFFF8787;
+
+    /* 辅助色: 次级按钮与货币底板. */
+    public static final int COLOR_WARNING = 0xFFFFDF11;
 
     /* 卡片最大宽度, 横向大屏时避免表单被拉得过宽. */
     public static final int CARD_MAX_WIDTH_DP = 560;
@@ -85,7 +88,7 @@ public final class AccountTheme {
         TextView view = new TextView(context);
         view.setText(text);
         view.setTextColor(COLOR_TEXT);
-        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f);
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f);
         view.setTypeface(Typeface.DEFAULT_BOLD);
         view.setGravity(Gravity.CENTER);
         return view;
@@ -95,7 +98,7 @@ public final class AccountTheme {
         TextView view = new TextView(context);
         view.setText(text);
         view.setTextColor(COLOR_TEXT_MUTED);
-        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
         view.setGravity(Gravity.CENTER);
         return view;
     }
@@ -104,7 +107,7 @@ public final class AccountTheme {
         TextView view = new TextView(context);
         view.setText(text);
         view.setTextColor(COLOR_TEXT_MUTED);
-        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
         return view;
     }
 
@@ -152,7 +155,7 @@ public final class AccountTheme {
         button.setText(text);
         button.setAllCaps(false);
         button.setTextColor(COLOR_ACCENT_TEXT);
-        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
+        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
         button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setBackground(pressed(0x33000000, rounded(context, COLOR_ACCENT, FIELD_RADIUS_DP + 2f)));
         button.setMinHeight(dp(context, BUTTON_HEIGHT_DP + 2));
@@ -166,7 +169,7 @@ public final class AccountTheme {
         button.setText(text);
         button.setAllCaps(false);
         button.setTextColor(contentColor);
-        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
+        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f);
         button.setBackground(pressed(COLOR_ACCENT_SOFT,
                 stroked(context, COLOR_FIELD, FIELD_RADIUS_DP + 2f, contentColor, 1f)));
         button.setMinHeight(dp(context, BUTTON_HEIGHT_DP));
