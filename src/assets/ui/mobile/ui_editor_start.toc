@@ -1,4 +1,0 @@
-﻿##启动层
-ui/mobile/cursor.xml
-ui/mobile/Fonts.xml
-ui/mobile/uitemplate.xml
