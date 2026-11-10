@@ -45,6 +45,7 @@ assets/
 │   ├── pipeline.md        # 本文件: 流程, 命令, 扩展步骤, 验收口径
 │   ├── plain-formats.md   # 明文工程文件规范 (逐类素材)
 │   ├── formats.md         # 各格式的容器结论与落地状态
+│   ├── scaffolds.md       # 分类脚手架: 分类矩阵, 回写能力与验证结果
 │   └── notes/             # 攻坚过程的取证笔记 (块结构, 像素, 存档)
 ├── forge/                 # 管线工具 (Python 3, 仅标准库)
 │   ├── cli.py             # 命令行入口, 七个子命令
@@ -57,6 +58,7 @@ assets/
 │   ├── census.py          # 素材清点
 │   ├── codecs/            # 各格式编解码器
 │   └── util/              # 编码探测与文本工具
+├── scaffolds/             # 分类脚手架 (每种素材一个子目录与样例工程)
 ├── reports/
 │   ├── census.csv         # 逐文件清点结果 (23541 行)
 │   ├── roundtrip-200.md   # 抽样往返验证报告
@@ -199,3 +201,10 @@ python -m forge.cli roundtrip --samples 200 --seed 0
 2. 资源改名与目录映射以 `client/src/shared/naming/resource-map.tsv` 为准,
    管线保持原版相对路径, 改名在复制阶段按映射表执行。
 3. 客户端自行实现资源加载时, 可以选择消费 `unpack` 出的明文, 跳过解密层。
+
+## 十二. 分类脚手架
+
+`scaffolds/` 与本文的管线并列, 针对单份素材提供可编辑的工程目录: `python -m scaffolds`
+把一份二进制导出成 JSON 加 PNG 或 XML 的工程, 再按工程内容重组二进制。它只调用
+`forge.codecs` 与 `forge.util`, 不修改 `forge/` 下任何文件, 分工与回写能力见
+`docs/scaffolds.md`。管线负责全树批量与索引权威, 脚手架负责按类修改与重建。

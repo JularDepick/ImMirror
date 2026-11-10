@@ -27,10 +27,6 @@ PROJECT_VERSION = 1
 """二进制族容器魔数, 与 forge.codecs.container 保持同一口径。"""
 MAGIC_BINARY = b"\xff\xd9\xff\xd8"
 
-"""常见来源扩展名, 供 CLI 与文档展示。"""
-TEXT_ENCODINGS = ("utf-8", "gbk", "gb18030", "big5", "latin-1")
-
-
 def _ensure_forge_importable() -> None:
     """把 assets 根目录放进 sys.path, 保证无论从哪个工作目录启动都能 import forge。"""
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -227,8 +223,6 @@ def build_named_block(container: dict, blocks) -> bytes:
     blocks 的每项是 (块名, 类型标识, 载荷字节); 块名为问号开头或类型标识为负时
     视为未解析区, 不写块头只写载荷, 保证兜底样本也能回写。
     """
-    import struct
-
     magic_hex = container.get("magic", "89674523")
     try:
         magic = bytes.fromhex(magic_hex)
@@ -261,10 +255,6 @@ def named_block_units(doc: dict):
         payload = blob_field_bytes(block.get("payload"), "区块 %s 的 payload" % name)
         units.append((name, block.get("type_id"), payload))
     return units
-
-
-def project_json_path(project_dir: str, name: str = "project.json") -> str:
-    return os.path.join(project_dir, name)
 
 
 def find_project_json(project_dir: str, preferred: str = "project.json") -> str:

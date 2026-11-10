@@ -127,7 +127,8 @@ def cmd_build(args) -> int:
         print("[失败] %s: %s" % (project_dir, exc), file=sys.stderr)
         return 1
     _print_build(result)
-    return 0 if result["byte_identical"] else 0
+    """build 不以是否逐字节一致作为失败判据: 改过像素或结构时本来就会不同。"""
+    return 0
 
 
 def cmd_verify(args) -> int:

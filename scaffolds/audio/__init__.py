@@ -70,7 +70,7 @@ def export(src: str, project_dir: str) -> dict:
         )
     doc = util.make_doc(NAME, "ogg", src, raw)
     doc["envelope"] = envelope or None
-    view = standard.OggCodec().view(PayloadBinary(plain)) or {}
+    view = standard.OggCodec().view(_payload_binary(plain)) or {}
     doc["stream"] = {
         "codec": view.get("codec", "unknown"),
         "channels": view.get("channels"),
@@ -92,7 +92,7 @@ def export(src: str, project_dir: str) -> dict:
     }
 
 
-def PayloadBinary(blob: bytes):
+def _payload_binary(blob: bytes):
     """构造一个只带 blob 的载荷, 供标准格式的视图函数使用。"""
     from forge.codecs.base import Payload
 

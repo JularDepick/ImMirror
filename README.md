@@ -62,6 +62,7 @@ assets/
 │   ├── pipeline.md        # 管线流程, 命令, 扩展步骤, 验收口径
 │   ├── plain-formats.md   # 明文工程文件规范 (逐类素材)
 │   ├── formats.md         # 各格式的容器结论与推进状态
+│   ├── scaffolds.md       # 分类脚手架: 分类矩阵, 回写能力与验证结果
 │   └── notes/             # 攻坚过程的取证笔记
 ├── forge/                 # 管线工具 (Python 3, 仅标准库)
 │   ├── cli.py             # 命令行入口
@@ -73,8 +74,17 @@ assets/
 │   ├── census.py          # 素材清点
 │   ├── codecs/            # 各格式编解码器
 │   └── util/              # 编码探测与文本工具
+├── scaffolds/             # 分类脚手架 (每种素材一个子目录与样例工程)
+│   ├── __main__.py        # 命令行入口 python -m scaffolds
+│   ├── util.py            # 脚手架共用工具
+│   ├── models/            # 模型与实体: omod emo ent oanim
+│   ├── textures/          # 纹理: ktx otex 图标集页
+│   ├── ui/                # 界面: axml 与文本布局 xml
+│   ├── data/              # 数据表: csv csvdef 与 xml 数据定义
+│   ├── audio/             # 音频: ogg
+│   └── world/             # 体素与世界: vox VMOF .r CUST fcm
 ├── reports/               # 清点, 往返验证与全量校验报告
-└── tests/                 # 编解码器契约测试与管线测试
+└── tests/                 # 编解码器契约测试, 管线测试与脚手架测试
 ```
 
 `project/` `build*/` 与 `temp/` 属于按需重建的工作目录, 不进版本库。
@@ -94,6 +104,11 @@ python -m forge.cli pack --target original    # 还原原版容器, 用于逐字
 python -m forge.cli verify --deep --source    # 全量重编码比对加源树复查
 python -m forge.cli roundtrip --samples 200   # 分层抽样 200 个做逐字节往返
 python -m unittest discover -s tests         # 契约测试与管线测试
+
+python -m scaffolds list                     # 列出分类脚手架与受理扩展名
+python -m scaffolds models export 源文件.emo -o 工程目录   # 二进制 -> 明文工程
+python -m scaffolds models build 工程目录 -o 产物.emo      # 明文工程 -> 二进制
+python -m scaffolds world verify 样本目录    # 分类级导出并逐字节比对
 ```
 
 编码产物进入客户端:
@@ -116,6 +131,10 @@ python -m forge.cli pack --out build
 | 世界区块 | `0c1c0706` | 载荷为 LZMA1 加 FlatBuffers, 待接入 | - |
 | 二进制 Android XML | `03000800` | 589/589 解析为可读 XML 视图 | `axml` |
 | 公开格式 | PNG/WebP/Ogg/ZIP/TTF/GIF/JPEG/MP3 | 已识别并出视图 | `png` `webp` `ogg` `zip` `ttf` `gif` `jpeg` `mp3` |
+
+分类脚手架改变了"待接入"的范围: VMOF, `.vox`, 世界区块头, CUST 与 FlatBuffers
+已能做文件级明文工程与逐字节回写, 只是结构语义仍待推进; 分类矩阵与逐类回写能力见
+`docs/scaffolds.md`。
 
 详细结论与证据链见 `docs/formats.md`, 原始逆向文档位于
 `client/temp/original/fake-mini-BUT-true-moments/docs/formats/`。
