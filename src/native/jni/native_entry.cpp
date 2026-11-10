@@ -5,6 +5,7 @@
 #include <android_native_app_glue.h>
 
 #include "core/log.h"
+#include "audio/audio_engine.h"
 #include "jni/engine_host.h"
 #include "platform/android_runtime.h"
 
@@ -59,6 +60,20 @@ JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeS
     (void)env;
     (void)clazz;
     immirror::jni::EngineHost::Instance().RequestStop();
+}
+
+/* Java 侧低频入口: 把音效池与音效句柄推给原生侧. */
+JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeAttachAudio(
+    JNIEnv* env, jclass clazz, jobject soundPool, jintArray soundIds) {
+    (void)clazz;
+    immirror::audio::AudioEngine::Instance().Attach(env, soundPool, soundIds);
+}
+
+/* Java 侧低频入口: Activity 销毁前解除音效引用. */
+JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeDetachAudio(
+    JNIEnv* env, jclass clazz) {
+    (void)clazz;
+    immirror::audio::AudioEngine::Instance().Detach(env);
 }
 
 }  /* extern "C" */

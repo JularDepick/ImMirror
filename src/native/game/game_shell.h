@@ -4,6 +4,8 @@
 #include <memory>
 #include <string>
 
+#include "audio/audio_engine.h"
+
 struct AAssetManager;
 
 namespace immirror {

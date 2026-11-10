@@ -28,6 +28,11 @@ android {
         buildConfig = true
     }
 
+    androidResources {
+        /* 音效与纹理需要按未压缩形式读取, 否则无法用 openFd 打开. */
+        noCompress += listOf("ogg", "ktx", "png", "json")
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

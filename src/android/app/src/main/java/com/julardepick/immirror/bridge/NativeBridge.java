@@ -1,5 +1,6 @@
 package com.julardepick.immirror.bridge;
 
+import android.media.SoundPool;
 import android.util.Log;
 
 /*
@@ -59,9 +60,29 @@ public final class NativeBridge {
         nativeStop();
     }
 
+    /* 把音效池与音效句柄推给原生侧; 音效播放属于事件触发的低频调用. */
+    public static void attachAudio(SoundPool pool, int[] soundIds) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeAttachAudio(pool, soundIds);
+    }
+
+    /* Activity 销毁前解除引用. */
+    public static void detachAudio() {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeDetachAudio();
+    }
+
     private static native void nativeOnDeviceProfile(String payload);
 
     private static native void nativeStart();
 
     private static native void nativeStop();
+
+    private static native void nativeAttachAudio(SoundPool pool, int[] soundIds);
+
+    private static native void nativeDetachAudio();
 }

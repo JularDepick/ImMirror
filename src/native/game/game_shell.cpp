@@ -186,11 +186,13 @@ void GameShell::HandleTapActions(const platform::InputSnapshot& input) {
         if (editZone && moved < kTapMoveLimit) {
             if (held < kLongPressSeconds) {
                 if (player_->BreakBlock(*world_)) {
+                    audio::AudioEngine::Instance().Play(audio::SoundId::kDigGrass);
                     IM_LOGI(kTag, "block broken");
                 }
             } else {
                 /* 长按放置: 以草方块为默认材料, 后续接入物品栏再改. */
                 if (player_->PlaceBlock(*world_, voxel::block::Grass)) {
+                    audio::AudioEngine::Instance().Play(audio::SoundId::kPlaceGrass);
                     IM_LOGI(kTag, "block placed");
                 }
             }

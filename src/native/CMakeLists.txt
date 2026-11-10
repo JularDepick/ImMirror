@@ -21,6 +21,7 @@ target_include_directories(immirror_app_glue PUBLIC
 # 各子系统在自己的目录里收集源文件, 汇总后统一编入库
 set(IMMIRROR_MODULE_SOURCES "")
 add_subdirectory(voxel)
+add_subdirectory(audio)
 add_subdirectory(world)
 add_subdirectory(render)
 add_subdirectory(player)
