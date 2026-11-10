@@ -15,15 +15,10 @@ SRC_ROOT = os.path.dirname(SCRIPT_DIR)
 ASSETS_ROOT = os.path.join(SRC_ROOT, "assets")
 TARGET_ROOT = os.path.join(SRC_ROOT, "android", "app", "src", "main", "assets")
 
-# 源相对路径 -> 目标相对路径
-MANIFEST = [
-    ("sounds/dig_grass.ogg", "sounds/dig_grass.ogg"),
-    ("sounds/dig_stone.ogg", "sounds/dig_stone.ogg"),
-    ("sounds/dig_sand.ogg", "sounds/dig_sand.ogg"),
-    ("sounds/place_grass.ogg", "sounds/place_grass.ogg"),
-    ("sounds/place_stone.ogg", "sounds/place_stone.ogg"),
-    ("sounds/place_sand.ogg", "sounds/place_sand.ogg"),
-]
+# 音效文件按材质分族, 破坏音与放置音各一套
+MATERIALS = ("grass", "stone", "sand", "wood", "snow", "gravel")
+MANIFEST = [(f"sounds/dig_{name}.ogg", f"sounds/dig_{name}.ogg") for name in MATERIALS]
+MANIFEST += [(f"sounds/place_{name}.ogg", f"sounds/place_{name}.ogg") for name in MATERIALS]
 
 
 def main() -> int:

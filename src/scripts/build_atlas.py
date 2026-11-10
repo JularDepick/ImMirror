@@ -3,7 +3,7 @@
 
 输入: src/assets/blocks/*.png (从原版资源复制的方块贴图)
 输出: src/android/app/src/main/assets/generated/atlas.rgba 裸 RGBA8 数据与 atlas.json 格位表
-图集规格: 1024x1024, 16x16 格, 每格 64 像素, 首行对应 v=0
+图集规格: 2048x2048, 16x16 格, 每格 128 像素, 首行对应 v=0
 """
 
 import json
@@ -22,7 +22,7 @@ BLOCKS_DIR = os.path.join(SRC_ROOT, "assets", "blocks")
 OUT_DIR = os.path.join(SRC_ROOT, "android", "app", "src", "main", "assets", "generated")
 
 GRID = 16
-CELL = 64
+CELL = 128
 
 # 格位顺序必须与 voxel/block_registry.cpp 的面索引一致
 SLOT_ORDER = [
@@ -31,9 +31,9 @@ SLOT_ORDER = [
     ("dirt", "dirt.png"),
     ("stone", "stone.png"),
     ("sand", "sand.png"),
-    ("water", "water_still.png"),
-    ("log_side", "log_arbor.png"),
-    ("log_top", "log_arbor_top.png"),
+    ("water", "water.png"),
+    ("log_side", "log_oak.png"),
+    ("log_top", "log_oak_top.png"),
     ("leaves", "leaves.png"),
     ("bedrock", "bedrock.png"),
     ("brick", "brick.png"),
@@ -41,7 +41,7 @@ SLOT_ORDER = [
     ("snow", "snow.png"),
     ("ice", "ice.png"),
     ("gravel", "gravel.png"),
-    ("planks", "planks_arbor.png"),
+    ("planks", "planks_oak.png"),
 ]
 
 
