@@ -1,12 +1,20 @@
-# 编码产物, 由 forge pack 生成后复制进客户端资源树
-build/
+# 解码后的工程树按需重建, 不进版本库
+project/
 
-# 工程树里的结构化视图属于派生数据, 可随时重新生成
-project/_view/
+# 编码产物与源树镜像 (build/ build-original/ build-source/ 等)
+build/
+build-*/
+build-source/
+
+# 逐文件索引属于派生数据, 体积大且可重生成; 汇总结论留在 reports/ 的 md 与 csv 里
+reports/project-index.jsonl
+reports/*.jsonl
 
 # 临时目录与日志
 temp/
 tmp/
+.agent/
+.agents/
 *.log
 __pycache__/
 *.pyc
