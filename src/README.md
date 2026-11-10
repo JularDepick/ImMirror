@@ -275,6 +275,11 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 
 其余项只做存取, 待对应系统 (光影, 雾效, 树形, 限帧, 震动, 雷达转向, 语音等) 落地后接入。
 
+验证方式: debug 包用 `adb shell run-as com.julardepick.immirror` 读写
+`files/settings/immirror-settings.cfg`, 重启游戏后看 `adb logcat -s ImMirrorGame` 的状态行。
+状态行里的 `chunks` 与 `view_distance` 对应, `look` 是灵敏度换算出的横向满屏转角,
+`yaw` 与 `pitch` 用于对比同一手势在不同灵敏度下的实际转角。
+
 ## 六、已知限制
 
 1. 原生库由 `scripts/build-native.sh` 先行构建, 不使用 AGP 的内置原生构建

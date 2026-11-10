@@ -30,8 +30,8 @@ public:
      */
     bool Initialize(const char* dataPath);
 
-    /* 配置文件绝对路径, 未初始化时为空串. */
-    const char* StoragePath() const;
+    /* 配置文件绝对路径, 未初始化时为空串. 返回副本, 调用方不必关心生命周期. */
+    std::string StoragePath() const;
 
     int32_t Get(Key key) const;
 

@@ -86,9 +86,9 @@ bool Settings::Initialize(const char* dataPath) {
     return true;
 }
 
-const char* Settings::StoragePath() const {
+std::string Settings::StoragePath() const {
     std::lock_guard<std::mutex> guard(mutex_);
-    return store_.Path().c_str();
+    return store_.Path();
 }
 
 int32_t Settings::Get(Key key) const {
