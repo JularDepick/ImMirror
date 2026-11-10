@@ -26,4 +26,16 @@ void ChunkColumn::RefreshTopBlockY() {
     topBlockY_ = -1;
 }
 
+
+void ChunkColumn::AssignBlocks(const std::vector<BlockId>& data) {
+    if (data.size() != blocks_.size()) {
+        return;
+    }
+    blocks_ = data;
+    dirty_ = true;
+    /* RefreshTopBlockY 从当前最高层往下扫描, 批量赋值时必须先置顶再重算. */
+    topBlockY_ = kWorldHeight - 1;
+    RefreshTopBlockY();
+}
+
 }  /* namespace immirror::voxel */

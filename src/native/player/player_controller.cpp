@@ -617,4 +617,15 @@ core::Vec3 PlayerController::ForwardDirection() const {
     return core::Vec3{-std::sin(yaw_) * cosPitch, std::sin(pitch_), -std::cos(yaw_) * cosPitch};
 }
 
+void PlayerController::SetPose(const core::Vec3& position, float yaw, float pitch) {
+    position_ = position;
+    spawnPosition_ = position;
+    velocity_ = core::Vec3{};
+    yaw_ = yaw;
+    pitch_ = pitch;
+    onGround_ = false;
+    spawned_ = true;
+    spawnPending_ = false;
+}
+
 }  /* namespace immirror::player */

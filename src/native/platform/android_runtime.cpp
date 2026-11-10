@@ -205,10 +205,12 @@ void Runtime::OnWindowCreated(ANativeWindow* window) {
     if (shell_ != nullptr) {
         shell_->SetViewportSize(device_->Width(), device_->Height());
         AAssetManager* assets = nullptr;
+        const char* dataPath = nullptr;
         if (bridge_.Handle() != nullptr && bridge_.Handle()->activity != nullptr) {
             assets = bridge_.Handle()->activity->assetManager;
+            dataPath = bridge_.Handle()->activity->internalDataPath;
         }
-        shell_->OnSurfaceReady(assets);
+        shell_->OnSurfaceReady(assets, dataPath);
         device_->SetSceneCallback(&Runtime::SceneCallbackThunk, shell_.get());
     }
     IM_LOGI(kTag, "render surface ready, %s %dx%d", device_->BackendName(), device_->Width(),

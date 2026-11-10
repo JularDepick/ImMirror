@@ -1,7 +1,11 @@
 #include "world/world.h"
 
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <algorithm>
+#include <utility>
 
 #include "voxel/block_registry.h"
 #include "voxel/chunk_column.h"
@@ -208,6 +212,167 @@ void World::RebuildVisibleList() {
         view.revision = chunk.revision;
         visible_.push_back(view);
     }
+}
+
+
+namespace {
+
+/* 存档格式: 文件头 + 区块记录, 方块数据用游程编码存储. */
+constexpr char kSaveMagic[4] = {'I', 'M', 'W', 'F'};
+constexpr uint32_t kSaveVersion = 1;
+constexpr uint32_t kMaxChunks = 65536;
+
+struct SaveHeader {
+    char magic[4];
+    uint32_t version;
+    uint32_t seed;
+    uint32_t chunkCount;
+    float playerX;
+    float playerY;
+    float playerZ;
+    float yaw;
+    float pitch;
+};
+
+struct ChunkRecord {
+    int32_t x;
+    int32_t z;
+    uint32_t runCount;
+};
+
+bool ReadRuns(FILE* file, uint32_t runCount, std::vector<voxel::BlockId>& blocks) {
+    for (uint32_t i = 0; i < runCount; ++i) {
+        uint16_t count = 0;
+        uint16_t id = 0;
+        if (std::fread(&count, sizeof(count), 1, file) != 1) {
+            return false;
+        }
+        if (std::fread(&id, sizeof(id), 1, file) != 1) {
+            return false;
+        }
+        if (blocks.size() + count > static_cast<size_t>(voxel::kChunkVolume)) {
+            return false;
+        }
+        blocks.insert(blocks.end(), count, id);
+    }
+    return blocks.size() == static_cast<size_t>(voxel::kChunkVolume);
+}
+
+}  /* namespace */
+
+bool World::SaveToFile(const char* path, const SaveState& state) const {
+    if (path == nullptr) {
+        return false;
+    }
+    FILE* file = std::fopen(path, "wb");
+    if (file == nullptr) {
+        return false;
+    }
+    SaveHeader header{};
+    std::memcpy(header.magic, kSaveMagic, sizeof(header.magic));
+    header.version = kSaveVersion;
+    header.seed = seed_;
+    header.chunkCount = static_cast<uint32_t>(chunks_.size());
+    header.playerX = state.playerX;
+    header.playerY = state.playerY;
+    header.playerZ = state.playerZ;
+    header.yaw = state.yaw;
+    header.pitch = state.pitch;
+    if (std::fwrite(&header, sizeof(header), 1, file) != 1) {
+        std::fclose(file);
+        return false;
+    }
+
+    for (const auto& entry : chunks_) {
+        const Chunk& chunk = *entry.second;
+        const std::vector<voxel::BlockId>& blocks = chunk.column.Blocks();
+        /* 先统计游程数量, 再写记录头与游程数据. */
+        std::vector<std::pair<uint16_t, voxel::BlockId>> runs;
+        runs.reserve(64);
+        for (size_t i = 0; i < blocks.size();) {
+            const voxel::BlockId id = blocks[i];
+            uint32_t length = 1;
+            while (i + length < blocks.size() && blocks[i + length] == id && length < 0xFFFF) {
+                ++length;
+            }
+            runs.emplace_back(static_cast<uint16_t>(length), id);
+            i += length;
+        }
+        ChunkRecord record{};
+        record.x = chunk.coord.x;
+        record.z = chunk.coord.z;
+        record.runCount = static_cast<uint32_t>(runs.size());
+        if (std::fwrite(&record, sizeof(record), 1, file) != 1) {
+            std::fclose(file);
+            return false;
+        }
+        for (const auto& run : runs) {
+            if (std::fwrite(&run.first, sizeof(run.first), 1, file) != 1 ||
+                std::fwrite(&run.second, sizeof(run.second), 1, file) != 1) {
+                std::fclose(file);
+                return false;
+            }
+        }
+    }
+    std::fclose(file);
+    return true;
+}
+
+bool World::LoadFromFile(const char* path, SaveState& state) {
+    if (path == nullptr) {
+        return false;
+    }
+    FILE* file = std::fopen(path, "rb");
+    if (file == nullptr) {
+        return false;
+    }
+    SaveHeader header{};
+    if (std::fread(&header, sizeof(header), 1, file) != 1 ||
+        std::memcmp(header.magic, kSaveMagic, sizeof(header.magic)) != 0 ||
+        header.version != kSaveVersion || header.chunkCount > kMaxChunks) {
+        std::fclose(file);
+        return false;
+    }
+
+    chunks_.clear();
+    visible_.clear();
+    seed_ = header.seed;
+
+    for (uint32_t i = 0; i < header.chunkCount; ++i) {
+        ChunkRecord record{};
+        if (std::fread(&record, sizeof(record), 1, file) != 1) {
+            std::fclose(file);
+            return false;
+        }
+        auto chunk = std::make_unique<Chunk>();
+        chunk->coord = voxel::ChunkCoord{record.x, record.z};
+        std::vector<voxel::BlockId> blocks;
+        blocks.reserve(voxel::kChunkVolume);
+        if (!ReadRuns(file, record.runCount, blocks)) {
+            std::fclose(file);
+            return false;
+        }
+        chunk->column.AssignBlocks(blocks);
+        Chunk* raw = chunk.get();
+        chunks_.emplace(ChunkKey(record.x, record.z), std::move(chunk));
+        RebuildMesh(*raw);
+    }
+    std::fclose(file);
+
+    /* 相邻列的边界面按加载后的完整数据重新计算一次. */
+    for (auto& entry : chunks_) {
+        RebuildMesh(*entry.second);
+    }
+    version_ += 1;
+    RebuildVisibleList();
+
+    state.playerX = header.playerX;
+    state.playerY = header.playerY;
+    state.playerZ = header.playerZ;
+    state.yaw = header.yaw;
+    state.pitch = header.pitch;
+    state.seed = header.seed;
+    return true;
 }
 
 }  /* namespace immirror::world */

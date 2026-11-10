@@ -40,6 +40,13 @@ public:
     /* 视线单位方向. */
     core::Vec3 LookDirection() const;
 
+    /* 当前朝向, 读档与存档时需要. */
+    float Yaw() const { return yaw_; }
+    float Pitch() const { return pitch_; }
+
+    /* 读档后恢复位置与朝向, 跳过延迟落位. */
+    void SetPose(const core::Vec3& position, float yaw, float pitch);
+
     /* 破坏视线命中的方块; 返回是否命中并修改了世界. */
     bool BreakBlock(world::World& world);
 

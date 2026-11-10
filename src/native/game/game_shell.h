@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 
 struct AAssetManager;
 
@@ -38,8 +39,8 @@ public:
     GameShell(const GameShell&) = delete;
     GameShell& operator=(const GameShell&) = delete;
 
-    /* 图形上下文就绪后调用; 可重复调用, 内部保证幂等. */
-    void OnSurfaceReady(AAssetManager* assets);
+    /* 图形上下文就绪后调用; dataPath 为应用内部存储目录, 用于世界存档. */
+    void OnSurfaceReady(AAssetManager* assets, const char* dataPath);
 
     /* 图形上下文失效前调用, 释放全部 GPU 资源. */
     void OnSurfaceLost();
@@ -57,6 +58,12 @@ private:
 
     void LogStatus(double deltaSeconds);
 
+    /* 把世界与玩家状态写入存档. */
+    void SaveWorld();
+
+    /* 组装存档路径, 必要时创建目录. */
+    void PrepareSavePath(const char* dataPath);
+
     std::unique_ptr<world::World> world_;
     std::unique_ptr<player::PlayerController> player_;
     std::unique_ptr<render::ChunkRenderer> renderer_;
@@ -72,6 +79,8 @@ private:
 
     double elapsedSeconds_ = 0.0;
     double logAccumulator_ = 0.0;
+    double saveAccumulator_ = 0.0;
+    std::string savePath_;
 };
 
 }  /* namespace game */

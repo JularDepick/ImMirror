@@ -1,7 +1,10 @@
 #include "game/game_shell.h"
 
+#include <sys/stat.h>
+
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 
 #include "core/log.h"
 #include "core/vec3.h"
@@ -31,6 +34,9 @@ constexpr float kTapMoveLimit = 0.03f;
 
 /* 世界种子, 固定值便于复现地形. */
 constexpr uint32_t kWorldSeed = 20260101u;
+
+/* 自动存档间隔. */
+constexpr double kAutoSaveSeconds = 20.0;
 
 void MakePerspective(float* out, float fovYDegrees, float aspect, float nearPlane, float farPlane) {
     const float radians = fovYDegrees * 3.14159265358979f / 180.0f;
@@ -67,7 +73,7 @@ GameShell::GameShell()
 
 GameShell::~GameShell() = default;
 
-void GameShell::OnSurfaceReady(AAssetManager* assets) {
+void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     if (surfaceReady_) {
         return;
     }
@@ -76,17 +82,51 @@ void GameShell::OnSurfaceReady(AAssetManager* assets) {
         return;
     }
     surfaceReady_ = true;
-    /* 先让中心区块生成地形, 再按地表高度放置玩家, 否则出生点会落在虚空. */
-    world_->Update(core::Vec3{8.0f, 0.0f, 8.0f}, kViewDistanceChunks);
-    player_->Spawn(*world_, 8.0f, 8.0f);
+    PrepareSavePath(dataPath);
+
+    world::World::SaveState state;
+    if (!savePath_.empty() && world_->LoadFromFile(savePath_.c_str(), state)) {
+        player_->SetPose(core::Vec3{state.playerX, state.playerY, state.playerZ}, state.yaw, state.pitch);
+        IM_LOGI(kTag, "world loaded from save, chunks=%d", world_->LoadedChunkCount());
+    } else {
+        /* 先让中心区块生成地形, 再按地表高度放置玩家, 否则出生点会落在虚空. */
+        world_->Update(core::Vec3{8.0f, 0.0f, 8.0f}, kViewDistanceChunks);
+        player_->Spawn(*world_, 8.0f, 8.0f);
+    }
     world_->Update(player_->Position(), kViewDistanceChunks);
     IM_LOGI(kTag, "game shell ready, chunks=%d", world_->LoadedChunkCount());
+}
+
+void GameShell::PrepareSavePath(const char* dataPath) {
+    if (dataPath == nullptr || dataPath[0] == '\0') {
+        savePath_.clear();
+        return;
+    }
+    std::string directory = std::string(dataPath) + "/worlds";
+    ::mkdir(directory.c_str(), 0700);
+    savePath_ = directory + "/default.world";
+}
+
+void GameShell::SaveWorld() {
+    if (savePath_.empty() || !surfaceReady_) {
+        return;
+    }
+    world::World::SaveState state;
+    const core::Vec3 position = player_->Position();
+    state.playerX = position.x;
+    state.playerY = position.y;
+    state.playerZ = position.z;
+    state.yaw = player_->Yaw();
+    state.pitch = player_->Pitch();
+    const bool saved = world_->SaveToFile(savePath_.c_str(), state);
+    IM_LOGI(kTag, "world save %s, path=%s", saved ? "ok" : "failed", savePath_.c_str());
 }
 
 void GameShell::OnSurfaceLost() {
     if (!surfaceReady_) {
         return;
     }
+    SaveWorld();
     renderer_->Shutdown();
     surfaceReady_ = false;
     IM_LOGI(kTag, "game shell surface released");
@@ -107,6 +147,13 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     player_->Update(deltaSeconds, input, *world_);
     HandleTapActions(input);
     LogStatus(deltaSeconds);
+
+    /* 定期落盘, 避免进程被系统回收时丢失进度. */
+    saveAccumulator_ += deltaSeconds;
+    if (saveAccumulator_ >= kAutoSaveSeconds) {
+        saveAccumulator_ = 0.0;
+        SaveWorld();
+    }
 }
 
 void GameShell::HandleTapActions(const platform::InputSnapshot& input) {

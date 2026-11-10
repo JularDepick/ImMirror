@@ -33,6 +33,9 @@ public:
     /* 整列填充同一方块, 用于重置或清空. */
     void Fill(BlockId id);
 
+    /* 批量替换整列数据并重算最高层, 供读档使用; 长度不符时忽略. */
+    void AssignBlocks(const std::vector<BlockId>& data);
+
     static constexpr bool InRange(int32_t x, int32_t y, int32_t z) {
         return x >= 0 && x < kChunkSizeX && y >= 0 && y < kWorldHeight && z >= 0 && z < kChunkSizeZ;
     }

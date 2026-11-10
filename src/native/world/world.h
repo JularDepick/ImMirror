@@ -49,6 +49,22 @@ public:
 
     int32_t LoadedChunkCount() const;
 
+    /* 存档状态: 玩家位置与朝向, 以及世界种子. */
+    struct SaveState {
+        float playerX = 0.0f;
+        float playerY = 0.0f;
+        float playerZ = 0.0f;
+        float yaw = 0.0f;
+        float pitch = 0.0f;
+        uint32_t seed = 0;
+    };
+
+    /* 把全部已加载区块与存档状态写入文件; 目录不存在时返回 false. */
+    bool SaveToFile(const char* path, const SaveState& state) const;
+
+    /* 从文件恢复世界; 成功后清空现有区块并按文件内容重建. */
+    bool LoadFromFile(const char* path, SaveState& state);
+
 private:
     struct Chunk;
     Chunk* FindChunk(voxel::ChunkCoord coord) const;
