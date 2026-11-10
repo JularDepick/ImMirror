@@ -10,5 +10,6 @@ releases/
 single-branch/
 
 # pip 临时解包目录与临时文件
-pip-unpack-*/
+pip-*/
+
 tmp*/tmp*.tmp
