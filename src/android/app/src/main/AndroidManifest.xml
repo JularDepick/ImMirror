@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 渲染后端要求 GLES 3.0; Vulkan 作为可选能力, 当前不强制 -->
+    <uses-feature
+        android:glEsVersion="0x00030000"
+        android:required="true" />
+
+    <application
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
+
+        <!-- 启动界面: 展示版本与设备分级, 提供进入游戏的入口 -->
+        <activity
+            android:name=".LauncherActivity"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 游戏界面: NativeActivity, 主循环与输入全部在原生线程内完成 -->
+        <activity
+            android:name=".PlayActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|navigation|screenLayout|screenSize|smallestScreenSize|uiMode|density|touchscreen|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="immirror_core" />
+        </activity>
+    </application>
+</manifest>
