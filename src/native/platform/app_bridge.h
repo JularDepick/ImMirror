@@ -35,6 +35,8 @@ public:
  * android_native_app_glue 的薄封装:
  * 把胶水层的命令队列与输入队列翻译成引擎可用的回调与输入快照,
  * 屏蔽 ANativeActivity, ALooper 与 AInputQueue 的使用细节.
+ * 触摸按指针 id 分别跟踪, 每一路指针各自维护位置与累计位移,
+ * 因此两根手指同时移动时互不干扰.
  */
 class AppBridge {
 public:
@@ -63,7 +65,20 @@ private:
 
     void HandleCommand(int32_t command);
     int32_t HandleInput(AInputEvent* event);
+
+    /* 触摸事件按动作类型分派到指针池的增删改. */
     void HandleMotion(AInputEvent* event);
+    void HandlePointerDown(AInputEvent* event, size_t index);
+    void HandlePointerMove(AInputEvent* event);
+    void HandlePointerUp(AInputEvent* event, size_t index);
+    void ReleaseAllPointers();
+
+    /* 指针池内部跟踪表, 与对外快照分离, 便于按 id 维护累计位移. */
+    PointerState* TrackById(int32_t id);
+    PointerState* TrackForSlot();
+    void RecordPointer(int32_t id, float x, float y, bool down);
+    void AccumulateMotion(PointerState& track, float x, float y);
+    void PublishPointers(int32_t width, int32_t height);
     void HandleKey(AInputEvent* event);
     void SaveState();
     void RequestExit();
@@ -71,6 +86,7 @@ private:
     android_app* app_ = nullptr;
     AppLifecycleListener* listener_ = nullptr;
     InputSnapshot input_;
+    PointerState tracks_[kMaxPointers];
     bool exiting_ = false;
 };
 

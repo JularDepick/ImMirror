@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/vec3.h"
+#include "player/input_tuning.h"
 #include "platform/input_state.h"
 #include "voxel/voxel_types.h"
 
@@ -22,6 +23,17 @@ struct RayHit {
 };
 
 /*
+ * 指针手势角色. 每根手指在按下时分配一个角色, 之后一直保持,
+ * 中途越过屏幕中线也不切换, 因此摇杆指与视角指可以各自独立地同时工作,
+ * 这正是边走边看所依赖的多点并发.
+ */
+enum class PointerRole {
+    kNone = 0,
+    kStick = 1,
+    kLook = 2,
+};
+
+/*
  * 第一人称玩家控制. 负责输入到运动的映射, 与体素世界的碰撞,
  * 以及视线射线拾取. 该对象只在原生主线程上使用.
  */
@@ -29,7 +41,11 @@ class PlayerController {
 public:
     void Spawn(const world::World& world, float x, float z);
 
-    void Update(double dt, const platform::InputSnapshot& input, const world::World& world);
+    /*
+     * 输入快照按引用传入而不是只读: 控制器消费完累计位移后会清零,
+     * 保证同一段位移不会被两帧重复计入.
+     */
+    void Update(double dt, platform::InputSnapshot& input, const world::World& world);
 
     /* 列主序 4x4 视图矩阵. */
     void GetViewMatrix(float* out16) const;
@@ -47,6 +63,21 @@ public:
     /* 读档后恢复位置与朝向, 跳过延迟落位. */
     void SetPose(const core::Vec3& position, float yaw, float pitch);
 
+    /* 请求一次跳跃, 由界面按钮或键盘调用, 落地那一帧生效. */
+    void RequestJump() { jumpRequested_ = true; }
+
+    /* 浮动摇杆的视觉状态, 界面层据此绘制摇杆, 与输入共用同一锚点与半径. */
+    platform::StickVisual GetStickVisual() const;
+
+    /* 查询某路指针当前承担的角色, 界面层与总装据此判断点击归属. */
+    PointerRole RoleOf(int32_t pointerId) const;
+
+    /* 视角与摇杆的映射参数, 设置体系就绪后从这里注入. */
+    void SetLookTuning(const LookTuning& tuning) { look_ = tuning; }
+    const LookTuning& Look() const { return look_; }
+    void SetStickTuning(const StickTuning& tuning) { stick_ = tuning; }
+    const StickTuning& Stick() const { return stick_; }
+
     /* 破坏视线命中的方块; 返回是否命中并修改了世界. */
     bool BreakBlock(world::World& world);
 
@@ -54,18 +85,23 @@ public:
     bool PlaceBlock(world::World& world, voxel::BlockId id);
 
 private:
-    /* 触摸手势归属, 由落点所在的半屏决定. */
-    enum class Gesture {
-        kNone = 0,
-        kStick = 1,
-        kLook = 2,
-    };
+    /* 把多指针快照翻译成摇杆量, 视角增量与跳跃请求. */
+    void ProcessInput(float dt, platform::InputSnapshot& input);
 
-    /* 把输入快照翻译成摇杆量, 视角增量与跳跃请求. */
-    void ProcessInput(double dt, const platform::InputSnapshot& input);
+    /* 为尚未认领的指针分配角色, 左半屏优先摇杆, 右半屏优先视角. */
+    void AssignRoles(platform::InputSnapshot& input);
+
+    /* 释放摇杆角色, 顺带做点击与双击跳跃判定. */
+    void ReleaseStick();
+
+    /* 依据锚点与触点位置更新摇杆量, 并累计手势位移. */
+    void UpdateStick(const platform::InputSnapshot& input, float dt);
+
+    /* 消费视角指的累计位移. */
+    void UpdateLook(const platform::InputSnapshot& input);
 
     /* 应用一次视角拖动增量, 俯仰角在此裁剪到正负 89 度. */
-    void UpdateLookDelta(float deltaX, float deltaY);
+    void UpdateLookDelta(float deltaWidth, float deltaHeight);
 
     /* 重力和跳跃积分, 以及逐轴分步的碰撞推进. */
     void StepMotion(double dt, const world::World& world);
@@ -101,24 +137,27 @@ private:
     float pitch_ = 0.0f;  /* 俯仰角, 弧度, 正值抬头 */
     bool onGround_ = false;
     bool spawned_ = false;
-    bool spawnPending_ = false;      /* 出生列尚无区块数据, 等待地形生成后落位 */
-    float pendingSeconds_ = 0.0f;    /* 已等待落位的秒数, 用于超时保护 */
+    bool spawnPending_ = false;   /* 出生列尚无区块数据, 等待地形生成后落位 */
+    float pendingSeconds_ = 0.0f; /* 已等待落位的秒数, 用于超时保护 */
 
-    /* 触摸手势状态, 逐帧由输入快照驱动. */
-    Gesture gesture_ = Gesture::kNone;
-    bool pointerWasDown_ = false;
-    float anchorX_ = 0.0f;         /* 摇杆锚点, 归一化屏幕坐标 */
-    float anchorY_ = 0.0f;
-    float lastPointerX_ = 0.0f;    /* 上一帧上报的触点位置 */
-    float lastPointerY_ = 0.0f;
-    int32_t lastPointerCount_ = 0; /* 上一帧的触点数量, 用于识别指针切换 */
-    float stickX_ = 0.0f;          /* 摇杆水平量, 向右为正 */
-    float stickY_ = 0.0f;          /* 摇杆前向量, 向前为正 */
-    float gestureSeconds_ = 0.0f;  /* 当前手势已持续的秒数 */
-    float gestureTravel_ = 0.0f;   /* 手势累计位移, 用于区分点击与拖动 */
+    /* 手势角色绑定, 按指针 id 区分, 同一时刻各自最多绑定一路指针. */
+    int32_t stickPointerId_ = -1;
+    int32_t lookPointerId_ = -1;
+
+    /* 浮动摇杆: 锚点即摇杆指的按下点, 位置为归一化屏幕坐标. */
+    float stickAnchorX_ = 0.0f;
+    float stickAnchorY_ = 0.0f;
+    float stickValueX_ = 0.0f;   /* 摇杆水平量, 向右为正 */
+    float stickValueY_ = 0.0f;   /* 摇杆前向量, 向前为正 */
+    float stickSeconds_ = 0.0f;  /* 摇杆指已按住的秒数 */
+    float stickTravel_ = 0.0f;   /* 摇杆指累计位移, 用于区分点击与拖动 */
+
     float doubleTapTimer_ = -1.0f; /* 双击窗口剩余秒数, 负值表示未开启 */
     bool jumpRequested_ = false;
     int64_t lastKeyEvents_ = 0;    /* 已处理的累计按键事件数 */
+
+    LookTuning look_;
+    StickTuning stick_;
 };
 
 }  /* namespace immirror::player */

@@ -1,5 +1,6 @@
 #include "platform/app_bridge.h"
 
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 
@@ -17,6 +18,9 @@ constexpr const char* kTag = "ImMirrorPlatform";
 /* 存档状态魔数与版本, 用于校验恢复数据的来源, 避免读到旧格式脏数据. */
 constexpr uint32_t kSavedStateMagic = 0x494D5331u;
 constexpr uint32_t kSavedStateVersion = 1u;
+
+/* 单步位移上限, 超出视为触点位置跳变, 该步不计入累计位移. */
+constexpr float kPointerJumpLimit = 0.35f;
 
 /*
  * 最小存档状态. 当前只保存累计命令数,
@@ -63,6 +67,14 @@ AppBridge::~AppBridge() {
 bool AppBridge::PumpEvents(int32_t timeoutMillis) {
     if (app_ == nullptr) {
         return false;
+    }
+    /*
+     * 上一帧的累计位移已经被逻辑层消费, 在这里清零.
+     * 位移只在收到新事件时产生, 因此清零点放在取事件之前, 本帧新事件照常累加.
+     */
+    for (int32_t i = 0; i < kMaxPointers; ++i) {
+        tracks_[i].motionX = 0.0f;
+        tracks_[i].motionY = 0.0f;
     }
     /* 每轮只取一个事件源, 取完后把等待时长降为 0, 尽量把队列排空再回到主循环. */
     int32_t waitMillis = timeoutMillis;
@@ -211,25 +223,195 @@ int32_t AppBridge::HandleInput(AInputEvent* event) {
     }
 }
 
+/*
+ * 触摸事件分派. 按下与抬起按指针 id 增删池内条目, 移动按事件携带的历史样本
+ * 逐段累加位移, 因此同一帧内连续多次回调不会丢动量, 多根手指也互不覆盖.
+ */
 void AppBridge::HandleMotion(AInputEvent* event) {
-    const int32_t action = AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
-    const size_t pointerCount = AMotionEvent_getPointerCount(event);
-    input_.pointerCount = static_cast<int32_t>(pointerCount);
+    const int32_t action = AMotionEvent_getAction(event);
+    const int32_t masked = action & AMOTION_EVENT_ACTION_MASK;
+    const int32_t width = SurfaceWidth();
+    const int32_t height = SurfaceHeight();
     ++input_.touchEvents;
 
-    if (pointerCount > 0) {
-        const float x = AMotionEvent_getX(event, 0);
-        const float y = AMotionEvent_getY(event, 0);
-        const int32_t width = SurfaceWidth();
-        const int32_t height = SurfaceHeight();
-        if (width > 0 && height > 0) {
-            input_.pointerX = x / static_cast<float>(width);
-            input_.pointerY = y / static_cast<float>(height);
+    switch (masked) {
+        case AMOTION_EVENT_ACTION_DOWN:
+            HandlePointerDown(event, 0);
+            break;
+        case AMOTION_EVENT_ACTION_POINTER_DOWN: {
+            const size_t index = static_cast<size_t>(
+                (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
+                AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+            HandlePointerDown(event, index);
+            break;
+        }
+        case AMOTION_EVENT_ACTION_MOVE:
+            HandlePointerMove(event);
+            break;
+        case AMOTION_EVENT_ACTION_POINTER_UP: {
+            const size_t index = static_cast<size_t>(
+                (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
+                AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+            HandlePointerUp(event, index);
+            break;
+        }
+        case AMOTION_EVENT_ACTION_UP: {
+            /* ACTION_UP 表示最后一根手指离开, 按规范清空整池, 不留下悬空角色. */
+            const size_t index = static_cast<size_t>(
+                (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
+                AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+            HandlePointerUp(event, index);
+            ReleaseAllPointers();
+            break;
+        }
+        case AMOTION_EVENT_ACTION_CANCEL:
+            ReleaseAllPointers();
+            IM_LOGI(kTag, "touch cancelled");
+            break;
+        default:
+            break;
+    }
+    PublishPointers(width, height);
+}
+
+void AppBridge::HandlePointerDown(AInputEvent* event, size_t index) {
+    if (index >= AMotionEvent_getPointerCount(event)) {
+        return;
+    }
+    const int32_t id = AMotionEvent_getPointerId(event, index);
+    if (TrackById(id) == nullptr && TrackForSlot() == nullptr) {
+        /* 指针池已满, 忽略多出来的触点, 已绑定的摇杆与视角不受影响. */
+        IM_LOGW(kTag, "pointer pool full, drop id=%d", id);
+        return;
+    }
+    RecordPointer(id, AMotionEvent_getX(event, index), AMotionEvent_getY(event, index), true);
+    IM_LOGI(kTag, "pointer down id=%d count=%d", id,
+            static_cast<int32_t>(AMotionEvent_getPointerCount(event)));
+}
+
+void AppBridge::HandlePointerMove(AInputEvent* event) {
+    const size_t count = AMotionEvent_getPointerCount(event);
+    const size_t history = AMotionEvent_getHistorySize(event);
+    for (size_t index = 0; index < count; ++index) {
+        const int32_t id = AMotionEvent_getPointerId(event, index);
+        if (TrackById(id) == nullptr) {
+            continue;
+        }
+        /* 先按批次内的历史样本推进, 再落到本次事件的当前位置. */
+        for (size_t step = 0; step < history; ++step) {
+            RecordPointer(id, AMotionEvent_getHistoricalX(event, index, step),
+                          AMotionEvent_getHistoricalY(event, index, step), true);
+        }
+        RecordPointer(id, AMotionEvent_getX(event, index), AMotionEvent_getY(event, index), true);
+    }
+}
+
+void AppBridge::HandlePointerUp(AInputEvent* event, size_t index) {
+    const size_t count = AMotionEvent_getPointerCount(event);
+    if (index >= count) {
+        return;
+    }
+    const int32_t id = AMotionEvent_getPointerId(event, index);
+    PointerState* track = TrackById(id);
+    if (track == nullptr) {
+        return;
+    }
+    /* 抬起前的最后一段位移仍然计入, 手指快速划动不会丢掉结尾的转角. */
+    AccumulateMotion(*track, AMotionEvent_getX(event, index), AMotionEvent_getY(event, index));
+    track->down = false;
+    IM_LOGI(kTag, "pointer up id=%d count=%d", id, static_cast<int32_t>(count));
+}
+
+void AppBridge::ReleaseAllPointers() {
+    for (int32_t i = 0; i < kMaxPointers; ++i) {
+        tracks_[i] = PointerState{};
+    }
+}
+
+PointerState* AppBridge::TrackById(int32_t id) {
+    for (int32_t i = 0; i < kMaxPointers; ++i) {
+        if (tracks_[i].down && tracks_[i].id == id) {
+            return &tracks_[i];
         }
     }
-    input_.pointerDown = action == AMOTION_EVENT_ACTION_DOWN ||
-                         action == AMOTION_EVENT_ACTION_MOVE ||
-                         action == AMOTION_EVENT_ACTION_POINTER_DOWN;
+    return nullptr;
+}
+
+PointerState* AppBridge::TrackForSlot() {
+    for (int32_t i = 0; i < kMaxPointers; ++i) {
+        if (!tracks_[i].down) {
+            return &tracks_[i];
+        }
+    }
+    return nullptr;
+}
+
+/*
+ * 写入一路指针的状态. 指针已按下且继续移动时累加位移, 新按下的指针从头计位移,
+ * 单步位移异常大时视为位置跳变丢弃该步, 避免一帧内转头过度.
+ */
+void AppBridge::RecordPointer(int32_t id, float x, float y, bool down) {
+    PointerState* track = TrackById(id);
+    if (track == nullptr) {
+        if (!down) {
+            return;
+        }
+        track = TrackForSlot();
+        if (track == nullptr) {
+            return;
+        }
+        *track = PointerState{};
+        track->id = id;
+        track->x = x;
+        track->y = y;
+        track->down = true;
+        return;
+    }
+    if (!down) {
+        return;
+    }
+    AccumulateMotion(*track, x, y);
+}
+
+void AppBridge::AccumulateMotion(PointerState& track, float x, float y) {
+    const float deltaX = x - track.x;
+    const float deltaY = y - track.y;
+    track.x = x;
+    track.y = y;
+    if (std::fabs(deltaX) < kPointerJumpLimit && std::fabs(deltaY) < kPointerJumpLimit) {
+        track.motionX += deltaX;
+        track.motionY += deltaY;
+    }
+}
+
+/* 把跟踪表整理成对外快照, 坐标在此处一次性归一化. */
+void AppBridge::PublishPointers(int32_t width, int32_t height) {
+    for (int32_t i = 0; i < kMaxPointers; ++i) {
+        input_.pointers[i] = PointerState{};
+    }
+    input_.pointerCount = 0;
+    input_.downMask = 0ull;
+    input_.surfaceWidth = width;
+    input_.surfaceHeight = height;
+
+    for (int32_t i = 0; i < kMaxPointers; ++i) {
+        const PointerState& track = tracks_[i];
+        if (!track.down) {
+            continue;
+        }
+        PointerState& out = input_.pointers[input_.pointerCount];
+        out = track;
+        if (width > 0 && height > 0) {
+            out.x = track.x / static_cast<float>(width);
+            out.y = track.y / static_cast<float>(height);
+            out.motionX = track.motionX / static_cast<float>(width);
+            out.motionY = track.motionY / static_cast<float>(height);
+        }
+        if (track.id >= 0 && track.id < 64) {
+            input_.downMask |= (1ull << track.id);
+        }
+        input_.pointerCount += 1;
+    }
 }
 
 void AppBridge::HandleKey(AInputEvent* event) {

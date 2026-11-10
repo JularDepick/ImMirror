@@ -8,6 +8,7 @@
 #include "audio/audio_engine.h"
 #include "jni/engine_host.h"
 #include "platform/android_runtime.h"
+#include "settings/settings.h"
 
 namespace {
 
@@ -28,6 +29,11 @@ std::string ToStdString(JNIEnv* env, jstring value) {
     std::string result(chars);
     env->ReleaseStringUTFChars(value, chars);
     return result;
+}
+
+/* 把本地字符串回传给 Java; 只用于设置读取这类低频调用, 不进入逐帧路径. */
+jstring ToJString(JNIEnv* env, const std::string& text) {
+    return env->NewStringUTF(text.c_str());
 }
 
 }  /* namespace */
@@ -74,6 +80,81 @@ JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeD
     JNIEnv* env, jclass clazz) {
     (void)clazz;
     immirror::audio::AudioEngine::Instance().Detach(env);
+}
+
+/*
+ * 设置系统入口. 全部是低频调用: 设置界面打开时批量读取, 用户改动时逐项写入,
+ * 逐帧路径只读原生侧的原子快照, 不经过这里.
+ * 返回 -1 表示键名未知, 正常取值都不小于 0.
+ */
+
+/* 指定应用内部存储目录并载入设置; 重复调用幂等. */
+JNIEXPORT jboolean JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeSettingsInit(JNIEnv* env, jclass clazz,
+                                                                    jstring dataPath) {
+    (void)clazz;
+    const std::string path = ToStdString(env, dataPath);
+    const bool ok = immirror::settings::Settings::Instance().Initialize(path.c_str());
+    IM_LOGI(kTag, "nativeSettingsInit ok=%d bytes=%zu", ok ? 1 : 0, path.size());
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+
+/* 立即落盘, 供 Activity 进入后台时调用. */
+JNIEXPORT jboolean JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeSettingsFlush(JNIEnv* env, jclass clazz) {
+    (void)env;
+    (void)clazz;
+    return immirror::settings::Settings::Instance().Save() ? JNI_TRUE : JNI_FALSE;
+}
+
+/* 按落盘键名读取单项设置. */
+JNIEXPORT jint JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeSettingsGetInt(
+    JNIEnv* env, jclass clazz, jstring key) {
+    (void)clazz;
+    const std::string name = ToStdString(env, key);
+    return immirror::settings::Settings::Instance().GetByName(name.c_str(), -1);
+}
+
+/* 写入单项设置, 返回裁剪后的落定值. */
+JNIEXPORT jint JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeSettingsSetInt(
+    JNIEnv* env, jclass clazz, jstring key, jint value) {
+    (void)clazz;
+    const std::string name = ToStdString(env, key);
+    return immirror::settings::Settings::Instance().SetByName(name.c_str(), value);
+}
+
+/* 全量导出 "键=值" 多行文本, 设置界面一次读完所有项. */
+JNIEXPORT jstring JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeSettingsExport(
+    JNIEnv* env, jclass clazz) {
+    (void)clazz;
+    return ToJString(env, immirror::settings::Settings::Instance().Export());
+}
+
+/* 导出键表元数据, 每行 "键|默认值|最小值|最大值", 供设置界面生成控件. */
+JNIEXPORT jstring JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeSettingsDescribe(
+    JNIEnv* env, jclass clazz) {
+    (void)clazz;
+    return ToJString(env, immirror::settings::Settings::Instance().Describe());
+}
+
+/* 恢复单项默认值; 键名为空串时恢复全部. */
+JNIEXPORT jboolean JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeSettingsReset(JNIEnv* env, jclass clazz,
+                                                                      jstring key) {
+    (void)clazz;
+    const std::string name = ToStdString(env, key);
+    auto& settings = immirror::settings::Settings::Instance();
+    if (name.empty()) {
+        settings.ResetAll();
+        return JNI_TRUE;
+    }
+    const immirror::settings::KeyInfo* info = immirror::settings::FindKey(name.c_str());
+    if (info == nullptr) {
+        IM_LOGW(kTag, "settings reset ignored, unknown key=%s", name.c_str());
+        return JNI_FALSE;
+    }
+    settings.Reset(info->key);
+    return JNI_TRUE;
 }
 
 }  /* extern "C" */

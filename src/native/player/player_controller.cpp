@@ -3,12 +3,15 @@
 #include <cmath>
 #include <cstdint>
 
+#include "core/log.h"
 #include "core/vec3.h"
 #include "voxel/block_registry.h"
 #include "world/world.h"
 
 namespace immirror::player {
 namespace {
+
+constexpr const char* kTag = "ImMirrorPlayer";
 
 /* 角度与无量纲常量. */
 constexpr float kPi = 3.14159265358979f;
@@ -31,15 +34,15 @@ constexpr float kMaxPitch = 89.0f * kDegreesToRadians;  /* 俯仰限制 */
 constexpr float kReachDistance = 6.0f;                  /* 射线最长距离 */
 constexpr int32_t kMaxRaySteps = 96;                    /* DDA 步数上限, 防御异常方向 */
 
-/* 触摸映射参数, 屏幕坐标均为归一化值. */
-constexpr float kHalfScreenSplit = 0.5f;              /* 左右半屏分界 */
-constexpr float kStickRadius = 0.12f;                 /* 摇杆满量程半径 */
-constexpr float kLookDegreesPerWidth = 150.0f;        /* 横向拖满屏宽的转角 */
-constexpr float kLookDegreesPerHeight = 120.0f;       /* 纵向拖满屏高的转角 */
-constexpr float kPointerJumpThreshold = 0.35f;        /* 指针跳变阈值, 超过则重锚 */
-constexpr float kTapMaxSeconds = 0.22f;               /* 判定点击的最长按压时长 */
-constexpr float kTapMaxTravel = 0.02f;                /* 判定点击的最大累计位移 */
-constexpr float kDoubleTapWindow = 0.35f;             /* 双击时间窗 */
+/*
+ * 触摸映射参数, 屏幕坐标均为归一化值.
+ * 分区只在指针按下的那一刻决定初始角色, 之后手指越过中线也不改判,
+ * 因此边走边看不会被半屏边界打断.
+ */
+constexpr float kRoleSplitX = 0.5f;      /* 摇杆与视角的初始分区边界 */
+constexpr float kTapMaxSeconds = 0.22f;  /* 判定点击的最长按压时长 */
+constexpr float kTapMaxTravel = 0.02f;   /* 判定点击的最大累计位移 */
+constexpr float kDoubleTapWindow = 0.35f; /* 双击时间窗 */
 
 /* 碰撞推进参数. */
 constexpr float kMaxSubStep = 0.2f;                   /* 单次碰撞推进的最大位移 */
@@ -130,7 +133,7 @@ bool PlayerController::LiftOutOfSolid(const world::World& world) {
     return false;
 }
 
-void PlayerController::Update(double dt, const platform::InputSnapshot& input, const world::World& world) {
+void PlayerController::Update(double dt, platform::InputSnapshot& input, const world::World& world) {
     /* 未显式出生时按当前水平坐标补一次出生, 避免玩家自由落体掉出世界. */
     if (!spawned_) {
         Spawn(world, position_.x, position_.z);
@@ -162,7 +165,7 @@ void PlayerController::Update(double dt, const platform::InputSnapshot& input, c
         }
     }
 
-    ProcessInput(clamped, input);
+    ProcessInput(static_cast<float>(clamped), input);
     StepMotion(clamped, world);
 
     /* 区块晚于出生生成或外部写入方块时, 玩家可能被包在实心方块里, 逐格上抬脱困. */
@@ -244,20 +247,15 @@ bool PlayerController::PlaceBlock(world::World& world, voxel::BlockId id) {
     return world.SetBlock(target.x, target.y, target.z, id);
 }
 
-void PlayerController::ProcessInput(double dt, const platform::InputSnapshot& input) {
-    const float seconds = static_cast<float>(dt);
-
+void PlayerController::ProcessInput(float dt, platform::InputSnapshot& input) {
     if (doubleTapTimer_ > 0.0f) {
-        doubleTapTimer_ -= seconds;
+        doubleTapTimer_ -= dt;
         if (doubleTapTimer_ < 0.0f) {
             doubleTapTimer_ = -1.0f;
         }
     }
-    if (gesture_ != Gesture::kNone) {
-        gestureSeconds_ += seconds;
-    }
 
-    /* 键盘调试通道: 按键请求与双击共用同一条跳跃请求, 跳跃时再判是否落地. */
+    /* 键盘调试通道: 按键请求与按钮, 双击共用同一条跳跃请求, 跳跃时再判是否落地. */
     if (input.keyEvents != lastKeyEvents_) {
         const int32_t code = input.lastKeyCode;
         if (code == kKeySpace || code == kKeyEnter || code == kKeyCenter || code == kKeyButtonA) {
@@ -266,92 +264,135 @@ void PlayerController::ProcessInput(double dt, const platform::InputSnapshot& in
         lastKeyEvents_ = input.keyEvents;
     }
 
-    /*
-     * 输入快照只上报单指针流: pointerCount 反映触点总数, 位置取其中一个触点.
-     * 因此手势以首次落点的半屏位置归属, 左右同时按下时以先落下的手指为准.
-     */
-    const bool down = input.pointerDown && input.pointerCount > 0;
-    const float pointerX = input.pointerX;
-    const float pointerY = input.pointerY;
-
-    if (down && !pointerWasDown_) {
-        /* 新手势: 左半屏进入摇杆, 右半屏进入视角拖动. */
-        gesture_ = pointerX < kHalfScreenSplit ? Gesture::kStick : Gesture::kLook;
-        anchorX_ = pointerX;
-        anchorY_ = pointerY;
-        lastPointerX_ = pointerX;
-        lastPointerY_ = pointerY;
-        gestureSeconds_ = 0.0f;
-        gestureTravel_ = 0.0f;
-        stickX_ = 0.0f;
-        stickY_ = 0.0f;
-    } else if (down && pointerWasDown_ && gesture_ != Gesture::kNone) {
-        float deltaX = pointerX - lastPointerX_;
-        float deltaY = pointerY - lastPointerY_;
-
-        /*
-         * 触点数变化意味着快照里的指针可能换了一根, 位置会跳到另一根手指上;
-         * 单帧位移异常大时按同样方式处理. 两种情况都重设锚点而不是产生突兀转头,
-         * 也不让摇杆瞬间顶到满量程.
-         */
-        const bool pointerSwitched = input.pointerCount != lastPointerCount_;
-        const bool jumpedTooFar = std::fabs(deltaX) > kPointerJumpThreshold ||
-                                  std::fabs(deltaY) > kPointerJumpThreshold;
-        if (pointerSwitched || jumpedTooFar) {
-            anchorX_ = pointerX;
-            anchorY_ = pointerY;
-            stickX_ = 0.0f;
-            stickY_ = 0.0f;
-            deltaX = 0.0f;
-            deltaY = 0.0f;
-        }
-        gestureTravel_ += std::fabs(deltaX) + std::fabs(deltaY);
-
-        if (gesture_ == Gesture::kStick) {
-            /* 摇杆量取锚点到当前触点的位移, 并裁剪进单位圆, 斜向不加速. */
-            float stickRight = (pointerX - anchorX_) / kStickRadius;
-            float stickForward = -(pointerY - anchorY_) / kStickRadius;
-            const float length = std::sqrt(stickRight * stickRight + stickForward * stickForward);
-            if (length > 1.0f) {
-                stickRight /= length;
-                stickForward /= length;
-            }
-            stickX_ = stickRight;
-            stickY_ = stickForward;
-        } else {
-            UpdateLookDelta(deltaX, deltaY);
-        }
-        lastPointerX_ = pointerX;
-        lastPointerY_ = pointerY;
-    } else if (!down && pointerWasDown_) {
-        /* 抬手: 左半屏的短促点击计入双击窗口, 第二次点击触发跳跃. */
-        if (gesture_ == Gesture::kStick && gestureSeconds_ <= kTapMaxSeconds &&
-            gestureTravel_ <= kTapMaxTravel) {
-            if (doubleTapTimer_ > 0.0f) {
-                jumpRequested_ = true;
-                doubleTapTimer_ = -1.0f;
-            } else {
-                doubleTapTimer_ = kDoubleTapWindow;
-            }
-        }
-        gesture_ = Gesture::kNone;
-        stickX_ = 0.0f;
-        stickY_ = 0.0f;
-    } else if (!down) {
-        /* 无触点时清空摇杆, 松开手指立刻停止水平移动. */
-        gesture_ = Gesture::kNone;
-        stickX_ = 0.0f;
-        stickY_ = 0.0f;
+    /* 手势角色按指针 id 绑定, 手指抬起即让出角色, 不影响另一根手指的绑定. */
+    if (stickPointerId_ >= 0 && !input.IsDown(stickPointerId_)) {
+        ReleaseStick();
+    }
+    if (lookPointerId_ >= 0 && !input.IsDown(lookPointerId_)) {
+        lookPointerId_ = -1;
     }
 
-    pointerWasDown_ = down;
-    lastPointerCount_ = input.pointerCount;
+    AssignRoles(input);
+    UpdateStick(input, dt);
+    UpdateLook(input);
+
+    /* 累计位移已在本帧消费完毕, 清零后不会被下一帧重复计入. */
+    input.ClearMotion();
 }
 
-void PlayerController::UpdateLookDelta(float deltaX, float deltaY) {
-    /* 右拖右转, 下拖低头; 角度按屏幕尺寸比例换算, 满屏宽度约 150 度. */
-    yaw_ -= deltaX * (kLookDegreesPerWidth * kDegreesToRadians);
-    pitch_ -= deltaY * (kLookDegreesPerHeight * kDegreesToRadians);
+void PlayerController::AssignRoles(platform::InputSnapshot& input) {
+    for (int32_t i = 0; i < platform::kMaxPointers; ++i) {
+        const platform::PointerState& pointer = input.pointers[i];
+        if (!pointer.down || pointer.uiClaimed) {
+            continue;
+        }
+        if (pointer.id == stickPointerId_ || pointer.id == lookPointerId_) {
+            continue;
+        }
+
+        /*
+         * 左半屏落点优先当摇杆, 右半屏落点优先当视角; 首选角色已被占用时
+         * 让给另一个空角色. 这样第一根手指落在任意一侧都能用, 第二根手指自动补位,
+         * 之后手指越过中线也不会改判, 摇杆与视角因此可以同时操作.
+         */
+        const bool preferStick =
+            stick_.leftHanded ? (pointer.x >= kRoleSplitX) : (pointer.x < kRoleSplitX);
+        PointerRole target = PointerRole::kNone;
+        if (preferStick && stickPointerId_ < 0) {
+            target = PointerRole::kStick;
+        } else if (!preferStick && lookPointerId_ < 0) {
+            target = PointerRole::kLook;
+        } else if (stickPointerId_ < 0) {
+            target = PointerRole::kStick;
+        } else if (lookPointerId_ < 0) {
+            target = PointerRole::kLook;
+        }
+
+        if (target == PointerRole::kStick) {
+            stickPointerId_ = pointer.id;
+            /* 摇杆模式锚点取按下点 (浮动摇杆); 经典模式锚点固定在底座中心. */
+            stickAnchorX_ = stick_.fixedAnchor ? stick_.anchorX : pointer.x;
+            stickAnchorY_ = stick_.fixedAnchor ? stick_.anchorY : pointer.y;
+            stickValueX_ = 0.0f;
+            stickValueY_ = 0.0f;
+            stickSeconds_ = 0.0f;
+            stickTravel_ = 0.0f;
+            IM_LOGI(kTag, "stick bound pointer=%d anchor=%.3f,%.3f", pointer.id, stickAnchorX_,
+                    stickAnchorY_);
+        } else if (target == PointerRole::kLook) {
+            lookPointerId_ = pointer.id;
+            IM_LOGI(kTag, "look bound pointer=%d", pointer.id);
+        }
+    }
+}
+
+void PlayerController::ReleaseStick() {
+    /* 短促点击计入双击窗口, 窗口内的第二次点击触发跳跃, 与界面跳跃按钮互不干扰. */
+    if (stickSeconds_ <= kTapMaxSeconds && stickTravel_ <= kTapMaxTravel) {
+        if (doubleTapTimer_ > 0.0f) {
+            jumpRequested_ = true;
+            doubleTapTimer_ = -1.0f;
+        } else {
+            doubleTapTimer_ = kDoubleTapWindow;
+        }
+    }
+    stickPointerId_ = -1;
+    stickValueX_ = 0.0f;
+    stickValueY_ = 0.0f;
+}
+
+void PlayerController::UpdateStick(const platform::InputSnapshot& input, float dt) {
+    if (stickPointerId_ < 0) {
+        stickValueX_ = 0.0f;
+        stickValueY_ = 0.0f;
+        return;
+    }
+    const platform::PointerState* pointer = input.Find(stickPointerId_);
+    if (pointer == nullptr) {
+        stickValueX_ = 0.0f;
+        stickValueY_ = 0.0f;
+        return;
+    }
+    stickSeconds_ += dt;
+
+    const float aspect = input.Aspect();
+    const float safeAspect = aspect > 0.0001f ? aspect : 1.0f;
+    /* 纵向位移折算到与横向相同的长度单位, 摇杆在屏幕上才是各向同性的圆. */
+    const float deltaX = pointer->x - stickAnchorX_;
+    const float deltaY = (pointer->y - stickAnchorY_) / safeAspect;
+    const float motionY = pointer->motionY / safeAspect;
+    stickTravel_ += std::sqrt(pointer->motionX * pointer->motionX + motionY * motionY);
+
+    const float radius = stick_.radius > 0.0001f ? stick_.radius : 0.0001f;
+    float right = deltaX / radius;
+    float forward = -deltaY / radius;
+    /* 裁剪进单位圆, 斜向不会因为分量的平方和而加速. */
+    const float length = std::sqrt(right * right + forward * forward);
+    if (length > 1.0f) {
+        right /= length;
+        forward /= length;
+    }
+    stickValueX_ = right;
+    stickValueY_ = forward;
+}
+
+void PlayerController::UpdateLook(const platform::InputSnapshot& input) {
+    if (lookPointerId_ < 0) {
+        return;
+    }
+    const platform::PointerState* pointer = input.Find(lookPointerId_);
+    if (pointer == nullptr) {
+        return;
+    }
+    /* 视角指用平台层累加的整帧位移, 一帧内的多次回调与折返滑动都不会丢失转角. */
+    UpdateLookDelta(pointer->motionX, pointer->motionY);
+}
+
+void PlayerController::UpdateLookDelta(float deltaWidth, float deltaHeight) {
+    /* 右拖右转, 下拖低头; 角度按屏宽与屏高换算, 具体斜率集中放在 LookTuning. */
+    const float verticalSign = look_.invertY ? -1.0f : 1.0f;
+    yaw_ -= deltaWidth * (look_.DegreesPerWidth() * kDegreesToRadians);
+    pitch_ -= verticalSign * deltaHeight * (look_.DegreesPerHeight() * kDegreesToRadians);
     pitch_ = ClampFloat(pitch_, -kMaxPitch, kMaxPitch);
     /* 偏航角回绕到正负 pi, 长时间旋转也不会累积浮点误差. */
     while (yaw_ > kPi) {
@@ -362,6 +403,30 @@ void PlayerController::UpdateLookDelta(float deltaX, float deltaY) {
     }
 }
 
+platform::StickVisual PlayerController::GetStickVisual() const {
+    platform::StickVisual visual;
+    visual.active = stickPointerId_ >= 0;
+    visual.anchorX = stickAnchorX_;
+    visual.anchorY = stickAnchorY_;
+    visual.valueX = stickValueX_;
+    visual.valueY = stickValueY_;
+    visual.radius = stick_.radius;
+    return visual;
+}
+
+PointerRole PlayerController::RoleOf(int32_t pointerId) const {
+    if (pointerId < 0) {
+        return PointerRole::kNone;
+    }
+    if (pointerId == stickPointerId_) {
+        return PointerRole::kStick;
+    }
+    if (pointerId == lookPointerId_) {
+        return PointerRole::kLook;
+    }
+    return PointerRole::kNone;
+}
+
 void PlayerController::StepMotion(double dt, const world::World& world) {
     const float seconds = static_cast<float>(dt);
 
@@ -370,7 +435,7 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     const float sinYaw = std::sin(yaw_);
     const core::Vec3 forward{-sinYaw, 0.0f, -cosYaw};
     const core::Vec3 right{cosYaw, 0.0f, -sinYaw};
-    core::Vec3 wish = forward * stickY_ + right * stickX_;
+    core::Vec3 wish = forward * stickValueY_ + right * stickValueX_;
     const float wishLength = wish.Length();
     if (wishLength > 1.0f) {
         wish = wish * (1.0f / wishLength);
@@ -604,8 +669,10 @@ void PlayerController::Respawn() {
     velocity_ = core::Vec3{};
     onGround_ = false;
     jumpRequested_ = false;
-    stickX_ = 0.0f;
-    stickY_ = 0.0f;
+    stickPointerId_ = -1;
+    lookPointerId_ = -1;
+    stickValueX_ = 0.0f;
+    stickValueY_ = 0.0f;
 }
 
 core::Vec3 PlayerController::EyePosition() const {

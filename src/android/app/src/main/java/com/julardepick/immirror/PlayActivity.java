@@ -21,14 +21,20 @@ import com.julardepick.immirror.device.DeviceProfile;
  */
 public final class PlayActivity extends NativeActivity {
 
-    /* 与原生侧 SoundId 枚举顺序一致的音效资源. */
+    /* 与原生侧 SoundId 枚举顺序一致的音效资源, 按材质分族. */
     private static final String[] SOUND_FILES = {
         "sounds/dig_grass.ogg",
         "sounds/dig_stone.ogg",
         "sounds/dig_sand.ogg",
+        "sounds/dig_wood.ogg",
+        "sounds/dig_snow.ogg",
+        "sounds/dig_gravel.ogg",
         "sounds/place_grass.ogg",
         "sounds/place_stone.ogg",
         "sounds/place_sand.ogg",
+        "sounds/place_wood.ogg",
+        "sounds/place_snow.ogg",
+        "sounds/place_gravel.ogg",
     };
 
     private static final String TAG = "ImMirrorPlay";
@@ -39,13 +45,23 @@ public final class PlayActivity extends NativeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        /* 设置目录与存档目录同源, 都取应用内部存储根目录; 先初始化再启动主循环. */
+        NativeBridge.initSettings(getFilesDir().getAbsolutePath());
         NativeBridge.onDeviceProfile(DeviceProfile.obtain(this).toNativePayload());
         setupAudio();
         NativeBridge.start();
     }
 
     @Override
+    protected void onPause() {
+        /* 设置由原生侧异步落盘, 进入后台时强制写一次, 避免进程被回收丢改动. */
+        NativeBridge.flushSettings();
+        super.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
+        NativeBridge.flushSettings();
         NativeBridge.detachAudio();
         releaseAudio();
         NativeBridge.stop();

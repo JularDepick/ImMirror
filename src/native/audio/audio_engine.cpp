@@ -79,8 +79,28 @@ JNIEnv* AudioEngine::CurrentEnv() {
     return nullptr;
 }
 
+void AudioEngine::SetMasterVolume(float volume) {
+    if (!(volume > 0.0f)) {
+        volume_ = 0.0f;
+        return;
+    }
+    volume_ = volume > 1.0f ? 1.0f : volume;
+}
+
+void AudioEngine::SetSoundEnabled(bool enabled) {
+    soundEnabled_ = enabled;
+}
+
+void AudioEngine::SetMusicEnabled(bool enabled) {
+    musicEnabled_ = enabled;
+}
+
+void AudioEngine::SetVoiceEnabled(bool enabled) {
+    voiceEnabled_ = enabled;
+}
+
 void AudioEngine::Play(SoundId id) {
-    if (!Ready()) {
+    if (!soundEnabled_ || !Ready()) {
         return;
     }
     const int32_t index = static_cast<int32_t>(id);
@@ -91,8 +111,12 @@ void AudioEngine::Play(SoundId id) {
     if (env == nullptr) {
         return;
     }
-    /* 参数依次为: 音效句柄, 左声道, 右声道, 优先级, 循环次数, 播放速率. */
-    env->CallIntMethod(soundPool_, playMethod_, soundIds_[index], 1.0f, 1.0f, 1, 0, 1.0f);
+    /* 参数依次为: 音效句柄, 左声道, 右声道, 优先级, 循环次数, 播放速率.
+     * 左右声道音量取设置层下发的主音量, 音量 0 时直接返回, 不产生无效流. */
+    if (volume_ <= 0.0f) {
+        return;
+    }
+    env->CallIntMethod(soundPool_, playMethod_, soundIds_[index], volume_, volume_, 1, 0, 1.0f);
 }
 
 }  /* namespace immirror::audio */

@@ -76,6 +76,68 @@ public final class NativeBridge {
         nativeDetachAudio();
     }
 
+    /*
+     * 设置系统. 原生侧持有唯一一份设置快照并负责落盘,
+     * Java 侧只做展示与转发, 因此设置界面以后接入时不必再复制一套存储.
+     * 全部是低频调用, 逐帧路径不经过这里.
+     */
+
+    /* 指定应用内部存储目录并载入设置; 重复调用幂等. */
+    public static boolean initSettings(String dataPath) {
+        if (!ensureLoaded()) {
+            return false;
+        }
+        return nativeSettingsInit(dataPath == null ? "" : dataPath);
+    }
+
+    /* 立即落盘, 建议在 Activity 进入后台时调用. */
+    public static boolean flushSettings() {
+        if (!ensureLoaded()) {
+            return false;
+        }
+        return nativeSettingsFlush();
+    }
+
+    /* 读取单项设置; 键名未知时返回 -1. */
+    public static int getSetting(String key) {
+        if (!ensureLoaded() || key == null) {
+            return -1;
+        }
+        return nativeSettingsGetInt(key);
+    }
+
+    /* 写入单项设置; 返回裁剪后的落定值, 键名未知时返回 -1. */
+    public static int setSetting(String key, int value) {
+        if (!ensureLoaded() || key == null) {
+            return -1;
+        }
+        return nativeSettingsSetInt(key, value);
+    }
+
+    /* 全量导出, 每行 "键=值". */
+    public static String exportSettings() {
+        if (!ensureLoaded()) {
+            return "";
+        }
+        return nativeSettingsExport();
+    }
+
+    /* 键表元数据, 每行 "键|默认值|最小值|最大值". */
+    public static String describeSettings() {
+        if (!ensureLoaded()) {
+            return "";
+        }
+        return nativeSettingsDescribe();
+    }
+
+    /* 恢复单项默认值; key 为空串时恢复全部. */
+    public static boolean resetSetting(String key) {
+        if (!ensureLoaded()) {
+            return false;
+        }
+        return nativeSettingsReset(key == null ? "" : key);
+    }
+
     private static native void nativeOnDeviceProfile(String payload);
 
     private static native void nativeStart();
@@ -85,4 +147,18 @@ public final class NativeBridge {
     private static native void nativeAttachAudio(SoundPool pool, int[] soundIds);
 
     private static native void nativeDetachAudio();
+
+    private static native boolean nativeSettingsInit(String dataPath);
+
+    private static native boolean nativeSettingsFlush();
+
+    private static native int nativeSettingsGetInt(String key);
+
+    private static native int nativeSettingsSetInt(String key, int value);
+
+    private static native String nativeSettingsExport();
+
+    private static native String nativeSettingsDescribe();
+
+    private static native boolean nativeSettingsReset(String key);
 }

@@ -3,9 +3,12 @@
 #include <GLES3/gl3.h>
 
 #include <cmath>
+#include <cstddef>
 #include <cstring>
 
 #include "core/log.h"
+#include "ui/hud_font.h"
+#include "ui/hud_slots.h"
 
 namespace immirror::ui {
 namespace {
@@ -15,8 +18,24 @@ constexpr const char* kTag = "ImMirrorHud";
 /* 顶点: 屏幕归一化坐标 (2) + 纹理坐标 (2) + 颜色 (4), uv 为负表示纯色矩形. */
 constexpr int32_t kFloatsPerVertex = 8;
 
+/* 顶点缓冲容量, 按顶点数计. HUD 常态用量不足一千, 预留到八千以容纳方块名文字. */
+constexpr int32_t kVertexCapacity = 8192;
+
 /* 图集为 16x16 格, 每格 64 像素. */
 constexpr float kAtlasGrid = 16.0f;
+
+/* 摇杆环粗细, 以屏宽为 1. */
+constexpr float kStickRingThickness = 0.004f;
+/* 滑块半径相对摇杆环半径的比例. */
+constexpr float kKnobRadiusRatio = 0.3f;
+
+/* 跳跃按钮按下时的缩放, 与亮度一起构成按压反馈. */
+constexpr float kJumpPressedScale = 0.9f;
+
+/* 方块名标签: 点阵像素边长, 内边距与离方块栏的间距, 均以屏宽为 1. */
+constexpr float kNamePixelSize = 0.0035f;
+constexpr float kNamePadding = 0.012f;
+constexpr float kNamePlateGap = 0.012f;
 
 const char* const kVertexShader = R"(#version 300 es
 layout(location = 0) in vec2 aPosition;
@@ -62,19 +81,29 @@ uint32_t CompileShader(GLenum type, const char* source) {
     return shader;
 }
 
-/* 直线段, 用于准星与选中框. */
+bool HasRoom(int32_t offset, int32_t vertices) {
+    return offset + vertices <= kVertexCapacity;
+}
+
+/*
+ * 纯色矩形. 中心与半宽半高都是设计坐标, scale 为 高/宽,
+ * 水平方向乘上它以后横纵像素长度相等. 用于准星, 按钮与标签底板.
+ */
 void PushRect(float* out, int32_t& offset, float centerX, float centerY, float halfWidth,
-              float halfHeight, float aspect, const float color[4]) {
+              float halfHeight, float scale, const float color[4]) {
+    if (!HasRoom(offset, 6)) {
+        return;
+    }
     const float positions[4][2] = {
-        {(centerX - halfWidth) * aspect, centerY - halfHeight},
-        {(centerX + halfWidth) * aspect, centerY - halfHeight},
-        {(centerX + halfWidth) * aspect, centerY + halfHeight},
-        {(centerX - halfWidth) * aspect, centerY + halfHeight},
+        {centerX - halfWidth, centerY - halfHeight},
+        {centerX + halfWidth, centerY - halfHeight},
+        {centerX + halfWidth, centerY + halfHeight},
+        {centerX - halfWidth, centerY + halfHeight},
     };
     const int32_t order[6] = {0, 1, 2, 0, 2, 3};
     for (int32_t index = 0; index < 6; ++index) {
         float* target = out + static_cast<size_t>(offset) * kFloatsPerVertex;
-        target[0] = positions[order[index]][0];
+        target[0] = positions[order[index]][0] * scale;
         target[1] = positions[order[index]][1];
         target[2] = -1.0f;
         target[3] = -1.0f;
@@ -86,9 +115,41 @@ void PushRect(float* out, int32_t& offset, float centerX, float centerY, float h
     }
 }
 
+/* 纯色三角形, 用于跳跃按钮上的向上箭头. */
+void PushTriangle(float* out, int32_t& offset, float centerX, float centerY, float halfWidth,
+                  float height, float scale, const float color[4]) {
+    if (!HasRoom(offset, 3)) {
+        return;
+    }
+    const float positions[3][2] = {
+        {centerX, centerY + height * 0.5f},
+        {centerX + halfWidth, centerY - height * 0.5f},
+        {centerX - halfWidth, centerY - height * 0.5f},
+    };
+    for (int32_t index = 0; index < 3; ++index) {
+        float* target = out + static_cast<size_t>(offset) * kFloatsPerVertex;
+        target[0] = positions[index][0] * scale;
+        target[1] = positions[index][1];
+        target[2] = -1.0f;
+        target[3] = -1.0f;
+        target[4] = color[0];
+        target[5] = color[1];
+        target[6] = color[2];
+        target[7] = color[3];
+        offset += 1;
+    }
+}
+
 /* 带图集纹理的矩形, cell 为图集格序号. */
-void PushSprite(float* out, int32_t& offset, float left, float bottom, float right, float top,
-                float aspect, int32_t cell, const float color[4]) {
+void PushSprite(float* out, int32_t& offset, float centerX, float centerY, float halfSize,
+                float scale, int32_t cell, const float color[4]) {
+    if (!HasRoom(offset, 6)) {
+        return;
+    }
+    const float left = centerX - halfSize;
+    const float bottom = centerY - halfSize;
+    const float right = centerX + halfSize;
+    const float top = centerY + halfSize;
     const float column = static_cast<float>(cell % 16);
     const float row = static_cast<float>(cell / 16);
     const float u0 = column / kAtlasGrid;
@@ -97,16 +158,16 @@ void PushSprite(float* out, int32_t& offset, float left, float bottom, float rig
     const float v0 = row / kAtlasGrid;
     const float v1 = (row + 1.0f) / kAtlasGrid;
     const float positions[4][2] = {
-        {left * aspect, bottom},
-        {right * aspect, bottom},
-        {right * aspect, top},
-        {left * aspect, top},
+        {left, bottom},
+        {right, bottom},
+        {right, top},
+        {left, top},
     };
     const float uvs[4][2] = {{u0, v1}, {u1, v1}, {u1, v0}, {u0, v0}};
     const int32_t order[6] = {0, 1, 2, 0, 2, 3};
     for (int32_t index = 0; index < 6; ++index) {
         float* target = out + static_cast<size_t>(offset) * kFloatsPerVertex;
-        target[0] = positions[order[index]][0];
+        target[0] = positions[order[index]][0] * scale;
         target[1] = positions[order[index]][1];
         target[2] = uvs[order[index]][0];
         target[3] = uvs[order[index]][1];
@@ -118,22 +179,27 @@ void PushSprite(float* out, int32_t& offset, float left, float bottom, float rig
     }
 }
 
+/* 圆环, thickness 等于 radius 时退化为实心圆. 横纵等比, 屏幕上始终是正圆. */
 void PushRing(float* out, int32_t& offset, float centerX, float centerY, float radius,
-              float thickness, float aspect, const float color[4], int32_t segments) {
+              float thickness, float scale, const float color[4], int32_t segments) {
+    const float innerRadius = radius - thickness;
     for (int32_t segment = 0; segment < segments; ++segment) {
+        if (!HasRoom(offset, 6)) {
+            return;
+        }
         const float a0 = 6.28318530718f * static_cast<float>(segment) / static_cast<float>(segments);
-        const float a1 = 6.28318530718f * static_cast<float>(segment + 1) / static_cast<float>(segments);
-        const float innerR = radius - thickness;
+        const float a1 =
+            6.28318530718f * static_cast<float>(segment + 1) / static_cast<float>(segments);
         const float quad[4][2] = {
-            {centerX + std::cos(a0) * innerR, centerY + std::sin(a0) * innerR},
-            {centerX + std::cos(a1) * innerR, centerY + std::sin(a1) * innerR},
+            {centerX + std::cos(a0) * innerRadius, centerY + std::sin(a0) * innerRadius},
+            {centerX + std::cos(a1) * innerRadius, centerY + std::sin(a1) * innerRadius},
             {centerX + std::cos(a1) * radius, centerY + std::sin(a1) * radius},
             {centerX + std::cos(a0) * radius, centerY + std::sin(a0) * radius},
         };
         const int32_t order[6] = {0, 1, 2, 0, 2, 3};
         for (int32_t index = 0; index < 6; ++index) {
             float* target = out + static_cast<size_t>(offset) * kFloatsPerVertex;
-            target[0] = quad[order[index]][0] * aspect;
+            target[0] = quad[order[index]][0] * scale;
             target[1] = quad[order[index]][1];
             target[2] = -1.0f;
             target[3] = -1.0f;
@@ -146,21 +212,48 @@ void PushRing(float* out, int32_t& offset, float centerX, float centerY, float r
     }
 }
 
-/* 方块栏几何: 九格居中排列在屏幕底部. */
-constexpr float kSlotSize = 0.052f;
-constexpr float kSlotGap = 0.004f;
-constexpr float kSlotCenterY = -0.86f;
-
-/* 相邻格中心间距, 中间格落在屏幕水平中心. */
-constexpr float kSlotPitch = kSlotSize * 2.0f + kSlotGap;
-constexpr float kSlotOriginX = -kSlotPitch * 4.0f;
-
-float SlotCenterX(int32_t slot) {
-    return kSlotOriginX + static_cast<float>(slot) * kSlotPitch;
+/* 点阵文字. left 与 top 为文本左上角的设计坐标, 逐像素铺小矩形. */
+void PushText(float* out, int32_t& offset, float left, float top, float pixelSize,
+              const char* text, float scale, const float color[4]) {
+    if (text == nullptr) {
+        return;
+    }
+    float cursorX = left;
+    for (const char* cursor = text; *cursor != '\0'; ++cursor) {
+        const uint8_t* rows = GlyphRows(*cursor);
+        if (rows != nullptr) {
+            for (int32_t row = 0; row < kGlyphHeight; ++row) {
+                for (int32_t column = 0; column < kGlyphWidth; ++column) {
+                    const bool lit = ((rows[row] >> (kGlyphWidth - 1 - column)) & 1u) != 0u;
+                    if (!lit) {
+                        continue;
+                    }
+                    const float centerX = cursorX + (static_cast<float>(column) + 0.5f) * pixelSize;
+                    const float centerY = top - (static_cast<float>(row) + 0.5f) * pixelSize;
+                    PushRect(out, offset, centerX, centerY, pixelSize * 0.5f, pixelSize * 0.5f,
+                             scale, color);
+                }
+            }
+        }
+        cursorX += static_cast<float>(kGlyphWidth + kGlyphSpacing) * pixelSize;
+    }
 }
 
-/* 方块栏中依次展示的图集格. */
-const int32_t kSlotCells[HudRenderer::kSlotCount] = {0, 2, 3, 4, 6, 8, 10, 11, 12};
+void ToUpper(const char* source, char* target, size_t capacity) {
+    if (target == nullptr || capacity == 0) {
+        return;
+    }
+    size_t index = 0;
+    if (source != nullptr) {
+        for (; source[index] != '\0' && index + 1 < capacity; ++index) {
+            const char character = source[index];
+            target[index] = (character >= 'a' && character <= 'z')
+                                ? static_cast<char>(character - 'a' + 'A')
+                                : character;
+        }
+    }
+    target[index] = '\0';
+}
 
 }  /* namespace */
 
@@ -203,7 +296,8 @@ bool HudRenderer::Initialize(uint32_t atlasTexture) {
     glGenBuffers(1, &vbo_);
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferData(GL_ARRAY_BUFFER, 96 * 1024, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, kVertexCapacity * kFloatsPerVertex * sizeof(float), nullptr,
+                 GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float), nullptr);
     glEnableVertexAttribArray(1);
@@ -238,79 +332,102 @@ void HudRenderer::Shutdown() {
 }
 
 void HudRenderer::SetViewport(int32_t width, int32_t height) {
-    viewportWidth_ = width;
-    viewportHeight_ = height;
+    layout_ = HudLayout(width, height);
 }
 
-int32_t HudRenderer::HitTestSlot(float normalizedX, float normalizedY) const {
-    /* 归一化坐标原点在左上角, 转换为以屏幕中心为原点的比例坐标. */
-    const float aspect = viewportHeight_ > 0
-                             ? static_cast<float>(viewportWidth_) / static_cast<float>(viewportHeight_)
-                             : 1.0f;
-    const float x = (normalizedX * 2.0f - 1.0f) * aspect;
-    const float y = 1.0f - normalizedY * 2.0f;
-    const float half = kSlotSize;
-    if (y < kSlotCenterY - half || y > kSlotCenterY + half) {
-        return -1;
-    }
-    for (int32_t slot = 0; slot < kSlotCount; ++slot) {
-        const float centerX = SlotCenterX(slot) * aspect;
-        if (x >= centerX - half * aspect && x <= centerX + half * aspect) {
-            return slot;
-        }
-    }
-    return -1;
-}
-
-void HudRenderer::Render(float stickX, float stickY, bool stickActive, int32_t selectedSlot) {
-    if (!ready_) {
+void HudRenderer::Render(const HudFrame& frame) {
+    if (!ready_ || !layout_.Valid()) {
         return;
     }
-    const float aspect = viewportHeight_ > 0
-                             ? static_cast<float>(viewportWidth_) / static_cast<float>(viewportHeight_)
-                             : 1.0f;
-    static float vertices[96 * 1024 / sizeof(float)];
+    const float scale = layout_.Scale();
+    static float vertices[kVertexCapacity * kFloatsPerVertex];
     int32_t offset = 0;
 
-    /* 准星: 两条细矩形组成十字. */
+    /* 准星: 两条细矩形组成十字, 固定在屏幕中心. */
     const float white[4] = {1.0f, 1.0f, 1.0f, 0.75f};
-    PushRect(vertices, offset, 0.0f, 0.0f, 0.006f, 0.0012f, aspect, white);
-    PushRect(vertices, offset, 0.0f, 0.0f, 0.0012f, 0.006f, aspect, white);
+    const float armHalf = layout_.DesignLength(0.006f);
+    const float armThickness = layout_.DesignLength(0.0012f);
+    PushRect(vertices, offset, 0.0f, 0.0f, armHalf, armThickness, scale, white);
+    PushRect(vertices, offset, 0.0f, 0.0f, armThickness, armHalf, scale, white);
 
-    /* 摇杆: 底圈固定在左下角, 摇杆头随输入偏移. */
-    const float stickCenterX = -0.52f;
-    const float stickCenterY = -0.42f;
-    const float baseColor[4] = {1.0f, 1.0f, 1.0f, 0.16f};
-    const float knobColor[4] = {1.0f, 1.0f, 1.0f, 0.38f};
-    PushRing(vertices, offset, stickCenterX, stickCenterY, 0.14f, 0.012f, aspect, baseColor, 24);
-    const float knobX = stickCenterX + stickX * 0.1f;
-    const float knobY = stickCenterY + stickY * 0.1f;
-    PushRing(vertices, offset, knobX, knobY, 0.052f, 0.046f, aspect,
-             stickActive ? knobColor : baseColor, 16);
+    /*
+     * 浮动摇杆: 环画在控制器回报的锚点上, 也就是这一路的按下点;
+     * 滑块按摇杆量沿环半径偏移, 环半径直接取控制器使用的满量程半径,
+     * 因此界面看到的幅度与真正参与移动的量一致.
+     */
+    if (frame.stick.active && frame.stick.radius > 0.0f) {
+        const float ringRadius = layout_.DesignLength(frame.stick.radius);
+        const float centerX = layout_.DesignX(frame.stick.anchorX);
+        const float centerY = layout_.DesignY(frame.stick.anchorY);
+        const float baseColor[4] = {1.0f, 1.0f, 1.0f, 0.20f};
+        const float knobColor[4] = {1.0f, 1.0f, 1.0f, 0.45f};
+        PushRing(vertices, offset, centerX, centerY, ringRadius,
+                 layout_.DesignLength(kStickRingThickness), scale, baseColor, 40);
+        PushRing(vertices, offset, centerX + frame.stick.valueX * ringRadius,
+                 centerY + frame.stick.valueY * ringRadius, ringRadius * kKnobRadiusRatio,
+                 ringRadius * kKnobRadiusRatio, scale, knobColor, 24);
+    }
 
-    /* 跳跃按钮: 右下角方框. */
-    const float jumpColor[4] = {1.0f, 1.0f, 1.0f, 0.22f};
-    PushRect(vertices, offset, 0.62f, -0.42f, 0.075f, 0.075f, aspect, jumpColor);
+    /* 跳跃按钮: 右下角方块加向上箭头, 按下时收缩并加亮作为反馈. */
+    const float jumpHalf = layout_.DesignLength(layout_.JumpHalfSize());
+    const float jumpCenterX = layout_.DesignX(layout_.JumpCenterX());
+    const float jumpCenterY = layout_.DesignY(layout_.JumpCenterY());
+    const float jumpDrawHalf = frame.jumpPressed ? jumpHalf * kJumpPressedScale : jumpHalf;
+    const float jumpBackdrop[4] = {0.0f, 0.0f, 0.0f, 0.32f};
+    const float jumpBody[4] = {1.0f, 1.0f, 1.0f, frame.jumpPressed ? 0.52f : 0.22f};
+    const float jumpArrow[4] = {1.0f, 1.0f, 1.0f, frame.jumpPressed ? 0.95f : 0.62f};
+    PushRect(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf, jumpDrawHalf, scale,
+             jumpBackdrop);
+    PushRect(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf * 0.86f,
+             jumpDrawHalf * 0.86f, scale, jumpBody);
+    PushTriangle(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf * 0.42f,
+                 jumpDrawHalf * 0.62f, scale, jumpArrow);
 
-    /* 方块栏: 九格图集图标, 选中格加亮边. */
+    /* 方块栏: 每格图集图标取自共享槽位表, 选中格加亮并描边. */
+    const float slotHalf = layout_.DesignLength(layout_.SlotHalfSize());
+    const float slotCenterY = layout_.DesignY(layout_.SlotCenterY());
     const float slotTint[4] = {1.0f, 1.0f, 1.0f, 0.92f};
     const float selectedTint[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    const float borderColor[4] = {1.0f, 0.92f, 0.55f, 1.0f};
-    const float backdrop[4] = {0.0f, 0.0f, 0.0f, 0.35f};
+    const float slotBorder[4] = {1.0f, 0.92f, 0.55f, 1.0f};
+    const float slotBackdrop[4] = {0.0f, 0.0f, 0.0f, 0.35f};
     for (int32_t slot = 0; slot < kSlotCount; ++slot) {
-        const float centerX = SlotCenterX(slot);
-        const bool selected = slot == selectedSlot;
-        PushRect(vertices, offset, centerX, kSlotCenterY, kSlotSize * 1.12f, kSlotSize * 1.12f,
-                 aspect, backdrop);
-        PushSprite(vertices, offset, centerX - kSlotSize, kSlotCenterY - kSlotSize,
-                   centerX + kSlotSize, kSlotCenterY + kSlotSize, aspect, kSlotCells[slot],
-                   selected ? selectedTint : slotTint);
+        const float centerX = layout_.DesignX(layout_.SlotCenterX(slot));
+        const bool selected = slot == frame.selectedSlot;
+        PushRect(vertices, offset, centerX, slotCenterY, slotHalf * 1.05f, slotHalf * 1.05f,
+                 scale, slotBackdrop);
+        PushSprite(vertices, offset, centerX, slotCenterY, slotHalf, scale,
+                   BlockSlotAtlasCell(slot), selected ? selectedTint : slotTint);
         if (selected) {
-            PushRect(vertices, offset, centerX, kSlotCenterY + kSlotSize, kSlotSize, 0.0035f, aspect, borderColor);
-            PushRect(vertices, offset, centerX, kSlotCenterY - kSlotSize, kSlotSize, 0.0035f, aspect, borderColor);
-            PushRect(vertices, offset, centerX - kSlotSize, kSlotCenterY, 0.0035f, kSlotSize, aspect, borderColor);
-            PushRect(vertices, offset, centerX + kSlotSize, kSlotCenterY, 0.0035f, kSlotSize, aspect, borderColor);
+            const float edge = slotHalf * 0.07f;
+            PushRect(vertices, offset, centerX, slotCenterY + slotHalf, slotHalf, edge, scale,
+                     slotBorder);
+            PushRect(vertices, offset, centerX, slotCenterY - slotHalf, slotHalf, edge, scale,
+                     slotBorder);
+            PushRect(vertices, offset, centerX - slotHalf, slotCenterY, edge, slotHalf, scale,
+                     slotBorder);
+            PushRect(vertices, offset, centerX + slotHalf, slotCenterY, edge, slotHalf, scale,
+                     slotBorder);
         }
+    }
+
+    /* 长按方块栏时在栏位上方显示方块名, 选中状态不因此改变. */
+    if (frame.nameSlot >= 0 && frame.nameSlot < kSlotCount) {
+        char text[32];
+        ToUpper(BlockSlotName(frame.nameSlot), text, sizeof(text));
+        const float pixel = layout_.DesignLength(kNamePixelSize);
+        const float textWidth = MeasureText(text, pixel);
+        const float padding = layout_.DesignLength(kNamePadding);
+        const float plateHalfWidth = textWidth * 0.5f + padding;
+        const float plateHalfHeight = static_cast<float>(kGlyphHeight) * pixel * 0.5f + padding * 0.5f;
+        const float plateCenterX = layout_.DesignX(layout_.SlotCenterX(frame.nameSlot));
+        const float plateCenterY = slotCenterY + layout_.DesignLength(layout_.SlotHalfSize()) +
+                                   layout_.DesignLength(kNamePlateGap) + plateHalfHeight;
+        const float plateColor[4] = {0.0f, 0.0f, 0.0f, 0.62f};
+        PushRect(vertices, offset, plateCenterX, plateCenterY, plateHalfWidth, plateHalfHeight,
+                 scale, plateColor);
+        PushText(vertices, offset, plateCenterX - textWidth * 0.5f,
+                 plateCenterY + static_cast<float>(kGlyphHeight) * pixel * 0.5f, pixel, text,
+                 scale, white);
     }
 
     if (offset == 0) {
