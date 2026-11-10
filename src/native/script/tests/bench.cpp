@@ -98,10 +98,6 @@ int RunOne(const BenchItem& item, const BindingRegistry& registry) {
 
 }  /* namespace */
 
-const char* BenchmarkFibonacciSource() { return kFibonacciSource; }
-
-const char* BenchmarkTableSource() { return kTableSource; }
-
 int RunBenchmarks() {
     BindingRegistry registry;
     RegisterDefaultBindings(registry);

@@ -11,8 +11,4 @@ namespace immirror::script {
  */
 int RunBenchmarks();
 
-/* 基准用的源码文本, 测试与工具共用 */
-const char* BenchmarkFibonacciSource();
-const char* BenchmarkTableSource();
-
 }  /* namespace immirror::script */
