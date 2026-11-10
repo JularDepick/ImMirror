@@ -97,30 +97,8 @@ def build(project_dir: str, out_path: str) -> dict:
     doc_path = util.find_project_json(project_dir, PROJECT_FILE)
     doc = util.read_json(doc_path)
     source = util.check_doc(doc, NAME, FORMATS)
-    container = doc.get("container") or {}
-    try:
-        magic = bytes.fromhex(container.get("magic", "89674523"))
-    except ValueError as exc:
-        raise util.ScaffoldError("container.magic 不是十六进制: %r" % container.get("magic")) from exc
-    if len(magic) != 4:
-        raise util.ScaffoldError("container.magic 必须是 4 字节, 实得 %d" % len(magic))
-    body = bytearray(magic)
-    body += struct.pack("<II", int(container.get("version", 100)),
-                        int(container.get("header_flag", 1)))
-    for block in doc.get("blocks") or []:
-        name = block.get("name")
-        type_id = block.get("type_id")
-        payload = util.blob_field_bytes(block.get("payload"), "区块 %s 的 payload" % name)
-        if not isinstance(name, str):
-            raise util.ScaffoldError("区块缺少 name")
-        if name.startswith("?") or not isinstance(type_id, int) or type_id < 0:
-            body += payload
-            continue
-        raw_name = name.encode("ascii", "strict")
-        if not 1 <= len(raw_name) <= 255:
-            raise util.ScaffoldError("区块名长度非法: %r" % name)
-        body += struct.pack("<H", type_id) + bytes((len(raw_name),)) + raw_name + payload
-    data = util.wrap_envelope(bytes(body), doc.get("envelope") or {})
+    body = util.build_named_block(doc.get("container") or {}, util.named_block_units(doc))
+    data = util.wrap_envelope(body, doc.get("envelope") or {})
     util.write_bytes(out_path, data)
     return {
         "category": NAME,

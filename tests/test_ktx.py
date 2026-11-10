@@ -313,6 +313,27 @@ class TestRealSamples(unittest.TestCase):
             worst = max(worst, mean)
         self.assertLess(worst, 8.0)
 
+    def test_wrapped_and_bare_twin_share_png(self):
+        """同一纹理的带容器副本与裸副本必须解出同一张 PNG。"""
+        if not os.path.isdir(ORIGINAL_ASSETS):
+            self.skipTest("缺少原版资源树, 无法配对裸副本")
+        codec = Ktx11Codec()
+        pairs = 0
+        for root, rel in self.samples:
+            if not rel.startswith("media/ktx/"):
+                continue
+            twin_rel = os.path.join("assets", rel[len("media/ktx/") :])
+            if not os.path.isfile(os.path.join(ORIGINAL_ASSETS, twin_rel)):
+                continue
+            bare = ktx_png.unwrap(read_sample(root, rel))
+            wrapped = ktx_png.unwrap(read_sample(ORIGINAL_ASSETS, twin_rel))
+            left = ktx_png.side_files(rel, codec.decode(bare))
+            right = ktx_png.side_files(rel, codec.decode(wrapped))
+            self.assertTrue(left and right)
+            self.assertEqual(left[0][1], right[0][1], "同一纹理两种载体的 PNG 不一致: %s" % rel)
+            pairs += 1
+        self.assertGreaterEqual(pairs, 3, "可配对的样本少于 3 组")
+
 
 if __name__ == "__main__":
     unittest.main()

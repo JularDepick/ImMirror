@@ -218,6 +218,51 @@ def wrap_envelope(data: bytes, envelope: dict) -> bytes:
     return MAGIC_BINARY + prefix.to_bytes(4, "big") + xor_stream(data[:prefix]) + data[prefix:]
 
 
+"""命名区块容器: 块序列的拆装由 forge.codecs.named_block 负责切分, 组装在这里。"""
+
+
+def build_named_block(container: dict, blocks) -> bytes:
+    """按容器头与块序列组装 89 67 45 23 容器。
+
+    blocks 的每项是 (块名, 类型标识, 载荷字节); 块名为问号开头或类型标识为负时
+    视为未解析区, 不写块头只写载荷, 保证兜底样本也能回写。
+    """
+    import struct
+
+    magic_hex = container.get("magic", "89674523")
+    try:
+        magic = bytes.fromhex(magic_hex)
+    except (TypeError, ValueError) as exc:
+        raise ScaffoldError("container.magic 不是十六进制: %r" % magic_hex) from exc
+    if len(magic) != 4:
+        raise ScaffoldError("container.magic 必须是 4 字节, 实得 %d" % len(magic))
+    body = bytearray(magic)
+    body += struct.pack("<II", int(container.get("version", 100)),
+                        int(container.get("header_flag", 1)))
+    for item in blocks:
+        name, type_id, payload = item
+        if not isinstance(name, str):
+            raise ScaffoldError("区块缺少 name")
+        if name.startswith("?") or not isinstance(type_id, int) or type_id < 0:
+            body += payload
+            continue
+        raw_name = name.encode("ascii", "strict")
+        if not 1 <= len(raw_name) <= 255:
+            raise ScaffoldError("区块名长度非法: %r" % name)
+        body += struct.pack("<H", type_id) + bytes((len(raw_name),)) + raw_name + payload
+    return bytes(body)
+
+
+def named_block_units(doc: dict):
+    """把工程文档里的区块列表还原成 (名, 类型标识, 载荷) 序列。"""
+    units = []
+    for block in doc.get("blocks") or []:
+        name = block.get("name")
+        payload = blob_field_bytes(block.get("payload"), "区块 %s 的 payload" % name)
+        units.append((name, block.get("type_id"), payload))
+    return units
+
+
 def project_json_path(project_dir: str, name: str = "project.json") -> str:
     return os.path.join(project_dir, name)
 
