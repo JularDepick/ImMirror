@@ -2,7 +2,6 @@ package com.julardepick.immirror.account;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.InputType;
@@ -64,6 +63,7 @@ public final class LoginActivity extends Activity {
     private TextView linkPrimary;
     private TextView linkSecondary;
     private TextView noticeView;
+    private NoticeBar noticeBar;
 
     private TextView settingsSummary;
     private LinearLayout settingsPanel;
@@ -117,14 +117,17 @@ public final class LoginActivity extends Activity {
         root.addView(scroll, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
-        column.addView(AccountTheme.title(this, getString(R.string.launcher_title)));
-        column.addView(AccountTheme.subtitle(this, getString(R.string.launcher_subtitle)),
+        column.addView(AccountTheme.title(this, getString(R.string.launcher_title),
+                AccountTheme.COLOR_TEXT_ON_DARK));
+        column.addView(AccountTheme.subtitle(this, getString(R.string.launcher_subtitle),
+                        AccountTheme.COLOR_TEXT_ON_DARK_MUTED),
                 AccountTheme.block(this, 4f));
 
         LinearLayout card = buildCard();
         column.addView(card, cardParams());
 
-        TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this), AccountTheme.COLOR_TEXT_FAINT, 11f);
+        TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
+                AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 11f);
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
         return root;
@@ -145,8 +148,7 @@ public final class LoginActivity extends Activity {
         int horizontal = AccountTheme.dp(this, 20f);
         int vertical = AccountTheme.dp(this, 18f);
         card.setPadding(horizontal, vertical, horizontal, vertical);
-        card.setBackground(AccountTheme.stroked(this, AccountTheme.COLOR_CARD,
-                AccountTheme.CARD_RADIUS_DP, AccountTheme.COLOR_CARD_STROKE, 1f));
+        card.setBackground(AccountTheme.panelBackground(this));
 
         card.addView(buildTabs());
         card.addView(buildDivider());
@@ -187,11 +189,8 @@ public final class LoginActivity extends Activity {
         passwordBlock.addView(passwordInput, AccountTheme.block(this, 6f));
         card.addView(passwordBlock, AccountTheme.block(this, 12f));
 
-        noticeView = AccountTheme.body(this, "", AccountTheme.COLOR_ERROR, 13f);
-        noticeView.setLineSpacing(AccountTheme.dp(this, 2f), 1f);
-        int noticePadding = AccountTheme.dp(this, 10f);
-        noticeView.setPadding(noticePadding, noticePadding, noticePadding, noticePadding);
-        noticeView.setVisibility(View.GONE);
+        noticeView = AccountTheme.notice(this);
+        noticeBar = new NoticeBar(noticeView);
         card.addView(noticeView, AccountTheme.block(this, 12f));
 
         primaryButton = AccountTheme.primaryButton(this, getString(R.string.account_action_login));
@@ -200,7 +199,7 @@ public final class LoginActivity extends Activity {
 
         card.addView(buildLinkRow(), AccountTheme.block(this, 8f));
 
-        settingsSummary = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_FAINT, 12f);
+        settingsSummary = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 12f);
         settingsSummary.setGravity(Gravity.CENTER);
         settingsSummary.setPadding(0, AccountTheme.dp(this, 12f), 0, 0);
         settingsSummary.setOnClickListener(view -> toggleSettings());
@@ -227,7 +226,7 @@ public final class LoginActivity extends Activity {
     private TextView buildTab(int targetMode, int textRes) {
         TextView tab = new TextView(this);
         tab.setText(textRes);
-        tab.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
+        tab.setTextSize(TypedValue.COMPLEX_UNIT_SP, AccountTheme.TEXT_SIZE_BODY);
         tab.setGravity(Gravity.CENTER);
         tab.setPadding(0, AccountTheme.dp(this, 9f), 0, AccountTheme.dp(this, 9f));
         tab.setClickable(true);
@@ -276,7 +275,7 @@ public final class LoginActivity extends Activity {
 
         sendCodeButton = AccountTheme.outlineButton(this, getString(R.string.account_action_send_code),
                 AccountTheme.COLOR_ACCENT);
-        sendCodeButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+        sendCodeButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, AccountTheme.TEXT_SIZE_SUB);
         sendCodeButton.setSingleLine(true);
         sendCodeButton.setOnClickListener(view -> requestCode());
         LinearLayout.LayoutParams sendParams = new LinearLayout.LayoutParams(
@@ -292,7 +291,7 @@ public final class LoginActivity extends Activity {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER);
         linkPrimary = AccountTheme.link(this, "", AccountTheme.COLOR_ACCENT);
-        linkSecondary = AccountTheme.link(this, "", AccountTheme.COLOR_TEXT_MUTED);
+        linkSecondary = AccountTheme.link(this, "", AccountTheme.COLOR_TEXT_ON_DARK_MUTED);
         row.addView(linkPrimary);
         row.addView(linkSecondary);
         return row;
@@ -303,7 +302,7 @@ public final class LoginActivity extends Activity {
         panel.setOrientation(LinearLayout.VERTICAL);
         int padding = AccountTheme.dp(this, 12f);
         panel.setPadding(padding, padding, padding, padding);
-        panel.setBackground(AccountTheme.rounded(this, AccountTheme.COLOR_FIELD, AccountTheme.FIELD_RADIUS_DP));
+        panel.setBackground(AccountTheme.panelBackground(this));
 
         panel.addView(AccountTheme.label(this, getString(R.string.account_settings_title)));
 
@@ -334,11 +333,11 @@ public final class LoginActivity extends Activity {
         actionRow.setOrientation(LinearLayout.HORIZONTAL);
         Button saveButton = AccountTheme.outlineButton(this, getString(R.string.account_settings_save),
                 AccountTheme.COLOR_TEXT);
-        saveButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+        saveButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, AccountTheme.TEXT_SIZE_SUB);
         saveButton.setOnClickListener(view -> saveSettings());
         Button testButton = AccountTheme.outlineButton(this, getString(R.string.account_settings_test),
                 AccountTheme.COLOR_TEXT_MUTED);
-        testButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+        testButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, AccountTheme.TEXT_SIZE_SUB);
         testButton.setOnClickListener(view -> testConnection());
         LinearLayout.LayoutParams halfParams = new LinearLayout.LayoutParams(
                 0, AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f);
@@ -405,9 +404,7 @@ public final class LoginActivity extends Activity {
     private void styleTab(TextView tab, boolean selected) {
         tab.setTextColor(selected ? AccountTheme.COLOR_TEXT : AccountTheme.COLOR_TEXT_MUTED);
         tab.setTypeface(selected ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-        tab.setBackground(selected
-                ? AccountTheme.rounded(this, AccountTheme.COLOR_ACCENT_SOFT, 10f)
-                : AccountTheme.rounded(this, Color.TRANSPARENT, 10f));
+        tab.setBackground(AccountTheme.tabBackground(this, selected));
     }
 
     private int primaryLabelResource() {
@@ -614,16 +611,11 @@ public final class LoginActivity extends Activity {
     }
 
     private void showNotice(CharSequence message, int color) {
-        noticeView.setText(message);
-        noticeView.setTextColor(color);
-        noticeView.setBackground(AccountTheme.rounded(this,
-                color == AccountTheme.COLOR_SUCCESS ? 0x1F6EE7A8 : 0x1FFF8A80, 8f));
-        noticeView.setVisibility(View.VISIBLE);
+        noticeBar.show(message, color);
     }
 
     private void clearNotice() {
-        noticeView.setText("");
-        noticeView.setVisibility(View.GONE);
+        noticeBar.clear();
     }
 
     private void toggleSettings() {

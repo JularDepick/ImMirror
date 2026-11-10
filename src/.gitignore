@@ -25,3 +25,7 @@ android/app/src/main/assets/generated/
 # 由 scripts/pack_assets.py 复制到安装包的资源子集
 android/app/src/main/assets/sounds/
 android/app/src/main/assets/ui/
+
+# 由 scripts/gen_ui_resources.py 生成的界面参数表: Java 常量类与原生头文件
+android/app/src/main/java/com/julardepick/immirror/generated/
+native/ui/generated/

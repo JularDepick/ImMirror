@@ -212,12 +212,15 @@ public final class LauncherActivity extends Activity {
         scroll.addView(column, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
 
-        column.addView(AccountTheme.title(this, getString(R.string.launcher_title)));
-        column.addView(AccountTheme.subtitle(this, getString(R.string.launcher_subtitle)),
+        column.addView(AccountTheme.title(this, getString(R.string.launcher_title),
+                AccountTheme.COLOR_TEXT_ON_DARK));
+        column.addView(AccountTheme.subtitle(this, getString(R.string.launcher_subtitle),
+                        AccountTheme.COLOR_TEXT_ON_DARK_MUTED),
                 AccountTheme.block(this, 4f));
 
         TextView version = AccountTheme.body(this, getString(R.string.launcher_version_format,
-                BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE), AccountTheme.COLOR_TEXT_FAINT, 12f);
+                BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
+                AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 12f);
         version.setGravity(Gravity.CENTER);
         column.addView(version, AccountTheme.block(this, 6f));
 
@@ -244,7 +247,8 @@ public final class LauncherActivity extends Activity {
         deviceCard.addView(detail, AccountTheme.block(this, 6f));
         column.addView(deviceCard, cardParams());
 
-        TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this), AccountTheme.COLOR_TEXT_FAINT, 11f);
+        TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
+                AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 11f);
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
         return scroll;

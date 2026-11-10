@@ -72,6 +72,15 @@ fi
 
 ABIS="${*:-$DEFAULT_ABIS}"
 
+# ---------------------------------------------------------------- 界面参数表
+# HUD 的九宫边界与素材尺寸来自生成头文件, 编译前先生成, 避免 Java 与 C++ 各写一份坐标
+PYTHON_BIN="${PYTHON_BIN:-python}"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+    printf '缺少 python, 无法生成界面素材参数表: %s\n' "$PYTHON_BIN" >&2
+    exit 1
+fi
+"$PYTHON_BIN" "$SCRIPT_DIR/gen_ui_resources.py" --no-assets
+
 printf '原生构建配置\n'
 printf '  源码目录     : %s\n' "$NATIVE_DIR"
 printf '  构建根目录   : %s\n' "$BUILD_ROOT"

@@ -62,3 +62,24 @@ android {
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
 }
+
+/*
+ * 界面素材参数表: 构建期从 assets/ui/ui_manifest.json 生成 Java 常量类, 原生头文件
+ * 与 APK 内的素材副本, 让 Java 与 C++ 两侧共用同一份尺寸与九宫边界.
+ * 生成物在 .gitignore 里忽略; Python 解释器可用 -PimmirrorPython=<路径> 指定.
+ */
+val genUiResources = tasks.register<Exec>("genUiResources") {
+    val script = layout.projectDirectory.file("../../scripts/gen_ui_resources.py").asFile
+    val manifest = layout.projectDirectory.file("../../assets/ui/ui_manifest.json").asFile
+    val python = (findProperty("immirrorPython") as String?) ?: "python"
+    workingDir = script.parentFile.parentFile
+    commandLine(python, script.absolutePath)
+    inputs.file(manifest)
+    outputs.dir(layout.projectDirectory.dir("src/main/java/com/julardepick/immirror/generated"))
+    outputs.dir(layout.projectDirectory.dir("../../native/ui/generated"))
+    outputs.dir(layout.projectDirectory.dir("src/main/assets/ui"))
+}
+
+tasks.named("preBuild") {
+    dependsOn(genUiResources)
+}

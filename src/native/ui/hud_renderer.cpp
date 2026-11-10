@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "core/log.h"
+#include "ui/generated/ui_resources_gen.h"
 #include "ui/hud_font.h"
 #include "ui/hud_slots.h"
 
@@ -31,6 +32,37 @@ constexpr float kKnobRadiusRatio = 0.3f;
 
 /* 跳跃按钮按下时的缩放, 与亮度一起构成按压反馈. */
 constexpr float kJumpPressedScale = 0.9f;
+
+/*
+ * 规范配色, 取自 .agent/UI_VISUAL_SPEC.md 第三章的角色色表.
+ * 四个分量依次为红绿蓝与透明度, 数值已从十六进制归一.
+ */
+/* #465677: HUD 底板, 原版 img_item 的槽位底色, 与素材一致取不透明 */
+constexpr float kHudBoardColor[4] = {0x46 / 255.0f, 0x56 / 255.0f, 0x77 / 255.0f, 1.0f};
+/* #20180F: 提示条底, 原版 board_tips_icon 的深棕黑, 同样不透明 */
+constexpr float kHudTipsColor[4] = {0x20 / 255.0f, 0x18 / 255.0f, 0x0F / 255.0f, 1.0f};
+/* #D61919: 血条实心段, 原版 img_blood_strip_red */
+constexpr float kHudBloodColor[4] = {0xD6 / 255.0f, 0x19 / 255.0f, 0x19 / 255.0f, 1.0f};
+
+/*
+ * 一个素材像素对应的归一化屏宽, 与 Java 侧一个素材像素等于一个 dp 的标尺呼应;
+ * 九宫边界按它换算成设计长度, 换算方式见 PushNineSlice.
+ */
+constexpr float kHudArtPixel = 0.00075f;
+
+/*
+ * 血条展示几何, 以屏宽为 1 的归一化坐标给出.
+ * 血条只是 HUD 的展示件, 不参与命中判定, 因此几何留在这里, 不改动布局表.
+ */
+constexpr float kHealthCenterX = 0.22f;
+constexpr float kHealthCenterY = 0.075f;
+constexpr float kHealthHalfWidth = 0.18f;
+constexpr float kHealthHalfHeight = 0.014f;
+/* 血条实心段相对底槽的内缩, 让底槽描边露出一圈. */
+constexpr float kHealthFillInset = 2.0f;
+
+/* 纯色填充时传给九宫的纹理坐标首项, 顶点着色器按负数判定走纯色分支. */
+constexpr float kSolidUv[4] = {-1.0f, -1.0f, -1.0f, -1.0f};
 
 /* 方块名标签: 点阵像素边长, 内边距与离方块栏的间距, 均以屏宽为 1. */
 constexpr float kNamePixelSize = 0.0035f;
@@ -176,6 +208,108 @@ void PushSprite(float* out, int32_t& offset, float centerX, float centerY, float
         target[6] = color[2];
         target[7] = color[3];
         offset += 1;
+    }
+}
+
+/* 单个四边形, 顶点顺序为左下, 右下, 右上, 左上, 纹理坐标按素材方向传入. */
+void PushQuad(float* out, int32_t& offset, float x0, float y0, float x1, float y1, float u0,
+              float v0, float u1, float v1, float scale, const float color[4]) {
+    if (!HasRoom(offset, 6)) {
+        return;
+    }
+    const float positions[4][2] = {{x0, y0}, {x1, y0}, {x1, y1}, {x0, y1}};
+    /* v0 给下边, v1 给上边, 与 PushSprite 的图集方向一致. */
+    const float uvs[4][2] = {{u0, v0}, {u1, v0}, {u1, v1}, {u0, v1}};
+    const int32_t order[6] = {0, 1, 2, 0, 2, 3};
+    for (int32_t index = 0; index < 6; ++index) {
+        float* target = out + static_cast<size_t>(offset) * kFloatsPerVertex;
+        target[0] = positions[order[index]][0] * scale;
+        target[1] = positions[order[index]][1];
+        target[2] = uvs[order[index]][0];
+        target[3] = uvs[order[index]][1];
+        target[4] = color[0];
+        target[5] = color[1];
+        target[6] = color[2];
+        target[7] = color[3];
+        offset += 1;
+    }
+}
+
+/*
+ * 九宫底板: 九个四边形拼成一块面板, 四角原位, 四边单向拉伸, 中心双向拉伸.
+ *
+ * asset 取自生成的参数表 ui_resources_gen.h, 四边边界是素材像素;
+ * unit 为一个素材像素对应的设计长度, 由调用方按屏宽换算, 因此同一边界在不同
+ * 分辨率下描边视觉粗细一致. uv 为素材在纹理内的归一化范围, 顺序为
+ * (u0, 左上 v, u1, 右下 v); uv 首项为负时九个四边形都按纯色填充,
+ * 用于界面图集尚未接入、只用规范色画底板的阶段.
+ */
+void PushNineSlice(float* out, int32_t& offset, float centerX, float centerY, float halfWidth,
+                   float halfHeight, float scale, const gen::UiAsset& asset, float unit,
+                   const float uv[4], const float color[4]) {
+    if (!HasRoom(offset, 54)) {
+        return;
+    }
+    const float left = centerX - halfWidth;
+    const float right = centerX + halfWidth;
+    const float bottom = centerY - halfHeight;
+    const float top = centerY + halfHeight;
+    const float width = halfWidth * 2.0f;
+    const float height = halfHeight * 2.0f;
+
+    float insetLeft = asset.left * unit;
+    float insetRight = asset.right * unit;
+    float insetTop = asset.top * unit;
+    float insetBottom = asset.bottom * unit;
+
+    /* 边界之和超过目标尺寸时按比例压缩, 避免九块互相重叠把描边画花. */
+    const float horizontal = insetLeft + insetRight;
+    if (horizontal >= width && horizontal > 0.0f) {
+        const float factor = width * 0.98f / horizontal;
+        insetLeft *= factor;
+        insetRight *= factor;
+    }
+    const float vertical = insetTop + insetBottom;
+    if (vertical >= height && vertical > 0.0f) {
+        const float factor = height * 0.98f / vertical;
+        insetTop *= factor;
+        insetBottom *= factor;
+    }
+
+    const float xs[4] = {left, left + insetLeft, right - insetRight, right};
+    const float ys[4] = {bottom, bottom + insetBottom, top - insetTop, top};
+
+    const bool textured = uv[0] >= 0.0f;
+    float sourceU[4] = {uv[0], uv[0], uv[2], uv[2]};
+    float sourceV[4] = {uv[3], uv[3], uv[1], uv[1]};
+    if (textured) {
+        /* 上下与左右的边界按素材像素占原图的比例切分纹理坐标. */
+        const float spanU = uv[2] - uv[0];
+        const float spanV = uv[3] - uv[1];
+        sourceU[0] = uv[0];
+        sourceU[1] = uv[0] + spanU * asset.left / asset.width;
+        sourceU[2] = uv[2] - spanU * asset.right / asset.width;
+        sourceU[3] = uv[2];
+        sourceV[0] = uv[3];
+        sourceV[1] = uv[3] - spanV * asset.bottom / asset.height;
+        sourceV[2] = uv[1] + spanV * asset.top / asset.height;
+        sourceV[3] = uv[1];
+    } else {
+        for (int32_t index = 0; index < 4; ++index) {
+            sourceU[index] = -1.0f;
+            sourceV[index] = -1.0f;
+        }
+    }
+
+    for (int32_t row = 0; row < 3; ++row) {
+        for (int32_t column = 0; column < 3; ++column) {
+            if (xs[column + 1] <= xs[column] || ys[row + 1] <= ys[row]) {
+                continue;
+            }
+            PushQuad(out, offset, xs[column], ys[row], xs[column + 1], ys[row + 1],
+                     sourceU[column], sourceV[row], sourceU[column + 1], sourceV[row + 1], scale,
+                     color);
+        }
     }
 }
 
@@ -350,6 +484,28 @@ void HudRenderer::Render(const HudFrame& frame) {
     PushRect(vertices, offset, 0.0f, 0.0f, armHalf, armThickness, scale, white);
     PushRect(vertices, offset, 0.0f, 0.0f, armThickness, armHalf, scale, white);
 
+    /* 一个素材像素的设计长度, 九宫边界与内缩量都按它换算. */
+    const float artUnit = layout_.DesignLength(kHudArtPixel);
+
+    /*
+     * 血条: 左上角横条. 底槽走九宫底板并取规范底板色, 实心段取规范血条色,
+     * 长度按血量比例截取, 左端固定, 右端随血量收缩.
+     */
+    const float healthHalfWidth = layout_.DesignLength(kHealthHalfWidth);
+    const float healthHalfHeight = layout_.DesignLength(kHealthHalfHeight);
+    const float healthCenterX = layout_.DesignX(kHealthCenterX);
+    const float healthCenterY = layout_.DesignY(kHealthCenterY);
+    PushNineSlice(vertices, offset, healthCenterX, healthCenterY, healthHalfWidth,
+                  healthHalfHeight, scale, gen::UiAssetOf(gen::UiWidget::MiscBarHpTrack),
+                  artUnit, kSolidUv, kHudBoardColor);
+    const float health = frame.health < 0.0f ? 0.0f : (frame.health > 1.0f ? 1.0f : frame.health);
+    if (health > 0.0f) {
+        const float fillHalfWidth = healthHalfWidth * health;
+        const float fillHalfHeight = std::fmax(healthHalfHeight - artUnit * kHealthFillInset, 0.0f);
+        PushRect(vertices, offset, healthCenterX - healthHalfWidth + fillHalfWidth, healthCenterY,
+                 fillHalfWidth, fillHalfHeight, scale, kHudBloodColor);
+    }
+
     /*
      * 浮动摇杆: 环画在控制器回报的锚点上, 也就是这一路的按下点;
      * 滑块按摇杆量沿环半径偏移, 环半径直接取控制器使用的满量程半径,
@@ -389,12 +545,12 @@ void HudRenderer::Render(const HudFrame& frame) {
     const float slotTint[4] = {1.0f, 1.0f, 1.0f, 0.92f};
     const float selectedTint[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     const float slotBorder[4] = {1.0f, 0.92f, 0.55f, 1.0f};
-    const float slotBackdrop[4] = {0.0f, 0.0f, 0.0f, 0.35f};
     for (int32_t slot = 0; slot < kSlotCount; ++slot) {
         const float centerX = layout_.DesignX(layout_.SlotCenterX(slot));
         const bool selected = slot == frame.selectedSlot;
-        PushRect(vertices, offset, centerX, slotCenterY, slotHalf * 1.05f, slotHalf * 1.05f,
-                 scale, slotBackdrop);
+        PushNineSlice(vertices, offset, centerX, slotCenterY, slotHalf * 1.05f, slotHalf * 1.05f,
+                      scale, gen::UiAssetOf(gen::UiWidget::SlotItemFrame), artUnit, kSolidUv,
+                      kHudBoardColor);
         PushSprite(vertices, offset, centerX, slotCenterY, slotHalf, scale,
                    BlockSlotAtlasCell(slot), selected ? selectedTint : slotTint);
         if (selected) {
@@ -422,9 +578,9 @@ void HudRenderer::Render(const HudFrame& frame) {
         const float plateCenterX = layout_.DesignX(layout_.SlotCenterX(frame.nameSlot));
         const float plateCenterY = slotCenterY + layout_.DesignLength(layout_.SlotHalfSize()) +
                                    layout_.DesignLength(kNamePlateGap) + plateHalfHeight;
-        const float plateColor[4] = {0.0f, 0.0f, 0.0f, 0.62f};
-        PushRect(vertices, offset, plateCenterX, plateCenterY, plateHalfWidth, plateHalfHeight,
-                 scale, plateColor);
+        PushNineSlice(vertices, offset, plateCenterX, plateCenterY, plateHalfWidth,
+                      plateHalfHeight, scale, gen::UiAssetOf(gen::UiWidget::DialogTipsBody),
+                      artUnit, kSolidUv, kHudTipsColor);
         PushText(vertices, offset, plateCenterX - textWidth * 0.5f,
                  plateCenterY + static_cast<float>(kGlyphHeight) * pixel * 0.5f, pixel, text,
                  scale, white);
