@@ -1,7 +1,10 @@
-# Agent Runtime
-AGENTS.md
-.agent/
-.agents/
+# 临时目录与构建产物
+temp/
+tmp/
+build/
+dist/
+release/
+releases/
 
-# Other
+# 业务仓库
 single-branch/
