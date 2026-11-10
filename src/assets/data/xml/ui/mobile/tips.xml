@@ -1,0 +1,1613 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<Ui>
+	<Script file="ui/mobile/tips.lua"/>	
+	<!--点击背包栏中item显示的tip-->
+	<Frame name="TipsFrame" parent="UIClient" frameStrata="TOOLTIP" hidden="true" framelevel="1000" input_transparent="true">
+		<Size>
+			<AbsDimension x="325" y="45" />
+		</Size>
+		<Anchors>
+			<Anchor point="bottom" relativePoint="top" relativeTo="PlayShortcut">
+				<Offset>
+					<AbsDimension x="0" y="-40"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+				<Layer level="BACKGROUND">
+					<Texture name="$parentBkg" inherits="TemplateBigBkg19" />
+				</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentType1" click_threshold="5" hidden="true">
+				<Size>
+					<RelDimension x="1.0" y="1.0" />
+				</Size>
+				<Anchors>
+					<Anchor point="center" relativeTo="$parent" relativePoint="center">
+						<Offset>
+							<AbsDimension x="0" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="$parentFont" fonttype="BlackFont30" lineInterval="2" text="" justifyH="center">
+							<Color r="197" g="255" b="0"/>
+							<Size>
+								<AbsDimension x="310" y="31"/>
+							</Size>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<Texture name="$parentSearch" file="ui/mobile/texture2/ingame2.xml" uvname="lzy_36">
+							<Size>
+								<AbsDimension x="30" y="26" />
+							</Size>
+							<Anchors>
+								<Anchor point="right" relativeTo="$parent" relativePoint="right">
+									<Offset>
+										<AbsDimension x="-15" y="0" />
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>TipsFrameType1_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentType2" click_threshold="5" hidden="true">
+				<Size>
+					<RelDimension x="1.0" y="1.0" />
+				</Size>
+				<Anchors>
+					<Anchor point="center" relativeTo="$parent" relativePoint="center">
+						<Offset>
+							<AbsDimension x="0" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="$parentFont" fonttype="BlackFont30" lineInterval="2" text="" justifyH="center">
+							<Color r="197" g="255" b="0"/>
+							<Size>
+								<AbsDimension x="310" y="31"/>
+							</Size>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+            <Texture name="$parentIcon" file="ui/mobile/texture2/empty.xml" uvname="empty"  hidden="true">
+              <Size>
+                <AbsDimension x="37" y="37" />
+              </Size>
+              <Anchors>
+                <Anchor point="left" relativePoint="left" relativeTo="$parent">
+                  <Offset>
+                    <AbsDimension x="5" y="0" />
+                  </Offset>
+                </Anchor>
+              </Anchors>
+            </Texture>
+					</Layer>
+				</Layers>
+        <Scripts>
+          <OnClick>TipsFrameType2_OnClick();</OnClick>
+        </Scripts>
+			</Button>
+			<Button name="$parentBan" hidden="false">
+				<Size>
+					<AbsDimension x="45" y="45"/>
+				</Size>
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="5" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentIcon" file="ui/mobile/texture2/ingame2.xml" uvname="lzy_15" hidden="false">
+							<Size>
+								<AbsDimension x="25" y="25"/>
+							</Size>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>TipsFrameBan_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>TipsFrame_OnLoad();</OnLoad>
+			<OnShow>TipsFrame_OnShow();</OnShow>
+			<OnUpdate>TipsFrame_OnUpdate();</OnUpdate>
+		</Scripts>
+	</Frame>
+
+<!--鼠标悬停之后出现的tip-->
+	<Frame name="MouseTipsFrame" parent="UIClient" frameStrata="TOOLTIP" hidden="true" framelevel="1000" input_transparent="true">
+		<Size>
+			<AbsDimension x="325" y="45" />
+		</Size>
+		<Anchors>
+			<Anchor point="topleft" relativePoint="topleft" relativeTo="parent">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			
+			<Layer level="BACKGROUND">
+				<Texture name="$parenBkg" inherits="EditBkgTemplate4">
+					<Size>
+						<AbsDimension x="243" y="49"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+
+				<FontString name="$parentItemName" fonttype="BlackFont22" text="fuck item" justifyH="center">
+					<Color r="252" g="219" b="68"/>
+					<Size>
+						<AbsDimension x="210" y="25"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parenBkg">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+		
+		</Frames>
+		<Scripts>
+			<OnLoad>MouseTipsFrame_OnLoad();</OnLoad>
+			<OnShow>MouseTipsFrame_OnShow();</OnShow>
+			<OnUpdate>MouseTipsFrame_OnUpdate();</OnUpdate>
+		</Scripts>
+	</Frame>
+
+
+	<Frame name="TipsBkgFrame" parent="UIClient" frameStrata="HIGH" hidden="true" framelevel="1000">
+		<Size>
+			<RelDimension x="1.0" y="1.0" />
+		</Size>
+		<Scripts>
+			<OnClick>TipsBkgFrame_OnClick();</OnClick>
+		</Scripts>
+	</Frame>
+	##小格子
+	<Frame name="CraftingNeedTemplate" virtual="true" input_transparent="true" hidden="true" abs_x="205" abs_y="33">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkgTexture" inherits="TemplateBkg38" abs_x="33" abs_y="33"/>
+				<Texture name="$parentIcon" alphamode="alphablend" abs_x="28" abs_y="28">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parentBkgTexture" />
+					</Anchors>				
+				</Texture>
+				<FontString name="$parentName" fonttype="BlackFont" lineInterval="2" text="铁剑×9" abs_x="200" abs_y="16">
+					<Color r="224" g="220" b="202"/>
+					<Anchors>
+						<Anchor point="bottomleft" relativePoint="bottomright" relativeTo="$parentBkgTexture">
+							<Offset>
+								<AbsDimension x="12" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+	#目前游戏用的道具tips
+	<Frame name="MItemTipsFrame" parent="UIClient" frameStrata="HIGH" hidden="true" framelevel="6000" abs_x="497" abs_y="470">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" inherits="TemplateBigBkg19"/>
+				<Texture name="$parentBodyBkg" inherits="TemplateBigBkg20" abs_x="461" abs_y="209">
+					<Anchors>
+						<Anchor point="top" relativePoint="top" relativeTo="$parentBkg" >
+							<Offset>
+								<AbsDimension x="0" y="108"/>
+							</Offset>
+						</Anchor>
+					</Anchors>				
+				</Texture>
+				<Texture name="$parentBkgTexture" file="ui/mobile/ui.png" x="160" y="4" w="66" h="68" hidden="true" abs_x="74" abs_y="74">
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="18" y="18"/>
+							</Offset>
+						</Anchor>
+					</Anchors>				
+				</Texture>
+				<Texture name="$parentBoxTexture" file="ui/mobile/texture2/common.xml" uvname="img_icon_shortcut.png" abs_x="74" abs_y="74">
+					<Anchors>
+						<Anchor point="TopLeft" relativePoint="TopLeft" relativeTo="$parentBkgTexture" />
+					</Anchors>				
+				</Texture>
+				<Texture name="$parentIcon" alphamode="alphablend" abs_x="66" abs_y="66">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parentBoxTexture" />
+					</Anchors>				
+				</Texture>
+				<FontString name="$parentName" fonttype="BlackFont20" text="铁剑" abs_x="200" abs_y="20">
+					<Color r="255" g="255" b="255"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentBoxTexture">
+							<Offset>
+								<AbsDimension x="14" y="8"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTypeDesc" fonttype="BlackFont20" text="铁剑" abs_x="200" abs_y="20">
+					<Color r="204" g="233" b="69"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentName">
+							<Offset>
+								<AbsDimension x="0" y="19"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentModName" fonttype="BlackFont17" text="铁剑" abs_x="200" abs_y="20" hidden="true">
+					<Color r="255" g="255" b="255"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentName">
+							<Offset>
+								<AbsDimension x="0" y="38"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentEnchant1" fonttype="BlackFont18" text="附魔属性1" hidden="true" abs_x="420" abs_y="18">
+					<Color r="0" g="176" b="240"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentBodyBkg">
+							<Offset>
+								<AbsDimension x="13" y="5"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentEnchant2" fonttype="BlackFont18" lineInterval="2" text="附魔属性2" abs_x="420" abs_y="18"  hidden="true">
+					<Color r="0" g="176" b="240"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentEnchant1">
+							<Offset>
+								<AbsDimension x="0" y="10"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentEnchant3" fonttype="BlackFont18" lineInterval="2" text="附魔属性3" abs_x="420" abs_y="18"  hidden="true">
+					<Color r="0" g="176" b="240"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentEnchant2">
+							<Offset>
+								<AbsDimension x="0" y="10"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentEnchant4" fonttype="BlackFont18" lineInterval="2" text="附魔属性4" abs_x="420" abs_y="18"  hidden="true">
+					<Color r="0" g="176" b="240"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentEnchant3">
+							<Offset>
+								<AbsDimension x="0" y="10"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentEnchant5" fonttype="BlackFont18" lineInterval="2" text="附魔属性5" abs_x="420" abs_y="18" hidden="true">
+					<Color r="0" g="176" b="240"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentEnchant4">
+							<Offset>
+								<AbsDimension x="0" y="10"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentGetTitle" fonttype="BlackFont" text="$378" abs_x="420" abs_y="16">
+					<Color r="255" g="137" b="32"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="30" y="84"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentPackType" fonttype="BlackFont18" lineInterval="4" text="$667" fontStyle="border" hidden="false" input_transparent="true">
+					<!--<Color r="236" g="143" b="22"/>-->
+					<Size>
+						<AbsDimension x="415" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentLine1">
+							<Offset>
+								<AbsDimension x="11" y="14"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentPackDesc" fonttype="BlackFont18" lineInterval="4" text="$667" fontStyle="border" hidden="false" input_transparent="true">
+					<!--<Color r="236" g="143" b="22"/>-->
+					<Size>
+						<AbsDimension x="415" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentLine1">
+							<Offset>
+								<AbsDimension x="11" y="14"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentPackTitle" fonttype="BlackFont21" lineInterval="2" text="$378" fontStyle="border" hidden="false">
+					<Color r="236" g="143" b="22"/>
+					<Size>
+						<AbsDimension x="300" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="15" y="99"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				##解锁标题
+				<FontString name="$parentUnlockTitle" fonttype="BlackFont" text="$667" abs_x="420" abs_y="16">
+					<Color r="1" g="194" b="16"/>
+					<Size>
+						<AbsDimension x="415" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="bottomleft" relativePoint="bottomleft" relativeTo="$parentBodyBkg">
+							<Offset>
+								<AbsDimension x="11" y="-80"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentAltTitle" fonttype="BlackFont21" lineInterval="2" text="$3545" fontStyle="border">
+					<Color r="236" g="143" b="22"/>
+					<Size>
+						<AbsDimension x="200" y="22"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="20" y="25"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+
+			</Layer>
+		</Layers>
+		<Frames>
+			##关闭按钮
+            <Button name="$parentCloseBtn" inherits="TemplateCloseBtn0">
+                <Anchors>
+                    <Anchor point="topright" relativeTo="$parentBkg" relativePoint="topright">
+                        <Offset>
+                            <AbsDimension x="-11" y="6"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+					<OnClick>MItemTipsFrameCloseBtn_OnClick();</OnClick>
+				</Scripts>
+            </Button>
+			##家园添加基本信息 ##品质
+			<RichText name="$parentQuality" lineInterval="1" multiLine="false" fonttype="BlackFont18" justifyH="left" text="" justifyV="middle" abs_x="120" abs_y="20">
+				<Color r="101" g="116" b="118"/>
+				<Anchors>
+					<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentName">
+						<Offset>
+							<AbsDimension x="0" y="20"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+			<RichText name="$parentDesc" multiLine="false" fonttype="BlackFont18" autoextend="true" input_transparent="true" abs_x="425" abs_y="64">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentBodyBkg" relativePoint="topleft">
+						<Offset>
+							<AbsDimension x="10" y="17" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+			<RichText name="$parentUnlockDesc" lineInterval="4" multiLine="false" fonttype="BlackFont18" fontStyle="border" autoextend="true" input_transparent="true">
+				<Size>
+					<AbsDimension x="320" y="22" />
+				</Size>
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentUnlockTitle" relativePoint="topright">
+						<Offset>
+							<AbsDimension x="-26" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+			<RichText name="$parentGetDesc" lineInterval="4" multiLine="false" fonttype="BlackFont18" fontStyle="border" autoextend="true" input_transparent="true" hidden="true" >
+				<Size>
+					<AbsDimension x="320" y="22"/>
+				</Size>
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentGetTitle" relativePoint="topright">
+						<Offset>
+							<AbsDimension x="-26" y="2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+			##解锁按钮
+			<Button name="$parentUnLockBtn" inherits="TemplateBtn3">
+				<Size>
+					<AbsDimension x="169" y="55" />
+				</Size>
+				<Anchors>
+					<Anchor point="bottom" relativeTo="$parentBkg" relativePoint="bottom">
+						<Offset>
+							<AbsDimension x="0" y="-4" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentName" justifyH="center" fonttype="BlackFont24" text="装备" abs_x="182" abs_y="24">
+							<Color r="55" g="54" b="51"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>MItemTipsFrameUnLockBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			##未知
+			<Button name="$parentBanBtn" inherits="TemplateBtn3">
+				<Size>
+					<AbsDimension x="169" y="55" />
+				</Size>
+				<Anchors>
+					<Anchor point="top" relativeTo="$parent" relativePoint="top">
+						<Offset>
+							<AbsDimension x="0" y="-6" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentName" justifyH="center" fonttype="BlackFont28" lineInterval="2" text="$3546">
+							<Color r="55" g="54" b="51"/>
+							<Size>
+								<AbsDimension x="150" y="28"/>
+							</Size>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>MItemTipsFrameBanBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			##解锁需要的道具
+			<Frame name="$parentUnlockNeed1" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentUnlockTitle" relativePoint="bottomleft">
+						<Offset>
+							<AbsDimension x="0" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<Texture name="$parentChip" file="ui/mobile/texture2/ingame2.xml" uvname="lzy_17">
+							<Size>
+								<AbsDimension x="0" y="10"/>
+							</Size>
+							<Anchors>
+								<Anchor point="topright" relativePoint="topright" relativeTo="$parentIcon">
+									<Offset>
+										<AbsDimension x="-2" y="2"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="$parentUnlockNeed2" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentUnlockNeed1" relativePoint="bottomleft">
+						<Offset>
+							<AbsDimension x="0" y="8" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<Texture name="$parentChip" file="ui/mobile/texture2/ingame2.xml" uvname="lzy_17">
+							<Size>
+								<AbsDimension x="10" y="10"/>
+							</Size>
+							<Anchors>
+								<Anchor point="topright" relativePoint="topright" relativeTo="$parentIcon">
+									<Offset>
+										<AbsDimension x="-2" y="2"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="$parentPackNeed1" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentGetTitle" relativePoint="bottomleft">
+						<Offset>
+							<AbsDimension x="0" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			##配方格子
+			<Frame name="$parentCraftingNeed1" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentGetTitle" relativePoint="bottomleft">
+						<Offset>
+							<AbsDimension x="0" y="12" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentCraftingNeed2" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="left" relativeTo="$parentCraftingNeed1" relativePoint="right">
+						<Offset>
+							<AbsDimension x="3" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentCraftingNeed3" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentCraftingNeed1" relativePoint="bottomleft">
+						<Offset>
+							<AbsDimension x="0" y="8" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentCraftingNeed4" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="left" relativeTo="$parentCraftingNeed3" relativePoint="right">
+						<Offset>
+							<AbsDimension x="3" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentCraftingNeed5" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentCraftingNeed3" relativePoint="bottomleft">
+						<Offset>
+							<AbsDimension x="0" y="8" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentCraftingNeed6" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="left" relativeTo="$parentCraftingNeed5" relativePoint="right">
+						<Offset>
+							<AbsDimension x="3" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentCraftingNeed7" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentCraftingNeed5" relativePoint="bottomleft">
+						<Offset>
+							<AbsDimension x="0" y="8" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentCraftingNeed8" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="left" relativeTo="$parentCraftingNeed7" relativePoint="right">
+						<Offset>
+							<AbsDimension x="3" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentCraftingNeed9" inherits="CraftingNeedTemplate">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentCraftingNeed7" relativePoint="bottomleft">
+						<Offset>
+							<AbsDimension x="0" y="8" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Button name="$parentPlaceBtn" inherits="TemplateBtn3">
+				<Size>
+					<AbsDimension x="169" y="55" />
+				</Size>
+				<Anchors>
+					<Anchor point="bottom" relativeTo="$parent" relativePoint="bottom">
+						<Offset>
+							<AbsDimension x="0" y="-8"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentName" justifyH="center" fonttype="BlackFont28" lineInterval="2" text="装备">
+							<Color r="55" g="54" b="51"/>
+							<Size>
+								<AbsDimension x="150" y="28"/>
+							</Size>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>MItemTipsFramePlaceBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnShow>MItemTipsFrame_OnShow();</OnShow>
+			<OnHide>MItemTipsFrame_OnHide();</OnHide>
+			<OnClick>MItemTipsFrame_OnClick();</OnClick>
+		</Scripts>
+	</Frame>
+	
+	#成就可以完成的Tips面板
+	<Frame name="AchievementFinishTipsFrame" parent="UIClient" frameStrata="MEDIUM" hidden="true" framelevel="2000" input_transparent="false">
+		<Size>
+			<AbsDimension x="312" y="69" />
+		</Size>
+		<Anchors>
+			<Anchor point="bottom" relativePoint="top" relativeTo="$parent">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" inherits="TemplateBigBkg19">
+					<Size>
+						<AbsDimension x="312" y="69" />
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="center">
+							<Offset>
+								<AbsDimension x="0" y="0" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentIconBkg" inherits="TemplateBkg38" >
+					<Size>
+						<AbsDimension x="51" y="51" />
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativeTo="$parent" relativePoint="left">
+							<Offset>
+								<AbsDimension x="10" y="0" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentIcon" alphamode="alphablend">
+					<Size>
+						<AbsDimension x="48" y="48" />
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativeTo="$parentIconBkg" relativePoint="center">
+							<Offset>
+								<AbsDimension x="0" y="0" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="cn" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="tw" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="en" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="tha" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="esn" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="ptb" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="fra" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="jpn" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="ara" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="kor" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="vie" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="rus" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="tur" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="ita" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="ger" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentTitle" fonttype="BlackFont20" lang_ver="ind" lineInterval="2" text="$648">
+					<Color r="255" g="137" b="32"/>
+					<Size>
+						<AbsDimension x="250" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				
+				<FontString name="$parentName" fonttype="BlackFont18" lineInterval="2" text="Achievement Name">
+					<Color r="224" g="220" b="202"/>
+					<Size>
+						<AbsDimension x="250" y="20"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentTitle">
+							<Offset>
+								<AbsDimension x="0" y="3"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<RichText name="$parentDesc" lineInterval="4" multiLine="false" fonttype="BlackFont24" fontStyle="border" autoextend="true" >
+				<Size>
+					<AbsDimension x="230" y="60" />
+				</Size>
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentName" relativePoint="bottomleft">
+						<Offset>
+							<AbsDimension x="0" y="15" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+		</Frames>
+		<Scripts>
+			<OnLoad>AchievementFinishTipsFrame_OnLoad();</OnLoad>
+			<OnShow>AchievementFinishTipsFrame_OnShow();</OnShow>
+			<OnHide>AchievementFinishTipsFrame_OnHide();</OnHide>
+			<OnClick>AchievementFinishTipsFrame_OnClick();</OnClick>
+			<OnUpdate>AchievementFinishTipsFrame_OnUpdate();</OnUpdate>
+		</Scripts>
+	</Frame>
+	#游戏提示框模版
+	<Frame name="GameTipsTemplate" hidden="true" virtual="true" input_transparent="true">
+		<Size>
+			<AbsDimension x="400" y="49" />
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" inherits="TemplateBigBkg19">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentText" fonttype="BlackFont30" lineInterval="2" fontStyle="border" justifyH="center" text=""> 
+					<Color r="255" g="255" b="255"/>
+					<Size>
+						<AbsDimension x="320" y="35"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="50" y="1"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentBkg1" inherits="TipsBkgTemplate" hidden="true">##
+					<Size>
+						<AbsDimension x="600" y="60"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentText1" fonttype="BlackFont30" lineInterval="2" fontStyle="border" justifyH="center" text="" hidden="true">## 
+					<Color r="255" g="255" b="255"/>
+					<Size>
+						<AbsDimension x="570" y="35"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentTick" file="ui/mobile/texture2/room.xml" uvname="icon_tick.png"  hidden="true">
+					<Size>
+						<AbsDimension x="34" y="29"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="20" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>	
+				</Texture>
+				<Texture name="$parentCross" file="ui/mobile/texture2/common_icon.xml" uvname="xtc_icon03"  hidden="true">
+					<Size>
+						<AbsDimension x="28" y="30"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="20" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>	
+				</Texture>
+				<Texture name="$parentStar" file="ui/mobile/texture2/common_icon.xml" uvname="icon_xingxing.png"  hidden="true">
+					<Size>
+						<AbsDimension x="43" y="38"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="20" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>	
+				</Texture>
+				<Texture name="$parentIcon" hidden="true">
+					<Size>
+						<AbsDimension x="40" y="40"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="20" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>	
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>GameTipsTemplate_OnLoad();</OnLoad>
+			<OnUpdate>GameTipsTemplate_OnUpdate();</OnUpdate>
+		</Scripts>
+	</Frame>
+	#游戏提示框
+	<Frame name="GameTipsFrame" parent="UIClient" frameStrata="TOOLTIP" hidden="true" framelevel="1001" input_transparent="true">
+		<Size>
+			<AbsDimension x="400" y="60" />
+		</Size>
+		<Anchors>
+			<Anchor point="top" relativePoint="top" relativeTo="$parent">
+				<Offset>
+					<AbsDimension x="0" y="220"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			<Frame name="$parentTips3" inherits="GameTipsTemplate" id="1"/>		
+			<Frame name="$parentTips2" inherits="GameTipsTemplate" id="2"/>
+			<Frame name="$parentTips1" inherits="GameTipsTemplate" id="3"/>		
+		</Frames>
+		<Scripts>
+			<OnLoad>GameTipsFrame_OnLoad();</OnLoad>
+			<OnShow>GameTipsFrame_OnShow();</OnShow>
+			<OnHide>GameTipsFrame_OnHide();</OnHide>
+			<OnUpdate>GameTipsFrame_OnUpdate();</OnUpdate>
+		</Scripts>
+	</Frame>
+
+	<Frame name="GamePopUpsFrame" parent="UIClient" frameStrata="FULLSCREEN" hidden="true" framelevel="1000" abs_x="520" abs_y="200">
+		<Anchors>
+			<Anchor point="top" relativePoint="top" relativeTo="$parent">
+				<Offset>
+					<AbsDimension x="0" y="-55"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="background">
+				<Texture name="$parentBkg" inherits="TemplateBigBkg19" />
+				<Texture name="$parentChenDi" inherits="TemplateBigBkg20" abs_x="500" abs_y="116">
+					<Anchors>
+						<Anchor point="top" relativePoint="top" relativeTo="$parentBkg">
+							<Offset>
+								<AbsDimension x="0" y="8"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentHeadBkg" file="ui/mobile/texture2/miniwork.xml" uvname="img_icon_head" abs_x="68" abs_y="68">
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="18" y="17"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentHead" file="ui/roleicons/32.png" abs_x="66" abs_y="66">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parentHeadBkg">
+							<Offset>
+								<AbsDimension x="0" y="2"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentHeadFrame" file="ui/headframes/1.png" abs_x="68" abs_y="68">
+					<Size>
+						<AbsDimension x="80" y="83"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativeTo="$parentHeadBkg" relativePoint="center" />
+					</Anchors>
+				</Texture>
+				<FontString name="$parentTitle" fonttype="BlackFont24" text="迷你队长七个字" abs_x="295" abs_y="24">
+					<Color r="225" g="219" b="213"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentHeadBkg">
+							<Offset>
+								<AbsDimension x="22" y="2"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentIcon" file="ui/mobile/texture0/common_icon.xml" uvname="icon_user_white" abs_x="21" abs_y="21">
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentNum" justifyH="center" fonttype="BlackFont20" text="21/40" abs_x="84" abs_y="18">
+					<Color r="225" g="219" b="213"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentIcon">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentContent" fonttype="BlackFont18" lineInterval="3" text="邀请您加入房间：黑科技大作战法卡卡丝丽指而我如" abs_x="401" abs_y="36" autowrap="true">
+					<Color r="224" g="220" b="202"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentTitle">
+							<Offset>
+								<AbsDimension x="1" y="9"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentCancelBtn" inherits="TemplateBtn2">
+				<Anchors>
+					<Anchor point="bottom" relativeTo="$parentBkg" relativePoint="bottom">
+						<Offset>
+							<AbsDimension x="-125" y="-11"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentText" fonttype="BlackFont24" justifyV="middle" justifyH="center" fontStyle="normal" text="$4994">
+							<Color r="51" g="55" b="55"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GamePopUpsFrameCancelBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentOkBtn" inherits="TemplateBtn3">
+				<Anchors>
+					<Anchor point="bottom" relativeTo="$parentBkg" relativePoint="bottom">
+						<Offset>
+							<AbsDimension x="125" y="-11"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentText" fonttype="BlackFont24" justifyV="middle" justifyH="center" fontStyle="normal" text="$1316">
+							<Color r="55" g="54" b="51"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GamePopUpsFrameOkBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			##勾选按钮:五分钟内不提示
+			<Button name="$parentHookBtn" abs_x="24" abs_y="24" inherits="TemplateTickBtn4">
+				<Anchors>
+					<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentTitle">
+						<Offset>
+							<AbsDimension x="2" y="55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>	
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="$parentName" fonttype="BlackFont18"  justifyH="left" text="$20592" abs_x="360" abs_y="18">
+							<Color r="224" g="220" b="202"/>
+							<Anchors>
+								<Anchor point="left" relativePoint="right" relativeTo="$parentBkg">
+									<Offset>
+										<AbsDimension x="16" y="1"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GamePopUpsFrameHookBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>GamePopUpsFrame_OnLoad();</OnLoad>
+			<OnUpdate>GamePopUpsFrame_OnUpdate();</OnUpdate>
+		</Scripts>
+	</Frame>
+
+	<!--一些带下划线的需要说明的文本，悬停时弹出相应tips-->
+	<Frame name="AttribTipsFrame" parent="UIClient" frameStrata="TOOLTIP" hidden="true" framelevel="1000" input_transparent="true">
+        <Size>
+            <AbsDimension x="270" y="100" />
+        </Size>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBkg" inherits="TemplateBkg49"> 
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="-3" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <RichText name="$parentContent" fonttype="BlackFont18" lineInterval="5" fontStyle="border" text="$3998" >
+                <Color r="254" g="244" b="204"/>
+                <Size>
+                    <AbsDimension x="250" y="45"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="left" relativePoint="left" relativeTo="$parentBkg">
+                        <Offset>
+                            <AbsDimension x="5" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </RichText>
+        </Frames>
+    </Frame>
+
+
+
+	##物理部件tips面板
+	<Frame name="PhysicsPartTipsFrame" parent="UIClient" frameStrata="HIGH" hidden="true" framelevel="2000">
+        <Size>
+            <AbsDimension x="347" y="185" />
+        </Size>
+        <Anchors>
+        	<Anchor point="topLeft" relativePoint="topright" relativeTo="MItemTipsFrame">
+        		<Offset>
+        			<AbsDimension x="-2" y="0"/>
+        		</Offset>
+        	</Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+            	<Texture name="$parentBkg" inherits="TemplateBigBkg19"/> 
+				<Texture name="$parentBodyBkg" inherits="TemplateBigBkg20" abs_x="311" abs_y="100">
+					<Anchors>
+						<Anchor point="bottom" relativePoint="bottom" relativeTo="$parentBkg" >
+							<Offset>
+								<AbsDimension x="0" y="-13"/>
+							</Offset>
+						</Anchor>
+					</Anchors>				
+				</Texture>
+                
+                <FontString name="$parentTypeDesc" text="武器·火焰喷射器" fonttype="BlackFont22" abs_x="190" abs_y="22" justifyH="left" shadowcolor="FF000000" fontStyle="border">
+                	<color r="255" g="255" b="255"/>
+                	<Anchors>
+                		<Anchor point="left" relativeTo="$parentTypeIconBkg" relativePoint="right">
+                			<Offset>
+                				<AbsDimension x="10" y="0"/>
+                			</Offset>
+                		</Anchor>
+                	</Anchors>
+                </FontString>
+                <Texture name="$parentTypeIconBkg" file="ui/mobile/texture2/common.xml" uvname="img_icon_shortcut.png"  abs_x="46" abs_y="46">
+					<Anchors>
+						<Anchor point="topLeft" relativePoint="topLeft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="18" y="13"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentTypeIcon" file="ui/mobile/texture2/vehicle.xml" uvname="empty"  abs_x="32" abs_y="32">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parentTypeIconBkg"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentHpIcon" file="ui/mobile/texture2/vehicle.xml" uvname="icon_heart_mach"  abs_x="22" abs_y="23">
+					<Anchors>
+						<Anchor point="topLeft" relativeTo="$parentBodyBkg" relativePoint="topLeft">
+							<Offset>
+								<AbsDimension x="8" y="9"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentHpTitle" text="$12028" fonttype="BlackFont18" shadowcolor="FF000000" abs_x="85" abs_y="23" justifyH="left" justifyV="middle" fontStyle="border">
+					<color r="224" g="220" b="202"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentHpIcon">
+							<Offset>
+								<AbsDimension x="14" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentHp" text="9999kg" fonttype="BlackFont18" shadowcolor="FF000000" abs_x="95" abs_y="23" justifyH="left" justifyV="middle" fontStyle="border">
+					<color r="224" g="220" b="202"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentHpTitle">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+
+				<Texture name="$parentPowerIcon" file="ui/mobile/texture2/vehicle.xml" uvname="icon_battery_mach"  abs_x="22" abs_y="23">
+					<Anchors>
+						<Anchor point="top" relativeTo="$parentHpIcon" relativePoint="bottom">
+							<Offset>
+								<AbsDimension x="0" y="7"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentPowerTitle" text="$12029" fonttype="BlackFont18" shadowcolor="FF000000" abs_x="85" abs_y="23" justifyH="left" justifyV="middle" fontStyle="border">
+					<color r="224" g="220" b="202"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentPowerIcon">
+							<Offset>
+								<AbsDimension x="14" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentPower" text="9999kg" fonttype="BlackFont18" shadowcolor="FF000000" abs_x="95" abs_y="23" justifyH="left" justifyV="middle" fontStyle="border">
+					<color r="224" g="220" b="202"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentPowerTitle">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+
+				<Texture name="$parentMassIcon" file="ui/mobile/texture2/vehicle.xml" uvname="icon_kg_mach"  abs_x="22" abs_y="23">
+					<Anchors>
+						<Anchor point="top" relativeTo="$parentPowerIcon" relativePoint="bottom">
+							<Offset>
+								<AbsDimension x="0" y="7"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentMassTitle" text="$12030" fonttype="BlackFont18" shadowcolor="FF000000" abs_x="85" abs_y="23" justifyH="left" justifyV="middle" fontStyle="border">
+					<color r="224" g="220" b="202"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentMassIcon">
+							<Offset>
+								<AbsDimension x="14" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentMass" text="9999kg" fonttype="BlackFont18" shadowcolor="FF000000" abs_x="95" abs_y="23" justifyH="left" justifyV="middle" fontStyle="border">
+					<color r="224" g="220" b="202"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentMassTitle">
+							<Offset>
+								<AbsDimension x="10" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+        	<Button name="$parentCloseBtn" hidden="true">
+				<Size>
+					<AbsDimension x="45" y="46" />
+				</Size>
+				<Anchors>
+					<Anchor point="topright" relativeTo="$parentBkg" relativePoint="topright">
+						<Offset>
+							<AbsDimension x="-5" y="5" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture name="$parentNormal" file="ui/mobile/texture2/empty.xml" uvname="empty" >
+					<Size>
+						<AbsDimension x="31" y="32"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</NormalTexture>
+				<PushedTexture name="$parentPushedBG" file="ui/mobile/texture2/empty.xml" uvname="empty" >
+					<Size>
+						<AbsDimension x="25" y="26"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</PushedTexture>
+				<Scripts>
+					<OnClick>PhysicsPartTipsFrameCloseBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>PhysicsPartTipsFrame_OnLoad();</OnLoad>
+			<OnEvent>PhysicsPartTipsFrame_OnEvent();</OnEvent>
+			<OnUpdate>PhysicsPartTipsFrame_OnUpdate();</OnUpdate>
+			<OnHide>PhysicsPartTipsFrame_OnHide();</OnHide>
+			<OnClick>MItemTipsFrame_OnClick();</OnClick>
+		</Scripts>
+    </Frame>
+    
+    <Frame name="ParamTipsFrame" parent="UIClient" frameStrata="TOOLTIP" hidden="true" framelevel="1000" input_transparent="true">
+		<Size>
+			<AbsDimension x="325" y="45" />
+		</Size>
+		<Anchors>
+			<Anchor point="bottom" relativePoint="top" relativeTo="PlayShortcut">
+				<Offset>
+					<AbsDimension x="0" y="-40"/>
+				</Offset> 
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" inherits="TemplateBigBkg19" />
+				<FontString name="$parentTitle" fonttype="BlackFont26" lineInterval="2" text="" justifyH="center">
+					<Size>
+						<AbsDimension x="310" y="32"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="3"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>ParamTipsFrame_OnLoad();</OnLoad>
+			<OnShow>ParamTipsFrame_OnShow();</OnShow>
+			<OnUpdate>ParamTipsFrame_OnUpdate();</OnUpdate>
+		</Scripts>
+	</Frame>
+
+	##弹出渐隐的tips
+	<Frame name="GameHUDFrame" parent="UIClient" frameStrata="TOOLTIP" hidden="true" framelevel="1000" input_transparent="true">
+		<Size>
+			<AbsDimension x="325" y="45" />
+		</Size>
+		<Anchors>
+			<Anchor point="top" relativePoint="top" relativeTo="$parent">
+				<Offset>
+					<AbsDimension x="0" y="40"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" inherits="TemplateBkg52" />
+				<FontString name="$parentText" fonttype="BlackFont20" justifyH="center" text="点击放置起点" abs_x="250" abs_y="20">
+					<Color r="255" g="227" b="38"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>GameHUDFrame_OnLoad();</OnLoad>
+			<OnShow>GameHUDFrame_OnShow();</OnShow>
+			<OnUpdate>GameHUDFrame_OnUpdate();</OnUpdate>
+		</Scripts>
+	</Frame>
+</Ui>

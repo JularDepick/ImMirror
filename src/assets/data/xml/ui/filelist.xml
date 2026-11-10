@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Texture Name="img_title_hall_2.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="line_blue_hall" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="img_title_name_hall.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="img_icon_head" Path="ui/mobile/texture2/miniwork.xml"/>
+
+<Texture Name="board_recharge_num_hall.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_bean" Path="ui/mobile/texture2/common_icon.xml"/>
+
+<Texture Name="icon_add_btn_money_s.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_coin" Path="ui/mobile/texture2/common_icon.xml"/>
+
+<Texture Name="icon_set_hall.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_letter_hall.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="img_dot_tips" Path="ui/mobile/texture2/common.xml"/>
+
+<Texture Name="icon_gift_hall.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_pack_hall.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_official_pre_f.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_mpoint_hall.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="img_board_workshop_r" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_wifi_green" Path="ui/mobile/texture2/room.xml"/>
+
+<Texture Name="" Path=""/>
+
+<Texture Name="icon_shop_hall.png" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_friend_hall" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_box_hall" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_tv_hall" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_subscribe" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_match_hall" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_notice_hall" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="icon_bp_hall" Path="ui/mobile/texture2/minilobby.xml"/>
+
+<Texture Name="img_board_white100_.png" Path="ui/mobile/texture2/common.xml"/>
+
+<Texture Name="btn_close.png" Path="ui/mobile/texture2/common.xml"/>
+
+<Texture Name="btn_superbig_blue.png" Path="ui/mobile/texture2/common.xml"/>
+
+<Texture Name="btn_superbig_yellow.png" Path="ui/mobile/texture2/common.xml"/>
+
+<Texture Name="jwsm_guanbi.png" Path="ui/mobile/texture2/outgame2/uitex3.xml"/>

@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<Ui>
+	<Script file="ui/mobile/mvc/resource/resourceCenter/importModel/ResourceCenterImportModelModel.lua"/>
+	<Script file="ui/mobile/mvc/resource/resourceCenter/importModel/ResourceCenterImportModelView.lua"/>
+	<Script file="ui/mobile/mvc/resource/resourceCenter/importModel/ResourceCenterImportModelCtrl.lua"/>
+
+	<Frame name="ResourceCenterImportModel" parent="UIClient" frameStrata="MEDIUM" hidden="true" framelevel="1001">
+		<Size>
+			<RelDimension x="1.0" y="1.0" />
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentMask" file="ui/white.png" stretchedge="true" color="B1000000" />
+				<Texture name="$parentBkg" inherits="TemplateBigBkg8" abs_x="996" abs_y="571">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" />
+					</Anchors>
+				</Texture>
+				<Texture name="$parentWhiteBkg" inherits="TemplateBigBkg2" abs_x="993" abs_y="443">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parentMask" relativePoint="center">
+							<Offset>
+								<AbsDimension x="0" y="-7"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+
+				##分割线
+				<Texture name="SplitTex" inherits="TemplateBkg20">
+					<Size>
+						<AbsDimension x="2" y="396"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topright" relativePoint="topright" relativeTo="$parentWhiteBkg">
+							<Offset>
+								<AbsDimension x="-509" y="19"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentModelBg" file="ui/mobile/texture2/common.xml" uvname ="img_board_resource" abs_x="455" abs_y="396" DrawType="ninesquare_center">
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parentWhiteBkg" relativePoint="topleft">
+							<Offset>
+								<AbsDimension x="18" y="19" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<NineSquare ox="0" oy="0" tilew="5" tileh="5"/>
+				</Texture>
+
+			</Layer>
+		</Layers>
+		<Frames>
+
+			##标题栏
+			<Frame name="$parentTitle" abs_x="987" abs_y="61">
+				<Anchors>
+					<Anchor point="center" relativeTo="$parentMask" relativePoint="center">
+						<Offset>
+							<AbsDimension x="0" y="75"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+				##标题栏背景:height:61
+						<Texture name="$parentBkg" inherits="TemplateBigBkg4">
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="-327"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentBkgLeft" file="ui/mobile/texture2/common.xml" uvname="img_title.png" abs_x="333" abs_y="56">
+							<Anchors>
+								<Anchor point="left" relativePoint="left" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="-4" y="-329"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentBkgClose" file="ui/mobile/texture2/common.xml" uvname="img_close_bd.png" abs_x="84" abs_y="56">
+							<Anchors>
+								<Anchor point="topright" relativePoint="topright" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="-327"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						##标题名
+						<FontString name="$parentName" fonttype="BlackFont36" justifyH="left" justifyV="middle" text="$34300" abs_x="200" abs_y="36">
+							<Color r="255" g="135" b="27"/>
+							<Anchors>
+								<Anchor point="left" relativePoint="left" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="17" y="-327"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="$parentEditField">
+				<Layers>
+					<Layer level="BACKGROUND">
+						##名称
+						<FontString name="$parentTxtName" fonttype="BlackFont28" text="$153" abs_x="39" abs_y="20" justifyH ="right">
+							<Color r="108" g="75" b="59"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="99" y="-174"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+
+						<Texture name="$parentNameEditBkg" inherits="TemplateBkg8">
+							<Size>
+								<AbsDimension x="334" y="46"/>
+							</Size>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="297" y="-173"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+												##名称输入提示
+						<FontString name="$parentTxtDefaultName" fonttype="BlackFont20" text="$34302" abs_x="142" abs_y="20" justifyH ="right">
+							<Color r="185" g="185" b="185"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="172" y="-173"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						##描述
+						<FontString name="$parentDescTxt" fonttype="BlackFont28" text="$156" abs_x="39" abs_y="20" justifyH ="right">
+							<Color r="108" g="75" b="59"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="99" y="-88"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+
+						<Texture name="$parentDescEditBkg" inherits="TemplateBkg8">
+							<Size>
+								<AbsDimension x="334" y="156"/>
+							</Size>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="297" y="-33"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						#默认描述
+						<FontString name="$parentDefaultDescTxt" fonttype="BlackFont20" text="$34303" abs_x="142" abs_y="20" justifyH ="right">
+							<Color r="185" g="185" b="185"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="172" y="-88"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						##生成类型
+						<FontString name="$parentSelectionTxt" fonttype="BlackFont28" text="$147" abs_x="79" abs_y="20" justifyH ="right">
+							<Color r="108" g="75" b="59"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="79" y="109"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+						#模型显示
+			<ModelView name="$parentView" hidden="false">
+				<Size>
+					<AbsDimension x="455" y="396"/>
+				</Size>
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentWhiteBkg" relativePoint="topleft">
+						<Offset>
+							<AbsDimension x="18" y="19" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnMouseDown>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):OnRotateMouseDown();</OnMouseDown>
+					<OnMouseMove>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):OnRotateMouseMove();</OnMouseMove>
+				</Scripts>
+			</ModelView>
+			##名称编辑框
+			<SafeMultiEditBox name="$parentNameEdit" letters="21" multiLine="false" abs_x="200" abs_y="25">
+				<Anchors>
+					<Anchor point="top" relativeTo="$parentMask" relativePoint="top">
+						<Offset>
+							<AbsDimension x="246" y="178" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<cursorcolor r="255" g="255" b="255"/>
+				<textcolor r="255" g="255" b="255"/>
+				<FontString name="$parentFont" fonttype="BlackFont24">
+					<Color r="255" g="255" b="255"/>
+				</FontString>
+				<Scripts>
+					<OnFocusLost>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):NameEditLostFocus();</OnFocusLost>
+					<OnFocusGained>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):NameEditGainFocus();</OnFocusGained>
+				</Scripts>
+			</SafeMultiEditBox>
+			##描述编辑框
+			<SafeMultiEditBox name="$parentDescEdit" letters="90" multiLine="false" abs_x="299" abs_y="66">
+				<Anchors>
+					<Anchor point="top" relativeTo="$parentMask" relativePoint="top">
+						<Offset>
+							<AbsDimension x="300" y="264" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<cursorcolor r="255" g="255" b="255"/>
+				<textcolor r="255" g="255" b="255"/>
+				<FontString name="$parentFont" fonttype="BlackFont24">
+					<Color r="255" g="255" b="255"/>
+				</FontString>
+				<Scripts>
+					<OnFocusLost>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):DescEditLostFocus();</OnFocusLost>
+					<OnFocusGained>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):DescEditGainFocus();</OnFocusGained>
+				</Scripts>
+			</SafeMultiEditBox>
+			<Button name="$parentTypeBtn1" inherits="t_btn_me" text="$3528" abs_x="100" abs_y="50">
+				<Anchors>
+					<Anchor point="center" relativePoint="center" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="181" y="108"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture name="$parentChecked" inherits="TemplateBigBkg13" abs_x="100" abs_y="50" hidden="true"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):TypeBtn1Click()</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentTypeBtn2" inherits="t_btn_me" text="$3933" abs_x="100" abs_y="50">
+				<Anchors>
+					<Anchor point="center" relativePoint="center" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="298" y="108"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture name="$parentChecked" inherits="TemplateBigBkg13" abs_x="100" abs_y="50"hidden="true"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):TypeBtn2Click()</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentTypeBtn3" inherits="t_btn_me" text="$4155" abs_x="100" abs_y="50">
+				<Anchors>
+					<Anchor point="center" relativePoint="center" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="415" y="108"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture name="$parentChecked" inherits="TemplateBigBkg13" abs_x="100" abs_y="50" hidden="true"/>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):TypeBtn3Click()</OnClick>
+				</Scripts>
+			</Button>
+			##关闭按钮
+			<Frame name="$parentCloseBtn" inherits="TemplateCloseBtn" abs_x="46" abs_y="60">
+				<Anchors>
+					<Anchor point="topright" relativePoint="topright" relativeTo="$parentTitle">
+						<Offset>
+							<AbsDimension x="0" y="-327"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):CloseBtnClicked()</OnClick>
+				</Scripts>
+			</Frame>
+			##确定导入按钮
+			<Button name="$parentConfirmBtn" inherits="t_btn_by" text="$34301">
+				<Anchors>
+					<Anchor point="center" relativePoint="center" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="368" y="250"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ResourceCenterImportModel"):ConfirmBtnClick()</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+</Ui>

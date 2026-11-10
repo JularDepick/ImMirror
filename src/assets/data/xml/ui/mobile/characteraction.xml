@@ -1,0 +1,708 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<Ui>
+    <Script file="ui/mobile/characteraction.lua" />
+		##动作格子模板
+    <Button name="ActionButtonTemplate" virtual="true" click_threshold="50" abs_x="77" abs_y="77">
+        <Layers>
+            <Layer level="BACKGROUND">
+                <!-- <Texture name="$parentBkg" inherits="TemplateBkg10" /> -->
+                <Texture name="$parentIcon" alphamode="alphablend" abs_x="77" abs_y="77">
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent" />
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentBan" file="ui/mobile/texture2/ingame2.xml" uvname="lzy_15" hidden="true" abs_x="22" abs_y="22">
+                    <Anchors>
+                        <Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="-10" y="-10"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentCheck" inherits="TemplateBigBkg13" hidden="true">
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+			<Frame name="$parentTick" inherits="TemplateBtn24" abs_x="31" abs_y="34">
+								<Anchors>
+                    <Anchor point="topright" relativePoint="topright" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="8" y="-8"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+						</Frame>
+            <Frame name="$parentUnlock" hidden="true" input_transparent="true">
+                <Size>
+                    <AbsDimension x="90" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="bottom" relativePoint="bottom" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="0" y="-5"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture name="$parentProBkg" file="ui/mobile/texture2/ingame2.xml" uvname="lzy_55" hidden="false">
+                            <Size>
+                                <AbsDimension x="81" y="22"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="bottom" relativePoint="bottom" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                        <Texture name="$parentPro" file="ui/mobile/texture2/ingame2.xml" uvname="lzy_56"  hidden="false">
+                            <Size>
+                                <AbsDimension x="75" y="18"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="left" relativePoint="left" relativeTo="$parentProBkg">
+                                    <Offset>
+                                        <AbsDimension x="3" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                        <Texture name="$parentLock" file="ui/mobile/texture2/outgame2/uitex.xml" uvname="juese_suo02.png" hidden="true">
+                            <Size>
+                                <AbsDimension x="17" y="23"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="-7" y="-2"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                        <FontString name="$parentCount" fonttype="BlackFont" fontStyle="border" justifyH="center" text="999/999">
+                            <Color r="255" g="255" b="255" />
+                            <Size>
+                                <AbsDimension x="81" y="17" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="center" relativePoint="center" relativeTo="$parentProBkg">
+                                    <Offset>
+                                        <AbsDimension x="0" y="-3" />
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnClick>ActionButtonTemplate_OnClick();</OnClick>
+        </Scripts>
+    </Button>
+
+		##动作快捷栏格子模板
+    <Button name="ActionShortCutButtonTemplate" virtual="true" click_threshold="50">
+        <Size platform="pc">
+						<AbsDimension x="60" y="60" />
+				</Size>
+				<Size platform="mobile">
+						<AbsDimension x="85" y="85" />
+				</Size>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBkg" file="ui/mobile/texture2/operate.xml" uvname="img_item_box.png" />
+                <Texture name="$parentIcon" alphamode="alphablend">
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent" />
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentCheck" inherits="TemplateBigBkg13" hidden="true">
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent" />
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentBan" file="ui/mobile/texture2/ingame2.xml" uvname="lzy_15" hidden="false">
+                    <Size>
+                        <AbsDimension x="25" y="25"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="-10" y="-10"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+								##快捷键提示:ctrl+1...
+								<FontString name="$parentNum" fonttype="BlackFont14" justifyH="center" text="1" abs_x="50" abs_y="14">
+										<Color r="61" g="69" b="70"/>
+										<Anchors>
+												<Anchor point="top" relativePoint="bottom" relativeTo="$parent">
+														<Offset>
+																<AbsDimension x="0" y="2"/>
+														</Offset>
+												</Anchor>
+										</Anchors>
+								</FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnClick>ActionShortCutButtonTemplate_OnClick();</OnClick>
+        </Scripts>
+    </Button>
+
+		##动作快捷栏
+    <Frame name="CharacterActionFrame" parent="UIClient"  hidden="true" framelevel="1020" frameStrata="BACKGROUND">
+        <Size platform="pc">
+            <AbsDimension x="522" y="73"/>
+        </Size>
+        <Size platform="mobile">
+            <AbsDimension x="718" y="84"/>
+        </Size>
+        <Anchors>
+            <Anchor point="bottom" relativePoint="top" relativeTo="PlayShortcut">
+                <Offset>
+                    <AbsDimension x="-22" y="-6" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBkg"  file="ui/mobile/texture2/operate.xml" uvname="img_board_expression.png" DrawType="ninesquare_center" color="00000000">
+                    <NineSquare ox="0" oy="0" tilew="10" tileh="10"/>
+                    <Anchors>
+                        <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentBkgTriangle"  file="ui/mobile/texture2/operate.xml" uvname="img_expression_arrow.png" abs_x="28" abs_y="15" >
+                    <Anchors>
+                        <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="-235" y="65"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentExpandActionBtn" abs_x="33" abs_y="32">
+                <NormalTexture name="$parentNormal" file="ui/mobile/texture2/operate.xml"  uvname="icon_set" />
+                <Anchors>
+                    <Anchor point="left" relativePoint="left" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="13" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>CharacterActionFrameExpandActionBtn_OnClick()</OnClick>
+                </Scripts>
+            </Button>
+            <Button name="ExpressionShortcut1" inherits="ActionShortCutButtonTemplate" />
+            <Button name="ExpressionShortcut2" inherits="ActionShortCutButtonTemplate" />
+            <Button name="ExpressionShortcut3" inherits="ActionShortCutButtonTemplate" />
+            <Button name="ExpressionShortcut4" inherits="ActionShortCutButtonTemplate" />
+            <Button name="ExpressionShortcut5" inherits="ActionShortCutButtonTemplate" />
+            <Button name="ExpressionShortcut6" inherits="ActionShortCutButtonTemplate" />
+            <Button name="ExpressionShortcut7" inherits="ActionShortCutButtonTemplate" />
+            <Button name="ExpressionShortcut8" inherits="ActionShortCutButtonTemplate" />
+        </Frames>
+        <Scripts>
+            <OnLoad>CharacterActionFrame_OnLoad();</OnLoad>
+            <OnShow>CharacterActionFrame_OnShow();</OnShow>
+            <OnHide>CharacterActionFrame_OnHide();</OnHide>
+            <OnUpdate>CharacterActionFrame_OnUpdate();</OnUpdate>
+        </Scripts>
+    </Frame>
+
+		##-- --------------------------------------------动作库-------------------------------------------------------------
+    <Frame name="ActionLibraryFrame" parent="UIClient"  hidden="true" framelevel="1000" frameStrata="BACKGROUND" abs_x="829" abs_y="492">
+        <Anchors>
+            <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                <Offset>
+                    <AbsDimension x="0" y="0" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+								<Texture name="$parentBkg" inherits="TemplateBigBkg8"/>
+								<Texture name="$parentBkgWhite" inherits="TemplateBigBkg2" abs_x="827" abs_y="329">
+										<Anchors>
+												<Anchor point="top" relativePoint="top" relativeTo="$parentBkg">
+														<Offset>
+																<AbsDimension x="0" y="52"/>
+														</Offset>
+												</Anchor>
+										</Anchors>	
+								</Texture>
+								<Texture name="$parentBkgCenter" inherits="TemplateBigBkg5" abs_x="784" abs_y="289">
+										<Anchors>
+												<Anchor point="top" relativePoint="top" relativeTo="$parentBkg">
+														<Offset>
+																<AbsDimension x="0" y="73"/>
+														</Offset>
+												</Anchor>
+										</Anchors>	
+								</Texture>
+						</Layer>
+        </Layers>
+        <Frames>
+						##标题栏:height:56
+            <Frame name="$parentTitle" inherits="TemplateTopTitleBkg1" />
+
+						##关闭按钮(old:ActionLibraryFrameTopCloseBtn)
+            <Frame name="$parentCloseBtn" inherits="TemplateCloseBtn">
+                <Anchors>
+                    <Anchor point="right" relativePoint="right" relativeTo="$parentTitle">
+                        <Offset>
+                            <AbsDimension x="-11" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>ActionLibraryFrameCloseBtn_OnClick();</OnClick>
+                </Scripts>
+            </Frame>
+            <SlidingFrame name="ActionLibraryBox" slidingY="true" slideplane="$parentPlane" abs_x="784" abs_y="239" >
+                <Anchors>
+                    <Anchor point="top" relativePoint="top" relativeTo="$parentBkgCenter">
+                        <Offset>
+                            <AbsDimension x="0" y="14"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <Frame name="$parentPlane" hidden="true" abs_x="734" abs_y="239" />
+                    <Button name="$parentItem1" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem2" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem3" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem4" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem5" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem6" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem7" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem8" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem9" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem10" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem11" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem12" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem13" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem14" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem15" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem16" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem17" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem18" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem19" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem20" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem21" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem22" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem23" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem24" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem25" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem26" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem27" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem28" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem29" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem30" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem31" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem32" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem33" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem34" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem35" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem36" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem37" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem38" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem39" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem40" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem41" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem42" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem43" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem44" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem45" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem46" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem47" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem48" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem49" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem50" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem51" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem52" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem53" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem54" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem55" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem56" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem57" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem58" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem59" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem60" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem61" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem62" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem63" inherits="ActionButtonTemplate"/>
+                    <Button name="$parentItem64" inherits="ActionButtonTemplate"/>
+                </Frames>
+                <Scripts>
+                    <OnMouseDown platform="pc">ActionLibraryBox_OnMouseDown()</OnMouseDown>
+                </Scripts>
+            </SlidingFrame>
+        </Frames>
+        <Scripts>
+            <OnLoad>ActionLibraryFrame_OnLoad();</OnLoad>
+            <OnShow>ActionLibraryFrame_OnShow();</OnShow>
+            <OnHide>ActionLibraryFrame_OnHide();</OnHide>
+            <OnClick>ActionLibraryFrame_OnClick();</OnClick>
+            <!-- <OnEvent>CharacterActionFrame_OnEvent();</OnEvent> -->
+        </Scripts>
+    </Frame>
+
+    <Button name="PhraseTemplate" virtual = "true">
+        <Size platform="pc">
+            <AbsDimension x="240" y="49"/>
+        </Size>
+        <Size platform="mobile">
+            <AbsDimension x="338" y="49"/>
+        </Size>
+        <Anchors>
+            <Anchor point="left" relativePoint="left" relativeTo="$parent">
+                <Offset>
+                    <AbsDimension x="0" y="0" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBkg"  inherits ="TemplateBkg87" color="ffffffff">
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString name="$parentAcckeyTips" fonttype="BlackFont14" justifyH="left" text="alt+1" abs_x="33" abs_y="14">
+                    <Color r="150" g="161" b="157"/>
+                    <Anchors>
+                        <Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parentBkg">
+                            <Offset>
+                                <AbsDimension x="-3" y="-1"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame name="$parentName" abs_y="49" abs_x = "200">
+                <Anchors>
+                    <Anchor point="center" relativePoint="center">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer>
+                        <FontString name="$parentText" fonttype="BlackFont18" justifyH="left" justifyV="middle"  input_transparent = "true">
+                            <Size>
+                                <AbsDimension x="200" y="40"/>
+                            </Size>
+                            <Color r ="255" g="255" b="255"/>
+                            <Anchors>
+                                <Anchor point="left" relativePoint="left" >
+                                    <Offset>
+                                        <AbsDimension x="0" y="2"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <RichText name="$parentIcon" fonttype="BlackFont18" justifyH="left" lineInterval="10" force_input_transparent = "true">
+                        <Size>
+                            <AbsDimension x="53" y="40"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="center" relativePoint="center" relativeTo="$parentText">
+                                <Offset>
+                                    <AbsDimension x="0" y="-5"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </RichText>
+                </Frames>
+                <Scripts>
+                    <OnClick>SendPhraseBtnClicked(nil,true);</OnClick>
+                </Scripts>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnClick>SendPhraseBtnClicked();</OnClick>
+        </Scripts>
+    </Button>
+    
+    <Frame name="PhraseLibraryFrame" parent="UIClient"  hidden="true" framelevel="1000" frameStrata="BACKGROUND" input_transparent="true">
+        <Size platform="pc">
+            <AbsDimension x="542" y="417"/>
+        </Size>
+        <Size platform="mobile">
+            <AbsDimension x="738" y="435"/>
+        </Size>
+        <Anchors>
+            <Anchor point="bottom" relativePoint="bottom" relativeTo="CharacterActionFrame">
+                <Offset>
+                    <AbsDimension x="3" y="-2" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Frames>
+            <Frame name="$parentUnFold" rel_x="1" rel_y="1">
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture name="$parentBkg"  file="ui/mobile/texture2/operate.xml" uvname="img_board_expression.png" DrawType="ninesquare_center" >
+                            <NineSquare ox="0" oy="0" tilew="10" tileh="10"/>
+                            <Anchors>
+                                <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                        <Texture name="$parentTopBkg"   file="ui/mobile/texture2/operate.xml" uvname="img_board_expression.png" DrawType="ninesquare_center" rel_x="1" abs_y="58" color="#77fff8d9">
+                            <NineSquare ox="0" oy="0" tilew="10" tileh="10"/>
+                            <Anchors>
+                                <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                          <FontString name="$parentTitleShadow" fonttype="BlackFont22" justifyH="left" text="$15281" abs_x="87" abs_y="22"
+                        lineInterval="2" fontStyle="normal">
+                            <Color r="00" g="00" b="00" a="80"/>
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentBkg">
+                                        <Offset>
+                                                <AbsDimension x="61" y="22"/>
+                                        </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentTitle" fonttype="BlackFont22" justifyH="left" text="$15281" abs_x="87" abs_y="22"
+                        lineInterval="2" fontStyle="normal" shadowcolor="00000080">
+                            <Color r="255" g="255" b="255"/>
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentBkg">
+                                        <Offset>
+                                            <AbsDimension x="59" y="20"/>
+                                        </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <Texture name="$parentLine" inherits="TemplateBkg20_H1" rel_x="1" abs_y="2" color="#70ffffff">
+                            <Size platform="pc">
+                                <AbsDimension x="528" y="2"/>
+                            </Size>
+                            <Size platform="mobile">
+                                <AbsDimension x="726" y="2"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="bottom" relativePoint="top" relativeTo="CharacterActionFrame">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                        <Texture name="$parentLine2" inherits="TemplateBkg20_H1" rel_x="1" abs_y="2" color="#70ffffff">
+                            <Size platform="pc">
+                                <AbsDimension x="528" y="2"/>
+                            </Size>
+                            <Size platform="mobile">
+                                <AbsDimension x="726" y="2"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="48"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Frame name="$parentPanel">
+                        <Anchors>
+                            <Anchor point="top" relativePoint="top" relativeTo="$parentBkg">
+                                <Offset>
+                                    <AbsDimension x="0" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Frames>
+                            <Button name="$parentItem1" inherits="PhraseTemplate" id = "1"/>
+                            <Button name="$parentItem2" inherits="PhraseTemplate" id = "2"/>
+                            <Button name="$parentItem3" inherits="PhraseTemplate" id = "3"/>
+                            <Button name="$parentItem4" inherits="PhraseTemplate" id = "4"/>
+                            <Button name="$parentItem5" inherits="PhraseTemplate" id = "5"/>
+                            <Button name="$parentItem6" inherits="PhraseTemplate" id = "6"/>
+                            <Button name="$parentItem7" inherits="PhraseTemplate" id = "7"/>
+                            <Button name="$parentItem8" inherits="PhraseTemplate" id = "8"/>
+                            <Button name="$parentItem9" inherits="PhraseTemplate" id = "9"/>
+                            <Button name="$parentItem10" inherits="PhraseTemplate" id = "10"/>
+                        </Frames>
+                    </Frame>
+                    <Button name="$parentClickMask" rel_x="1" abs_y="48">
+                        <Anchors>
+                            <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentBkg">
+                                <Offset>
+                                    <AbsDimension x="0" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <NormalTexture name="$parentNormal" file="ui/mobile/texture0/operate.xml"  uvname="img_arrow_white" abs_x="26" abs_y="14">
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="25" y="21"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </NormalTexture>
+                        <Scripts>
+                            <OnClick>PhraseLibraryFrameFoldArrow_OnClick();</OnClick>
+                        </Scripts>
+                    </Button>
+                </Frames>
+                <Scripts>
+                    <OnShow>PhraseLibraryFrameUnFold_OnShow();</OnShow>
+                    <OnHide>PhraseLibraryFrameUnFold_OnHide()</OnHide>
+                </Scripts>
+            </Frame>
+            <Frame name="$parentFold" rel_x="1" abs_y="125">
+                <Anchors>
+                    <Anchor point="bottom" relativePoint="bottom" relativeTo="CharacterActionFrame">
+                        <Offset>
+                            <AbsDimension x="3" y="-2" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture name="$parentBkg"  file="ui/mobile/texture2/operate.xml" uvname="img_board_expression.png" DrawType="ninesquare_center" >
+                            <NineSquare ox="0" oy="0" tilew="10" tileh="10"/>
+                            <Anchors>
+                                <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                        <Texture name="$parentTopBkg"   file="ui/mobile/texture2/operate.xml" uvname="img_board_expression.png" DrawType="ninesquare_center" rel_x="1" abs_y="58" color="#77fff8d9">
+                            <NineSquare ox="0" oy="0" tilew="10" tileh="10"/>
+                            <Anchors>
+                                <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                          <FontString name="$parentTitleShadow" fonttype="BlackFont22" justifyH="left" text="$15281" abs_x="87" abs_y="22"
+                        lineInterval="2" fontStyle="normal">
+                            <Color r="00" g="00" b="00" a="80"/>
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentBkg">
+                                        <Offset>
+                                                <AbsDimension x="61" y="22"/>
+                                        </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentTitle" fonttype="BlackFont22" justifyH="left" text="$15281" abs_x="87" abs_y="22"
+                        lineInterval="2" fontStyle="normal" shadowcolor="00000080">
+                            <Color r="255" g="255" b="255"/>
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentBkg">
+                                        <Offset>
+                                            <AbsDimension x="59" y="20"/>
+                                        </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <Texture name="$parentLine" inherits="TemplateBkg20_H1" rel_x="1" abs_y="2" color="#70ffffff">
+                            <Size platform="pc">
+                                <AbsDimension x="528" y="2"/>
+                            </Size>
+                            <Size platform="mobile">
+                                <AbsDimension x="726" y="2"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="bottom" relativePoint="top" relativeTo="CharacterActionFrame">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button name="$parentClickArrow" abs_x="40" abs_y="40" input_transparent="true">
+                        <Anchors>
+                            <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentBkg" >
+                                <Offset>
+                                    <AbsDimension x="19" y="9"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <NormalTexture name="$parentNormal" file="ui/mobile/texture0/operate.xml"  uvname="img_arrow_white" UVType="turn180" abs_x="26" abs_y="14">
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent" >
+                                    <Offset>
+                                        <AbsDimension x="8" y="12"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </NormalTexture>
+                    </Button>
+                </Frames>
+                <Scripts>
+                    <OnClick>PhraseLibraryFrameUnFold_OnClick();</OnClick>
+                </Scripts>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnShow>PhraseLibraryFrame_OnShow();</OnShow>
+            <OnHide>PhraseLibraryFrame_OnHide();</OnHide>
+        </Scripts>
+    </Frame>
+    <Frame name="PhraseLibraryFrameMask" framelevel="900" parent="UIClient" hidden="true" frameStrata="BACKGROUND" >
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBg" file="ui/mobile/texture2/common.xml" uvname="img_board_white100_.png" DrawType="ninesquare_center" rel_x="1" rel_y="1" color="00000000">
+                    <NineSquare ox="0" oy="0" tilew="5" tileh="5"/>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnClick>PhraseLibraryFrameMask_OnClick();</OnClick>
+        </Scripts>
+    </Frame>
+</Ui> 

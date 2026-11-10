@@ -1,0 +1,98 @@
+熔炼ID,熔炼材料ID,物品名字,英文名称/必填/插件用,翻译用名称,插件编辑模板[0=不是模板，1=作为模板],插件编辑[大于0开放插件编辑，1=作物，2=工具，3=杂物，4=方块],"熔炉类型(0熔炉,1氧气提炼装置)",氧气值,热量,燃烧值（篝火，0-100）,熔炉产出,经验产出,掉落几率,保留容器ID,分数,
+ID,MaterialID,Name,ENName,Key,IsTemplate,EditType,Type,OxyValue,Heat,Combustion,Result,Exp,ExpOdds,ContainerID,Score,
+1,106,沙子,Sand,Sand,1,4,,,0,0,632,1,1000,,0.1,
+2,114,粘土块,LimeSandSoil,LimeSandSoil,0,4,,,0,0,666,1,1000,,0.1,
+3,124,地狱岩,SulphurRock,SulphurRock,0,4,,,0,0,11214,1,1000,,0.1,
+4,200,果木,Fruitwood,Fruitwood,0,4,,,0,0,11202,1,1000,,0.1,
+5,201,落叶松木,Larch,Larch,0,4,,,0,0,11202,1,1000,,0.1,
+6,202,白杨木,PoplarWood,PoplarWood,0,4,,,0,0,11202,1,1000,,0.1,
+7,203,红杉木,Redwood,Redwood,0,4,,,0,0,11202,1,1000,,0.1,
+8,204,楠木,PhoebeWood,PhoebeWood,0,4,,,0,0,11202,1,1000,,0.1,
+9,205,胡桃木,WalnutWood,WalnutWood,0,4,,,0,0,11202,1,1000,,0.1,
+10,206,果木板,FruitwoodBoard,FruitwoodBoard,0,4,,,320,30,0,,,,,1.5
+11,207,落叶松木板,LarchBoard,LarchBoard,0,4,,,320,30,0,,,,,1.5
+12,208,白杨木板,PoplarBoard,PoplarBoard,0,4,,,320,30,0,,,,,1.5
+13,209,红杉木板,RedwoodBoard,RedwoodBoard,0,4,,,320,30,0,,,,,1.5
+14,210,楠木板,PhoebeBoard,PhoebeBoard,0,4,,,320,30,0,,,,,1.5
+15,211,胡桃木板,WalnutBoard,WalnutBoard,0,4,,,320,30,0,,,,,1.5
+16,212,果木树苗,FruitwoodSapling,FruitwoodSapling,0,1,,,160,30,0,,,,,0.5
+17,213,落叶松树苗,LarchSapling,LarchSapling,0,1,,,160,30,0,,,,,0.5
+18,214,白杨木树苗,PoplarSapling,PoplarSapling,0,1,,,160,30,0,,,,,0.5
+19,215,红杉树苗,RedwoodSapling,RedwoodSapling,0,1,,,160,30,0,,,,,0.5
+20,216,楠木树苗,PhoebeSapling,PhoebeSapling,0,1,,,160,30,0,,,,,0.5
+21,217,胡桃树苗,WalnutSapling,WalnutSapling,0,1,,,160,30,0,,,,,0.5
+22,241,马铃薯,Potato,Potato,0,1,,,0,0,12512,1,1000,,0.1,
+23,400,金矿石,GoldOre,GoldOre,0,4,,,0,0,11207,15,10000,,14,
+24,401,铁矿石,IronOre,IronOre,0,4,,,0,0,11209,3,10000,,2.9,
+25,402,煤矿石,CoalOre,CoalOre,0,4,,,0,0,11201,1,10000,,1.1,
+26,403,蓝晶石矿石,KyaniteOre,KyaniteOre,0,4,,,0,0,11511,22,10000,,22,
+27,404,钻石矿石,DiamondOre,DiamondOre,0,4,,,0,0,11203,44,10000,,44,
+28,405,电石矿石,AcetyleneOre,AcetyleneOre,0,4,,,0,0,706,2,10000,,2.2,
+29,406,绿宝石矿石,MalachiteOre,MalachiteOre,0,4,,,0,0,11204,44,10000,,44,
+30,407,下界石英矿石,SilicaOre,SilicaOre,0,4,,,0,0,11210,1,10000,,1.7,
+31,416,煤炭块,Lump coal,Lump coal,0,4,,,18000,0,0,,,,,80
+32,505,圆石,Rock,Rock,0,4,,,0,0,104,1,1000,,0.1,
+33,514,果木台阶,FruitwoodStep,FruitwoodStep,0,4,,,160,30,0,,,,,1.5
+34,515,落叶松台阶,LarchStep,LarchStep,0,4,,,160,30,0,,,,,1.5
+35,516,白杨台阶,PoplarStep,PoplarStep,0,4,,,160,30,0,,,,,1.5
+36,517,红杉台阶,RedwoodStep,RedwoodStep,0,4,,,160,30,0,,,,,1.5
+37,518,楠木台阶,PhoebeStep,PhoebeStep,0,4,,,160,30,0,,,,,1.5
+38,519,胡桃木台阶,WalnutStep,WalnutStep,0,4,,,160,30,0,,,,,1.5
+39,520,果木楼梯,FruitwoodStair,FruitwoodStair,0,4,,,400,30,0,,,,,1.5
+40,521,落叶松楼梯,LarchStair,LarchStair,0,4,,,400,30,0,,,,,1.5
+41,522,白杨楼梯,PoplarStair,PoplarStair,0,4,,,400,30,0,,,,,1.5
+42,523,红杉楼梯,RedwoodStair,RedwoodStair,0,4,,,400,30,0,,,,,1.5
+43,524,楠木楼梯,PhoebeStair,PhoebeStair,0,4,,,400,30,0,,,,,1.5
+44,525,胡桃木楼梯,WalnutStair,WalnutStair,0,4,,,400,30,0,,,,,1.5
+45,534,围栏,Fence,Fence,0,2,,,400,30,0,,,,,1.5
+46,535,围栏门,FenceGate,FenceGate,0,2,,,1000,30,0,,,,,1.5
+47,576,珍木围栏,,,,,,,400,30,0,,,,,1.5
+48,562,桃花木板,PeachblossomBoard,PeachblossomBoard,0,4,,,0,30,11202,1,1000,,0.1,
+49,706,蓝色电能线,BlueWire,BlueWire,0,2,,,0,0,1009,1,1000,,0.1,
+50,707,木质压力板,Acetylene lamp,Acetylene lamp,0,2,,,400,30,0,,,,,1.5
+51,718,推拉机械臂,Push-pullArm,Push-pullArm,0,2,,,400,0,0,,,,,1.5
+52,719,机械臂,RobotArm,RobotArm,0,2,,,400,0,0,,,,,1.5
+53,727,活板门,TrapDoor,TrapDoor,0,0,,,600,30,0,,,,,1.5
+54,812,木门,Balsa wood door,Balsa wood door,0,2,,,1000,30,0,,,,,1.5
+55,813,梯子,Ladder,Ladder,0,2,,,400,30,0,,,,,1.5
+56,815,告示牌,Message board,Message board,0,2,,,400,30,0,,,,,1.5
+57,11001,木斧头,WoodAxe,WoodAxe,0,2,,,300,30,0,,,,,1.5
+58,11011,木镐,WoodPickaxe,WoodPickaxe,0,2,,,300,30,0,,,,,1.5
+59,11021,木铲,WoodShovel,WoodShovel,0,2,,,240,30,0,,,,,1.5
+60,11031,木锄,WoodenHoe,WoodenHoe,0,2,,,240,30,0,,,,,1.5
+61,11052,岩浆桶,MagmaDrum,MagmaDrum,0,0,,,24000,0,0,,,11050,,100
+62,11200,粘土,LimeSand,LimeSand,0,4,,,0,0,11213,1,1000,,0.1,
+63,11201,煤炭,Small coal,Small coal,1,3,,,1800,30,0,,,,,8
+64,11202,木炭,Charcoal,Charcoal,0,3,,,1800,30,0,,,,,8
+65,11300,,,,0,0,,,2400,0,0,,,,,12
+66,12001,木剑,Stick,Stick,0,2,,,300,30,0,,,,,1.5
+67,12516,生牛肉,Raw steak,Raw steak,0,1,,,0,0,12517,1,1000,,0.1,
+68,12518,生鸡肉,Raw chicken leg,Raw chicken leg,0,1,,,0,0,12519,1,1000,,0.1,
+69,12520,生鱼,Raw fish,Raw fish,0,1,,,0,0,12521,1,1000,,0.1,
+70,12522,生猪排,Raw pork,Raw pork,0,1,,,0,0,12523,1,1000,,0.1,
+71,12524,生鲑鱼,Salmon,Salmon,0,1,,,0,0,12525,1,1000,,0.1,
+72,12528,一碗生米饭,RawRice,RawRice,0,1,,,0,0,12529,1,1000,,0.1,
+73,12530,生羊腿,RawLambLeg,RawLambLeg,0,1,,,0,0,12531,1,1000,,0.1,
+74,13807,木船,Wood boat,Wood boat,,3,,,1800,30,0,,,,,1.5
+75,445,坚硬矿石,HardOre,HardOre,,4,,,0,0,11073,55,10000,,0.1,
+76,446,重力矿石,GravityOre,GravityOre,0,4,,,0,0,11074,66,10000,,0.1,
+77,448,石油块,Oil,Oil,0,0,,,2000,0,,,,,,10
+78,218,果木树叶,FruitwoodLeaves,FruitwoodLeaves,,,1,10,,30,,,,,,
+79,219,落叶松树叶,LarchLeaves,LarchLeaves,,,1,10,,30,,,,,,
+80,220,白杨树叶,PoplarLeaves,PoplarLeaves,,,1,10,,30,,,,,,
+81,221,红杉树叶,RedwoodLeaves,RedwoodLeaves,,,1,10,,30,,,,,,
+82,222,楠木树叶,PhoebeLeaves,PhoebeLeaves,,,1,10,,30,,,,,,
+83,223,胡桃树叶,WalnutLeaves,WalnutLeaves,,,1,10,,30,,,,,,
+84,255,桃花树叶,PeachLeaves,PeachLeaves,,,1,10,,30,,,,,,
+85,12583,氧气果（掉落物）,OxygenFruit,OxygenFruit,,,1,60,,30,,,,,,
+86,264,珍木木板,,,,,,,360,30,0,,,,,1.5
+87,574,珍木台阶,,,,,,,180,30,0,,,,,0.75
+88,575,珍木楼梯,,,,,,,400,30,0,,,,,1.5
+89,576,珍木围栏,,,,,,,400,30,0,,,,,1.5
+90,254,桃花木,,,,,,,0,30,11202,1,1000,,0.1,
+91,11595,苔藓球,,,,,,,0,0,11598,3,,,,
+92,375,乔木木板,,,,,,,320,30,0,,,,,1.5
+93,579,雨林乔木,,,,,,,0,0,11202,1,1000,,0.1,
+94,377,乔木台阶,ArborWoodStep,ArborWoodStep,0,4,,,160,30,0,,,,,1.5
+95,376,乔木楼梯,ArborWoodStair,ArborWoodStair,0,4,,,400,30,0,,,,,1.5
+100,,熔炼模板,,,0,0,,,0,0,0,0,0,0,0,

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:7e5907d1433f75243b6310852f3ae461$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="shop.png" width="256" height="256">
+    <sprite n="icon_add_btn_money" x="2" y="202" w="40" h="43"/>
+    <sprite n="img_icon_custom" x="2" y="68" w="132" h="132"/>
+    <sprite n="line_sep" x="136" y="68" w="13" h="108"/>
+    <sprite n="tab_workshop_n" x="2" y="2" w="244" h="64"/>
+</TextureAtlas>

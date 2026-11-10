@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:0a01d5740c92f6a3827e865c3f768c78$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="ingame2.png" width="1024" height="1024">
+    <sprite n="coolingbkg" x="109" y="152" w="83" h="82"/>
+    <sprite n="font_pd_0" x="892" y="132" w="36" h="36"/>
+    <sprite n="font_pd_1" x="930" y="116" w="36" h="36"/>
+    <sprite n="font_pd_2" x="968" y="78" w="36" h="36"/>
+    <sprite n="font_pd_3" x="892" y="94" w="36" h="36"/>
+    <sprite n="font_pd_4" x="930" y="78" w="36" h="36"/>
+    <sprite n="font_pd_5" x="892" y="56" w="36" h="36"/>
+    <sprite n="font_pd_6" x="978" y="40" w="36" h="36"/>
+    <sprite n="font_pd_7" x="940" y="40" w="36" h="36"/>
+    <sprite n="font_pd_8" x="978" y="2" w="36" h="36"/>
+    <sprite n="font_pd_9" x="940" y="2" w="36" h="36"/>
+    <sprite n="juese_xuanzhong" x="197" y="49" w="106" h="104"/>
+    <sprite n="juese_xuanzhong02" x="373" y="136" w="90" h="90"/>
+    <sprite n="ltjm_fangjian02" x="647" y="2" w="101" h="87"/>
+    <sprite n="lzy_02" x="379" y="94" w="99" h="40"/>
+    <sprite n="lzy_03" x="2" y="152" w="105" h="102"/>
+    <sprite n="lzy_04" x="894" y="2" w="44" h="52"/>
+    <sprite n="lzy_05" x="305" y="123" w="66" h="88"/>
+    <sprite n="lzy_06" x="542" y="88" w="100" h="100"/>
+    <sprite n="lzy_07" x="2" y="351" w="52" h="53"/>
+    <sprite n="lzy_08" x="56" y="402" w="50" h="47"/>
+    <sprite n="lzy_09" x="305" y="213" w="64" h="84"/>
+    <sprite n="lzy_12" x="2" y="276" w="53" h="73"/>
+    <sprite n="lzy_13" x="65" y="256" w="42" h="41"/>
+    <sprite n="lzy_14" x="750" y="2" w="48" h="47"/>
+    <sprite n="lzy_15" x="163" y="359" w="16" h="16"/>
+    <sprite n="lzy_16" x="194" y="179" w="80" h="80"/>
+    <sprite n="lzy_17" x="277" y="171" w="25" h="25"/>
+    <sprite n="lzy_18" x="2" y="2" w="193" h="148"/>
+    <sprite n="lzy_19" x="542" y="2" w="103" h="84"/>
+    <sprite n="lzy_20" x="2" y="406" w="48" h="50"/>
+    <sprite n="lzy_25" x="930" y="154" w="31" h="33"/>
+    <sprite n="lzy_26" x="277" y="155" w="26" h="14"/>
+    <sprite n="lzy_27" x="832" y="133" w="30" h="30"/>
+    <sprite n="lzy_28" x="379" y="2" w="161" h="90"/>
+    <sprite n="lzy_29" x="163" y="341" w="16" h="16"/>
+    <sprite n="lzy_30" x="800" y="49" w="43" h="39"/>
+    <sprite n="lzy_32" x="305" y="49" w="72" h="72"/>
+    <sprite n="lzy_33" x="188" y="261" w="62" h="61"/>
+    <sprite n="lzy_34" x="108" y="371" w="50" h="49"/>
+    <sprite n="lzy_35" x="56" y="351" w="50" h="49"/>
+    <sprite n="lzy_36" x="832" y="165" w="30" h="26"/>
+    <sprite n="lzy_41" x="968" y="153" w="32" h="34"/>
+    <sprite n="lzy_42" x="480" y="94" w="60" h="60"/>
+    <sprite n="lzy_43" x="793" y="129" w="37" h="37"/>
+    <sprite n="lzy_44" x="197" y="2" w="180" h="45"/>
+    <sprite n="lzy_45" x="847" y="2" w="45" h="44"/>
+    <sprite n="lzy_47" x="847" y="48" w="43" h="83"/>
+    <sprite n="lzy_48" x="750" y="51" w="41" h="83"/>
+    <sprite n="lzy_49" x="2" y="266" w="61" h="8"/>
+    <sprite n="lzy_50" x="2" y="256" w="61" h="8"/>
+    <sprite n="lzy_51" x="276" y="251" w="22" h="22"/>
+    <sprite n="lzy_52" x="163" y="316" w="17" h="23"/>
+    <sprite n="lzy_53" x="793" y="90" w="37" h="37"/>
+    <sprite n="lzy_55" x="194" y="155" w="81" h="22"/>
+    <sprite n="lzy_56" x="465" y="156" w="75" h="18"/>
+    <sprite n="lzy_57" x="800" y="2" w="45" h="45"/>
+    <sprite n="lzy_58" x="182" y="324" w="52" h="53"/>
+    <sprite n="lzy_59" x="276" y="227" w="22" h="22"/>
+    <sprite n="lzy_porter" x="109" y="316" w="52" h="53"/>
+    <sprite n="sdjm_icon03" x="968" y="116" w="35" h="35"/>
+    <sprite n="tsb_dikuang" x="57" y="299" w="50" h="50"/>
+    <sprite n="tsb_dikuang03" x="252" y="275" w="50" h="50"/>
+    <sprite n="tsb_xuanzhong" x="276" y="198" w="27" h="27"/>
+    <sprite n="tz_all_h" x="109" y="236" w="77" h="78"/>
+    <sprite n="xsyd_jdt01" x="465" y="189" w="73" h="11"/>
+    <sprite n="xsyd_jdt02" x="465" y="176" w="73" h="11"/>
+</TextureAtlas>

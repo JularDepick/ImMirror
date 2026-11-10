@@ -1,0 +1,4027 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<Ui>
+	<Script file="ui/mobile/mvc/modsLib/modsLibEditor/modEdit/SingleEditorFrameCtrl.lua"/>
+	<Script file="ui/mobile/mvc/modsLib/modsLibEditor/modEdit/SingleEditorFrameModel.lua"/>
+	<Script file="ui/mobile/mvc/modsLib/modsLibEditor/modEdit/SingleEditorFrameView.lua"/>
+
+	<!--新版编辑界面-->
+	<Button name="EditorTabBtnTemplate11111" virtual="true" abs_x="175" abs_y="60">
+		<Layers>
+			<Layer level="overlay">
+				<Texture name="$parentChecked" file="ui/mobile/texture2/common.xml" uvname="tab_fullpage_left_h.png" abs_x="183" abs_y="60" hidden="true"/>
+				<FontString name="$parentName" fonttype="BlackFont26" justifyH="center" text="tab按钮" abs_x="140" abs_y="27" >
+					<Color r="255" g="135" b="63"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="17" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<NormalTexture name="$parentNormal" file="ui/mobile/texture2/common.xml" uvname="tab_fullpage_left_n.png"/>
+		<PushedTexture name="$parentPushedBG" file="ui/mobile/texture2/common.xml" uvname="tab_fullpage_left_n.png" rel_x="0.9" rel_y="0.9">
+			<Anchors>
+				<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+			</Anchors>
+		</PushedTexture>
+		<Layers>
+			<Layer level="overlay">
+				##LLDO:红点
+				<Texture name="$parentRedTag" file="ui/mobile/texture2/common.xml" uvname="img_dot_tips" hidden="true" abs_x="20" abs_y="20">
+					<Anchors>
+						<Anchor point="center" relativePoint="topright" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##LLOD:感叹号
+				<Texture name="$parentSighTag" file="ui/mobile/texture2/common.xml" uvname="icon_tipoff_o" hidden="true">
+					<Angle value="37" />
+					<Size>
+						<AbsDimension x="10" y="25"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="topright" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>	
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorTabBtnTemplate_OnClick();</OnClick>
+		</Scripts>
+	</Button>
+
+	<!--
+	##模板: 文字带下划线，点击弹出说明
+	<Button name="EditorAttrWithTipsBtn" abs_x="280" abs_y="40" virtual="true">
+		<Anchors>
+			<Anchor relativePoint="Left" relativeTo="$parent" point="Left">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			<RichText name="$parentTitle" fonttype="BlackFont20" lineInterval="1" input_transparent="true" text="$9024" abs_x="280" abs_y="20">
+				<LinkColor r="61" g="69" b="70" />
+				<Anchors>
+					<Anchor point="right" relativeTo="$parent" relativePoint="right">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<MouseDownUpdate platform="mobile">ButtonWithTips_MouseDownUpdate();</MouseDownUpdate>
+					<OnMouseUp platform="mobile">ButtonWithTips_OnMouseUp();</OnMouseUp>
+					<OnEnter platform="pc">ButtonWithTips_OnMouseEnter()</OnEnter>
+					<OnLeave platform="pc">ButtonWithTips_OnMouseLeave()</OnLeave>
+				</Scripts>
+			</RichText>
+		</Frames>
+	</Button>
+
+	##选择按钮模板
+
+	<Button name="NewEditorSelBtnTemplate" abs_x="94" abs_y="94" virtual="true">
+		<Layers>
+			<Layer level="overlay">
+				##加号图标
+				<Texture name="$parentAddIcon" file="ui/mobile/texture2/common.xml" uvname="icon_add_green.png" abs_x="48" abs_y="48" hidden="true">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="center" />
+					</Anchors>
+				</Texture>
+				<Texture name="$parentIcon" alphamode="alphablend" abs_x="80" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<NormalTexture name="$parentNormal" inherits="TemplateBigBkg15" />
+		<PushedTexture name="$parentPushedBG" inherits="TemplateBigBkg15" rel_x="0.9" rel_y="0.9">
+			<Anchors>
+				<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+			</Anchors>
+		</PushedTexture>
+		<Frames>
+			<Button name="$parentDel" inherits="TemplateBtn23">
+				<Anchors>
+					<Anchor point="center" relativePoint="topright" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-9" y="8"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>NewEditorSelBtnTemplateDel_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnClick>NewEditorSelBtnTemplate_OnClick();</OnClick>
+		</Scripts>
+	</Button>
+	-->
+	<!--分隔线-->
+	<Frame name="NewEditorLineTemplate11111" abs_x="1097" abs_y="40" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentLine" inherits="TemplateBkg20" abs_x="1030" abs_y="2">
+					<Anchors>
+						<Anchor point="bottom" relativePoint="bottom" relativeTo="$parent" >
+							<Offset>
+								<AbsDimension x="0" y="-5"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<!-- 遮罩 -->
+				<Texture name="$parentLineZheZhao" inherits="NewRuleSetFrameFenGeXianZhezhaoDiban" abs_x="500" abs_y="30" hidden="true">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentTitle" fonttype="BlackFont24" justifyH="center" text="标题" abs_x="200" abs_y="24">
+					<Color r="77" g="112" b="117"/>
+					<Anchors>
+						<Anchor point="top" relativePoint="top" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="5"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentHelpBtn" hidden="true" inherits="TemplateBtn32">
+				<Anchors>
+					<Anchor point="top" relativePoint="top" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-110" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFeatureHelpBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+	<!--选项模板-->
+	<Frame name="NewEditorOptionTemplate11111" abs_x="1097" abs_y="55" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString name="$parentName" fonttype="BlackFont20" abs_x="332" abs_y="20" justifyH="right" text="$3656">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentBtn" abs_x="394" abs_y="37" inherits="TemplateBtn21">
+				<Anchors>
+					<Anchor point="left" relativePoint="right" relativeTo="$parentName">
+						<Offset>
+							<AbsDimension x="39" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentName" abs_x="394" abs_y="18" fonttype="BlackFont18" justifyH="center" justifyV="middle" text="$3656">
+							<Color r="55" g="54" b="41"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorOptionTemplateBtn_OnClick()</OnClick>
+				</Scripts>
+			</Button>
+			<RichText name="$parentDesc" lineInterval="1" multiLine="false" fonttype="BlackFont26" hidden="true">
+				<Size>
+					<AbsDimension x="360" y="27"/>
+				</Size>
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="367" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+		</Frames>
+	</Frame>
+	<!--可选择的-->
+	<Frame name="NewEditorSelectionTemplate11111" abs_x="1097" abs_y="98" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString name="$parentName" fonttype="BlackFont20" abs_x="332" abs_y="21" justifyH="right" text="$3651">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentBtn1" inherits="NewEditorSelBtnTemplate" id="1">
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="370" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parentBtn2" inherits="NewEditorSelBtnTemplate" id="2">
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parentBtn1">
+						<Offset>
+							<AbsDimension x="130" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parentBtn3" inherits="NewEditorSelBtnTemplate" id="3">
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parentBtn2">
+						<Offset>
+							<AbsDimension x="130" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+		</Frames>
+	</Frame>
+	<!--滑动条模板-->
+	<Frame name="NewEditorSliderTemplate11111" abs_x="1097" abs_y="75" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString name="$parentName" fonttype="BlackFont20" abs_x="332" abs_y="20" justifyH="right" text="$3648">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="20" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentVal" fonttype="BlackFont24" abs_x="85" abs_y="24" justifyH="left" text="999">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentName">
+							<Offset>
+								<AbsDimension x="430" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentDesc" fonttype="BlackFont24" abs_x="150" abs_y="24" text="$3852">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentVal"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<RichText name="$parentRichName" multiLine="false" fonttype="BlackFont20" hidden="true" abs_x="332" abs_y="20" justifyH="right" text="$3648">
+				<LinkColor r="61" g="69" b="70"/>
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="20" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateRichName_OnClick();</OnClick>
+				</Scripts>
+			</RichText>
+			<Frame name="$parentNameTip" abs_x="209" abs_y="130" hidden="true">
+				<Anchors>
+					<Anchor point="bottomright" relativeTo="$parentRichName" relativePoint="topright">
+						<Offset>
+							<AbsDimension x="0" y="-10" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBkg" inherits="TemplateBigBkg19" />
+						<Texture name="$parentBkg1" inherits="TemplateBigBkg20" abs_x="196" abs_y="110">
+							<Anchors>
+								<Anchor point="top" relativePoint="top" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="10"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentArrow" file="ui/mobile/texture2/messagebox.xml" uvname="board_tips_arrow" abs_x="10" abs_y="17" >
+							<Angle value="90" />
+							<Anchors>
+								<Anchor point="topright" relativePoint="bottomright" relativeTo="$parentBkg">
+									<Offset>
+										<AbsDimension x="-29" y="-6"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<FontString name="$parentText" fonttype="BlackFont20" justifyH="left" autowrap="true" text="$3648" abs_x="186" abs_y="90">
+							<Color r="224" g="220" b="201"/>
+							<Anchors>
+								<Anchor point="top" relativePoint="top" relativeTo="$parentBkg1">
+									<Offset>
+										<AbsDimension x="0" y="8"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Slider name="$parentBar" inherits="TemplateSingleBar2" orientation="HORIZONTAL" minValue="0" maxValue="100" valueStep="1" defaultValue="0" abs_x="328" abs_y="30">
+				<Anchors>
+					<Anchor point="left" relativeTo="$parent" relativePoint="left">
+						<Offset>
+							<AbsDimension x="404" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnValueChanged>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateBar_OnValueChanged()</OnValueChanged>
+				</Scripts>
+			</Slider>
+			<Button name="$parentLeftBtn" inherits="TemplateSingleBar_LeftBtn01">
+				<Anchors>
+					<Anchor point="right" relativePoint="left" relativeTo="$parentBar">
+						<Offset>
+							<AbsDimension x="-18" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateLeftBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentRightBtn" inherits="TemplateSingleBar_RightBtn01">
+				<Anchors>
+					<Anchor point="left" relativePoint="right" relativeTo="$parentBar">
+						<Offset>
+							<AbsDimension x="18" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateRightBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+	<!--单个选择按钮模板-->
+	<Button name="SingleSelBtnTemplate11111" abs_x="78" abs_y="78" virtual="true">
+		<Layers>
+			<Layer level="overlay">
+				##加号图标
+				<Texture name="$parentAddIcon" file="ui/mobile/texture2/common.xml" uvname="icon_add_green.png" abs_x="30" abs_y="30">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="center" />
+					</Anchors>
+				</Texture>
+				<Texture name="$parentIcon" alphamode="alphablend" abs_x="60" abs_y="60">
+					<Anchors>
+						<Anchor point="top" relativePoint="top" relativeTo="$parent" >
+							<Offset>
+								<AbsDimension x="0" y="4"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentName" fonttype="BlackFont" text="苹果" justifyH="center" abs_x="76" abs_y="16">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="bottom" relativePoint="bottom" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="-2"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<NormalTexture name="$parentNormal" inherits="TemplateBigBkg15" />
+		<PushedTexture name="$parentPushedBG" inherits="TemplateBigBkg15" rel_x="0.9" rel_y="0.9">
+			<Anchors>
+				<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+			</Anchors>
+		</PushedTexture>
+		<Frames>
+			<Button name="$parentDel" abs_x="31" abs_y="32" inherits="TemplateBtn23">
+				<Anchors>
+					<Anchor point="center" relativePoint="topright" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-9" y="8"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleSelBtnTemplateDel_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<Frame name="$parentNum" abs_x="78" abs_y="26">
+				<Anchors>
+					<Anchor point="top" relativePoint="bottom" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="0" y="5"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBkg" inherits="TemplateBkg31" abs_x="78" abs_y="26"/>
+						<FontString name="$parentVal" fonttype="BlackFont18" text="50" justifyH="center" abs_x="60" abs_y="18">
+							<Color r="55" g="54" b="41"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="$parentLeftBtn" inherits="TemplateSingleBar_LeftBtn01">
+						<Anchors>
+							<Anchor point="right" relativePoint="left" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="-7" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleSelBtnTemplateNumLeftBtn_OnClick();</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="$parentRightBtn" inherits="TemplateSingleBar_RightBtn01">
+						<Anchors>
+							<Anchor point="left" relativePoint="right" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="7" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleSelBtnTemplateNumRightBtn_OnClick();</OnClick>
+						</Scripts>
+					</Button>
+				</Frames>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleSelBtnTemplate_OnClick();</OnClick>
+		</Scripts>
+	</Button>
+	<!--开关模板-->
+	<Frame name="NewEditorSwitchTemplate11111" abs_x="1097" abs_y="50" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString name="$parentName" fonttype="BlackFont20" abs_x="332" abs_y="22" justifyH="right" text="$3650">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="20" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentBtn" inherits="mini_SwitchBtnTemplateUI3">
+				<Anchors>
+					<Anchor point="left" relativePoint="right" relativeTo="$parentName">
+						<Offset>
+							<AbsDimension x="39" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+		</Frames>
+	</Frame>
+
+	<!--选项模板(带编辑按钮)-->
+	<Frame name="NewEditorOptionTemplate211111" abs_x="988" abs_y="75" virtual="true">
+		<Frames>
+			<Button name="$parentName" inherits="EditorAttrWithTipsBtn"/>
+			<Button name="$parentEditBtn" abs_x="39" abs_y="43" inherits="TemplateBtnBig_EditBtn">
+				<Anchors>
+					<Anchor point="left" relativePoint="right" relativeTo="$parentBtn">
+						<Offset>
+							<AbsDimension x="10" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>PhysxMaterialOptionEditBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentBtn" abs_x="394" abs_y="37" inherits="TemplateBtn21">
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="320" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentName" fonttype="BlackFont18" justifyH="center" justifyV="middle" text="$3656">
+							<Color r="55" g="54" b="41"/>
+							<Size>
+								<AbsDimension x="220" y="18"/>
+							</Size>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorOptionTemplateBtn_OnClick()</OnClick>
+				</Scripts>
+			</Button>
+			<RichText name="$parentDesc" lineInterval="1" multiLine="false" fonttype="BlackFont26" hidden="true">
+				<Size>
+					<AbsDimension x="360" y="27"/>
+				</Size>
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="367" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+		</Frames>
+	</Frame>
+	<!--开关模板(带tips)-->
+	<Frame name="NewEditorSwitchTemplate211111" abs_x="988" abs_y="50" virtual="true">
+		<Frames>
+			<Button name="$parentName" inherits="EditorAttrWithTipsBtn"/>
+			<Button name="$parentBtn" inherits="mini_SwitchBtnTemplateUI4">
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="320" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnMouseDown>SwitchBtn_OnMouseDown();</OnMouseDown>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+	##单个选项按钮模板
+	<Button name="NewSingleOptionBtnTemplate11111" abs_x="376" abs_y="40" virtual="true">
+		<Anchors>
+			<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+				<Offset>
+					<AbsDimension x="100" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="overlay">
+				<FontString name="$parentName" fonttype="BlackFont18" justifyH="center" justifyV="middle" text="选择按钮" abs_x="220" abs_y="20">
+					<Color r="55" g="54" b="41"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<NormalTexture name="$parentNormal" inherits="TemplateBkg33"/>
+		<PushedTexture name="$parentPushedBG" inherits="TemplateBkg33" rel_x="0.95" rel_y="0.95">
+			<Anchors>
+				<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+			</Anchors>
+		</PushedTexture>
+		<Scripts>
+			<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewSingleOptionBtnTemplate_OnClick()</OnClick>
+		</Scripts>
+	</Button>
+
+	<!--物理属性设置用模板(增加编辑按钮和属性说明tips)-->
+	<!--滑动条模板(带tips)-->
+	<Frame name="NewEditorSliderTemplate211111" abs_x="988" abs_y="75" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString name="$parentVal" fonttype="BlackFont20" justifyH="left" text="999">
+					<Color r="61" g="69" b="70"/>
+					<Size>
+						<AbsDimension x="85" y="20"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentRightBtn">
+							<Offset>
+								<AbsDimension x="40" y="8"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentDesc" fonttype="BlackFont20" text="$3852">
+					<Color r="61" g="69" b="70"/>
+					<Size>
+						<AbsDimension x="77" y="20"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentVal">
+							<Offset>
+								<AbsDimension x="-20" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentName" inherits="EditorAttrWithTipsBtn"/>
+			<Button name="$parentLeftBtn" inherits="TemplateSingleBar_LeftBtn01">
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="320" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateLeftBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<Slider name="$parentBar" orientation="HORIZONTAL" minValue="0" maxValue="100" valueStep="1" defaultValue="0" inherits="TemplateSingleBar2">
+				<Size>
+					<AbsDimension x="328" y="30"/>
+				</Size>
+				<Anchors>
+					<Anchor point="left" relativeTo="$parentLeftBtn" relativePoint="right">
+						<Offset>
+							<AbsDimension x="15" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnValueChanged>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateBar_OnValueChanged()</OnValueChanged>
+				</Scripts>
+			</Slider>
+			<Button name="$parentRightBtn" inherits="TemplateSingleBar_RightBtn01">
+				<Anchors>
+					<Anchor point="left" relativePoint="right" relativeTo="$parentBar">
+						<Offset>
+							<AbsDimension x="15" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateRightBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+
+	<Button name="ModsLibRadioBtnTemplate" inherits="TemplateTickBtn5" virtual="true">
+		<Scripts>
+			<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):ModsLibRadioBtnTemplate_OnClick();</OnClick>
+		</Scripts>
+	</Button>
+	##圆形单选
+	<Frame name="NewEditorRadioTemplate" abs_x="988" abs_y="55" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<FontString name="$parentName" justifyH="right" fonttype="BlackFont20" text="" abs_x="275" abs_y="22">
+					<Color r="55" g="54" b="49"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>	
+		<Frames>
+			<Button name="$parentBtn1" inherits="ModsLibRadioBtnTemplate" id="1" >
+				<Anchors>
+					<Anchor point="left" relativePoint="right" relativeTo="$parentName">
+						<Offset>
+							<AbsDimension x="40" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parentBtn2" inherits="ModsLibRadioBtnTemplate" id="2">
+				<Anchors>
+					<Anchor point="left" relativePoint="right" relativeTo="$parentBtn1">
+						<Offset>
+							<AbsDimension x="50" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+			<Button name="$parentBtn3" inherits="ModsLibRadioBtnTemplate" id="3">
+				<Anchors>
+					<Anchor point="left" relativePoint="right" relativeTo="$parentBtn1">
+						<Offset>
+							<AbsDimension x="50" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+		</Frames>
+	</Frame>
+	
+	<!--打开开发者商店条目模板-->
+	<Frame name="NewEditorOpenStoreItemTemplate11111" virtual="true" abs_x="1030" abs_y="113">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" inherits="TemplateBkg34"/>
+				<Texture name="$parentIcon" file="ui/mobile/texture2/minilobby.xml" uvname="icon_shop_hall" abs_x="58" abs_y="66">
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="40" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentDesc" fonttype="BlackFont22" text="$25101" autowrap="true" abs_x="740" abs_y="22">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentIcon">
+							<Offset>
+								<AbsDimension x="26" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentSwitchBtn" abs_x="108" abs_y="43">
+				<Anchors>
+					<Anchor point="right" relativePoint="right" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-28" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentGrayBkg" inherits="TemplateBkg8" abs_x="110" abs_y="36">
+							<Anchors>
+								<Anchor point="left" relativePoint="left" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentGreenBkg" inherits="TemplateBkg69" abs_x="110" abs_y="36" hidden="true">
+							<Anchors>
+								<Anchor point="left" relativePoint="left" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentPoint" inherits="TemplateBkg9" abs_x="76" abs_y="43">
+							<Anchors>
+								<Anchor point="left" relativeTo="$parent" relativePoint="left"/>
+								<Offset>
+									<AbsDimension x="-5" y="0"/>
+								</Offset>
+							</Anchors>
+						</Texture>
+						<FontString name="$parentName" fonttype="BlackFont" text="$21743" justifyH="center" justifyV="middle">
+							<Color r="55" g="54" b="49"/>
+							<Anchors>
+								<Anchor point="topright" relativePoint="topright" relativeTo="$parentPoint" />
+								<Anchor point="bottomleft" relativePoint="bottomleft" relativeTo="$parentPoint" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnMouseDown>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):OpenStore_SwitchBtn_OnMouseDown();</OnMouseDown>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+	<!--特性功能条目模板-->
+	<Frame name="NewEditorFeaturesItemTemplate11111" virtual="true" abs_x="1030" abs_y="113">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" inherits="TemplateBkg34"/>
+				<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_attack" abs_x="90" abs_y="90">
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="11" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentDesc" fonttype="BlackFont22" text="$3650" autowrap="true" abs_x="740" abs_y="44">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentIcon">
+							<Offset>
+								<AbsDimension x="26" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentEditBtn" inherits="TemplateBtn11">
+				<Anchors>
+					<Anchor point="right" relativePoint="right" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-16" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentName" fonttype="BlackFont20" justifyH="center" text="$3529" abs_x="130" abs_y="20">
+							<Color r="55" g="54" b="51"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+							</Anchors>
+						</FontString>
+						<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_set.png" abs_x="26" abs_y="24">
+							<Anchors>
+								<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="11" y="10"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnMouseDown>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFrameItemEditBtn_OnClick();</OnMouseDown>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+	<!--包裹条目模板-->
+	<Frame name="NewEditorFeaturesPackageTemplate11111" virtual="true" abs_x="964" abs_y="113" hidden="false">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" inherits="TemplateBkg34"/>
+				<Texture name="$parentIconBkg" inherits="TemplateBigBkg15">
+					<Size>
+						<AbsDimension x="81" y="75"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="20" y="-10"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentIcon" file="ui/mobile/texture2/outgame.xml"  uvname="juese_gezi01.png">
+					<Size>
+						<AbsDimension x="58" y="57"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentNum" fonttype="BlackFont18" fontStyle="border" text="" shadowcolor="ff624130">
+					<Color r="253" g="253" b="222" />
+					<Anchors>
+						<Anchor point="topleft" relativePoint="bottomright" relativeTo="$parentIcon">
+							<Offset>
+								<AbsDimension x="-8" y="-13" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentDesc" fonttype="BlackFont18" justifyH="center" text="$3650" autowrap="true">
+					<Color r="55" g="54" b="41"/>
+					<Size>
+						<AbsDimension x="115" y="40"/>
+					</Size>
+					<Anchors>
+						<Anchor point="top" relativePoint="bottom" relativeTo="$parentIconBkg">
+							<Offset>
+								<AbsDimension x="0" y="2"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentEditBtn" inherits="TemplateBtn7">
+				<size>
+					<AbsDimension x="130" y="55"/>
+				</size>
+				<Anchors>
+					<Anchor point="right" relativePoint="right" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-20" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<FontString name="$parentName" fonttype="BlackFont20" justifyH="center" text="$3529" >
+					<Color r="55" g="54" b="51"/>
+					<Size>
+						<AbsDimension x="70" y="20"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="22" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Frames>
+					<Frame name="$parentEditFrame" input_transparent="true"  abs_x="33" abs_y="31">
+						<Anchors>
+							<Anchor point="center" relativePoint="center" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="-30" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer>
+								<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_set.png">
+								</Texture>
+							</Layer>
+						</Layers>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnMouseDown>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFrameItemPackageEditBtn_OnClick();</OnMouseDown>
+				</Scripts>
+			</Button>
+			<Frame name="$parentSetSlider" abs_x="650" abs_y="46" virtual="false">
+				<Anchors>
+					<Anchor point="center" relativePoint="center" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-143" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="$parentDesc" fonttype="BlackFont26" justifyH="left" text="1">
+							<Color r="61" g="69" b="70"/>
+							<Size>
+								<AbsDimension x="100" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="left" relativePoint="right" relativeTo="$parentRightBtn">
+									<Offset>
+										<AbsDimension x="90" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="$parentLeftBtn" inherits="TemplateSingleBar_LeftBtn01">
+						<Anchors>
+							<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="260" y="5"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>PackItemSetSliderTemplateLeftBtn_OnClick()</OnClick>
+						</Scripts>
+					</Button>
+					<Slider name="$parentBar" orientation="HORIZONTAL" minValue="0" maxValue="100" valueStep="1" defaultValue="1" inherits="TemplateSingleBar2">
+						<Size>
+							<AbsDimension x="250" y="30"/>
+						</Size>
+						<Anchors>
+							<Anchor point="left" relativeTo="$parentLeftBtn" relativePoint="right">
+								<Offset>
+									<AbsDimension x="15" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnValueChanged>PackItemSetSliderTempBar_OnValueChanged()</OnValueChanged>
+						</Scripts>
+					</Slider>
+					<Button name="$parentRightBtn" inherits="TemplateSingleBar_RightBtn01">
+						<Anchors>
+							<Anchor point="left" relativePoint="right" relativeTo="$parentBar">
+								<Offset>
+									<AbsDimension x="15" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>PackItemSetSliderTemplateRightBtn_OnClick()</OnClick>
+						</Scripts>
+					</Button>
+				</Frames>
+			</Frame>
+			<Button name="$parentBG" hidden="false">
+				<Size>
+					<AbsDimension x="350" y="50"/>
+				</Size>
+				<Anchors>
+					<Anchor point="center" relativeTo="$parentSetSlider" relativePoint="center">
+						<Offset>
+							<AbsDimension x="100" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Button>
+		</Frames>
+	</Frame>
+
+	<!--NPC商品设置模板-->
+	<Frame name="NewEditorNPCStoreItemTemplate11111" virtual="true" abs_x="1030" abs_y="120">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" inherits="TemplateBkg34"/>
+				<Texture name="$parentIconBkg" inherits="TemplateBkg38">
+					<Size>
+						<AbsDimension x="90" y="90"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="20" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentIcon" >
+					<Size>
+						<AbsDimension x="72" y="72"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="26" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentDesc" fonttype="BlackFont22" text="$3650" autowrap="true">
+					<Color r="61" g="69" b="70"/>
+					<Size>
+						<AbsDimension x="680" y="53"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topright" relativeTo="$parentIcon">
+							<Offset>
+								<AbsDimension x="24" y="-3"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentBuyDesc" fonttype="BlackFont22" autowrap="true" text="购买所需:">
+					<Color r="61" g="69" b="70"/>
+					<Size>
+						<AbsDimension x="150" y="50"/>
+					</Size>
+					<Anchors>
+						<Anchor point="top" relativePoint="bottom" relativeTo="$parentIcon">
+							<Offset>
+								<AbsDimension x="136" y="-28"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentStarIcon" file="items/icon14001.png" alphamode="alphablend">
+					<Size>
+						<AbsDimension x="32" y="32"/>
+					</Size>
+					<Anchors>
+						<Anchor point="top" relativePoint="bottom" relativeTo="$parentBuyDesc">
+							<Offset>
+								<AbsDimension x="50" y="-57"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentStarDesc" fonttype="BlackFont22"  text="$3650">
+					<Color r="61" g="69" b="70"/>
+					<Size>
+						<AbsDimension x="200" y="26"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentStarIcon">
+							<Offset>
+								<AbsDimension x="6" y="4"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentItemIcon1" file="ui/mobile/texture2/outgame.xml"  uvname="juese_gezi01.png">
+					<Size>
+						<AbsDimension x="32" y="32"/>
+					</Size>
+					<Anchors>
+						<Anchor point="top" relativePoint="bottom" relativeTo="$parentStarIcon">
+							<Offset>
+								<AbsDimension x="156" y="-33"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentItemDesc1" fonttype="BlackFont22"  text="$3650">
+					<Color r="1" g="194" b="16"/>
+					<Size>
+						<AbsDimension x="200" y="26"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentItemIcon1">
+							<Offset>
+								<AbsDimension x="6" y="4"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentItemIcon2" file="ui/mobile/texture2/outgame.xml"  uvname="juese_gezi01.png">
+					<Size>
+						<AbsDimension x="32" y="32"/>
+					</Size>
+					<Anchors>
+						<Anchor point="top" relativePoint="bottom" relativeTo="$parentItemIcon1">
+							<Offset>
+								<AbsDimension x="137" y="-33"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentItemDesc2" fonttype="BlackFont22"  text="$3650">
+					<Color r="1" g="194" b="16"/>
+					<Size>
+						<AbsDimension x="200" y="26"/>
+					</Size>
+					<Anchors>
+						<Anchor point="left" relativePoint="right" relativeTo="$parentItemIcon2">
+							<Offset>
+								<AbsDimension x="6" y="4"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentTransparentBkg" inherits="TemplateBkg49" hidden="true">
+					<Size>
+						<RelDimension x="1.0" y="1.0"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topright" relativePoint="topright" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentEditBtn" inherits="TemplateBtn7">
+				<size>
+					<AbsDimension x="130" y="50"/>
+				</size>
+				<Anchors>
+					<Anchor point="right" relativePoint="right" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-20" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay" >
+						<FontString name="$parentName" fonttype="BlackFont20" justifyH="center" text="$3529" >
+							<Color r="55" g="54" b="51"/>
+							<Size>
+								<AbsDimension x="70" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="22" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Frame name="$parentEditFrame" input_transparent="true">
+						<Size>
+							<AbsDimension x="30" y="30"/>
+						</Size>
+						<Anchors>
+							<Anchor point="center" relativePoint="center" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="-30" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer>
+								<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_set.png">
+								</Texture>
+							</Layer>
+						</Layers>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnMouseDown>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFrameItemEditBtn_OnClick();</OnMouseDown>
+				</Scripts>
+			</Button>
+			<Button name="$parentSwapMoveBtn" hidden="true" inherits="TemplateBigRoundBlueBtn">
+				<Anchors>
+					<Anchor point="center" relativeTo="$parent" relativePoint="center">
+						<Offset>
+							<AbsDimension x="0" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_swap.png" abs_x="39" abs_y="34">
+							<Anchors>
+								<Anchor point="center" relativeTo="$parent" relativePoint="center">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>SingleEditorFrameItemEditSwapMoveBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentMoveSwitchBtn" hidden="true">
+				<size>
+					<AbsDimension x="53" y="53"/>
+				</size>
+				<Anchors>
+					<Anchor point="right" relativePoint="right" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="-51" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture name="$parentNormal" file="ui/mobile/texture2/common_icon.xml" uvname="ico_bind_move.png" />
+				<PushedTexture name="$parentPushedBG" file="ui/mobile/texture2/common_icon.xml" uvname="ico_bind_move.png">
+					<Size>
+						<AbsDimension x="50" y="50"/>
+					</Size>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+					</Anchors>
+				</PushedTexture>
+				<Scripts>
+					<OnClick>SingleEditorFrameItemEditMoveSwitchBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+
+	<Frame name="SingleEditorFrame" parent="UIClient" frameStrata="MEDIUM" hidden="true" framelevel="2300" rel_x="1.0" rel_y="1.0">
+		<Anchors>
+			<Anchor point="center" relativePoint="center" relativeTo="">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg0" file="ui/mobile/texture2/bigtex/minilobby.png"  hidden="false" stretchedge="true"/>
+				<Texture name="$parentBkg1" inherits="TemplateBigBkg1_ninecenter" color="FFCBD5CE"/>
+				<Texture name="$parentBkgWhite" inherits="TemplateBigBkg2"> 
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="3" y="0"/>
+							</Offset>
+						</Anchor>
+						<Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent" >
+							<Offset>
+								<AbsDimension x="3" y="-87"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentTabBkg" inherits="TemplateLeftTabBkg"/>
+				##右侧白色背景
+				<Texture name="$parentWhiteBkg2" inherits="TemplateBigBkg2" hidden="true">
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="176" y="58"/>
+							</Offset>
+						</Anchor>
+						<Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent" >
+							<Offset>
+								<AbsDimension x="0" y="-87"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentTaskTip" fonttype="BlackFont20" abs_x="568" abs_y="20" justifyH="center" text="$11070" hidden="true">
+					<Color r="77" g="132" b="131"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="422" y="155"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentPackTip" fonttype="BlackFont24" justifyH="left" text="$21769" hidden="true">
+					<Color r="61" g="69" b="70"/>
+					<Size>
+						<AbsDimension x="540" y="56"/>
+					</Size>
+					<Anchors>
+						<Anchor point="bottomleft" relativePoint="bottomleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="450" y="-16"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				##右侧顶部标题
+				<FontString name="$parentRightTopTitle" fonttype="BlackFont24" justifyH="center" text="外观" abs_x="300" abs_y="24" hidden="true">
+					<Color r="77" g="112" b="117"/>
+					<Anchors>
+						<Anchor point="top" relativePoint="top" relativeTo="$parentWhiteBkg2">
+							<Offset>
+								<AbsDimension x="0" y="15"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				##包含物品背景
+				<Texture name="$parentPackBkg"  inherits="TemplateBigBkg2" >
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentWhiteBkg2" >
+							<Offset>
+								<AbsDimension x="-5" y="-4"/>
+							</Offset>
+						</Anchor>
+						<Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parentBkgWhite" />
+					</Anchors>
+				</Texture>
+				<FontString name="$parentSelect" fonttype="BlackFont24" text="$21765" hidden="true">
+					<Color r="77" g="112" b="117"/>
+					<Size>
+						<AbsDimension x="200" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="top" relativePoint="top" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="-284" y="81"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentProbability" fonttype="BlackFont24" text="$21766" hidden="true">
+					<Color r="77" g="112" b="117"/>
+					<Size>
+						<AbsDimension x="200" y="24"/>
+					</Size>
+					<Anchors>
+						<Anchor point="top" relativePoint="top" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="378" y="80"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			##标题栏:height:56
+			<Frame name="$parentTitle" inherits="TemplateTopTitleBkgFit" />
+			##帮助按钮
+			<Frame name="$parentHelpBtn" inherits="TemplateHelpBtn">
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parentTitle">
+						<Offset>
+							<AbsDimension x="15" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFrameHelpBtn_OnClick()</OnClick>
+				</Scripts>
+			</Frame>
+			##关闭按钮
+			<Frame name="$parentCloseBtn" inherits="TemplateCloseBtnLarge">
+				<Anchors>
+					<Anchor point="right" relativePoint="right" relativeTo="$parentTitle">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFrameCloseBtn_OnClick()</OnClick>
+				</Scripts>
+			</Frame>
+			<Button name="$parentSortBtn" hidden="true" inherits="TemplateBtn7">
+				<Size>
+					<AbsDimension x="53" y="49"/>
+				</Size>
+				<Anchors>
+					<Anchor point="topright" relativePoint="topright" relativeTo="$parentBkg">
+						<Offset>
+							<AbsDimension x="-112" y="5"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<Texture name="$parentBkg" >
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+							</Anchors>
+						</Texture>
+						<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_swap">
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+							</Anchors>
+							<Size>
+								<AbsDimension x="39" y="34" />
+							</Size>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFrameSortBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<!-- 新旧触发器界面开关 -->
+			<Button name="$parentSwitchOverBtn" abs_x="100" abs_y="36" hidden="false">
+				<Anchors>
+					<Anchor point="right" relativePoint="right" relativeTo="$parentTitle">
+						<Offset>
+							<AbsDimension x="-120" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBkg" inherits="TemplateBkg69" hidden="true" abs_x="100" abs_y="36"/>  ##绿色方块
+						<Texture name="$parentBkgOff" inherits="TemplateBkg8" hidden="false" abs_x="100" abs_y="36" />
+						<Texture name="$parentPoint" inherits="TemplateBkg9" abs_x="50" abs_y="43">
+							<Anchors>
+								<Anchor point="left" relativeTo="$parent" relativePoint="left"/>
+							</Anchors>
+						</Texture>
+						<FontString name="$parentDesc" fonttype="BlackFont" text="$16608" justifyH="center" justifyV="middle" abs_x="76" abs_y="43">
+							<Color r="55" g="54" b="51"/>
+							<Anchors>
+								<Anchor point="left" relativePoint="left" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="-15" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SwitchOwerModleBtnClick();</OnClick>
+				</Scripts>
+			</Button>
+			##保存
+			<Button name="$parentSaveBtn" inherits="TemplateBtn3">
+				<Anchors>
+					<Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="1040" y="-12"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentTitle" fonttype="BlackFont24" justifyH="center" text="$3760" abs_x="182" abs_y="24">
+							<Color r="55" g="54" b="51"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>SingleEditorFrameSaveBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			##变量库
+			<Button name="$parentVarLibBtn" inherits="TemplateBtn20">
+				<Anchors>
+					<Anchor point="right" relativeTo="$parentSaveBtn" relativePoint="left" >
+						<Offset>
+							<AbsDimension x="-80" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentTitle" fonttype="BlackFont24" justifyH="center" text="$13007" abs_x="182" abs_y="24">
+							<Color r="55" g="52" b="51"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("DeveloperEditTrigger"):VarLibBtnClicked();</OnClick>
+				</Scripts>
+			</Button>
+
+			<Button name="$parentSaveForNewBtn" abs_x="182" abs_y="61">
+				<Anchors>
+					<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="500" y="-12"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture name="$parentNormal" inherits="TemplateBkg4"/>
+				<PushedTexture name="$parentPushedBG" inherits="TemplateBkg4" rel_x="0.9" rel_y="0.9">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+					</Anchors>
+				</PushedTexture>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentTitle" fonttype="BlackFont24" justifyH="center" text="$15209" abs_x="182" abs_y="24">
+							<Color r="55" g="52" b="51"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFrameSaveForNewBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			##恢复默认
+			<Button name="$parentResetBtn" inherits="TemplateBtn2">
+				<Anchors>
+					<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="240" y="-12"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="overlay">
+						<FontString name="$parentTitle" fonttype="BlackFont24" justifyH="center" text="$1143" abs_x="182" abs_y="24">
+							<Color r="51" g="55" b="55"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFrameResetBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parentDelBtn" inherits="TemplateBtnBig_DeleteBtn" hidden="true">
+				<Anchors>
+					<Anchor point="bottomleft" relativePoint="bottomleft" relativeTo="$parentBkg">
+						<Offset>
+							<AbsDimension x="600" y="-16"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorFrameDelBtn_OnClick();</OnClick>
+				</Scripts>
+			</Button>
+			##基础设置
+			<Frame name="$parentBaseSet" rel_x="1" rel_y="1">
+				<Anchors>
+					<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="176" y="53"/>
+						</Offset>
+					</Anchor>
+					<Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent" >
+						<Offset>
+							<AbsDimension x="0" y="-87"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						##横分割线
+						<Texture name="$parentLine1" inherits="TemplateBkg20" abs_x="1030" abs_y="2">
+							<Anchors>
+								<Anchor point="top" relativePoint="top" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="48"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						##竖分割线
+						<Texture name="$parentLine2" inherits="TemplateBkg20" abs_x="2" abs_y="495" >
+							<Angle value="90"/>
+							<Anchors>
+								<Anchor point="top" relativePoint="bottom" relativeTo="$parentLine1">
+									<Offset>
+										<AbsDimension x="-63" y="3"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentModelBorder" inherits="TemplateBigBkg11" abs_x="416" abs_y="548">
+							<Anchors>
+								<Anchor point="bottomright" relativePoint="bottomleft" relativeTo="$parentLine2">
+									<Offset>
+										<AbsDimension x="-31" y="19"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentModelBkg" file="ui/mobile/texture2/bigtex/img_land.png" abs_x="305" abs_y="200">
+							<Anchors>
+								<Anchor point="bottom" relativePoint="bottom" relativeTo="$parentModelBorder">
+									<Offset>
+										<AbsDimension x="0" y="-24"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<ModelView name="NewEditorModelView" abs_x="475" abs_y="405">
+							<Anchors>
+								<Anchor point="bottom" relativePoint="center" relativeTo="$parentModelBkg">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</ModelView>
+						<Texture name="NewSingleEditorIcon" alphamode="alphablend" abs_x="120" abs_y="120">
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parentModelBkg">
+									<Offset>
+										<AbsDimension x="0" y="-135"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						##头顶名字
+						<FontString name="$parentTopName" fonttype="BlackFont24" justifyH="center" text="野人头顶名字" abs_x="420" abs_y="26" hidden="true">
+							<Color r="239" g="128" b="18"/>
+							<Anchors>
+								<Anchor point="top" relativePoint="top" relativeTo="NewEditorModelView">
+									<Offset>
+										<AbsDimension x="0" y="35"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button name="$parentRotateView" abs_x="429" abs_y="400">
+						<Anchors>
+							<Anchor point="center" relativeTo="NewEditorModelView" relativePoint="center" />
+						</Anchors>
+						<Scripts>
+							<OnMouseDown>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorModelViewRotateView_OnMouseDown();</OnMouseDown>
+							<OnMouseMove>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorModelViewView_OnMouseMove();</OnMouseMove>
+						</Scripts>
+					</Button>
+					##勾选按钮:自定义装备, 是否显示角色模型
+					<Button name="$parentShowModelBtn" inherits="TemplateTickBtn5" hidden="true">
+						<Anchors>
+							<Anchor point="topleft" relativePoint="topleft" relativeTo="NewEditorModelView">
+								<Offset>
+									<AbsDimension x="20" y="20"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>GetInst("ModsLibEditorItemPartMgr"):ShowModelBtnOnClick();</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="$parentModelTurnRight" abs_x="78" abs_y="49" hidden="true">
+						<Anchors>
+							<Anchor point="left" relativePoint="left" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="20" y="20"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<NormalTexture name="$parentNormal" file="ui/mobile/texture2/outgame2/uitex.xml" uvname="swjc_jiantou01.png" />
+						<PushedTexture name="$parentPushedBG" file="ui/mobile/texture2/outgame2/uitex.xml" uvname="swjc_jiantou01.png" abs_x="75" abs_y="46" >
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</PushedTexture>
+						<Scripts>
+							<OnMouseDown>EditorModelTurnRight_OnMouseDown();</OnMouseDown>
+							<OnMouseUp>EditorModelTurnRight_OnMouseUp();</OnMouseUp>
+						</Scripts>
+					</Button>
+					<Button name="$parentModelTurnLeft" abs_x="78" abs_y="49" hidden="true">
+						<Anchors>
+							<Anchor point="left" relativePoint="right" relativeTo="$parentModelTurnRight">
+								<Offset>
+									<AbsDimension x="230" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<NormalTexture name="$parentNormal" file="ui/mobile/texture2/outgame2/uitex.xml" uvname="swjc_jiantou01.png" UVType="mirroeu"/>
+						<PushedTexture name="$parentPushedBG" file="ui/mobile/texture2/outgame2/uitex.xml" uvname="swjc_jiantou01.png" abs_x="75" abs_y="46" UVType="mirroeu">
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</PushedTexture>
+						<Scripts>
+							<OnMouseDown>EditorModelTurnLeft_OnMouseDown();</OnMouseDown>
+							<OnMouseUp>EditorModelTurnLeft_OnMouseUp();</OnMouseUp>
+						</Scripts>
+					</Button>
+					##配方
+					<Frame name="$parentCraft" abs_x="604" abs_y="548" hidden="true">
+						<Anchors>
+							<Anchor point="topright" relativePoint="topright" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="-32" y="18"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentResultBkg" inherits="TemplateBigBkg11" abs_x="606" abs_y="229">
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parent" />
+									</Anchors>
+								</Texture>
+								<Texture name="$parentResultTitleBkg" inherits="TemplateBkg25" abs_x="604" abs_y="46">
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parentResultBkg">
+											<Offset>
+												<AbsDimension x="0" y="1"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<FontString name="$parentResultTitle" fonttype="BlackFont24" justifyH="center" text="$1234" abs_x="350" abs_y="24">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parentResultBkg">
+											<Offset>
+												<AbsDimension x="0" y="11"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString name="$parentResultDesc" fonttype="BlackFont20" lineInterval="5" text="物品描述" abs_x="435" abs_y="75" autowrap="true">
+									<Color r="101" g="116" b="118"/>
+									<Anchors>
+										<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentResultBkg">
+											<Offset>
+												<AbsDimension x="112" y="60"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<Texture name="$parentArrow" file="ui/mobile/texture2/room.xml"  uvname="img_frame_arrow.png" abs_x="29" abs_y="36">
+									<Angle value="90"/>
+									<Anchors>
+										<Anchor point="top" relativePoint="bottom" relativeTo="$parentResultBkg" />
+									</Anchors>
+								</Texture>
+								<Texture name="$parentMaterialBkg" inherits="TemplateBigBkg5" abs_x="606" abs_y="285">
+									<Anchors>
+										<Anchor point="top" relativePoint="bottom" relativeTo="$parentResultBkg">
+											<Offset>
+												<AbsDimension x="0" y="34"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<FontString name="$parentMaterialTitle" fonttype="BlackFont24" justifyH="center" text="$1233" abs_x="350" abs_y="24">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parentMaterialBkg">
+											<Offset>
+												<AbsDimension x="0" y="6"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Frame name="$parentBackpackCraft" abs_x="120" abs_y="25">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentResultBkg">
+										<Offset>
+											<AbsDimension x="455" y="142"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentName" fonttype="BlackFont" text="$1235" abs_x="100" abs_y="16">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent">
+													<Offset>
+														<AbsDimension x="39" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Button name="$parentTick" abs_x="25" abs_y="25" input_transparent="true" >
+										<Anchors>
+											<Anchor point="left" relativePoint="left" relativeTo="$parent">
+												<Offset>
+													<AbsDimension x="8" y="-3"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+												<Texture name="$parentBkg" file="ui/mobile/texture2/common.xml" uvname="board_check_circle.png" abs_x="24" abs_y="24">
+													<Anchors>
+														<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+													</Anchors>
+												</Texture>
+												<Texture name="$parentIcon" file="ui/mobile/texture2/common.xml" uvname="icon_tick_multi.png" hidden="true" abs_x="20" abs_y="20">
+													<Anchors>
+														<Anchor point="center" relativePoint="center" relativeTo="$parentBkg">
+															<Offset>
+																<AbsDimension x="0" y="0"/>
+															</Offset>
+														</Anchor>
+													</Anchors>
+												</Texture>
+											</Layer>
+										</Layers>
+									</Button>
+								</Frames>
+								<Scripts>
+									<OnClick>SingleEditorBaseSetCraftBackpackCraft_OnClick();</OnClick>
+								</Scripts>
+							</Frame>
+							<Button name="$parentResult" inherits="SingleSelBtnTemplate11111">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentResultBkg">
+										<Offset>
+											<AbsDimension x="18" y="50"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Button>
+							<Frame name="$parentType" inherits="NewEditorOptionTemplate11111" abs_x="640" abs_y="55">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentResultBkg">
+										<Offset>
+											<AbsDimension x="-239" y="125"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Frame>
+							<Frame name="$parentProdNum" inherits="NewEditorSliderTemplate11111">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentResultBkg">
+										<Offset>
+											<AbsDimension x="-239" y="170"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Frame>
+							<Button name="$parentMaterial1" inherits="SingleSelBtnTemplate11111"/>
+							<Button name="$parentMaterial2" inherits="SingleSelBtnTemplate11111"/>
+							<Button name="$parentMaterial3" inherits="SingleSelBtnTemplate11111"/>
+							<Button name="$parentMaterial4" inherits="SingleSelBtnTemplate11111"/>
+							<Button name="$parentMaterial5" inherits="SingleSelBtnTemplate11111"/>
+							<Button name="$parentMaterial6" inherits="SingleSelBtnTemplate11111"/>
+						</Frames>
+					</Frame>
+					##熔炼
+					<Frame name="$parentFurnace" abs_x="604" abs_y="548" hidden="true">
+						<Anchors>
+							<Anchor point="topright" relativePoint="topright" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="-32" y="18"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentMaterialBkg" inherits="TemplateBigBkg11" abs_x="606" abs_y="330">
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parent" />
+									</Anchors>
+								</Texture>
+								<Texture name="$parentResultTitleBkg" inherits="TemplateBkg25" abs_x="604" abs_y="46">
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parentMaterialBkg" />
+									</Anchors>
+								</Texture>
+								<FontString name="$parentMaterialTitle" fonttype="BlackFont24" justifyH="center" text="$1244" abs_x="350" abs_y="24">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parentMaterialBkg">
+											<Offset>
+												<AbsDimension x="0" y="11"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString name="$parentMaterialDesc" fonttype="BlackFont20" lineInterval="5" text="物品描述" abs_x="435" abs_y="75" autowrap="true">
+									<Color r="101" g="116" b="118"/>
+									<Anchors>
+										<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentMaterialBkg">
+											<Offset>
+												<AbsDimension x="112" y="60"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<Texture name="$parentArrow" file="ui/mobile/texture2/room.xml"  uvname="img_frame_arrow.png" abs_x="29" abs_y="36">
+									<Angle value="90"/>
+									<Anchors>
+										<Anchor point="top" relativePoint="bottom" relativeTo="$parentMaterialBkg" />
+									</Anchors>
+								</Texture>
+								<Texture name="$parentResultBkg" inherits="TemplateBigBkg5" abs_x="606" abs_y="184">
+									<Anchors>
+										<Anchor point="top" relativePoint="bottom" relativeTo="$parentMaterialBkg">
+											<Offset>
+												<AbsDimension x="0" y="34"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<FontString name="$parentResultTitle" fonttype="BlackFont24" justifyH="center" text="$1245" abs_x="350" abs_y="24">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parentResultBkg">
+											<Offset>
+												<AbsDimension x="0" y="6"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<FontString name="$parentResultDesc" fonttype="BlackFont20" lineInterval="5" text="物品描述" abs_x="400" abs_y="75" autowrap="true">
+									<Color r="101" g="116" b="118"/>
+									<Anchors>
+										<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentResultBkg">
+											<Offset>
+												<AbsDimension x="113" y="60"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Button name="$parentMaterial" inherits="SingleSelBtnTemplate11111">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentMaterialBkg">
+										<Offset>
+											<AbsDimension x="18" y="50"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Button>
+							<Frame name="$parentCanBurn" inherits="NewEditorSwitchTemplate11111">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentMaterialBkg">
+										<Offset>
+											<AbsDimension x="-239" y="165"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Frame>
+							<Frame name="$parentHeat" inherits="NewEditorSliderTemplate11111">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentMaterialBkg">
+										<Offset>
+											<AbsDimension x="-239" y="250"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Frame>
+							<Button name="$parentResult" inherits="SingleSelBtnTemplate11111">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentResultBkg">
+										<Offset>
+											<AbsDimension x="18" y="50"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Button>
+						</Frames>
+					</Frame>
+					##公共
+					<Frame name="$parentCommon" abs_x="620" abs_y="525" hidden="true">
+						<Anchors>
+							<Anchor point="left" relativePoint="right" relativeTo="$parentLine2">
+								<Offset>
+									<AbsDimension x="0" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								##名字
+								<FontString name="$parentNameTitle" fonttype="BlackFont20" justifyH="right" text="$590" abs_x="110" abs_y="20">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="0" y="59"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<Texture name="$parentNameBkg" inherits="TemplateBkg8" abs_x="394" abs_y="46">
+									<Anchors>
+										<Anchor point="left" relativePoint="right" relativeTo="$parentNameTitle">
+											<Offset>
+												<AbsDimension x="39" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								##描述
+								<FontString name="$parentDescTitle" fonttype="BlackFont20" justifyH="right" text="$156" abs_x="115" abs_y="20">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentNameTitle">
+											<Offset>
+												<AbsDimension x="0" y="55"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<Texture name="$parentDescBkg" inherits="TemplateBkg8" abs_x="394" abs_y="138">
+									<Anchors>
+										<Anchor point="top" relativePoint="bottom" relativeTo="$parentNameBkg">
+											<Offset>
+												<AbsDimension x="0" y="27"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Frames>
+							##名字编辑
+							<SafeEditBox name="$parentNameEdit" letters="30" multiLine="false" editMethod="527" abs_x="375" abs_y="20">
+								<Anchors>
+									<Anchor point="left" relativePoint="left" relativeTo="$parentNameBkg">
+										<Offset>
+											<AbsDimension x="10" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<FontString name="$parentFont" justifyH="left" fonttype="BlackFont20">
+									<Color r="255" g="255" b="255"/>
+								</FontString>
+								<FontString name="$parentDefault" justifyH="left" default="true" fonttype="BlackFont20" text="$3939" textcolor="ffb9b9b9" />
+								<Scripts>
+									<OnFocusLost>SingleEditorBaseSetNameEdit_OnFocusLost();</OnFocusLost>
+									<OnTabPressed platform="pc">SingleEditorBaseSetNameEdit_OnTabPressed();</OnTabPressed>
+								</Scripts>
+							</SafeEditBox>
+							<Button name="$parentNameDisplay" abs_x="46" abs_y="46" hidden="true">
+								<Anchors>
+									<Anchor point="right" relativePoint="right" relativeTo="$parentNameBkg">
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="overlay">
+										<Texture name="$parentShowIcon" file="ui/mobile/texture2/modlib.xml" uvname="icon_read_white" abs_x="29" abs_y="20" hidden="true">
+											<Anchors>
+												<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+											</Anchors>
+										</Texture>
+										<Texture name="$parentHideIcon" file="ui/mobile/texture2/common_icon.xml" uvname="ico_model_yincang" abs_x="34" abs_y="18">
+											<Anchors>
+												<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<NormalTexture name="$parentNormal" inherits="TemplateBkg28"/>
+								<PushedTexture name="$parentPushedBG" inherits="TemplateBkg28" rel_x="0.9" rel_y="0.9">
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+									</Anchors>
+								</PushedTexture>
+								<Scripts>
+									<OnClick>SingleEditorBaseSetTopNameDisplay();</OnClick>
+								</Scripts>
+							</Button>
+							<RichText name="$parentDescTip" abs_x="375" abs_y="120" fonttype="BlackFont18" autoextend="false" input_transparent="true" hidden="false">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentDescBkg">
+										<Offset>
+											<AbsDimension x="10" y="10"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</RichText>
+							##描述编辑
+							<SlidingFrame name="$parentDesc" slidingY="true" slideplane="$parentPlane" abs_x="375" abs_y="120" letters="250">
+				                <Anchors>
+									<Anchor point="center" relativePoint="center" relativeTo="$parentDescTip" />
+								</Anchors>
+				                <Frames>
+				                    <Frame name="$parentPlane" hidden="true" abs_x="375" abs_y="120" letters="250"/>
+				                    <SafeMultiEditBox name="$parentEdit" fonttype="BlackFont18" abs_x="375" abs_y="120" letters="648" editMethod="527">
+										<Anchors>
+											<Anchor point="top" relativePoint="top" relativeTo="$parentPlane" />
+										</Anchors>
+										<textcolor r="255" g="255" b="255"/>
+										<cursorcolor r="255" g="255" b="255" />
+										<Scripts>
+											<OnFocusLost>SingleEditorBaseSetDescEdit_OnFocusLost();</OnFocusLost>
+											<OnFocusGained>SingleEditorBaseSetDescEdit_OnFocusGained();</OnFocusGained>
+											<OnTabPressed platform="pc">SingleEditorBaseSetDescEdit_OnTabPressed();</OnTabPressed>
+											<OnTextSet>SingleEditorBaseSetDescEdit_OnTextSet();</OnTextSet>
+										</Scripts>
+									</SafeMultiEditBox>
+				                </Frames>
+				            </SlidingFrame>
+							
+							<Button name="$parentDescDisplay" abs_x="46" abs_y="46" hidden="true">
+								<Anchors>
+									<Anchor point="topright" relativePoint="topright" relativeTo="$parentDescBkg" />
+								</Anchors>
+								<Layers>
+									<Layer level="overlay">
+										<Texture name="$parentShowIcon" file="ui/mobile/texture2/modlib.xml" uvname="icon_read_white" abs_x="29" abs_y="20" hidden="true">
+											<Anchors>
+												<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+											</Anchors>
+										</Texture>
+										<Texture name="$parentHideIcon" file="ui/mobile/texture2/common_icon.xml" uvname="ico_model_yincang" abs_x="34" abs_y="18" hidden="true">
+											<Anchors>
+												<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<NormalTexture name="$parentNormal" inherits="TemplateBkg28"/>
+								<PushedTexture name="$parentPushedBG" inherits="TemplateBkg28" rel_x="0.9" rel_y="0.9">
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+									</Anchors>
+								</PushedTexture>
+								<Scripts>
+									<OnClick>SingleEditorBaseSetTopNameDisplay();</OnClick>
+								</Scripts>
+							</Button>
+							##模型选择
+							<Frame name="$parentSelModel" abs_x="620" abs_y="100" id="1">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+										<Offset>
+											<AbsDimension x="0" y="280"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentName" fonttype="BlackFont20" justifyH="right" text="$3651" abs_x="110" abs_y="20">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+													<Offset>
+														<AbsDimension x="0" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Button name="$parentBtn1" inherits="NewEditorSelBtnTemplate" id="1">
+										<Anchors>
+											<Anchor point="topleft" relativePoint="topright" relativeTo="$parentName">
+												<Offset>
+													<AbsDimension x="39" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Button>
+									<Button name="$parentBtn2" inherits="NewEditorSelBtnTemplate" id="2">
+										<Anchors>
+											<Anchor point="left" relativePoint="left" relativeTo="$parentBtn1">
+												<Offset>
+													<AbsDimension x="130" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Button>
+									<Button name="$parentBtn3" inherits="NewEditorSelBtnTemplate" id="3">
+										<Anchors>
+											<Anchor point="left" relativePoint="left" relativeTo="$parentBtn2">
+												<Offset>
+													<AbsDimension x="130" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Button>
+								</Frames>
+							</Frame>
+							##模型大小滑动条
+							<Frame name="$parentModelScale" abs_x="620" abs_y="50" id="2">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentSelModel">
+										<Offset>
+											<AbsDimension x="0" y="55"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentName" fonttype="BlackFont20" justifyH="right" text="$3648" abs_x="110" abs_y="20">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent">
+													<Offset>
+														<AbsDimension x="0" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+										<FontString name="$parentVal" fonttype="BlackFont24" justifyH="center" text="999" abs_x="60" abs_y="24">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+													<Offset>
+														<AbsDimension x="270" y="-15"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+										<FontString name="$parentDesc" fonttype="BlackFont24" text="$3852" abs_x="80" abs_y="24">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="right" relativeTo="$parentVal" />
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Button name="$parentLeftBtn" inherits="TemplateSingleBar_LeftBtn01">
+										<Anchors>
+											<Anchor point="right" relativePoint="left" relativeTo="$parentBar">
+												<Offset>
+													<AbsDimension x="-18" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Scripts>
+											<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateLeftBtn_OnClick();</OnClick>
+										</Scripts>
+									</Button>
+									<Slider name="$parentBar" inherits="TemplateSingleBar2" orientation="HORIZONTAL" minValue="0" maxValue="100" valueStep="1" defaultValue="0" abs_x="328" abs_y="30">
+										<Anchors>
+											<Anchor point="left" relativeTo="$parent" relativePoint="left">
+												<Offset>
+													<AbsDimension x="180" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+
+											</Layer>
+										</Layers>
+										<Scripts>
+											<OnValueChanged>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateBar_OnValueChanged()</OnValueChanged>
+										</Scripts>
+									</Slider>
+									<Button name="$parentRightBtn" inherits="TemplateSingleBar_RightBtn01">
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentBar">
+												<Offset>
+													<AbsDimension x="18" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Scripts>
+											<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NewEditorSliderTemplateRightBtn_OnClick();</OnClick>
+										</Scripts>
+									</Button>
+								</Frames>
+							</Frame>
+
+							##翻译名字
+							<Button name="$parentTranslateName" inherits="TranslateBtnTemplate" hidden="false" abs_x="36" abs_y="28">
+								<Anchors>
+									<Anchor point="right" relativeTo="$parentNameEdit" relativePoint="right">
+										<Offset>
+											<AbsDimension x="-40" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Button>
+
+							##翻译描述
+							<Button name="$parentTranslateDesc" inherits="TranslateBtnTemplate" hidden="false" abs_x="36" abs_y="28">
+								<Anchors>
+									<Anchor point="bottomright" relativeTo="$parentDescEdit" relativePoint="bottomright">
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Button>
+
+							##TODO:选择装备类型
+							<Frame name="$parentSelectEquipSlot" abs_x="620" abs_y="24" hidden="true">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+										<Offset>
+											<AbsDimension x="0" y="420"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentName" fonttype="BlackFont20" justifyH="right" text="$33013" abs_x="110" abs_y="20">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent" >
+													<Offset>
+														<AbsDimension x="0" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Button name="$parentBtn" inherits="t_btn_18e" abs_x="394" abs_y="37" text="$33021">
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentName">
+												<Offset>
+													<AbsDimension x="39" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Scripts>
+								            <OnClick>GetInst("ModsLibEditorItemPartMgr"):SelectEquipSlotType();</OnClick>
+								        </Scripts>
+									</Button>
+								</Frames>
+							</Frame>
+
+							##TODO:编辑装备部件
+							<Frame name="$parentEditEquip" abs_x="620" abs_y="24" hidden="true">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+										<Offset>
+											<AbsDimension x="0" y="490"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentName" fonttype="BlackFont20" justifyH="right" text="$33014" abs_x="110" abs_y="20">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent" >
+													<Offset>
+														<AbsDimension x="0" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Button name="$parentBtn" inherits="t_btn_my_i">
+										<Layers>
+											<layer level = "overlay">
+											      <Texture name="$parentSighTag" file="ui/mobile/texture2/common.xml" uvname="icon_tipoff_o" hidden="true">
+													<Angle value="37" />
+													<Size>
+														<AbsDimension x="10" y="25"/>
+													</Size>
+													<Anchors>
+														<Anchor point="center" relativePoint="topright" relativeTo="$parent">
+														<Offset>
+															<AbsDimension x="-2" y="-3"/>
+														</Offset>
+														</Anchor>
+													</Anchors>	
+												</Texture>
+											</layer>
+										</Layers>
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentName">
+												<Offset>
+													<AbsDimension x="39" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Scripts>
+								            <OnClick>GetInst("ModsLibEditorItemPartMgr"):OpenEquipEditFrame();</OnClick>
+								        </Scripts>
+									</Button>
+								</Frames>
+							</Frame>
+						</Frames>
+					</Frame>
+					##LLTODO:剧情编辑基础属性
+					<SlidingFrame name="$parentNPCPlot" slidingY="true" slideplane="$parentPlane" rel_x="1" rel_y="1" hidden="true">
+						<Anchors>
+							<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="3" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentBkg" inherits="TemplateBigBkg2" abs_x="1128" abs_y="580">
+									<Anchors>
+										<Anchor point="bottomright" relativeTo="$parent" relativePoint="bottomright">
+											<Offset>
+												<AbsDimension x="5" y="-1"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Frame name="$parentPlane" abs_x="1097" abs_y="577">
+								<Anchors>
+									<Anchor point="top" relativeTo="$parent" relativePoint="top">
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Frame>
+							##标题横线
+							<Frame name="$parentTitle" abs_x="1097" abs_y="60">
+								<Anchors>
+									<Anchor point="top" relativePoint="top" relativeTo="$parentPlane" >
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentTitle" fonttype="BlackFont24" justifyH="center" text="$11007" abs_x="400" abs_y="24" hidden="false">
+											<Color r="77" g="112" b="117"/>
+											<Anchors>
+												<Anchor point="top" relativePoint="top" relativeTo="$parent" >
+													<Offset>
+														<AbsDimension x="0" y="15"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+										<Texture name="$parentLine" inherits="TemplateBkg20" abs_x="1030" abs_y="2">
+											<Anchors>
+												<Anchor point="top" relativePoint="top" relativeTo="$parent" >
+													<Offset>
+														<AbsDimension x="0" y="63"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+							</Frame>
+							##剧情名称编辑
+							<Frame name="$parentNameEdit" abs_x="1097" abs_y="60" id="1" hidden="false">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentTitle">
+										<Offset>
+											<AbsDimension x="0" y="30"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$11026" abs_x="250" abs_y="20" hidden="false">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+											</Anchors>
+										</FontString>
+										<Texture name="$parentBkg" inherits="TemplateBkg8" abs_x="376" abs_y="40">
+											<Anchors>
+												<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+													<Offset>
+														<AbsDimension x="100" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Frames>
+									<SafeEditBox name="$parentEdit" letters="20" multiLine="false" abs_x="356" abs_y="20">
+										<Anchors>
+											<Anchor point="center" relativeTo="$parentBkg" relativePoint="center" />
+										</Anchors>
+										<FontString name="$parentFont" fonttype="BlackFont20"  justifyH="center">
+											<Color r="255" g="255" b="255"/>
+										</FontString>
+										<FontString name="$parentDefault" default="true" fonttype="BlackFont20" text="$9255" textcolor="ffb9b9b9" />
+									</SafeEditBox>
+								</Frames>
+							</Frame>
+							##图标
+							<Frame name="$parentIcon" abs_x="1097" abs_y="98" id="2" hidden="false">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentNameEdit" />
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$11094" abs_x="250" abs_y="20">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Button name="$parentBtn1" inherits="SingleSelBtnTemplate11111" id="2">
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+												<Offset>
+													<AbsDimension x="100" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Button>
+								</Frames>
+							</Frame>
+							##前置条件
+							<Frame name="$parentCondition" abs_x="1097" abs_y="80" id="3" hidden="false">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentIcon" />
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$11031" abs_x="250" abs_y="20">
+											<Color r="55" g="54" b="41"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<RichText name="$parentDesc" fonttype="BlackFont26" abs_x="250" abs_y="26" text="" color="ff373629" />
+									<Button name="$parentBtn" inherits="NewSingleOptionBtnTemplate11111"  id="3">
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+												<Offset>
+													<AbsDimension x="100" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Button>
+								</Frames>
+							</Frame>
+							##剧情对话:SingleOptionBtnTemplate
+							<Frame name="$parentTalk" abs_x="1097" abs_y="80" id="4" hidden="false">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentCondition" />
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$11028" abs_x="250" abs_y="20">
+											<Color r="55" g="54" b="41"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<RichText name="$parentDesc" fonttype="BlackFont26" abs_x="250" abs_y="26" text="" />
+									<Button name="$parentBtn" inherits="NewSingleOptionBtnTemplate11111"  id="4">
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+												<Offset>
+													<AbsDimension x="100" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Button>
+								</Frames>
+							</Frame>
+							##触发目标
+							<Frame name="$parentTarget" abs_x="1097" abs_y="98" id="5" hidden="false">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentTalk" />
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$11029" abs_x="250" abs_y="20">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Button name="$parentBtn1" inherits="SingleSelBtnTemplate11111" id="5">
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+												<Offset>
+													<AbsDimension x="100" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Button>
+								</Frames>
+							</Frame>
+							##前置条件参数:前置任务
+							<Frame name="ConditionParamTask" abs_x="1097" abs_y="240" id="6" hidden="false">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentCondition" />
+								</Anchors>
+								<Frames>
+									##前置任务1: id=6
+									<Frame name="$parent1" abs_x="1000" abs_y="80" id="6">
+										<Anchors>
+											<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent" />
+										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+												<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$11034" abs_x="250" abs_y="20">
+													<Color r="61" g="69" b="70"/>
+													<Anchors>
+														<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+													</Anchors>
+												</FontString>
+											</Layer>
+										</Layers>
+										<Frames>
+											<RichText name="$parentDesc" fonttype="BlackFont26" abs_x="250" abs_y="26" text="" />
+											<Button name="$parentBtn" inherits="NewSingleOptionBtnTemplate11111"  id="6">
+												<Anchors>
+													<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+														<Offset>
+															<AbsDimension x="100" y="0"/>
+														</Offset>
+													</Anchor>
+												</Anchors>
+											</Button>
+										</Frames>
+									</Frame>
+									##前置任务2: id=7
+									<Frame name="$parent2" abs_x="1000" abs_y="80" id="7">
+										<Anchors>
+											<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parent1" />
+										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+												<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$11035" abs_x="250" abs_y="20">
+													<Color r="61" g="69" b="70"/>
+													<Anchors>
+														<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+													</Anchors>
+												</FontString>
+											</Layer>
+										</Layers>
+										<Frames>
+											<RichText name="$parentDesc" fonttype="BlackFont26" abs_x="250" abs_y="26" text="" />
+											<Button name="$parentBtn" inherits="NewSingleOptionBtnTemplate11111"  id="7">
+												<Anchors>
+													<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+														<Offset>
+															<AbsDimension x="100" y="0"/>
+														</Offset>
+													</Anchor>
+												</Anchors>
+											</Button>
+										</Frames>
+									</Frame>
+									##前置任务3: id=8
+									<Frame name="$parent3" abs_x="1000" abs_y="80" id="8">
+										<Anchors>
+											<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parent2" />
+										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+												<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$11036" abs_x="250" abs_y="20">
+													<Color r="61" g="69" b="70"/>
+													<Anchors>
+														<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+													</Anchors>
+												</FontString>
+											</Layer>
+										</Layers>
+										<Frames>
+											<RichText name="$parentDesc" fonttype="BlackFont26" abs_x="250" abs_y="26" text="" />
+											<Button name="$parentBtn" inherits="NewSingleOptionBtnTemplate11111"  id="8">
+												<Anchors>
+													<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+														<Offset>
+															<AbsDimension x="100" y="0"/>
+														</Offset>
+													</Anchor>
+												</Anchors>
+											</Button>
+										</Frames>
+									</Frame>
+								</Frames>
+							</Frame>
+							##开始时间: id=9
+							<Frame name="ConditionParamStartTime" inherits="NewEditorSliderTemplate11111" id="9">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentCondition" />
+								</Anchors>
+							</Frame>
+							##结束时间: id=10
+							<Frame name="ConditionParamEndTime" inherits="NewEditorSliderTemplate11111" id="10">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentCondition" />
+								</Anchors>
+							</Frame>
+							##拥有道具: id = 11
+							<Frame name="ConditionParamItem" abs_x="1097" abs_y="98" id="11" hidden="false">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentCondition" />
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$11037" abs_x="250" abs_y="20">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Button name="$parentBtn1" inherits="SingleSelBtnTemplate11111" id="11">
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+												<Offset>
+													<AbsDimension x="100" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</Button>
+								</Frames>
+							</Frame>
+							##拥有道具数量: id = 12
+							<Frame name="ConditionParamItemQuantity" inherits="NewEditorSliderTemplate11111" id="12">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentCondition" />
+								</Anchors>
+							</Frame>
+						</Frames>
+					</SlidingFrame>
+					##商店编辑基础属性
+					<SlidingFrame name="$parentStore" slidingY="false" slideplane="$parentPlane" rel_x="1" rel_y="1" hidden="true">
+						<Anchors>
+							<Anchor point="center" relativeTo="$parent" relativePoint="center">
+								<Offset>
+									<AbsDimension x="0" y="5"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentBkg" inherits="TemplateBigBkg2" abs_x="1114" abs_y="580">
+									<Anchors>
+										<Anchor point="bottomright" relativeTo="$parent" relativePoint="bottomright">
+											<Offset>
+												<AbsDimension x="0" y="-6"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Frame name="$parentPlane" rel_x="1" rel_y="1">
+								<Anchors>
+									<Anchor point="center" relativeTo="$parent" relativePoint="center">
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Frame>
+							##标题横线
+							<Frame name="$parentTitle" abs_x="1097" abs_y="60">
+								<Anchors>
+									<Anchor point="top" relativePoint="top" relativeTo="$parentPlane">
+										<Offset>
+											<AbsDimension x="0" y="8"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<Texture name="$parentLine" inherits="TemplateBkg20" abs_x="1030" abs_y="2">
+											<Anchors>
+												<Anchor point="top" relativePoint="top" relativeTo="$parent" >
+													<Offset>
+														<AbsDimension x="0" y="63"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+										<FontString name="$parentTitle" fonttype="BlackFont24" justifyH="center" text="$21702" abs_x="400" abs_y="24" hidden="false">
+											<Color r="77" g="112" b="117"/>
+											<Anchors>
+												<Anchor point="center" relativePoint="center" relativeTo="$parent" >
+													<Offset>
+														<AbsDimension x="0" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+							</Frame>
+							##商店名称编辑
+							<Frame name="$parentNameEdit" abs_x="1097" abs_y="60" id="1" hidden="false">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentTitle" />
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$21703" abs_x="250" abs_y="20" hidden="false">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+											</Anchors>
+										</FontString>
+										<Texture name="$parentBkg" inherits="TemplateBkg8" abs_x="376" abs_y="40">
+											<Anchors>
+												<Anchor point="left" relativePoint="right" relativeTo="$parentTitle">
+													<Offset>
+														<AbsDimension x="100" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Frames>
+									<SafeEditBox name="$parentEdit" letters="21" multiLine="false" abs_x="356" abs_y="20">
+										<Anchors>
+											<Anchor point="left" relativeTo="$parentBkg" relativePoint="left">
+												<Offset>
+													<AbsDimension x="15" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<FontString name="$parentFont" fonttype="BlackFont20"  justifyH="left">
+											<Color r="255" g="255" b="255"/>
+										</FontString>
+										<FontString name="$parentDefault" default="true" fonttype="BlackFont20" text="$21703" textcolor="ffb9b9b9" />
+										<Scripts>
+											<OnFocusLost>SingleEditorFrameBaseSetStoreDescEdit_OnFocusLost();</OnFocusLost>
+										</Scripts>
+									</SafeEditBox>
+								</Frames>
+							</Frame>
+							##商店描述编辑
+							<Frame name="$parentDescEdit" abs_x="1097" abs_y="120" id="1" hidden="false">
+								<Anchors>
+									<Anchor point="top" relativePoint="bottom" relativeTo="$parentNameEdit" >
+										<Offset>
+											<AbsDimension x="0" y="10"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString name="$parentTitle" fonttype="BlackFont20" justifyH="right" text="$21704" abs_x="250" abs_y="20" hidden="false">
+											<Color r="61" g="69" b="70"/>
+											<Anchors>
+												<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent" >
+													<Offset>
+														<AbsDimension x="0" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+										<Texture name="$parentBkg" inherits="TemplateBkg8" abs_x="376" abs_y="100">
+											<Anchors>
+												<Anchor point="topleft" relativePoint="topright" relativeTo="$parentTitle">
+													<Offset>
+														<AbsDimension x="100" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Frames>
+									<RichText name="$parentDescTip" lineInterval="2" multiLine="false" text="$21704" fonttype="BlackFont20" autoextend="false" input_transparent="true" hidden="false">
+										<Size>
+											<AbsDimension x="295" y="80"/>
+										</Size>
+										<Anchors>
+											<Anchor point="topleft" relativeTo="$parentBkg" relativePoint="topleft" >
+												<Offset>
+													<AbsDimension x="14" y="13"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+									</RichText>
+									<SafeMultiEditBox name="$parentEdit" letters="90" fonttype="BlackFont20" multiLine="false"  abs_x="356" abs_y="80" >
+										<Anchors>
+											<Anchor point="center" relativeTo="$parentBkg" relativePoint="center" />
+										</Anchors>
+										<textcolor r="255" g="255" b="255"/>
+										<FontString name="$parentDefault" default="true" fonttype="BlackFont20" text="$21704" textcolor="ffffffff" />
+										<Scripts>
+											<OnFocusLost>SingleEditorFrameBaseSetStoreDescEdit_OnFocusLost();</OnFocusLost>
+											<OnFocusGained>SingleEditorFrameBaseSetStoreDescEdit_OnFocusGained();</OnFocusGained>
+										</Scripts>
+									</SafeMultiEditBox>
+								</Frames>
+							</Frame>
+
+						</Frames>
+						<Scripts>
+							<OnShow>SingleEditorFrameBaseSetStore_OnShow();</OnShow>
+							<OnHide>SingleEditorFrameBaseSetStore_OnHide();</OnHide>
+						</Scripts>
+					</SlidingFrame>
+					##状态
+					<Frame name="$parentStatus" abs_x="620" abs_y="525" hidden="true">
+						<Anchors>
+							<Anchor point="left" relativePoint="right" relativeTo="$parentLine2">
+								<Offset>
+									<AbsDimension x="0" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								##名字
+								<FontString name="$parentNameTitle" fonttype="BlackFont20" justifyH="right" text="$590" abs_x="110" abs_y="20">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="0" y="59"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<Texture name="$parentNameBkg" inherits="TemplateBkg8" abs_x="394" abs_y="46">
+									<Anchors>
+										<Anchor point="left" relativePoint="right" relativeTo="$parentNameTitle">
+											<Offset>
+												<AbsDimension x="39" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								##描述
+								<FontString name="$parentDescTitle" fonttype="BlackFont20" justifyH="right" text="$25408" abs_x="115" abs_y="20">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentNameTitle">
+											<Offset>
+												<AbsDimension x="0" y="55"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<Texture name="$parentDescBkg" inherits="TemplateBkg8" abs_x="394" abs_y="138">
+									<Anchors>
+										<Anchor point="top" relativePoint="bottom" relativeTo="$parentNameBkg">
+											<Offset>
+												<AbsDimension x="0" y="27"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Frames>
+							##名字编辑
+							<SafeEditBox name="$parentNameEdit" letters="30" multiLine="false" editMethod="527" abs_x="375" abs_y="20">
+								<Anchors>
+									<Anchor point="left" relativePoint="left" relativeTo="$parentNameBkg">
+										<Offset>
+											<AbsDimension x="10" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<FontString name="$parentFont" justifyH="left" fonttype="BlackFont20">
+									<Color r="255" g="255" b="255"/>
+								</FontString>
+								<FontString name="$parentDefault" justifyH="left" default="true" fonttype="BlackFont20" text="$3939" textcolor="ffb9b9b9" />
+							</SafeEditBox>
+							<RichText name="$parentDescTip" abs_x="375" abs_y="120" lineInterval="2" fonttype="BlackFont18" autoextend="false" input_transparent="true" hidden="false">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentDescBkg">
+										<Offset>
+											<AbsDimension x="10" y="10"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</RichText>
+							<SafeMultiEditBox name="$parentDescEdit" fonttype="BlackFont18" abs_x="375" abs_y="120" letters="250" multiLine="false" editMethod="527" hidden="false">
+								<Anchors>
+									<Anchor point="center" relativePoint="center" relativeTo="$parentDescTip" />
+								</Anchors>
+								<textcolor r="255" g="255" b="255"/>
+								<Scripts>
+									<OnFocusLost>SingleEditorBaseSetDescEdit_OnFocusLost();</OnFocusLost>
+									<OnFocusGained>SingleEditorBaseSetDescEdit_OnFocusGained();</OnFocusGained>
+								</Scripts>
+							</SafeMultiEditBox>
+							##翻译名字
+							<Button name="$parentTranslateName" inherits="TranslateBtnTemplate" hidden="false" abs_x="36" abs_y="28">
+								<Anchors>
+									<Anchor point="right" relativeTo="$parentNameEdit" relativePoint="right">
+										<Offset>
+											<AbsDimension x="-40" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Button>
+							##翻译描述
+							<Button name="$parentTranslateDesc" inherits="TranslateBtnTemplate" hidden="false" abs_x="36" abs_y="28">
+								<Anchors>
+									<Anchor point="bottomright" relativeTo="$parentDescEdit" relativePoint="bottomright">
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Button>
+							##模型选择
+							<Frame name="$parentSelModel">
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+										<Offset>
+											<AbsDimension x="0" y="299"/>
+										</Offset>
+									</Anchor>
+									<Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent">
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<Texture name="$parentLine" inherits="TemplateBkg20" abs_x="623" abs_y="2">
+											<Anchors>
+												<Anchor point="bottom" relativePoint="top" relativeTo="$parent">
+													<Offset>
+														<AbsDimension x="0" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Button name="$parentBtn1" inherits="TemplateBtn22" abs_x="74" abs_y="74" id="1">
+										<Anchors>
+											<Anchor point="left" relativePoint="left" relativeTo="$parent">
+												<Offset>
+													<AbsDimension x="108" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+												<FontString name="$parentToptext" fonttype="BlackFont20" justifyH="center" text="$590" abs_x="110" abs_y="19">
+													<Color r="61" g="69" b="70"/>
+													<Anchors>
+														<Anchor point="bottom" relativePoint="top" relativeTo="$parent">
+															<Offset>
+																<AbsDimension x="0" y="-13"/>
+															</Offset>
+														</Anchor>
+													</Anchors>
+												</FontString>
+												<FontString name="$parentBottomtext" fonttype="BlackFont20" justifyH="center" text="$590" abs_x="110" abs_y="19">
+													<Color r="61" g="69" b="70"/>
+													<Anchors>
+														<Anchor point="top" relativePoint="bottom" relativeTo="$parent">
+															<Offset>
+																<AbsDimension x="0" y="13"/>
+															</Offset>
+														</Anchor>
+													</Anchors>
+												</FontString>
+											</Layer>
+										</Layers>
+										<Frames>
+											<Button name="$parentDel" abs_x="31" abs_y="32" inherits="TemplateBtn23">
+												<Anchors>
+													<Anchor point="center" relativePoint="topright" relativeTo="$parent">
+														<Offset>
+															<AbsDimension x="-9" y="8"/>
+														</Offset>
+													</Anchor>
+												</Anchors>
+												<Scripts>
+													<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):DelStatusSelModelBtnClick();</OnClick>
+												</Scripts>
+											</Button>
+										</Frames>
+										<Scripts>
+											<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SetStatusSelModelBtnClick()</OnClick>
+										</Scripts>
+									</Button>
+									<Button name="$parentBtn2" inherits="TemplateBtn22" abs_x="74" abs_y="74" id="2">
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentBtn1">
+												<Offset>
+													<AbsDimension x="64" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+												<FontString name="$parentToptext" fonttype="BlackFont20" justifyH="center" text="$590" abs_x="110" abs_y="19">
+													<Color r="61" g="69" b="70"/>
+													<Anchors>
+														<Anchor point="bottom" relativePoint="top" relativeTo="$parent">
+															<Offset>
+																<AbsDimension x="0" y="-13"/>
+															</Offset>
+														</Anchor>
+													</Anchors>
+												</FontString>
+												<FontString name="$parentBottomtext" fonttype="BlackFont20" justifyH="center" text="$590" abs_x="110" abs_y="19">
+													<Color r="61" g="69" b="70"/>
+													<Anchors>
+														<Anchor point="top" relativePoint="bottom" relativeTo="$parent">
+															<Offset>
+																<AbsDimension x="0" y="13"/>
+															</Offset>
+														</Anchor>
+													</Anchors>
+												</FontString>
+											</Layer>
+										</Layers>
+										<Frames>
+											<Button name="$parentDel" abs_x="31" abs_y="32" inherits="TemplateBtn23">
+												<Anchors>
+													<Anchor point="center" relativePoint="topright" relativeTo="$parent">
+														<Offset>
+															<AbsDimension x="-9" y="8"/>
+														</Offset>
+													</Anchor>
+												</Anchors>
+												<Scripts>
+													<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):DelStatusSelModelBtnClick();</OnClick>
+												</Scripts>
+											</Button>
+										</Frames>
+										<Scripts>
+											<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SetStatusSelModelBtnClick()</OnClick>
+										</Scripts>
+									</Button>
+									<Button name="$parentBtn3" inherits="TemplateBtn22" abs_x="74" abs_y="74" id="3">
+										<Anchors>
+											<Anchor point="left" relativePoint="right" relativeTo="$parentBtn2">
+												<Offset>
+													<AbsDimension x="64" y="0"/>
+												</Offset>
+											</Anchor>
+										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+												<FontString name="$parentToptext" fonttype="BlackFont20" justifyH="center" text="$590" abs_x="110" abs_y="19">
+													<Color r="61" g="69" b="70"/>
+													<Anchors>
+														<Anchor point="bottom" relativePoint="top" relativeTo="$parent">
+															<Offset>
+																<AbsDimension x="0" y="-13"/>
+															</Offset>
+														</Anchor>
+													</Anchors>
+												</FontString>
+												<FontString name="$parentBottomtext" fonttype="BlackFont20" justifyH="center" text="$590" abs_x="110" abs_y="19">
+													<Color r="61" g="69" b="70"/>
+													<Anchors>
+														<Anchor point="top" relativePoint="bottom" relativeTo="$parent">
+															<Offset>
+																<AbsDimension x="0" y="13"/>
+															</Offset>
+														</Anchor>
+													</Anchors>
+												</FontString>
+											</Layer>
+										</Layers>
+										<Frames>
+											<Button name="$parentDel" abs_x="31" abs_y="32" inherits="TemplateBtn23">
+												<Anchors>
+													<Anchor point="center" relativePoint="topright" relativeTo="$parent">
+														<Offset>
+															<AbsDimension x="-9" y="8"/>
+														</Offset>
+													</Anchor>
+												</Anchors>
+												<Scripts>
+													<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):DelStatusSelModelBtnClick();</OnClick>
+												</Scripts>
+											</Button>
+										</Frames>
+										<Scripts>
+											<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SetStatusSelModelBtnClick();</OnClick>
+										</Scripts>
+									</Button>
+								</Frames>
+							</Frame>
+							##演示
+							<Button name="$parentShowBtn" abs_x="117" abs_y="50">
+								<Anchors>
+									<Anchor point="bottomright" relativePoint="bottomleft" relativeTo="$parent">
+										<Offset>
+											<AbsDimension x="-365" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Layers>
+									<Layer level="overlay">
+										<Texture name="$parentIcon" file="ui/mobile/texture0/videotape.xml" uvname="icon_play">
+											<Size>
+												<AbsDimension x="17" y="21"/>
+											</Size>
+											<Anchors>
+												<Anchor point="left" relativePoint="left" relativeTo="$parent">
+													<Offset>
+														<AbsDimension x="10" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</Texture>
+										<FontString name="$parentName" fonttype="BlackFont20" justifyH="left" text="$25412" abs_x="65" abs_y="19">
+											<Color r="55" g="54" b="51"/>
+											<Anchors>
+												<Anchor point="left" relativePoint="right" relativeTo="$parentIcon">
+													<Offset>
+														<AbsDimension x="24" y="0"/>
+													</Offset>
+												</Anchor>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<NormalTexture name="$parentNormal" inherits="TemplateBkg23"/>
+								<PushedTexture name="$parentPushedBG" inherits="TemplateBkg23" rel_x="0.98" rel_y="0.98">
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+									</Anchors>
+								</PushedTexture>
+								<Scripts>
+									<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):StatusShowBtnClick();</OnClick>
+								</Scripts>
+							</Button>
+						</Frames>
+					</Frame>
+				</Frames>
+			</Frame>
+			<!-- 商品设置页 -->
+			##左侧导航按钮
+			<Frame name="$parentTabFrame" abs_x="183" abs_y="720">
+				<Anchors>
+					<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="0" y="56"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Button name="SingleEditorTab1" inherits="EditorTabBtnTemplate11111" id="1"/>
+					<Button name="SingleEditorTab2" inherits="EditorTabBtnTemplate11111" id="2"/>
+					<Button name="SingleEditorTab3" inherits="EditorTabBtnTemplate11111" id="3"/>
+					<Button name="SingleEditorTab4" inherits="EditorTabBtnTemplate11111" id="4"/>
+					<Button name="SingleEditorTab5" inherits="EditorTabBtnTemplate11111" id="5"/>
+					<Button name="SingleEditorTab6" inherits="EditorTabBtnTemplate11111" id="6"/>
+					<Button name="SingleEditorTab7" inherits="EditorTabBtnTemplate11111" id="7"/>
+				</Frames>
+			</Frame>
+			##属性
+			<SlidingFrame name="SingleEditorAttrBox" slidingY="true" slideplane="$parentPlane" abs_x="1097" abs_y="525" hidden="true">
+				<Anchors>
+					<Anchor point="top" relativePoint="top" relativeTo="$parentWhiteBkg2">
+						<Offset>
+							<AbsDimension x="0" y="45"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Frame name="$parentPlane" abs_x="1097" abs_y="525" />
+				</Frames>
+			</SlidingFrame>
+			##生物特性属性
+			<SlidingFrame name="SingleEditorFeature" slidingY="true" slideplane="$parentPlane" abs_x="1097" abs_y="525" hidden="true">
+				<Anchors>
+					<Anchor point="top" relativePoint="top" relativeTo="$parentWhiteBkg2">
+						<Offset>
+							<AbsDimension x="0" y="45"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Frame name="$parentPlane" abs_x="1097" abs_y="525" />
+					<Frame name="$parentLine" inherits="NewEditorLineTemplate11111"/>
+					<Frame name="NewEditorFeatureItemAdd" abs_x="1030" abs_y="113">
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentBkg" inherits="TemplateBkg34"/>
+								<Texture name="$parentIcon" file="ui/mobile/texture2/playercenter.xml" uvname="icon_add_upload.png" abs_x="50" abs_y="50">
+									<Anchors>
+										<Anchor point="left" relativePoint="left" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="20" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<FontString name="$parentDesc" fonttype="BlackFont22" text="$6324" abs_x="200" abs_y="22">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="left" relativePoint="right" relativeTo="$parentIcon">
+											<Offset>
+												<AbsDimension x="25" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Button name="$parentNewBtn">
+								<Scripts>
+									<OnMouseDown>SingleEditorFrameFeatureItemAddBtn_OnClick();</OnMouseDown>
+								</Scripts>
+							</Button>
+						</Frames>
+					</Frame>
+				</Frames>
+			</SlidingFrame>
+
+			<SlidingFrame name="SingleEditorPackage" slidingY="true" slideplane="$parentPlane" abs_x="988" abs_y="480" hidden="true">
+				<Anchors>
+					<Anchor point="top" relativePoint="top" relativeTo="$parentPackBkg">
+						<Offset>
+							<AbsDimension x="0" y="70"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Frame name="$parentPlane">
+						<Anchors>
+							<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="0" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Size>
+							<AbsDimension x="988" y="500"/>
+						</Size>
+					</Frame>
+					<Frame name="NewEditorFeaturePackageAdd" hidden="false">
+						<Size>
+							<AbsDimension x="964" y="113"/>
+						</Size>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentBkg" inherits="TemplateBkg34"/>
+								<Texture name="$parentIconFrame" inherits="TemplateBkg30">
+									<Size>
+										<AbsDimension x="74" y="74"/>
+									</Size>
+									<Anchors>
+										<Anchor point="left" relativePoint="left" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="36" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<Texture name="$parentIcon" file="ui/mobile/texture2/playercenter.xml" uvname="icon_add_upload.png">
+									<Size>
+										<AbsDimension x="55" y="55"/>
+									</Size>
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parentIconFrame">
+											<Offset>
+												<AbsDimension x="0" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<FontString name="$parentDesc" fonttype="BlackFont26" text="$21767">
+									<Color r="55" g="54" b="49"/>
+									<Size>
+										<AbsDimension x="200" y="26"/>
+									</Size>
+									<Anchors>
+										<Anchor point="left" relativePoint="right" relativeTo="$parentIcon">
+											<Offset>
+												<AbsDimension x="20" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Button name="$parentNewBtn">
+								<size>
+									<RelDimension x="1" y="1"/>
+								</size>
+								<Anchors>
+									<Anchor point="left" relativePoint="left" relativeTo="$parent">
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnMouseDown>NewEditorFeaturePackageAddNewBtn_OnClick();</OnMouseDown>
+								</Scripts>
+							</Button>
+						</Frames>
+					</Frame>
+				</Frames>
+			</SlidingFrame>
+			##互动模块,NPC商店设置
+			<SlidingFrame name="SingleEditorNPCStoreSet" slidingY="true" slideplane="$parentPlane" abs_x="988" abs_y="548" hidden="true">
+				<Anchors>
+					<Anchor point="left" relativePoint="right" relativeTo="$parentTabFrame">
+						<Offset>
+							<AbsDimension x="14" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Frame name="$parentPlane">
+						<Anchors>
+							<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="0" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Size>
+							<AbsDimension x="988" y="600"/>
+						</Size>
+					</Frame>
+					<Frame name="$parentLine" >
+						<Anchors>
+							<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="0" y="-256"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentLine" file="ui/mobile/texture2/outgame2/uitex4.xml" uvname="wfsdg_fengexian.png" abs_x="988" abs_y="2">
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="0" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<!-- 遮罩 -->
+								<Texture name="$parentLineZheZhao" inherits="NewRuleSetFrameFenGeXianZhezhaoDiban" abs_x="500" abs_y="30" hidden="false">
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="0" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<FontString name="$parentTitle" fonttype="BlackFont30" justifyH="center" text="商店设置" abs_x="400" abs_y="30" hidden="false">
+									<Color r="98" g="65" b="48"/>
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="0" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+
+					<Frame name="$parentName" abs_x="988" abs_y="80" hidden="false" >
+						<Anchors>
+							<Anchor point="top" relativePoint="top" relativeTo="$parentLine">
+								<Offset>
+									<AbsDimension x="12" y="311"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer>
+								<FontString name="$parentTitle"  fonttype="BlackFont26"  text="$11010">
+									<Color r="98" g="65" b="48"/>
+									<Size>
+										<AbsDimension x="150" y="30"/>
+									</Size>
+									<Anchors>
+										<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="0" y="25"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<Texture name="$parentInputBkg" file="ui/mobile/texture2/outgame2/uitex4.xml" DrawType="center" uvname="cjk_shurukuang01.png">
+									<Size>
+										<AbsDimension x="750" y="50"/>
+									</Size>
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parentEdit">
+											<Offset>
+												<AbsDimension x="0" y="-4"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+									<Center>
+										<Left   offsetX="0"  offsetY="0" w="30" h="49"/>
+										<Center offsetX="30" offsetY="0" w="30" h="49"  />
+										<Right  offsetX="60" offsetY="0" w="30" h="49" />
+									</Center>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Frames>
+							<SafeEditBox name="$parentEdit" letters="75" multiLine="false" editMethod="527">
+								<Size>
+									<AbsDimension x="740" y="30"/>
+								</Size>
+								<Anchors>
+									<Anchor point="left" relativePoint="left" relativeTo="$parentTitle">
+										<Offset>
+											<AbsDimension x="150" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<FontString name="$parentFont" fonttype="BlackFont30">
+									<Color r="172" g="150" b="123"/>
+								</FontString>
+								<FontString name="$parentDefault" justifyH="center" default="true" fonttype="BlackFont30" text="$9255" textcolor="ff82715c"/>
+								<Scripts>
+									<OnTabPressed platform="pc"></OnTabPressed>
+									<OnFocusLost>SingleEditorInteractionEditBtn_OnFocusLost();</OnFocusLost>
+								</Scripts>
+							</SafeEditBox>
+						</Frames>
+					</Frame>
+					<Frame name="$parentDesc" abs_x="988" abs_y="80" hidden="false" >
+						<Anchors>
+							<Anchor point="top" relativePoint="top" relativeTo="$parentName">
+								<Offset>
+									<AbsDimension x="-3" y="117"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer>
+								<FontString name="$parentTitle"  fonttype="BlackFont26"  text="商店描述">
+									<Color r="98" g="65" b="48"/>
+									<Size>
+										<AbsDimension x="150" y="30"/>
+									</Size>
+									<Anchors>
+										<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="0" y="25"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+								<Texture name="$parentInputBkg" file="ui/mobile/texture2/outgame2/uitex4.xml" DrawType="center" uvname="cjk_shurukuang01.png">
+									<Size>
+										<AbsDimension x="750" y="100"/>
+									</Size>
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parentEdit">
+											<Offset>
+												<AbsDimension x="0" y="-4"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+									<Center>
+										<Left   offsetX="0"  offsetY="0" w="30" h="49"/>
+										<Center offsetX="30" offsetY="0" w="30" h="49"  />
+										<Right  offsetX="60" offsetY="0" w="30" h="49" />
+									</Center>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Frames>
+							<SafeEditBox name="$parentEdit" letters="75" multiLine="false" editMethod="527">
+								<Size>
+									<AbsDimension x="740" y="30"/>
+								</Size>
+								<Anchors>
+									<Anchor point="left" relativePoint="left" relativeTo="$parentTitle">
+										<Offset>
+											<AbsDimension x="150" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<FontString name="$parentFont" fonttype="BlackFont30">
+									<Color r="172" g="150" b="123"/>
+								</FontString>
+								<FontString name="$parentDefault" justifyH="center" default="true" fonttype="BlackFont30" text="$9255" textcolor="ff82715c"/>
+								<Scripts>
+									<OnTabPressed platform="pc"></OnTabPressed>
+									<OnFocusLost>SingleEditorInteractionEditBtn_OnFocusLost();</OnFocusLost>
+								</Scripts>
+							</SafeEditBox>
+						</Frames>
+					</Frame>
+				</Frames>
+			</SlidingFrame>
+			##互动模块,NPC商品设置
+			<SlidingFrame name="SingleEditorNPCStoreItemSet" slidingY="true" slideplane="$parentPlane" rel_x="1" rel_y="1" hidden="true">
+				<Anchors>
+					<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentWhiteBkg2">
+						<Offset>
+							<AbsDimension x="0" y="10"/>
+						</Offset>
+					</Anchor>
+					<Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parentWhiteBkg2" >
+						<Offset>
+							<AbsDimension x="0" y="-10"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Frame name="$parentPlane" abs_x="1097" abs_y="565">
+						<Anchors>
+							<Anchor point="top" relativePoint="top" relativeTo="$parent"/>
+						</Anchors>
+					</Frame>
+					<Frame name="$parentTitle" abs_x="1097" abs_y="60">
+						<Anchors>
+							<Anchor point="top" relativePoint="top" relativeTo="$parentPlane" />
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentLine" inherits="TemplateBkg20" abs_x="1030" abs_y="2">
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parent" >
+											<Offset>
+												<AbsDimension x="0" y="63"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<FontString name="$parentTitle" fonttype="BlackFont24" justifyH="center" text="$21705" abs_x="400" abs_y="24" hidden="false">
+									<Color r="77" g="112" b="117"/>
+									<Anchors>
+										<Anchor point="top" relativePoint="top" relativeTo="$parent" >
+											<Offset>
+												<AbsDimension x="0" y="15"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+					<Frame name="NewEditorNPCStoreItemAdd">
+						<Size>
+							<AbsDimension x="1030" y="113"/>
+						</Size>
+						<Anchors>
+							<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="0" y="365"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentBkg" inherits="TemplateBkg34"/>
+								<Texture name="$parentIconBkg" inherits="TemplateBkg30" abs_x="90" abs_y="90">
+									<Anchors>
+										<Anchor point="left" relativePoint="left" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="20" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<Texture name="$parentIcon" file="ui/mobile/texture2/playercenter.xml" uvname="icon_add_upload.png" abs_x="50" abs_y="50">
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parentIconBkg"/>
+									</Anchors>
+								</Texture>
+								<FontString name="$parentDesc" fonttype="BlackFont22" text="$21710">
+									<Color r="61" g="69" b="70"/>
+									<Size>
+										<AbsDimension x="200" y="22"/>
+									</Size>
+									<Anchors>
+										<Anchor point="left" relativePoint="right" relativeTo="$parentIconBkg">
+											<Offset>
+												<AbsDimension x="16" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Frames>
+							<Button name="$parentNewBtn">
+								<size>
+									<RelDimension x="1" y="1"/>
+								</size>
+								<Anchors>
+									<Anchor point="left" relativePoint="left" relativeTo="$parent">
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnClick>EditorSelBtnTemplate_OnClick();</OnClick>
+								</Scripts>
+							</Button>
+						</Frames>
+					</Frame>
+				</Frames>
+			</SlidingFrame>
+			##互动模块
+			<SlidingFrame name="SingleEditorInteraction" slidingY="true" slideplane="$parentPlane" abs_x="1097" abs_y="525" hidden="true">
+				<Anchors>
+					<Anchor point="top" relativePoint="top" relativeTo="$parentWhiteBkg2">
+						<Offset>
+							<AbsDimension x="0" y="40"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Frames>
+					<Frame name="$parentPlane" abs_x="1097" abs_y="525" />
+					<Frame name="$parentLine" inherits="NewEditorLineTemplate11111"/>
+					<Button name="$parentHelpBtn" inherits="TemplateBtn32" abs_x="28" abs_y="28">
+						<Anchors>
+							<Anchor point="center" relativePoint="center" relativeTo="$parentLine">
+								<Offset>
+									<AbsDimension x="-125" y="-5"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>SingleEditorInteractionHelpBtn_OnClick();</OnClick>
+						</Scripts>
+					</Button>
+					<Frame name="$parentDialogue" abs_x="1030" abs_y="46" hidden="false" >
+						<Anchors>
+							<Anchor point="top" relativePoint="top" relativeTo="$parentLine">
+								<Offset>
+									<AbsDimension x="0" y="50"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer>
+								<FontString name="$parentTitle"  fonttype="BlackFont20"  text="$11010" abs_x="125" abs_y="20">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+									</Anchors>
+								</FontString>
+								<Texture name="$parentInputBkg" inherits="TemplateBkg8" abs_x="903" abs_y="46">
+									<Anchors>
+										<Anchor point="left" relativePoint="left" relativeTo="$parentTitle">
+											<Offset>
+												<AbsDimension x="128" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Frames>
+							<SafeEditBox name="$parentEdit" letters="75" multiLine="false" editMethod="527" abs_x="880" abs_y="20">
+								<Anchors>
+									<Anchor point="center" relativePoint="center" relativeTo="$parentInputBkg" />
+								</Anchors>
+								<FontString name="$parentFont" fonttype="BlackFont20">
+									<Color r="255" g="255" b="255"/>
+								</FontString>
+								<FontString name="$parentDefault" justifyH="center" default="true" fonttype="BlackFont20" text="$9255" textcolor="ffb9b9b9"/>
+								<Scripts>
+									<OnTabPressed platform="pc"></OnTabPressed>
+									<OnFocusLost>SingleEditorInteractionEditBtn_OnFocusLost();</OnFocusLost>
+								</Scripts>
+							</SafeEditBox>
+						</Frames>
+					</Frame>
+					<Frame name="NPCStoreAddItemBtn" virtual="false" abs_x="1030" abs_y="113" hidden="false">
+						<Anchors>
+							<Anchor point="left" relativePoint="left" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="0" y="214"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="$parentBkg" inherits="TemplateBkg34"/>
+								<Texture name="$parentIconBkg" inherits="TemplateBkg30" abs_x="90" abs_y="90">
+									<Anchors>
+										<Anchor point="left" relativePoint="left" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="11" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<Texture name="$parentIcon" file="ui/mobile/texture2/playercenter.xml" uvname="icon_add_upload.png" abs_x="50" abs_y="50">
+									<Anchors>
+										<Anchor point="center" relativePoint="center" relativeTo="$parentIconBkg" />
+									</Anchors>
+								</Texture>
+								<FontString name="$parentDesc" fonttype="BlackFont22" text="$21699" abs_x="200" abs_y="22">
+									<Color r="61" g="69" b="70"/>
+									<Anchors>
+										<Anchor point="left" relativePoint="right" relativeTo="$parentIconBkg">
+											<Offset>
+												<AbsDimension x="26" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):NPCStoreAddItemBtn_OnClick();</OnClick>
+						</Scripts>
+					</Frame>
+					<Frame name="$parentItem0" inherits="NewEditorOpenStoreItemTemplate11111" hidden="true"/>
+					<Frame name="$parentItem1" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem2" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem3" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem4" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem5" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem6" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem7" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem8" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem9" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem10" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem11" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem12" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem13" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem14" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem15" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem16" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem17" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem18" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem19" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem20" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem21" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem22" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem23" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem24" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem25" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem26" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem27" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem28" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem29" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem30" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem31" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem32" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem33" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem34" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem35" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem36" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem37" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem38" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem39" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem40" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem41" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem42" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem43" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem44" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem45" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem46" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem47" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem48" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem49" inherits="NewEditorFeaturesItemTemplate11111"/>
+					<Frame name="$parentItem50" inherits="NewEditorFeaturesItemTemplate11111"/>
+				</Frames>
+				<Scripts>
+					<OnShow>GetInst("UIManager"):GetCtrl("SingleEditorFrame"):SingleEditorInteraction_OnShow();</OnShow>
+					<OnHide>SingleEditorInteraction_OnHide();</OnHide>
+				</Scripts>
+			</SlidingFrame>
+		</Frames>
+	</Frame>
+</Ui>

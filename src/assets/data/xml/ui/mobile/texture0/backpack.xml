@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:d0f5922d2071d27a39609049e16c0b5f$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="backpack.png" width="256" height="256">
+    <sprite n="icon_atk" x="96" y="92" w="17" h="17"/>
+    <sprite n="icon_cloak" x="63" y="143" w="56" h="57"/>
+    <sprite n="icon_cloth" x="2" y="143" w="59" h="58"/>
+    <sprite n="icon_def" x="113" y="111" w="15" h="17"/>
+    <sprite n="icon_defense" x="96" y="69" w="19" h="21"/>
+    <sprite n="icon_dex" x="117" y="69" w="14" h="14"/>
+    <sprite n="icon_exper" x="62" y="203" w="40" h="42"/>
+    <sprite n="icon_hands" x="62" y="2" w="66" h="65"/>
+    <sprite n="icon_hat" x="2" y="75" w="68" h="66"/>
+    <sprite n="icon_matk" x="115" y="92" w="12" h="16"/>
+    <sprite n="icon_mdef" x="96" y="111" w="15" h="17"/>
+    <sprite n="icon_pets" x="2" y="2" w="58" h="71"/>
+    <sprite n="icon_shoes" x="2" y="203" w="58" h="50"/>
+    <sprite n="icon_sort_all" x="72" y="117" w="22" h="22"/>
+    <sprite n="icon_sort_block" x="72" y="93" w="22" h="22"/>
+    <sprite n="icon_sort_equip" x="72" y="69" w="22" h="22"/>
+    <sprite n="icon_sort_material" x="104" y="226" w="22" h="22"/>
+    <sprite n="icon_sort_tool" x="104" y="202" w="22" h="22"/>
+</TextureAtlas>

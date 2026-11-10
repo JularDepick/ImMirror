@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:8dc12016da8c72902d58ccc4dbd24257$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="videotape.png" width="512" height="512">
+    <sprite n="avt_male_h" x="424" y="213" w="36" h="36"/>
+    <sprite n="icon_Back" x="370" y="224" w="34" h="24"/>
+    <sprite n="icon_Barrage" x="370" y="173" w="52" h="49"/>
+    <sprite n="icon_out" x="424" y="175" w="43" h="36"/>
+    <sprite n="icon_play" x="482" y="118" w="23" h="28"/>
+    <sprite n="icon_preview" x="436" y="60" w="56" h="56"/>
+    <sprite n="icon_sound_effect" x="428" y="118" w="52" h="55"/>
+    <sprite n="icon_special_effects" x="370" y="2" w="64" h="57"/>
+    <sprite n="icon_stop" x="67" y="210" w="22" h="28"/>
+    <sprite n="icon_video_add" x="370" y="117" w="56" h="54"/>
+    <sprite n="icon_video_edit" x="370" y="61" w="56" h="54"/>
+    <sprite n="img_board_black50" x="2" y="210" w="31" h="31"/>
+    <sprite n="luzhi_bd_btn" x="436" y="2" w="56" h="56"/>
+    <sprite n="luzhi_bd_bubble" x="186" y="210" w="182" h="102"/>
+    <sprite n="luzhi_bd_doudong" x="2" y="264" w="182" h="102"/>
+    <sprite n="luzhi_bd_flower" x="186" y="106" w="182" h="102"/>
+    <sprite n="luzhi_bd_movie" x="2" y="106" w="182" h="102"/>
+    <sprite n="luzhi_bd_shijianzhou_1" x="35" y="210" w="30" h="30"/>
+    <sprite n="luzhi_bd_star" x="186" y="2" w="182" h="102"/>
+    <sprite n="luzhi_bd_yunwu" x="2" y="2" w="182" h="102"/>
+    <sprite n="luzhi_jindu" x="482" y="148" w="22" h="114"/>
+    <sprite n="luzhi_jingdou" x="26" y="243" w="22" h="14"/>
+    <sprite n="luzhi_jingdou_b" x="494" y="32" w="8" h="8"/>
+    <sprite n="luzhi_jingdou_bd_g" x="494" y="22" w="8" h="8"/>
+    <sprite n="luzhi_jingdou_bd_p" x="494" y="12" w="8" h="8"/>
+    <sprite n="luzhi_jingdou_bd_y" x="494" y="2" w="8" h="8"/>
+    <sprite n="luzhi_jingdou_c" x="121" y="234" w="22" h="20"/>
+    <sprite n="luzhi_jingdou_ch" x="50" y="242" w="22" h="20"/>
+    <sprite n="luzhi_jingdou_h" x="2" y="243" w="22" h="14"/>
+    <sprite n="luzhi_jingdou_h1" x="145" y="210" w="30" h="8"/>
+    <sprite n="luzhi_jingdou_m" x="115" y="210" w="21" h="22"/>
+    <sprite n="luzhi_jingdou_mh" x="98" y="234" w="21" h="22"/>
+    <sprite n="luzhi_jingdou_t" x="91" y="210" w="22" h="22"/>
+    <sprite n="luzhi_jingdou_th" x="74" y="240" w="22" h="22"/>
+</TextureAtlas>

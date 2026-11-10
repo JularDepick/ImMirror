@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:e5efb54449b24113e14c971a780524b3$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="common.png" width="1024" height="1024">
+    <sprite n="ani_bg" x="176" y="73" w="51" h="100"/>
+    <sprite n="ani_keyframe" x="160" y="128" w="14" h="48"/>
+    <sprite n="board_activity_box_blue" x="866" y="251" w="155" h="122"/>
+    <sprite n="board_activity_box_white" x="125" y="833" w="155" h="122"/>
+    <sprite n="board_blue_r" x="537" y="400" w="30" h="30"/>
+    <sprite n="board_bottom_blue" x="225" y="532" w="30" h="30"/>
+    <sprite n="board_bottom_blue1" x="228" y="265" w="60" h="60"/>
+    <sprite n="board_bottom_blue_big" x="229" y="203" w="60" h="60"/>
+    <sprite n="board_bottom_blue_r" x="162" y="628" w="30" h="30"/>
+    <sprite n="board_bottom_friend" x="138" y="543" w="30" h="30"/>
+    <sprite n="board_check" x="196" y="548" w="24" h="24"/>
+    <sprite n="board_check_circle" x="170" y="548" w="24" h="24"/>
+    <sprite n="board_check_select_" x="374" y="248" w="24" h="24"/>
+    <sprite n="board_map_info_d" x="130" y="511" w="30" h="30"/>
+    <sprite n="board_map_pic" x="119" y="816" w="15" h="15"/>
+    <sprite n="board_placeholder_ad" x="98" y="511" w="30" h="30"/>
+    <sprite n="board_placeholder_map" x="66" y="511" w="30" h="30"/>
+    <sprite n="board_recharge_num" x="102" y="816" w="15" h="15"/>
+    <sprite n="board_sink" x="138" y="479" w="30" h="30"/>
+    <sprite n="board_sink_d" x="30" y="985" w="36" h="36"/>
+    <sprite n="board_sink_d2" x="138" y="447" w="30" h="30"/>
+    <sprite n="board_tab_blue" x="138" y="415" w="30" h="30"/>
+    <sprite n="board_tips_icon_brown" x="2" y="668" w="30" h="163"/>
+    <sprite n="board_uistyle_b" x="374" y="222" w="24" h="24"/>
+    <sprite n="board_uistyle_g" x="376" y="166" w="24" h="24"/>
+    <sprite n="board_uistyle_y" x="376" y="140" w="24" h="24"/>
+    <sprite n="board_white" x="138" y="383" w="30" h="30"/>
+    <sprite n="btn_big_blue" x="66" y="65" w="96" h="61"/>
+    <sprite n="btn_big_circle_blue" x="296" y="171" w="76" h="79"/>
+    <sprite n="btn_big_circle_gray" x="66" y="222" w="76" h="79"/>
+    <sprite n="btn_big_empty" x="66" y="2" w="96" h="61"/>
+    <sprite n="btn_big_orange" x="405" y="262" w="158" h="61"/>
+    <sprite n="btn_big_red" x="405" y="122" w="182" h="61"/>
+    <sprite n="btn_big_yellow" x="705" y="99" w="182" h="61"/>
+    <sprite n="btn_circle_blue" x="235" y="327" w="50" h="53"/>
+    <sprite n="btn_circle_gray" x="661" y="212" w="41" h="44"/>
+    <sprite n="btn_circle_red" x="176" y="295" w="50" h="53"/>
+    <sprite n="btn_circle_yellow" x="176" y="240" w="50" h="53"/>
+    <sprite n="btn_close" x="138" y="303" w="36" h="46"/>
+    <sprite n="btn_help" x="2" y="985" w="26" h="37"/>
+    <sprite n="btn_huge_circle_yellow" x="34" y="668" w="140" h="146"/>
+    <sprite n="btn_long_red" x="368" y="274" w="30" h="41"/>
+    <sprite n="btn_middle_blue" x="405" y="394" w="130" h="50"/>
+    <sprite n="btn_middle_blue_right" x="226" y="434" w="67" h="50"/>
+    <sprite n="btn_middle_empty" x="889" y="147" w="131" h="50"/>
+    <sprite n="btn_middle_red" x="561" y="348" w="130" h="50"/>
+    <sprite n="btn_middle_yellow" x="882" y="199" w="130" h="50"/>
+    <sprite n="btn_middle_yellow_left" x="226" y="382" w="67" h="50"/>
+    <sprite n="btn_mini_blue" x="823" y="372" w="40" h="43"/>
+    <sprite n="btn_mini_empty" x="66" y="406" w="40" h="43"/>
+    <sprite n="btn_mini_gray" x="138" y="351" w="30" h="30"/>
+    <sprite n="btn_mini_gray_b" x="66" y="361" w="40" h="43"/>
+    <sprite n="btn_mini_gray_d" x="130" y="631" w="30" h="30"/>
+    <sprite n="btn_mini_gray_n" x="98" y="631" w="30" h="30"/>
+    <sprite n="btn_mini_gray_n_flat" x="66" y="631" w="30" h="30"/>
+    <sprite n="btn_mini_gray_p" x="368" y="445" w="30" h="30"/>
+    <sprite n="btn_mini_gray_r" x="589" y="122" w="72" h="47"/>
+    <sprite n="btn_mini_green" x="658" y="303" w="40" h="43"/>
+    <sprite n="btn_mini_green_n" x="368" y="413" w="30" h="30"/>
+    <sprite n="btn_mini_lightblue" x="368" y="381" w="30" h="30"/>
+    <sprite n="btn_mini_orange" x="658" y="258" w="40" h="43"/>
+    <sprite n="btn_mini_red" x="663" y="167" w="40" h="43"/>
+    <sprite n="btn_mini_red_n" x="368" y="349" w="30" h="30"/>
+    <sprite n="btn_mini_yellow" x="663" y="122" w="40" h="43"/>
+    <sprite n="btn_oversized_blue" x="66" y="548" w="70" h="81"/>
+    <sprite n="btn_price" x="693" y="372" w="128" h="58"/>
+    <sprite n="btn_return" x="235" y="486" w="48" h="44"/>
+    <sprite n="btn_return_white" x="176" y="450" w="48" h="44"/>
+    <sprite n="btn_square_blue1" x="179" y="574" w="47" h="50"/>
+    <sprite n="btn_square_yellow" x="176" y="496" w="47" h="50"/>
+    <sprite n="btn_superbig_blue" x="66" y="548" w="70" h="81"/>
+    <sprite n="btn_superbig_blue1" x="296" y="418" w="70" h="81"/>
+    <sprite n="btn_superbig_empty" x="296" y="335" w="70" h="81"/>
+    <sprite n="btn_superbig_orange" x="296" y="252" w="70" h="81"/>
+    <sprite n="btn_superbig_red" x="586" y="254" w="70" h="81"/>
+    <sprite n="btn_superbig_yellow" x="589" y="171" w="70" h="81"/>
+    <sprite n="btn_trapezoid_gray" x="138" y="575" w="39" h="51"/>
+    <sprite n="frame_blue" x="84" y="965" w="11" h="9"/>
+    <sprite n="frame_commend" x="368" y="317" w="30" h="30"/>
+    <sprite n="frame_commend_line" x="92" y="980" w="6" h="2"/>
+    <sprite n="frame_sink" x="992" y="112" w="30" h="30"/>
+    <sprite n="frame_title_board" x="68" y="985" w="30" h="36"/>
+    <sprite n="icon_add_green" x="176" y="400" w="48" h="48"/>
+    <sprite n="icon_add_light" x="229" y="137" w="64" h="64"/>
+    <sprite n="icon_lock_green" x="66" y="451" w="39" h="49"/>
+    <sprite n="icon_maximum_orange" x="889" y="99" w="37" h="46"/>
+    <sprite n="icon_pull" x="376" y="91" w="27" h="47"/>
+    <sprite n="icon_refresh" x="374" y="192" w="28" h="28"/>
+    <sprite n="icon_tick_multi" x="567" y="214" w="20" h="20"/>
+    <sprite n="img_bar_photo" x="85" y="816" w="15" h="15"/>
+    <sprite n="img_bd_black50" x="68" y="816" w="15" h="15"/>
+    <sprite n="img_board_Second_floor" x="960" y="112" w="30" h="30"/>
+    <sprite n="img_board_load_" x="51" y="816" w="15" h="15"/>
+    <sprite n="img_board_load_top" x="85" y="816" w="15" h="15"/>
+    <sprite n="img_board_mount" x="2" y="833" w="80" h="150"/>
+    <sprite n="img_board_select" x="34" y="816" w="15" h="15"/>
+    <sprite n="img_board_select_tab" x="928" y="112" w="30" h="30"/>
+    <sprite n="img_book_l" x="710" y="2" w="216" h="95"/>
+    <sprite n="img_book_mark" x="235" y="73" w="55" h="62"/>
+    <sprite n="img_book_r" x="700" y="275" w="154" h="95"/>
+    <sprite n="img_close_bd" x="928" y="54" w="84" h="56"/>
+    <sprite n="img_doubt" x="66" y="303" w="70" h="56"/>
+    <sprite n="img_frame_activity" x="176" y="350" w="48" h="48"/>
+    <sprite n="img_frame_activity_lt" x="567" y="236" w="17" h="52"/>
+    <sprite n="img_frame_activity_rb" x="84" y="833" w="39" h="130"/>
+    <sprite n="img_homeshop_bg_d" x="34" y="2" w="30" h="664"/>
+    <sprite n="img_homeshop_bg_l" x="2" y="2" w="30" h="664"/>
+    <sprite n="img_icon_lignt" x="296" y="91" w="78" h="78"/>
+    <sprite n="img_icon_shortcut" x="66" y="128" w="92" h="92"/>
+    <sprite n="img_line_drak" x="84" y="981" w="6" h="1"/>
+    <sprite n="img_line_sink" x="84" y="976" w="6" h="3"/>
+    <sprite n="img_line_tab" x="125" y="957" w="169" h="3"/>
+    <sprite n="img_line_teach" x="92" y="976" w="6" h="2"/>
+    <sprite n="img_shade_tab" x="405" y="185" w="175" h="27"/>
+    <sprite n="img_tab_right_arrow" x="565" y="290" w="17" h="28"/>
+    <sprite n="img_title" x="405" y="2" w="303" h="56"/>
+    <sprite n="img_title_bd" x="144" y="240" w="30" h="61"/>
+    <sprite n="img_title_gather" x="100" y="965" w="303" h="56"/>
+    <sprite n="tab_book_left_h" x="296" y="2" w="106" h="87"/>
+    <sprite n="tab_book_left_n" x="160" y="178" w="67" h="60"/>
+    <sprite n="tab_bookc_line_h" x="136" y="816" w="97" h="9"/>
+    <sprite n="tab_clip_left_h" x="405" y="325" w="154" h="67"/>
+    <sprite n="tab_clip_left_n" x="590" y="60" w="113" h="60"/>
+    <sprite n="tab_fullpage_left_h" x="405" y="60" w="183" h="60"/>
+    <sprite n="tab_fullpage_left_n" x="705" y="162" w="175" h="60"/>
+    <sprite n="tab_line_up_h" x="136" y="827" w="4" h="2"/>
+    <sprite n="tab_right_h" x="176" y="2" w="115" h="69"/>
+    <sprite n="tab_right_n" x="928" y="2" w="92" h="50"/>
+    <sprite n="tab_up_h" x="704" y="224" w="160" h="49"/>
+    <sprite n="tab_up_n" x="405" y="214" w="160" h="46"/>
+</TextureAtlas>

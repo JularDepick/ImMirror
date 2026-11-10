@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<Ui>
+	<Script file="ui/mobile/mvc/ShareArchive/ShareArchiveModel.lua"/>
+	<Script file="ui/mobile/mvc/ShareArchive/ShareArchiveView.lua"/>
+	<Script file="ui/mobile/mvc/ShareArchive/ShareArchiveCtrl.lua"/>
+	<Script file="ui/mobile/mvc/ShareArchive/ShareArchiveInterface.lua"/>
+	<Script file="ui/mobile/mvc/ShareArchive/TempMapInterface.lua"/>
+	<Script file="ui/mobile/mvc/ShareArchive/SimpleLocalData.lua"/>
+	
+	##下拉框按钮模板
+	<Button name="ShareArchiveDropDownBtnT" abs_x="340" abs_y="46" virtual="true">
+		<Layers>
+			<Layer>
+				<Texture name="$parentBkg" inherits="TemplateBkg8" />
+				<Texture name="$parentRightBkg" inherits="TemplateBkg28" abs_x="46" abs_y="46">
+					<Anchors>
+						<Anchor point="right" relativePoint="right" relativeTo="$parentBkg">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>	
+				</Texture>
+				<Texture name="$parentArrowIcon" file="ui/mobile/texture2/common.xml" uvname="icon_dropdown" abs_x="20" abs_y="10">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parentRightBkg">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>	
+				</Texture>
+				<FontString name="$parentName" fonttype="BlackFont24"  justifyH="center" text="商品名称" abs_x="200" abs_y="24">
+					<Color r="255" g="255" b="255"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="-15" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):DropDownBtnOnClick();</OnClick>
+		</Scripts>
+	</Button>
+
+	##勾选按钮
+	<Button name="ShareArchiveTickBtnT" virtual="true" abs_x="50" abs_y="24">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBkg" file="ui/mobile/texture2/common.xml" uvname="board_check.png" abs_x="24" abs_y="24">
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parent" />
+					</Anchors>
+				</Texture>
+				<Texture name="$parentTick" file="ui/mobile/texture2/room.xml" uvname="icon_tick" hidden="true" abs_x="28" abs_y="28">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parentBkg">
+							<Offset>
+								<AbsDimension x="0" y="-3"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<RichText name="$parentName" lineInterval="8" input_transparent="true" multiLine="false" fonttype="BlackFont20" abs_x="400" abs_y="20">
+				<Anchors>
+					<Anchor point="left" relativePoint="left" relativeTo="$parent">
+						<Offset>
+							<AbsDimension x="38" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+		</Frames>
+		<Scripts>
+			<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):TickBtnOnClick();</OnClick>
+		</Scripts>
+	</Button>
+
+	<Frame name="ShareArchive" parent="UIClient" frameStrata="MEDIUM" hidden="true" framelevel="3000">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentMask" file="ui/white.png" stretchedge="true" color="8c000000" />
+				<Texture name="$parentBkg" inherits="TemplateBigBkg8" abs_x="1050" abs_y="700">
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+					</Anchors>
+				</Texture>
+				<Texture name="$parentBody" inherits="TemplateBigBkg2" abs_x="1048" abs_y="600">
+					<Anchors>
+						<Anchor point="top" relativePoint="top" relativeTo="$parentBkg">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			##标题栏
+			<Frame name="$parentTitleFrame" inherits="TemplateTopTitleBkg0" abs_x="1050" abs_y="61">
+				<Anchors>
+					<Anchor point="top" relativeTo="$parentBkg" relativePoint="top"  />
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="$parentTitle" fonttype="BlackFont36" text="$25800" abs_x="300" abs_y="46">
+							<Color r="255" g="135" b="27"/>
+							<Anchors>
+								<Anchor point="left" relativePoint="left" relativeTo="$parentBkgLeft">
+									<Offset>
+										<AbsDimension x="25" y="10"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Button name="$parentCloseBtn" inherits="TemplateCloseBtn0" abs_x="46" abs_y="60">
+				<Anchors>
+					<Anchor point="topright" relativeTo="$parentTitleFrame" relativePoint="topright">
+						<Offset>
+							<AbsDimension x="-7" y="-7"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):CloseBtnClicked();</OnClick>
+				</Scripts>
+			</Button>
+			<Frame name="$parentLeft" abs_x="535" abs_y="550">
+				<Anchors>
+					<Anchor point="top" relativeTo="$parentBkg" relativePoint="top">
+						<Offset>
+							<AbsDimension x="-250" y="55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentPicBkg" inherits="TemplateBkg12" abs_x="492" abs_y="268">
+							<Anchors>
+								<Anchor point="top" relativePoint="top" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="28"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentPic" file="ui/mobile/texture2/bigtex/dtxx_jybeijingtu.png" abs_x="481" abs_y="255">
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parentPicBkg" />
+							</Anchors>
+						</Texture>
+						<FontString name="$parentNameTitle" fonttype="BlackFont20" justifyH="center" text="$153" abs_x="120" abs_y="20">
+							<Color r="61" g="69" b="70"/>
+							<Anchors>
+								<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentPicBkg">
+									<Offset>
+										<AbsDimension x="-29" y="39"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<Texture name="$parentNameEditBkg" inherits="TemplateBkg8" abs_x="396" abs_y="46">
+							<Anchors>
+								<Anchor point="left" relativePoint="right" relativeTo="$parentNameTitle">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<FontString name="$parentDescTitle" fonttype="BlackFont20" justifyH="center" text="$169" abs_x="120" abs_y="20">
+							<Color r="61" g="69" b="70"/>
+							<Anchors>
+								<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentNameTitle">
+									<Offset>
+										<AbsDimension x="0" y="45"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<Texture name="$parentDescEditBkg" inherits="TemplateBkg8" abs_x="396" abs_y="125">
+							<Anchors>
+								<Anchor point="topleft" relativePoint="topright" relativeTo="$parentDescTitle">
+									<Offset>
+										<AbsDimension x="0" y="-14"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<SafeEditBox name="$parentNameEdit" letters="33" multiLine="false" editMethod="527" abs_x="360" abs_y="24">
+						<Anchors>
+							<Anchor point="center" relativeTo="$parentNameEditBkg" relativePoint="center" />
+						</Anchors>
+						<FontString name="$parentFont" fonttype="BlackFont20" >
+							<Color r="255" g="255" b="255"/>
+						</FontString>
+						<Scripts>
+							<OnFocusLost>GetInst("UIManager"):GetCtrl("ShareArchive"):NameEdit_OnFocusLost();</OnFocusLost>
+							<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):NameEdit_OnClick();</OnClick>
+							<!-- <OnEnterPressed platform="pc">ShareArchiveInfoFrameMapNameEdit_OnEnterPressed();</OnEnterPressed> -->
+							<!-- <OnTabPressed platform="pc">ShareArchiveInfoFrameMapNameEdit_OnTabPressed();</OnTabPressed> -->
+						</Scripts>
+					</SafeEditBox>
+					<SafeMultiEditBox name="$parentDescEdit" letters="90" fonttype="BlackFont20" lineInterval="7" editMethod="527" abs_x="360" abs_y="100">
+						<textcolor r="255" g="255" b="255"/>
+						<Anchors>
+							<Anchor point="top" relativeTo="$parentDescEditBkg" relativePoint="top">
+								<Offset>
+									<AbsDimension x="0" y="15" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnFocusGained>GetInst("UIManager"):GetCtrl("ShareArchive"):DescEdit_OnFocusGained();</OnFocusGained>
+							<OnFocusLost>GetInst("UIManager"):GetCtrl("ShareArchive"):DescEdit_OnFocusLost();</OnFocusLost>
+						</Scripts>
+					</SafeMultiEditBox>
+
+					##翻译名字
+					<Button name="$parentTranslateName" inherits="TranslateBtnTemplate" hidden="false" abs_x="36" abs_y="28">
+						<Anchors>
+							<Anchor point="right" relativeTo="$parentNameEditBkg" relativePoint="right">
+								<Offset>
+									<AbsDimension x="-10" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+
+					##翻译描述
+					<Button name="$parentTranslateDesc" inherits="TranslateBtnTemplate" hidden="false" abs_x="36" abs_y="28">
+						<Anchors>
+							<Anchor point="bottomright" relativeTo="$parentDescEditBkg" relativePoint="bottomright">
+								<Offset>
+									<AbsDimension x="-10" y="-10"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+				</Frames>
+			</Frame>
+			<Frame name="$parentRight" abs_x="500" abs_y="550">
+				<Anchors>
+					<Anchor point="top" relativeTo="$parentBkg" relativePoint="top">
+						<Offset>
+							<AbsDimension x="270" y="55"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentLine" inherits="TemplateBkg20_V" abs_x="1" abs_y="495">
+							<Anchors>
+								<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft">
+									<Offset>
+										<AbsDimension x="0" y="35"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						##标题1
+						<Texture name="$parentTitleBkg1" inherits="TemplateBigBkg23" abs_x="467" abs_y="36">
+							<Anchors>
+								<Anchor point="top" relativePoint="top" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="28"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						##上传设置
+						<FontString name="$parentTitle1" fonttype="BlackFont24" justifyH="left" text="$34401" abs_x="200" abs_y="24">
+							<Color r="61" g="69" b="70"/>
+							<Anchors>
+								<Anchor point="left" relativePoint="left" relativeTo="$parentTitleBkg1">
+									<Offset>
+										<AbsDimension x="9" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						##地图标签
+						<FontString name="$parentLabelTitle" fonttype="BlackFont20" justifyH="left" text="$34401" abs_x="100" abs_y="20">
+							<Color r="61" g="69" b="70"/>
+							<Anchors>
+								<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentTitleBkg1">
+									<Offset>
+										<AbsDimension x="23" y="30"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						##上传类型
+						<FontString name="$parentTypeTitle" fonttype="BlackFont20" justifyH="left" text="$34402" abs_x="100" abs_y="20">
+							<Color r="61" g="69" b="70"/>
+							<Anchors>
+								<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentLabelTitle">
+									<Offset>
+										<AbsDimension x="0" y="40"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+
+						##标题2
+						<Texture name="$parentTitleBkg2" inherits="TemplateBigBkg23" abs_x="467" abs_y="36">
+							<Anchors>
+								<Anchor point="top" relativePoint="bottom" relativeTo="$parentTitleBkg1">
+									<Offset>
+										<AbsDimension x="0" y="191"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						##权限设置
+						<FontString name="$parentTitle2" fonttype="BlackFont24" justifyH="left" text="$34402" abs_x="200" abs_y="24">
+							<Color r="61" g="69" b="70"/>
+							<Anchors>
+								<Anchor point="left" relativePoint="left" relativeTo="$parentTitleBkg2">
+									<Offset>
+										<AbsDimension x="9" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					##下拉框1
+					<Button name="$parentLabelBtn" inherits="ShareArchiveDropDownBtnT">
+						<Anchors>
+							<Anchor point="left" relativeTo="$parentLabelTitle" relativePoint="left">
+								<Offset>
+									<AbsDimension x="104" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+
+					##下拉框2
+					<Button name="$parentTypeBtn" inherits="ShareArchiveDropDownBtnT">
+						<Anchors>
+							<Anchor point="left" relativeTo="$parentTypeTitle" relativePoint="left">
+								<Offset>
+									<AbsDimension x="104" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+
+					##描述1:25808:审核通过后，将会传入迷你工坊，大家都能见到你的地图
+					<RichText name="$parentTips1" lineInterval="8" input_transparent="true" multiLine="true" fonttype="BlackFont18" abs_x="350" abs_y="46">
+						<Anchors>
+							<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentTypeBtn">
+								<Offset>
+									<AbsDimension x="0" y="8"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</RichText>
+
+					##勾选1:协议
+					<Button name="$parentAgreement" inherits="ShareArchiveTickBtnT" id="1">
+						<Anchors>
+							<Anchor point="topleft" relativeTo="$parentTitleBkg2" relativePoint="bottomleft">
+								<Offset>
+									<AbsDimension x="22" y="20"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Frames>
+							<Button name="$parenBtn" abs_x="300" abs_y="46">
+								<Anchors>
+									<Anchor point="left" relativeTo="$parent" relativePoint="left">
+										<Offset>
+											<AbsDimension x="60" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Scripts>
+									<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):ShowAgreement();</OnClick>
+								</Scripts>
+							</Button>
+						</Frames>
+					</Button>
+
+					##勾选2:录像
+					<Button name="$parentVideo" inherits="ShareArchiveTickBtnT" id="2">
+						<Anchors>
+							<Anchor point="topleft" relativeTo="$parentAgreement" relativePoint="bottomleft">
+								<Offset>
+									<AbsDimension x="0" y="22"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+
+					##勾选3:作为模板
+					<Button name="$parentTemplate" inherits="ShareArchiveTickBtnT" id="3">
+						<Anchors>
+							<Anchor point="topleft" relativeTo="$parentVideo" relativePoint="bottomleft">
+								<Offset>
+									<AbsDimension x="0" y="22"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Button>
+
+					##设置按钮
+					<Button name="$parentSettingBtn" abs_x="108" abs_y="41" inherits="TemplateBtn4">
+						<Anchors>
+							<Anchor point="left" relativePoint="left" relativeTo="$parentTemplate">
+								<Offset>
+									<AbsDimension x="235" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="overlay">
+								<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_set" abs_x="25" abs_y="23">
+									<Anchors>
+										<Anchor point="left" relativePoint="left" relativeTo="$parent">
+											<Offset>
+												<AbsDimension x="11" y="-5"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</Texture>
+								<FontString name="$parentName" fonttype="BlackFont20" justifyH="left" text="$9008" abs_x="72" abs_y="20">
+									<Color r="55" g="54" b="48"/>
+									<Anchors>
+										<Anchor point="left" relativePoint="right" relativeTo="$parentIcon" >
+											<Offset>
+												<AbsDimension x="6" y="3"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):SetBtnOnClick();</OnClick>
+						</Scripts>
+					</Button>
+
+					##描述2:341:内容上传不得违反国家相关规定，且不得含有国家明文禁止的内容
+					<RichText name="$parentTips2" lineInterval="8" input_transparent="false" multiLine="true" fonttype="BlackFont18" abs_x="432" abs_y="46">
+						<Anchors>
+							<Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parentTemplate">
+								<Offset>
+									<AbsDimension x="0" y="28"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):OpenSafeTipFrame();</OnClick>
+						</Scripts>
+					</RichText>
+				</Frames>
+			</Frame>
+			##确定
+			<Button name="$parentOKBtn" inherits="TemplateBtnBig_OKBtn" abs_x="182" abs_y="61">
+				<Anchors>
+					<Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parentBkg">
+						<Offset>
+							<AbsDimension x="-27" y="-12"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):OKBtnOnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+
+	##模板设置界面
+	##黄色感叹号模板
+	<Button name="ArchiveTemplateWarningT" inherits="TemplateBtn17" virtual="true" abs_x="28" abs_y="30">
+		<Layers>
+			<Layer level="overlay">
+				<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_tipoff.png" abs_x="3" abs_y="13">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="center" />
+					</Anchors>
+				</Texture>
+				<FontString name="$parentDesc" fonttype="BlackFont20" justifyH="left" lineInterval="5" text="下载者使用模板进行上传将强" autowrap="true" abs_x="290" abs_y="52">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="46" y="6"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<Frame name="ArchiveTemplateSetFrame" parent="UIClient" frameStrata="MEDIUM" hidden="true" framelevel="3100" inherits="t_popup_gt">
+		<Layers>
+			<Layer level="BACKGROUND">
+				##收费方式
+				<FontString name="$parentChargeTitle" fonttype="BlackFont20" justifyH="left" text="$34408" abs_x="200" abs_y="20">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentBkg">
+							<Offset>
+								<AbsDimension x="157" y="337"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentCloseBtn" inherits="TemplateCloseBtn0" abs_x="36" abs_y="46">
+				<Anchors>
+					<Anchor point="topright" relativePoint="topright" relativeTo="$parentTitleBkg">
+						<Offset>
+							<AbsDimension x="-10" y="11"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):TemplateSetFrameCloseBtnOnClick();</OnClick>
+				</Scripts>
+			</Button>
+			##下拉框
+			<Button name="$parentTypeBtn" inherits="ShareArchiveDropDownBtnT">
+				<Anchors>
+					<Anchor point="top" relativeTo="$parentTitleBkg" relativePoint="bottom">
+						<Offset>
+							<AbsDimension x="0" y="25"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):TemplateSetFrameTypeBtnOnClick();</OnClick>
+				</Scripts>
+			</Button>
+
+			##提示
+			<Frame name="$parentWarn1" inherits="ArchiveTemplateWarningT">
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentBkg" relativePoint="topleft">
+						<Offset>
+							<AbsDimension x="153" y="163"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentWarn2" inherits="ArchiveTemplateWarningT">
+				<Anchors>
+					<Anchor point="top" relativeTo="$parentWarn1" relativePoint="bottom">
+						<Offset>
+							<AbsDimension x="0" y="30"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentWarn3" inherits="ArchiveTemplateWarningT">
+				<Anchors>
+					<Anchor point="top" relativeTo="$parentWarn2" relativePoint="bottom">
+						<Offset>
+							<AbsDimension x="0" y="12"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+
+			##下拉框: 收费方式
+			<Button name="$parentChargeBtn" inherits="TemplateBtn21" text="免费" abs_x="223" abs_y="37">
+				<Anchors>
+					<Anchor point="left" relativeTo="$parentChargeTitle" relativePoint="left">
+						<Offset>
+							<AbsDimension x="117" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<FontString name="$parentName" fonttype="BlackFont18"  justifyH="center" text="免费" abs_x="200" abs_y="18">
+					<Color r="55" g="54" b="41"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="center" relativeTo="$parent" />
+					</Anchors>
+				</FontString>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ShareArchive"):TemplateSetFrameTypeBtnOnClick();</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+</Ui>

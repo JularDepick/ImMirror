@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:b5cb8f4646ca6e6980ae4045fc9e9cc8$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="minilobby.png" width="512" height="512">
+    <sprite n="board_enter_workshop" x="291" y="252" w="99" h="98"/>
+    <sprite n="board_font_home" x="392" y="252" w="50" h="18"/>
+    <sprite n="board_workshop" x="302" y="2" w="207" h="48"/>
+    <sprite n="btn_blue_hall" x="2" y="191" w="221" h="88"/>
+    <sprite n="btn_dgreen_hall" x="291" y="190" w="160" h="54"/>
+    <sprite n="btn_lgreen_hall" x="2" y="101" w="221" h="88"/>
+    <sprite n="btn_orange_hall" x="2" y="2" w="298" h="97"/>
+    <sprite n="btn_purple_hall" x="302" y="52" w="160" h="54"/>
+    <sprite n="icon_4399box" x="376" y="415" w="44" h="44"/>
+    <sprite n="icon_4399id_h" x="392" y="321" w="46" h="46"/>
+    <sprite n="icon_4399id_n" x="464" y="100" w="46" h="46"/>
+    <sprite n="icon_7kvip" x="392" y="272" w="48" h="47"/>
+    <sprite n="icon_benefit" x="222" y="417" w="60" h="60"/>
+    <sprite n="icon_bp" x="442" y="289" w="64" h="64"/>
+    <sprite n="icon_events" x="225" y="233" w="64" h="64"/>
+    <sprite n="icon_gambling" x="160" y="417" w="60" h="60"/>
+    <sprite n="icon_mntreasure" x="94" y="281" w="60" h="60"/>
+    <sprite n="icon_notice_hall" x="331" y="108" w="34" h="33"/>
+    <sprite n="icon_prom_4399box" x="330" y="444" w="44" h="44"/>
+    <sprite n="icon_prom_4399id" x="284" y="444" w="44" h="44"/>
+    <sprite n="icon_prom_7kvip" x="313" y="398" w="44" h="44"/>
+    <sprite n="icon_prom_official" x="359" y="369" w="44" h="44"/>
+    <sprite n="icon_prom_oppo_hall" x="313" y="352" w="44" h="44"/>
+    <sprite n="icon_prom_oppobbs" x="267" y="369" w="44" h="44"/>
+    <sprite n="icon_prom_qqbluediamond1" x="221" y="369" w="44" h="44"/>
+    <sprite n="icon_prom_qqhuangdiamond" x="48" y="281" w="44" h="44"/>
+    <sprite n="icon_prom_qqvip" x="175" y="327" w="44" h="44"/>
+    <sprite n="icon_prom_tencentapp" x="2" y="281" w="44" h="44"/>
+    <sprite n="icon_prom_tencentappvip" x="175" y="281" w="44" h="44"/>
+    <sprite n="icon_prom_vbbs" x="129" y="369" w="44" h="44"/>
+    <sprite n="icon_prom_vivo" x="83" y="369" w="44" h="44"/>
+    <sprite n="icon_qqbluediamond1" x="453" y="190" w="57" h="50"/>
+    <sprite n="icon_qqbluediamond2" x="453" y="242" w="55" h="45"/>
+    <sprite n="icon_qqgame" x="464" y="52" w="46" h="46"/>
+    <sprite n="icon_qqvip" x="2" y="369" w="33" h="46"/>
+    <sprite n="icon_return_home" x="221" y="299" w="60" h="60"/>
+    <sprite n="icon_shopee" x="225" y="167" w="64" h="64"/>
+    <sprite n="icon_shouq_hall" x="175" y="373" w="35" h="41"/>
+    <sprite n="icon_sign" x="2" y="417" w="60" h="60"/>
+    <sprite n="icon_starfactory" x="225" y="101" w="64" h="64"/>
+    <sprite n="icon_uid" x="440" y="355" w="60" h="60"/>
+    <sprite n="icon_xiaomi" x="37" y="369" w="44" h="44"/>
+    <sprite n="img_bar_pic" x="291" y="148" w="210" h="40"/>
+    <sprite n="img_board_bar_dot" x="2" y="479" w="28" h="28"/>
+    <sprite n="img_board_bar_orange" x="399" y="108" w="28" h="28"/>
+    <sprite n="img_board_sign" x="44" y="327" w="24" h="24"/>
+    <sprite n="img_borad_benefit" x="32" y="479" w="24" h="24"/>
+    <sprite n="img_borad_benefit_r" x="2" y="327" w="40" h="40"/>
+    <sprite n="img_circlebg_gray" x="291" y="108" w="38" h="38"/>
+    <sprite n="img_icon_arrow" x="429" y="108" w="29" h="17"/>
+    <sprite n="img_icon_blue" x="64" y="415" w="94" h="94"/>
+    <sprite n="img_title_hall_2" x="367" y="108" w="30" h="30"/>
+    <sprite n="sel_tab_hall" x="291" y="246" w="154" h="4"/>
+</TextureAtlas>

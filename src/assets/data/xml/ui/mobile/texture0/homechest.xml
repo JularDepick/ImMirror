@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:fbf77d4d0bc1d3a0ceadaaa123613a47$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="homechest.png" width="1024" height="1024">
+    <sprite n="board_shop_recharge_blue" x="412" y="122" w="174" h="133"/>
+    <sprite n="board_shop_recharge_brown" x="178" y="118" w="174" h="133"/>
+    <sprite n="board_shop_recharge_p" x="2" y="118" w="174" h="133"/>
+    <sprite n="board_shop_recharge_y" x="617" y="98" w="174" h="133"/>
+    <sprite n="icon_board_bug" x="748" y="284" w="98" h="97"/>
+    <sprite n="icon_board_water" x="872" y="2" w="120" h="113"/>
+    <sprite n="icon_box_y" x="730" y="477" w="52" h="47"/>
+    <sprite n="icon_bug" x="793" y="213" w="59" h="69"/>
+    <sprite n="icon_handbook_y" x="354" y="168" w="55" h="58"/>
+    <sprite n="icon_homeland_tab" x="784" y="423" w="52" h="52"/>
+    <sprite n="icon_medal_r" x="783" y="544" w="50" h="62"/>
+    <sprite n="icon_qq_tab" x="730" y="423" w="52" h="52"/>
+    <sprite n="icon_report_r" x="354" y="118" w="56" h="48"/>
+    <sprite n="icon_set_homeland_y" x="793" y="98" w="63" h="56"/>
+    <sprite n="icon_set_mem_y" x="793" y="156" w="62" h="55"/>
+    <sprite n="icon_set_sys_y" x="354" y="228" w="54" h="52"/>
+    <sprite n="icon_share_y" x="730" y="526" w="51" h="48"/>
+    <sprite n="icon_track_r" x="730" y="576" w="47" h="48"/>
+    <sprite n="icon_water" x="784" y="477" w="51" h="65"/>
+    <sprite n="img_bar_homeland" x="419" y="96" w="196" h="24"/>
+    <sprite n="img_bar_homeland_h" x="858" y="117" w="160" h="20"/>
+    <sprite n="img_board_black_next" x="2" y="2" w="622" h="60"/>
+    <sprite n="img_board_black_tips" x="2" y="64" w="415" h="52"/>
+    <sprite n="img_board_circle" x="626" y="50" w="244" h="46"/>
+    <sprite n="img_board_circle_green" x="626" y="2" w="244" h="46"/>
+    <sprite n="img_board_garden_b" x="837" y="485" w="158" h="171"/>
+    <sprite n="img_board_garden_g" x="570" y="406" w="158" h="171"/>
+    <sprite n="img_board_garden_green" x="410" y="257" w="158" h="171"/>
+    <sprite n="img_board_garden_n" x="848" y="312" w="158" h="171"/>
+    <sprite n="img_board_garden_o" x="588" y="233" w="158" h="171"/>
+    <sprite n="img_board_garden_y" x="858" y="139" w="158" h="171"/>
+    <sprite n="img_line_decorate" x="419" y="64" w="203" h="30"/>
+    <sprite n="img_tips_board" x="811" y="658" w="156" h="60"/>
+    <sprite n="img_title_decorate" x="779" y="608" w="30" h="88"/>
+    <sprite n="label_counttime" x="2" y="253" w="152" h="34"/>
+    <sprite n="label_shop_discount" x="748" y="383" w="94" h="38"/>
+</TextureAtlas>

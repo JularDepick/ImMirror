@@ -1,0 +1,901 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<Ui>
+
+	<Script file="ui/mobile/mvc/shop/shopAdvert/ShopAdvertLottery/ShopAdvertLotteryCfg.lua"/>
+	<Script file="ui/mobile/mvc/shop/shopAdvert/ShopAdvertLottery/ShopAdvertLotteryInterface.lua"/>
+
+	<Script file="ui/mobile/mvc/shop/shopAdvert/ShopAdvertLottery/ui/RewardListItem.lua"/>
+	<Script file="ui/mobile/mvc/shop/shopAdvert/ShopAdvertLottery/ShopAdvertLotteryModel.lua"/>
+	<Script file="ui/mobile/mvc/shop/shopAdvert/ShopAdvertLottery/ShopAdvertLotteryView.lua"/>
+	<Script file="ui/mobile/mvc/shop/shopAdvert/ShopAdvertLottery/ShopAdvertLotteryCtrl.lua"/>
+	
+
+	##标题栏
+	<Frame name="ShopAdvertLotteryTitleTemplate"  virtual="true" hidden="true">
+		<Size>
+			<AbsDimension x="700" y="61"/>
+		</Size> 
+		<Anchors>
+			<Anchor point="top" relativePoint="top" relativeTo="$parent">
+				<Offset>
+					<AbsDimension x="0" y="135" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			##标题栏:height:56
+			<Frame name="$parentTitle" inherits="TemplateTopTitleBkg1" rel_x="1" abs_y="56"/>
+
+			##关闭按钮
+			<Frame name="$parentCloseBtn" inherits="TemplateCloseBtn">
+				<Anchors>
+					<Anchor point="right" relativePoint="right" relativeTo="$parentTitle">
+						<Offset>
+							<AbsDimension x="-11" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+		</Frames>
+	</Frame>
+	##奖励一览奖品模板
+	<Frame name="ShopAdvertLotteryPrizeItemTemplate" virtual="true" abs_x="78" abs_y="78" >
+			<Anchors>
+				<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+					<Offset>
+						<AbsDimension x="989" y="235"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<Layers>
+				<Layer level="BACKGROUND">
+					##品质
+					<Texture name="$parentQuality" file="ui/mobile/texture0/pandabox.xml" uvname="img_icon_shortcut_y" abs_x="78" abs_y="78">
+						<Anchors>
+							<Anchor point="center" relativePoint="center" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="0" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Texture>	
+					##icon
+					<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_homelv.png" abs_x="44" abs_y="44">
+						<Anchors>
+							<Anchor point="center" relativeTo="$parent" relativePoint="center" >
+								<Offset>
+									<AbsDimension x="0" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Texture>					
+				</Layer>
+			</Layers>
+	</Frame>
+	##抽奖获得奖励奖品模板 
+	<Frame name="ShopAdvertRewardListItemTemplate" virtual="true" abs_x="110" abs_y="140">
+		<Anchors>
+			<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft" >
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				##品质背景图片
+				<Texture name="$parentQualityBkg" file="ui/mobile/texture2/common.xml" uvname="img_icon_shortcut.png" abs_x="92" abs_y="92">
+					<Anchors>
+						<Anchor point="top" relativePoint="top" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="6"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##品质背景图片2 370, 181  270 187
+				<Texture name="$parentQualityBkg2" file="ui/mobile/texture2/room.xml" uvname="label_map_purple" abs_x="72" abs_y="26">
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>	
+				##icon
+				<Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_homelv.png" abs_x="44" abs_y="44">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parentQualityBkg" relativePoint="center" >
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentQualityDesc" fonttype="BlackFont18" angle="0" justifyH="center" text="$41007" abs_x="37" abs_y="17">
+					<Color r="255" g="255" b="255"/>
+					<Anchors>
+						<Anchor point="left" relativePoint="left" relativeTo="$parentQualityBkg2">
+							<Offset>
+								<AbsDimension x="18" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>		
+				<FontString name="$parentDesc" fonttype="BlackFont18" angle="0" justifyH="center" text="$41007" abs_x="100" abs_y="34">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="bottom" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="0" y="-17"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>					
+			</Layer>
+		</Layers>
+	</Frame>
+	<Frame name="ShopAdvertLottery" parent="UIClient" frameStrata="MEDIUM" hidden="true" framelevel="2000" input_transparent = "true">
+		<Size>
+			<RelDimension x="1.0" y="1.0"/>
+		</Size> 
+		<Anchors>
+			<Anchor point="center" relativePoint="center" relativeTo="$parent">
+				<Offset>
+					<AbsDimension x="0" y="0" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				##背景1
+				<Texture name="$parentBkg1" file="ui/mobile/texture2/bigtex/board_white.png" abs_x="1104" abs_y="614">
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft">
+							<Offset>
+								<AbsDimension x="176" y="1062" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##背景
+				<Texture name="$parentBkg" file="ui/mobile/texture2/bigtex/bg_shop.png" abs_x="1090" abs_y="604">
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="186" y="115"/>
+							</Offset>
+						</Anchor>
+					</Anchors> 
+				</Texture>
+				##背景星星
+				<Texture name="$parentBkgStar" file="ui/mobile/texture0/bigtex/img_deco_star.png" abs_x="913" abs_y="163">
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="186" y="115"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##彩虹
+				<Texture name="$parentBkgRainbow" file="ui/mobile/texture0/bigtex/img_deco_rainbow.png" abs_x="611" abs_y="380">
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="454" y="115"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##ui_zp_dou.ent 转盘启动豆子
+				<ModelView name="$parentParticleDou" hidden="false" input_transparent="true">
+					<Size>
+						<AbsDimension x="1280" y="720"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft">
+							<Offset>
+								<AbsDimension x="0" y="0" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</ModelView>
+				##转盘管子
+				<Texture name="$parentBkgGuanzi" file="ui/mobile/texture0/pandabox.xml" uvname="img_pandadraw_tube" abs_x="71" abs_y="124">
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="236" y="326"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##转盘底座
+				<Texture name="$parentBkgWhellBottom" file="ui/mobile/texture0/pandabox.xml" uvname="img_pandadraw_platform.png" abs_x="307" abs_y="41">
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="409" y="654"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##转盘背景
+				<Texture name="$parentBkgWheel" file="ui/mobile/texture0/bigtex/img_pandadraw_wheel.png" abs_x="539" abs_y="539">
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="293" y="137"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##熊猫图片img_pandabox
+				<Texture name="$parentBkgPandabox" file="ui/mobile/texture0/bigtex/img_pandabox.png" abs_x="336" abs_y="477">
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="917" y="220"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##高亮
+				<Texture name="$parentWheelHighLight" hidden="false" file="ui/mobile/texture0/bigtex/img_pandadraw_wheel_highlight.png" abs_x="475" abs_y="475">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parentBkgWheel" relativePoint="center" >
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				##轮盘上的物品--icon_xingxing 38 40  icon_08.png 88 80
+				<Texture name="$parentWheelItemImg1" file="ui/mobile/texture2/common_icon.xml" uvname="icon_08.png" abs_x="88" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="562" y="248"/>##68,71
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentWheelItemTxt1" fonttype="BlackFont" angle="0" justifyH="center" text="迷你豆x100" abs_x="80" abs_y="16">
+					<Color r="80" g="84" b="110"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="562" y="192"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentWheelItemImg2" file="ui/mobile/texture2/common_icon.xml" uvname="icon_08.png" abs_x="88" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="663" y="287"/>##623 256## 81 62
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentWheelItemTxt2" fonttype="BlackFont" angle="40" justifyH="center" text="迷你豆x100" abs_x="80" abs_y="16">
+					<Color r="80" g="84" b="110"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="700" y="245"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>				
+				<Texture name="$parentWheelItemImg3" file="ui/mobile/texture2/common_icon.xml" uvname="icon_08.png" abs_x="88" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="717" y="376"/> 
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentWheelItemTxt3" fonttype="BlackFont" angle="80" justifyH="center" text="迷你豆x100" abs_x="80" abs_y="16">
+					<Color r="80" g="84" b="110"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="780" y="369"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentWheelItemImg4" file="ui/mobile/texture2/common_icon.xml" uvname="icon_08.png" abs_x="88" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="702" y="485"/> 
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentWheelItemTxt4" fonttype="BlackFont" angle="300" justifyH="center" text="迷你豆x100" abs_x="80" abs_y="16">
+					<Color r="80" g="84" b="110"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="745" y="512"/> 
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentWheelItemImg5" file="ui/mobile/texture2/common_icon.xml" uvname="icon_08.png" abs_x="88" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="617" y="560"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentWheelItemTxt5" fonttype="BlackFont" angle="340" justifyH="center" text="迷你豆x100" abs_x="80" abs_y="16">
+					<Color r="80" g="84" b="110"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="632" y="610"/> 
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<Texture name="$parentWheelItemImg6" file="ui/mobile/texture2/common_icon.xml" uvname="icon_08.png" abs_x="88" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="512" y="555"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentWheelItemTxt6" fonttype="BlackFont" angle="380" justifyH="center" text="迷你豆x100" abs_x="80" abs_y="16">
+					<Color r="80" g="84" b="110"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="500" y="610"/> 
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>	
+				<Texture name="$parentWheelItemImg7" file="ui/mobile/texture2/common_icon.xml" uvname="icon_08.png" abs_x="88" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="430" y="490"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentWheelItemTxt7" fonttype="BlackFont" angle="420" justifyH="center" text="迷你豆x100" abs_x="80" abs_y="16">
+					<Color r="80" g="84" b="110"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="390" y="520"/>  
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>	
+				<Texture name="$parentWheelItemImg8" file="ui/mobile/texture2/common_icon.xml" uvname="icon_08.png" abs_x="88" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="403" y="385"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentWheelItemTxt8" fonttype="BlackFont" angle="280" justifyH="center" text="迷你豆x100" abs_x="80" abs_y="16">
+					<Color r="80" g="84" b="110"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="345" y="380"/> 
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>	
+				<Texture name="$parentWheelItemImg9" file="ui/mobile/texture2/common_icon.xml" uvname="icon_08.png" abs_x="88" abs_y="80">
+					<Anchors>
+						<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+							<Offset>
+								<AbsDimension x="455" y="287"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<FontString name="$parentWheelItemTxt9" fonttype="BlackFont" angle="320" justifyH="center" text="迷你豆x100" abs_x="80" abs_y="16">
+					<Color r="80" g="84" b="110"/>
+					<Anchors>
+						<Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+							<Offset>
+								<AbsDimension x="416" y="250"/> 
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				##ui_zp_deng.ent 转盘灯特效
+				<ModelView name="$parentParticleLight" hidden="false" input_transparent="true">
+					<Size>
+						<AbsDimension x="1280" y="720"/>
+					</Size>
+					<Anchors>
+						<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft">
+							<Offset>
+								<AbsDimension x="0" y="0" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</ModelView>
+				##观看广告
+				<Texture name="$parentAdBoard" inherits="TemplateBkg50" uvname="board_more.png" abs_x="332" abs_y="111">
+						<Anchors>
+							<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft">
+								<Offset>
+									<AbsDimension x="919" y="127" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+				</Texture>
+				##观看广告，获取更多迷你点参与 抽奖。
+				<FontString name="$parentAdTxt" fonttype="BlackFont22"  autowrap="true" justifyH="left" text="$30127" abs_x="241" abs_y="66">
+					<Color r="61" g="69" b="70"/>
+					<Anchors>
+						<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentAdBoard">
+							<Offset>
+								<AbsDimension x="17" y="15"/> 
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+														
+			</Layer>
+		</Layers>
+		<Frames>
+			##抽奖按钮
+			<Button name="$parentLotteryBtn" abs_x="210" abs_y="210">
+				<Anchors>
+					<Anchor point="center" relativeTo="$parentBkgWheel" relativePoint="center" >
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBkg" file="ui/mobile/texture0/pandabox.xml" uvname="img_pandadraw_hand" abs_x="210" abs_y="210">
+							<Anchors>
+								<Anchor point="center" relativeTo="$parent" relativePoint="center" >
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentBkg0" file="ui/mobile/texture0/pandabox.xml" uvname="img_pandadraw_btnpress" abs_x="138" abs_y="138">
+							<Anchors>
+								<Anchor point="center" relativeTo="$parent" relativePoint="center" >
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<FontString name="$parentTxt" fonttype="BlackFont40" justifyH="center" justifyV="middle" text="$30122" abs_x="120" abs_y="40">
+							<Color r="255" g="255" b="255"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parentBkg0">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<!-- ##高亮
+						<Texture name="$parentHighLight" hidden="false" file="ui/mobile/texture0/bigtex/img_pandadraw_wheel_highlight.png" abs_x="475" abs_y="475">
+							<Anchors>
+								<Anchor point="center" relativeTo="$parent" relativePoint="center" >
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture> -->
+					</Layer>
+				</Layers>
+				<Frames>
+					##抽奖按钮上的花费显示
+					<Frame name="$parentCost" abs_x="105" abs_y="23">
+						<Anchors>
+							<Anchor point="top" relativeTo="$parent" relativePoint="top" >
+								<Offset>
+									<AbsDimension x="0" y="135"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+							<Texture name="$parentBkg" file="ui/mobile/texture0/pandabox.xml" uvname="img_bd_num_capsule_w70" DrawType="center" abs_x="105" abs_y="23">
+								<Anchors>
+									<Anchor point="center" relativeTo="$parent" relativePoint="center" >
+										<Offset>
+											<AbsDimension x="0" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+								<Center>##60 24 11
+									<Left offsetX="0" offsetY="0" w="11" h="24" />
+									<Center offsetX="11" offsetY="0" w="38" h="24" />
+									<Right offsetX="49" offsetY="0" w="11" h="24" />
+								</Center>
+							</Texture>
+							##消费
+							<FontString name="$parentTxt" fonttype="BlackFont" angle="0" text="$30128" abs_x="105" abs_y="15">
+								<Color r="85" g="91" b="97"/>
+								<Anchors>
+									<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentBkg">
+										<Offset>
+											<AbsDimension x="10" y="5"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+							<Texture name="$parentIcon" file="ui/mobile/texture0/common_icon.xml" uvname="icon10009" abs_x="31" abs_y="33">
+								<Anchors>
+									<Anchor point="left" relativeTo="$parent" relativePoint="left">
+										<Offset>
+											<AbsDimension x="44" y="0" />
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</Texture>
+							<FontString name="$parentTxtCost" fonttype="BlackFont" angle="0" text="x5" abs_x="105" abs_y="15">
+								<Color r="85" g="91" b="97"/>
+								<Anchors>
+									<Anchor point="left" relativePoint="right" relativeTo="$parentIcon">
+										<Offset>
+											<AbsDimension x="3" y="0"/>
+										</Offset>
+									</Anchor>
+								</Anchors>
+							</FontString>
+							
+							</Layer>
+						</Layers>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ShopAdvertLottery"):LotteryBtnClicked()</OnClick>
+				</Scripts>
+			</Button>
+
+			##广告视图
+			##今日剩余奖励次数富文本
+			<RichText name="$parentAdCountText"   lineInterval="5" multiLine="true" fonttype="BlackFont18"  justifyH="left" justifyV="middle" abs_x="196" abs_y="17" input_transparent="true">				
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parentAdBoard" relativePoint="topleft">
+						<Offset>
+							<AbsDimension x="17" y="80" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+			##观看广告按钮
+			<Frame name="$parentWatchAd">
+				<Size>
+					<AbsDimension x="58" y="61"/>
+				</Size> 
+				<Anchors>
+					<Anchor point="topleft" relativePoint="topleft" relativeTo="$parentAdBoard">
+						<Offset>
+							<AbsDimension x="260" y="28" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentImg" file="ui/mobile/texture2/common.xml" uvname="btn_circle_yellow.png" abs_x="58" abs_y="61">
+								<Anchors>
+									<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft">
+										<Offset>
+											<AbsDimension x="0" y="0" />
+										</Offset>
+									</Anchor>
+								</Anchors>
+						</Texture>
+						<Texture name="$parentImg2" file="ui/mobile/texture2/common_icon.xml" uvname="icon_tv.png" abs_x="30" abs_y="30">
+								<Anchors>
+									<Anchor point="center" relativeTo="$parentImg" relativePoint="center">
+										<Offset>
+											<AbsDimension x="0" y="0" />
+										</Offset>
+									</Anchor>
+								</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ShopAdvertLottery"):WatchAdBtnClicked()</OnClick>
+				</Scripts>
+			</Frame>
+			##帮助界面
+			##奖励一览
+			<Frame name="$parentPrize1" inherits="ShopAdvertLotteryPrizeItemTemplate" >
+				<Anchors>
+					<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+						<Offset>
+							<AbsDimension x="986" y="332"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>		
+			<Frame name="$parentPrize2" inherits="ShopAdvertLotteryPrizeItemTemplate" >
+				<Anchors>
+					<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+						<Offset>
+							<AbsDimension x="1083" y="332"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentPrize3" inherits="ShopAdvertLotteryPrizeItemTemplate" >
+				<Anchors>
+					<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+						<Offset>
+							<AbsDimension x="1176" y="332"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentPrize4" inherits="ShopAdvertLotteryPrizeItemTemplate" >
+				<Anchors>
+					<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+						<Offset>
+							<AbsDimension x="986" y="426"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentPrize5" inherits="ShopAdvertLotteryPrizeItemTemplate" >
+				<Anchors>
+					<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+						<Offset>
+							<AbsDimension x="1083" y="426"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parentPrize6" inherits="ShopAdvertLotteryPrizeItemTemplate" >
+				<Anchors>
+					<Anchor point="center" relativeTo="$parent" relativePoint="topleft" >
+						<Offset>
+							<AbsDimension x="1176" y="426"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			##浏览更多	
+			<Frame name="$parentPrizeMore"  abs_x="300" abs_y="30">
+				<Anchors>
+					<Anchor point="top" relativeTo="$parentBkgPandabox" relativePoint="top" >
+						<Offset>
+							<AbsDimension x="0" y="268"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<FontString name="$parentTxt" fonttype="BlackFont18" angle="0" justifyH="center" text="$30124" abs_x="107" abs_y="17">
+							<Color r="85" g="91" b="97"/>
+							<Anchors>
+								<Anchor point="center" relativePoint="center" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>	
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ShopAdvertLottery"):PrizeMoreBtnClicked()</OnClick>
+				</Scripts>
+			</Frame>	
+			##tip按钮
+			<Button name="$parentHelpBtn"  >
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft" >
+						<Offset>
+							<AbsDimension x="186" y="128"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Size>
+					<AbsDimension x="72" y="61"/>
+				</Size> 
+				<Layers>
+					<Layer level="BACKGROUND">
+						##icon
+						<Texture name="$parentBg" file="ui/mobile/texture0/shop.xml"  UVType="mirroeu" uvname="img_board_shop_2" DrawType="center" abs_x="72" abs_y="61">
+							<Anchors>
+								<Anchor point="center" relativeTo="$parent" relativePoint="center" >
+									<Offset>
+										<AbsDimension x="0" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<Center>
+								<Left offsetX="0" offsetY="0" w="72" h="60" />
+								<Center offsetX="72" offsetY="0" w="72" h="60" />
+								<Right offsetX="144" offsetY="0" w="72" h="60" />
+							</Center>
+						</Texture>							
+					</Layer>
+				</Layers>
+				<Frames>
+					<Frame name="$parentTip" inherits="TemplateBtn32" hidden="false">
+						<Anchors>
+							<Anchor point="left" relativePoint="left" relativeTo="$parent">
+								<Offset>##203, 137
+									<AbsDimension x="17" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>GetInst("UIManager"):GetCtrl("ShopAdvertLottery"):HelpBtnClicked()</OnClick>
+						</Scripts>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnClick>GetInst("UIManager"):GetCtrl("ShopAdvertLottery"):HelpBtnClicked()</OnClick>
+				</Scripts>
+			</Button>
+			##大奖公示富文本
+			<RichText name="$parentPrizeText"  lineInterval="5" multiLine="true" fonttype="BlackFont18"  justifyV="middle" abs_x="256" abs_y="127" input_transparent="true">				
+				<Anchors>
+					<Anchor point="topleft" relativeTo="$parent" relativePoint="topleft">
+						<Offset>
+							<AbsDimension x="956" y="551" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</RichText>
+			##帮助界面
+			<Frame name="$parentHelpFrame" hidden="true"  framelevel="2500">
+				<Size>
+					<RelDimension x="1.0" y="1.0"/>
+				</Size> 
+				<Layers>
+					<Layer level="BACKGROUND">
+						##阴影遮罩
+						<Texture name="$parentMask" file="ui/white.png" stretchedge="true" color="C0000000" />
+						<Texture name="$parentBkg" inherits="TemplateBigBkg2" abs_x="706" abs_y="406">
+							<Anchors>
+								<Anchor point="top" relativePoint="top" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="188"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Frame name="$parentTitle"  inherits="ShopAdvertLotteryTitleTemplate"  hidden="false">
+						<Size>
+							<AbsDimension x="700" y="61"/>
+						</Size> 
+						<Anchors>
+							<Anchor point="top" relativePoint="top" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="0" y="135" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Frame>
+					##内容显示
+					<SlidingFrame name="$parentBox" slidingY="true" slideplane="$parentPlane" abs_x="626" abs_y="346">
+						<Anchors>
+							<Anchor point="top" relativePoint="top" relativeTo="$parentBkg">
+								<Offset>
+									<AbsDimension x="0" y="30"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Frames>
+							<Frame name="$parentPlane" hidden="true" abs_x="626" abs_y="346" />
+							<RichText name="$parentContent" lineInterval="5" multiLine="false" text="aaa" fonttype="BlackFont24" autoextend="false" input_transparent="true" abs_x="616" abs_y="1000">
+								<Anchors>
+									<Anchor point="top" relativeTo="$parentPlane" relativePoint="top" />
+								</Anchors>
+							</RichText>
+						</Frames>
+					</SlidingFrame>
+				</Frames>
+			</Frame>
+			##抽奖结果界面
+			<Frame name="$parentRewardListFrame" hidden="true" framelevel="2500">
+				<Size>
+					<RelDimension x="1.0" y="1.0"/>
+				</Size> 
+				<Layers>
+					<Layer level="BACKGROUND">
+						##阴影遮罩
+						<Texture name="$parentMask" file="ui/white.png" stretchedge="true" color="C0000000" />
+						<Texture name="$parentBkg" inherits="TemplateBigBkg2" abs_x="806" abs_y="436">
+							<Anchors>
+								<Anchor point="top" relativePoint="top" relativeTo="$parent">
+									<Offset>
+										<AbsDimension x="0" y="166"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						<Texture name="$parentBkg2" inherits="TemplateBigBkg5" abs_x="779" abs_y="325">
+							<Anchors>
+								<Anchor point="top" relativePoint="top" relativeTo="$parentBkg">
+									<Offset>
+										<AbsDimension x="0" y="16"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+						
+					</Layer>
+				</Layers>
+				<Frames>
+					<Frame name="$parentTitle"  inherits="ShopAdvertLotteryTitleTemplate"  hidden="false">
+						<Size>
+							<AbsDimension x="800" y="61"/>
+						</Size> 
+						<Anchors>
+							<Anchor point="top" relativePoint="top" relativeTo="$parent">
+								<Offset>
+									<AbsDimension x="0" y="113" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</Frame>
+					<ListViewFrame name="$parentListView" slidingY="true" slideplane="$parentPlane" abs_x="779" abs_y="321">
+						<Anchors>
+							<Anchor point="top" relativePoint="top" relativeTo="$parentBkg2">
+								<Offset>
+									<AbsDimension x="0" y="2"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Frames>
+							<Frame name="$parentPlane" hidden="true" abs_x="779" abs_y="325">
+							</Frame>
+						</Frames>
+					</ListViewFrame>
+					<Button name="$parentBtnOk" inherits="TemplateBtnBig_OKBtn">
+						<Anchors>
+							<Anchor point="bottom" relativePoint="bottom" relativeTo="$parentBkg">
+								<Offset>
+									<AbsDimension x="0" y="-14"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>GetInst("UIManager"):GetCtrl("ShopAdvertLottery"):RewardListCloseBtnClicked()</OnClick>
+						</Scripts>
+					</Button>
+				</Frames>
+			</Frame>
+		</Frames>
+		<Scripts>
+			<OnUpdate>GetInst("UIManager"):GetCtrl("ShopAdvertLottery"):Update()</OnUpdate>
+		</Scripts>
+	</Frame>
+</Ui>

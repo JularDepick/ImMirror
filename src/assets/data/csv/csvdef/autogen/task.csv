@@ -1,0 +1,4 @@
+任务ID,任务图标,任务名字,繁体任务名字,英文任务名,任务目标数量,任务奖励1,奖励数量1,任务奖励2,奖励数量2,任务奖励3,奖励数量3,泰语,西班牙语,巴西葡萄牙语,法语,阿拉伯语,日语,韩语,越南语,俄语,土耳其语,意大利语,德语,印尼语
+ID,Icon,Name,TWName,ENName,TargetNum,Reward1,RewardNum1,Reward2,RewardNum2,Reward3,RewardNum3,THAName,ESNName,PTBName,FRAName,ARAName,JPNName,KORName,VIEName,RUSName,TURName,ITAName,GERName,INDName
+1,icon11203.png,收集水晶,收集水晶,Collect crystal,1,817,1,12502,1,200,5,สะสมคริสตัล,Recoge cristal,Coletar Cristais,Collecter un cristal,تجميع الكريستال,クリスタル収集,수정 수집,Thu thập pha lê,Собрать кристаллы,Kristal topla,Raccogli cristallo,Sammle Kristalle,Kumpulkan kristal
+2,icon12500.png,收集食物,收集食物,Collect food,8,817,3,12502,2,200,5,สะสมอาหาร,Recoge comida,Coletar Comida,Collecter de la norriture,تجميع الطعام,食べ物収集,식품 수집,Thu thập thức ăn,Собрать пищу,Gıda topla,Raccogli cibo,Sammle Nahrung,Kumpulkan makanan

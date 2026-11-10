@@ -1,0 +1,54 @@
+//ver200 es block_water
+
+uniform float g_shadowdensity;
+uniform float g_fTime;
+uniform vec3 g_EyePos;
+uniform vec3 g_EyePosModel;
+uniform vec3 g_LightSCMPos;
+uniform vec4 g_ShadowCenter;
+uniform mat4 g_depthproj;
+uniform mat4 g_referencepoint;
+uniform vec3 g_warfogparameter;
+uniform vec3 g_warfogcolor;
+uniform vec4 g_AmbientLight;
+uniform mat4 g_World;
+uniform mat4 g_WorldView;
+uniform mat4 g_WorldViewProj;
+uniform vec3 g_ChunkOrigin;
+uniform vec4 g_SkyLightColor;
+uniform vec4 g_TorchLightColor;
+uniform float g_NumTexRepeat;
+uniform float g_fSpeed;
+uniform float g_fAmp;
+
+
+attribute vec4 in_var_POSITION;
+attribute vec4 in_var_COLOR0;
+attribute vec2 in_var_TEXCOORD0;
+varying vec4 varying_COLOR0;
+varying vec2 varying_TEXCOORD0;
+varying vec2 varying_TEXCOORD1;
+varying vec4 varying_TEXCOORD2;
+varying vec4 varying_TEXCOORD3;
+
+void main()
+{
+    vec3 _55 = in_var_POSITION.xyz + g_ChunkOrigin;
+    vec4 _62 = vec4(_55, 1.0) * g_WorldViewProj;
+    vec4 _63 = in_var_COLOR0 * vec4(0.0039215688593685626983642578125);
+    float _67 = floor(in_var_POSITION.w * 0.00390625) * 0.0078740157186985015869140625;
+    vec3 _89 = ((max(g_SkyLightColor.xyz * (_67 * g_SkyLightColor.w), g_TorchLightColor.xyz * fract(in_var_POSITION.w * 0.0078125)) + g_AmbientLight.xyz) * _63.xyz) * _63.w;
+    vec4 _91 = vec4(_89.x, _89.y, _89.z, _63.w);
+    _91.w = _67;
+    float _95 = _62.x;
+    float _97 = _62.y;
+    float _99 = _62.w;
+    vec2 _100 = vec2(_99);
+    gl_Position = _62;
+    varying_COLOR0 = _91;
+    varying_TEXCOORD0 = in_var_TEXCOORD0 * vec2(0.000244140625);
+    varying_TEXCOORD1 = in_var_POSITION.xz * vec2(0.000624999986030161380767822265625);
+    varying_TEXCOORD2 = vec4((vec2(-_95, _97) + _100) * 0.5, ((vec2(_95, -_97) + _100) * 0.5).yx);
+    varying_TEXCOORD3 = vec4(normalize(g_EyePosModel - _55), _99);
+}
+

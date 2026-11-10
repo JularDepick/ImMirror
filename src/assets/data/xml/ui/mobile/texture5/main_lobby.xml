@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:0e6e9348172b4bc5f0cfa413eb20b4e1$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="minilobby.png" width="1024" height="1024">
+    <sprite n="board_font" x="525" y="80" w="70" h="24"/>
+    <sprite n="board_font_home" x="400" y="170" w="50" h="18"/>
+    <sprite n="board_numbg_hall" x="824" y="120" w="113" h="24"/>
+    <sprite n="board_recharge_num_hall" x="989" y="37" w="30" h="30"/>
+    <sprite n="btn_blue_hall" x="302" y="80" w="221" h="88"/>
+    <sprite n="btn_dgreen_hall" x="824" y="58" w="160" h="54"/>
+    <sprite n="btn_lgreen_hall" x="601" y="40" w="221" h="88"/>
+    <sprite n="btn_orange_hall" x="2" y="2" w="298" h="100"/>
+    <sprite n="btn_purple_hall" x="827" y="2" w="160" h="54"/>
+    <sprite n="icon_add_btn_money_s" x="939" y="120" w="38" h="39"/>
+    <sprite n="icon_box_hall" x="939" y="201" w="38" h="34"/>
+    <sprite n="icon_bp_hall" x="348" y="170" w="50" h="33"/>
+    <sprite n="icon_fblikes" x="903" y="181" w="34" h="33"/>
+    <sprite n="icon_friend_hall" x="989" y="2" w="31" h="33"/>
+    <sprite n="icon_gift_hall" x="934" y="237" w="42" h="44"/>
+    <sprite n="icon_hallmini_box" x="176" y="162" w="56" h="56"/>
+    <sprite n="icon_hallmini_fblikes" x="118" y="162" w="56" h="56"/>
+    <sprite n="icon_hallmini_match" x="60" y="162" w="56" h="56"/>
+    <sprite n="icon_hallmini_subscribe" x="2" y="162" w="56" h="56"/>
+    <sprite n="icon_hallmini_tv" x="234" y="104" w="56" h="56"/>
+    <sprite n="icon_halltop_friend" x="176" y="104" w="56" h="56"/>
+    <sprite n="icon_halltop_letter" x="118" y="104" w="56" h="56"/>
+    <sprite n="icon_halltop_pack" x="60" y="104" w="56" h="56"/>
+    <sprite n="icon_halltop_qqfriend" x="2" y="104" w="56" h="56"/>
+    <sprite n="icon_halltop_set" x="963" y="349" w="56" h="56"/>
+    <sprite n="icon_letter_hall" x="684" y="268" w="41" h="35"/>
+    <sprite n="icon_match_hall" x="727" y="277" w="41" h="32"/>
+    <sprite n="icon_mpoint_hall" x="286" y="214" w="46" h="46"/>
+    <sprite n="icon_notice_hall" x="903" y="146" w="34" h="33"/>
+    <sprite n="icon_official_pre_f" x="963" y="297" w="58" h="50"/>
+    <sprite n="icon_oppo" x="348" y="205" w="47" h="49"/>
+    <sprite n="icon_oppobbs" x="234" y="162" w="55" h="45"/>
+    <sprite n="icon_pack_hall" x="640" y="214" w="44" h="40"/>
+    <sprite n="icon_prom_oppo_hall" x="334" y="256" w="44" h="44"/>
+    <sprite n="icon_prom_oppobbs" x="397" y="240" w="44" h="44"/>
+    <sprite n="icon_prom_tencentapp" x="450" y="220" w="44" h="44"/>
+    <sprite n="icon_prom_tencentappvip" x="548" y="186" w="44" h="44"/>
+    <sprite n="icon_prom_vbbs" x="502" y="186" w="44" h="44"/>
+    <sprite n="icon_prom_vivo" x="978" y="251" w="44" h="44"/>
+    <sprite n="icon_qq_hall" x="903" y="216" w="29" h="33"/>
+    <sprite n="icon_return_home_flat" x="400" y="190" w="48" h="48"/>
+    <sprite n="icon_set_hall" x="640" y="256" w="42" h="43"/>
+    <sprite n="icon_shop_hall" x="903" y="283" w="58" h="66"/>
+    <sprite n="icon_subscribe" x="986" y="69" w="34" h="35"/>
+    <sprite n="icon_tencentapp" x="979" y="205" w="42" h="44"/>
+    <sprite n="icon_tencentappvip" x="594" y="214" w="44" h="42"/>
+    <sprite n="icon_tribe" x="979" y="142" w="43" h="42"/>
+    <sprite n="icon_tv_hall" x="986" y="106" w="34" h="34"/>
+    <sprite n="icon_uid_flat" x="452" y="170" w="48" h="48"/>
+    <sprite n="icon_vbbs" x="291" y="170" w="55" h="42"/>
+    <sprite n="icon_vivo" x="799" y="242" w="60" h="44"/>
+    <sprite n="img_bar_pic" x="595" y="130" w="210" h="40"/>
+    <sprite n="img_board_bar_dot" x="769" y="221" w="28" h="28"/>
+    <sprite n="img_board_bar_orange" x="769" y="191" w="28" h="28"/>
+    <sprite n="img_board_healthmode" x="601" y="2" w="224" h="36"/>
+    <sprite n="img_board_sign" x="903" y="251" w="24" h="24"/>
+    <sprite n="img_board_workshop_r" x="689" y="172" w="78" h="94"/>
+    <sprite n="img_borad_benefit" x="769" y="251" w="24" h="24"/>
+    <sprite n="img_borad_benefit_r" x="861" y="242" w="40" h="40"/>
+    <sprite n="img_borad_benefit_ray" x="595" y="172" w="92" h="40"/>
+    <sprite n="img_circlebg" x="234" y="209" w="50" h="50"/>
+    <sprite n="img_circlebg_gray" x="939" y="161" w="38" h="38"/>
+    <sprite n="img_hexagonbg" x="525" y="106" w="68" h="78"/>
+    <sprite n="img_icon_arrow" x="769" y="172" w="29" h="17"/>
+    <sprite n="img_icon_blue" x="807" y="146" w="94" h="94"/>
+    <sprite n="img_textbg" x="979" y="186" w="43" h="17"/>
+    <sprite n="img_title_name_hall" x="302" y="2" w="297" h="76"/>
+    <sprite n="line_blue_hall" x="980" y="114" w="2" h="26"/>
+    <sprite n="sel_tab_hall" x="824" y="114" w="154" h="4"/>
+</TextureAtlas>

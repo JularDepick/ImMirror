@@ -1,0 +1,2082 @@
+<Blocks>
+	<cube>
+		<negx index="0">
+			<quad>
+				<vert x="0" y="0" z="0" u="1" v="1"/>
+				<vert x="0" y="0" z="1" u="0" v="1"/>
+				<vert x="0" y="1" z="1" u="0" v="0"/>
+				<vert x="0" y="1" z="0" u="1" v="0"/>
+			</quad>
+		</negx>
+		<posx index="1">
+			<quad>
+				<vert x="1" y="0" z="0" u="0" v="1"/>
+				<vert x="1" y="1" z="0" u="0" v="0"/>
+				<vert x="1" y="1" z="1" u="1" v="0"/>
+				<vert x="1" y="0" z="1" u="1" v="1"/>
+			</quad>
+		</posx>
+		<negz index="2">
+			<quad>
+				<vert x="0" y="0" z="0" u="0" v="1"/>
+				<vert x="0" y="1" z="0" u="0" v="0"/>
+				<vert x="1" y="1" z="0" u="1" v="0"/>
+				<vert x="1" y="0" z="0" u="1" v="1"/>
+			</quad>
+		</negz>
+		<posz index="3">
+			<quad>
+				<vert x="0" y="0" z="1" u="1" v="1"/>
+				<vert x="1" y="0" z="1" u="0" v="1"/>
+				<vert x="1" y="1" z="1" u="0" v="0"/>
+				<vert x="0" y="1" z="1" u="1" v="0"/>
+			</quad>
+		</posz>
+		<negy index="4">
+			<quad>
+				<vert x="0" y="0" z="0" u="1" v="0"/>
+				<vert x="1" y="0" z="0" u="0" v="0"/>
+				<vert x="1" y="0" z="1" u="0" v="1"/>
+				<vert x="0" y="0" z="1" u="1" v="1"/>
+			</quad>
+		</negy>
+		<posy index="5">
+			<quad>
+				<vert x="0" y="1" z="0" u="0" v="0"/>
+				<vert x="0" y="1" z="1" u="0" v="1"/>
+				<vert x="1" y="1" z="1" u="1" v="1"/>
+				<vert x="1" y="1" z="0" u="1" v="0"/>
+			</quad>
+		</posy>
+	</cube>
+	<cube2>
+		<negx index="0">
+			<quad>
+				<vert x="0" y="0" z="0" u="1" v="1"/>
+				<vert x="0" y="0" z="2" u="0" v="1"/>
+				<vert x="0" y="2" z="2" u="0" v="0"/>
+				<vert x="0" y="2" z="0" u="1" v="0"/>
+			</quad>
+		</negx>
+		<posx index="1">
+			<quad>
+				<vert x="2" y="0" z="0" u="0" v="1"/>
+				<vert x="2" y="2" z="0" u="0" v="0"/>
+				<vert x="2" y="2" z="2" u="1" v="0"/>
+				<vert x="2" y="0" z="2" u="1" v="1"/>
+			</quad>
+		</posx>
+		<negz index="2">
+			<quad>
+				<vert x="0" y="0" z="0" u="0" v="1"/>
+				<vert x="0" y="2" z="0" u="0" v="0"/>
+				<vert x="2" y="2" z="0" u="1" v="0"/>
+				<vert x="2" y="0" z="0" u="1" v="1"/>
+			</quad>
+		</negz>
+		<posz index="3">
+			<quad>
+				<vert x="0" y="0" z="2" u="1" v="1"/>
+				<vert x="2" y="0" z="2" u="0" v="1"/>
+				<vert x="2" y="2" z="2" u="0" v="0"/>
+				<vert x="0" y="2" z="2" u="1" v="0"/>
+			</quad>
+		</posz>
+		<negy index="4">
+			<quad>
+				<vert x="0" y="0" z="0" u="1" v="0"/>
+				<vert x="2" y="0" z="0" u="0" v="0"/>
+				<vert x="2" y="0" z="2" u="0" v="1"/>
+				<vert x="0" y="0" z="2" u="1" v="1"/>
+			</quad>
+		</negy>
+		<posy index="5">
+			<quad>
+				<vert x="0" y="2" z="0" u="0" v="0"/>
+				<vert x="0" y="2" z="2" u="0" v="1"/>
+				<vert x="2" y="2" z="2" u="1" v="1"/>
+				<vert x="2" y="2" z="0" u="1" v="0"/>
+			</quad>
+		</posy>
+	</cube2>
+	<cube3>
+		<negx index="0">
+			<quad>
+				<vert x="-0.02" y="-0.02" z="-0.02" u="1.02" v="1.02"/>
+				<vert x="-0.02" y="-0.02" z="1.02" u="-0.02" v="1.02"/>
+				<vert x="-0.02" y="1.02" z="1.02" u="-0.02" v="-0.02"/>
+				<vert x="-0.02" y="1.02" z="-0.02" u="1.02" v="-0.02"/>
+			</quad>
+			<quad>
+				<vert x="-0.02" y="1.02" z="-0.02" u="1.02" v="-0.02"/>
+				<vert x="-0.02" y="1.02" z="1.02" u="-0.02" v="-0.02"/>
+				<vert x="-0.02" y="-0.02" z="1.02" u="-0.02" v="1.02"/>
+				<vert x="-0.02" y="-0.02" z="-0.02" u="1.02" v="1.02"/>
+			</quad>
+		</negx>
+		<posx index="1">
+			<quad>
+				<vert x="1.02" y="-0.02" z="-0.02" u="-0.02" v="1.02"/>
+				<vert x="1.02" y="1.02" z="-0.02" u="-0.02" v="-0.02"/>
+				<vert x="1.02" y="1.02" z="1.02" u="1.02" v="-0.02"/>
+				<vert x="1.02" y="-0.02" z="1.02" u="1.02" v="1.02"/>
+			</quad>
+			<quad>
+				<vert x="1.02" y="-0.02" z="1.02" u="1.02" v="1.02"/>
+				<vert x="1.02" y="1.02" z="1.02" u="1.02" v="-0.02"/>
+				<vert x="1.02" y="1.02" z="-0.02" u="-0.02" v="-0.02"/>
+				<vert x="1.02" y="-0.02" z="-0.02" u="-0.02" v="1.02"/>
+			</quad>
+		</posx>
+		<negz index="2">
+			<quad>
+				<vert x="-0.02" y="-0.02" z="-0.02" u="-0.02" v="1.02"/>
+				<vert x="-0.02" y="1.02" z="-0.02" u="-0.02" v="-0.02"/>
+				<vert x="1.02" y="1.02" z="-0.02" u="1.02" v="-0.02"/>
+				<vert x="1.02" y="-0.02" z="-0.02" u="1.02" v="1.02"/>
+			</quad>
+			<quad>
+				<vert x="1.02" y="-0.02" z="-0.02" u="1.02" v="1.02"/>
+				<vert x="1.02" y="1.02" z="-0.02" u="1.02" v="-0.02"/>
+				<vert x="-0.02" y="1.02" z="-0.02" u="-0.02" v="-0.02"/>
+				<vert x="-0.02" y="-0.02" z="-0.02" u="-0.02" v="1.02"/>
+			</quad>
+		</negz>
+		<posz index="3">
+			<quad>
+				<vert x="-0.02" y="-0.02" z="1.02" u="1.02" v="1.02"/>
+				<vert x="1.02" y="-0.02" z="1.02" u="-0.02" v="1.02"/>
+				<vert x="1.02" y="1.02" z="1.02" u="-0.02" v="-0.02"/>
+				<vert x="-0.02" y="1.02" z="1.02" u="1.02" v="-0.02"/>
+			</quad>
+			<quad>
+				<vert x="-0.02" y="1.02" z="1.02" u="1.02" v="-0.02"/>
+				<vert x="1.02" y="1.02" z="1.02" u="-0.02" v="-0.02"/>
+				<vert x="1.02" y="-0.02" z="1.02" u="-0.02" v="1.02"/>
+				<vert x="-0.02" y="-0.02" z="1.02" u="1.02" v="1.02"/>
+			</quad>
+		</posz>
+		<negy index="4">
+			<quad>
+				<vert x="-0.02" y="-0.02" z="-0.02" u="1.02" v="-0.02"/>
+				<vert x="1.02" y="-0.02" z="-0.02" u="-0.02" v="-0.02"/>
+				<vert x="1.02" y="-0.02" z="1.02" u="-0.02" v="1.02"/>
+				<vert x="-0.02" y="-0.02" z="1.02" u="1.02" v="1.02"/>
+			</quad>
+			<quad>
+				<vert x="-0.02" y="-0.02" z="1.02" u="1.02" v="1.02"/>
+				<vert x="1.02" y="-0.02" z="1.02" u="-0.02" v="1.02"/>
+				<vert x="1.02" y="-0.02" z="-0.02" u="-0.02" v="-0.02"/>
+				<vert x="-0.02" y="-0.02" z="-0.02" u="1.02" v="-0.02"/>
+			</quad>
+		</negy>
+		<posy index="5">
+			<quad>
+				<vert x="-0.02" y="1.02" z="-0.02" u="-0.02" v="-0.02"/>
+				<vert x="-0.02" y="1.02" z="1.02" u="-0.02" v="1.02"/>
+				<vert x="1.02" y="1.02" z="1.02" u="1.02" v="1.02"/>
+				<vert x="1.02" y="1.02" z="-0.02" u="1.02" v="-0.02"/>
+			</quad>
+			<quad>
+				<vert x="1.02" y="1.02" z="-0.02" u="1.02" v="-0.02"/>
+				<vert x="1.02" y="1.02" z="1.02" u="1.02" v="1.02"/>
+				<vert x="-0.02" y="1.02" z="1.02" u="-0.02" v="1.02"/>
+				<vert x="-0.02" y="1.02" z="-0.02" u="-0.02" v="-0.02"/>
+			</quad>
+		</posy>
+	</cube3>
+	<wall modelfile="blocks/wall.obj">
+		<pillow index="0"/>
+		<bar1 index="1"/>
+		<bar2 index="2"/>
+	</wall>
+	<fence modelfile="blocks/fence.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</fence>
+	<fence2 modelfile="blocks/fence2.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</fence2>
+	<fence3 modelfile="blocks/fence3.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</fence3>
+	<fence_birch modelfile="blocks/fence_birch.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</fence_birch>
+	<fence_stonebrick modelfile="blocks/fence_stonebrick.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</fence_stonebrick>
+	<enclosure_birch modelfile="blocks/enclosure_birch.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</enclosure_birch>
+	<fence_normalwood modelfile="blocks/fence_normalwood.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</fence_normalwood>
+	<ironenclosure modelfile="blocks/ironenclosure.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</ironenclosure>
+	<lamp1 modelfile="blocks/lamp1.obj">
+		<base index="0"/>
+	</lamp1>
+	<lamp2 modelfile="blocks/lamp2.obj">
+		<base index="0"/>
+	</lamp2>
+	<lamp3 modelfile="blocks/lamp3.obj">
+		<base index="0"/>
+	</lamp3>
+	<lamp4 modelfile="blocks/lamp4.obj">
+		<base index="0"/>
+	</lamp4>
+	<lamp5 modelfile="blocks/lamp5.obj">
+		<base index="0"/>
+	</lamp5>
+	<stair modelfile="blocks/stair.obj">
+		<stair index="0"/>
+		<stair1 index="1"/>
+		<stair2 index="2"/>
+	</stair>
+	<door modelfile="blocks/door.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+	</door>
+	<torch modelfile="blocks/torch.obj">
+		<side index="0"/>
+		<top index="1"/>
+	</torch>
+	<hurbs normalmode="0">
+		<cross index="0">
+			<quad>
+				<vert x="0.2" y="0" z="0.2" u="0" v="1"/>
+				<vert x="0.2" y="1" z="0.2" u="0" v="0"/>
+				<vert x="0.8" y="1" z="0.8" u="1" v="0"/>
+				<vert x="0.8" y="0" z="0.8" u="1" v="1"/>
+			</quad>
+			<quad>
+				<vert x="0.2" y="0" z="0.8" u="0" v="1"/>
+				<vert x="0.2" y="1" z="0.8" u="0" v="0"/>
+				<vert x="0.8" y="1" z="0.2" u="1" v="0"/>
+				<vert x="0.8" y="0" z="0.2" u="1" v="1"/>
+			</quad>
+		</cross>
+		<front index="1">
+			<quad>
+				<vert x="1" y="0.2" z="0" u="0" v="1"/>
+				<vert x="0.2" y="1" z="0" u="0" v="0"/>
+				<vert x="0.2" y="1" z="1" u="1" v="0"/>
+				<vert x="1" y="0.2" z="1" u="1" v="1"/>
+			</quad>
+		</front>
+		<back index="2">
+			<quad>
+				<vert x="1" y="0.2" z="0" u="0" v="1"/>
+				<vert x="1" y="0.2" z="1" u="1" v="1"/>
+				<vert x="0.2" y="1" z="1" u="1" v="0"/>
+				<vert x="0.2" y="1" z="0" u="0" v="0"/>
+			</quad>
+		</back>
+	</hurbs>
+	<wheat normalmode="0">
+		<cross index="0">
+			<quad>
+				<vert x="0.25" y="0" z="0" u="0" v="1"/>
+				<vert x="0.25" y="1" z="0" u="0" v="0"/>
+				<vert x="0.25" y="1" z="1.0" u="1" v="0"/>
+				<vert x="0.25" y="0" z="1.0" u="1" v="1"/>
+			</quad>
+			<quad>
+				<vert x="0.75" y="0" z="0" u="0" v="1"/>
+				<vert x="0.75" y="1" z="0" u="0" v="0"/>
+				<vert x="0.75" y="1" z="1.0" u="1" v="0"/>
+				<vert x="0.75" y="0" z="1.0" u="1" v="1"/>
+			</quad>
+			<quad>
+				<vert x="0" y="0" z="0.25" u="0" v="1"/>
+				<vert x="0" y="1" z="0.25" u="0" v="0"/>
+				<vert x="1" y="1" z="0.25" u="1" v="0"/>
+				<vert x="1" y="0" z="0.25" u="1" v="1"/>
+			</quad>
+			<quad>
+				<vert x="0" y="0" z="0.75" u="0" v="1"/>
+				<vert x="0" y="1" z="0.75" u="0" v="0"/>
+				<vert x="1" y="1" z="0.75" u="1" v="0"/>
+				<vert x="1" y="0" z="0.75" u="1" v="1"/>
+			</quad>
+		</cross>
+	</wheat>
+	<rice normalmode="0">
+		<cross index="0">
+			<quad>
+				<vert x="0.25" y="-1" z="0" u="0" v="1"/>
+				<vert x="0.25" y="1" z="0" u="0" v="0"/>
+				<vert x="0.25" y="1" z="1.0" u="1" v="0"/>
+				<vert x="0.25" y="-1" z="1.0" u="1" v="1"/>
+			</quad>
+			<quad>
+				<vert x="0.75" y="-1" z="0" u="0" v="1"/>
+				<vert x="0.75" y="1" z="0" u="0" v="0"/>
+				<vert x="0.75" y="1" z="1.0" u="1" v="0"/>
+				<vert x="0.75" y="-1" z="1.0" u="1" v="1"/>
+			</quad>
+			<quad>
+				<vert x="0" y="-1" z="0.25" u="0" v="1"/>
+				<vert x="0" y="1" z="0.25" u="0" v="0"/>
+				<vert x="1" y="1" z="0.25" u="1" v="0"/>
+				<vert x="1" y="-1" z="0.25" u="1" v="1"/>
+			</quad>
+			<quad>
+				<vert x="0" y="-1" z="0.75" u="0" v="1"/>
+				<vert x="0" y="1" z="0.75" u="0" v="0"/>
+				<vert x="1" y="1" z="0.75" u="1" v="0"/>
+				<vert x="1" y="-1" z="0.75" u="1" v="1"/>
+			</quad>
+		</cross>
+	</rice>
+	<cactus2>
+		<negx index="0">
+			<quad>
+				<vert x="0.05" y="0" z="0" u="1" v="1"/>
+				<vert x="0.05" y="0" z="1" u="0" v="1"/>
+				<vert x="0.05" y="1" z="1" u="0" v="0"/>
+				<vert x="0.05" y="1" z="0" u="1" v="0"/>
+			</quad>
+		</negx>
+		<posx index="1">
+			<quad>
+				<vert x="0.95" y="0" z="0" u="0" v="1"/>
+				<vert x="0.95" y="1" z="0" u="0" v="0"/>
+				<vert x="0.95" y="1" z="1" u="1" v="0"/>
+				<vert x="0.95" y="0" z="1" u="1" v="1"/>
+			</quad>
+		</posx>
+		<negz index="2">
+			<quad>
+				<vert x="0" y="0" z="0.05" u="0" v="1"/>
+				<vert x="0" y="1" z="0.05" u="0" v="0"/>
+				<vert x="1" y="1" z="0.05" u="1" v="0"/>
+				<vert x="1" y="0" z="0.05" u="1" v="1"/>
+			</quad>
+		</negz>
+		<posz index="3">
+			<quad>
+				<vert x="0" y="0" z="0.95" u="1" v="1"/>
+				<vert x="1" y="0" z="0.95" u="0" v="1"/>
+				<vert x="1" y="1" z="0.95" u="0" v="0"/>
+				<vert x="0" y="1" z="0.95" u="1" v="0"/>
+			</quad>
+		</posz>
+		<negy index="4">
+			<quad>
+				<vert x="0" y="0" z="0" u="1" v="0"/>
+				<vert x="1" y="0" z="0" u="0" v="0"/>
+				<vert x="1" y="0" z="1" u="0" v="1"/>
+				<vert x="0" y="0" z="1" u="1" v="1"/>
+			</quad>
+		</negy>
+		<posy index="5">
+			<quad>
+				<vert x="0" y="1" z="0" u="0" v="0"/>
+				<vert x="0" y="1" z="1" u="0" v="1"/>
+				<vert x="1" y="1" z="1" u="1" v="1"/>
+				<vert x="1" y="1" z="0" u="1" v="0"/>
+			</quad>
+		</posy>
+	</cactus2>
+	<dustplane normalmode="0">
+		<negx index="0">
+			<quad>
+				<vert x="0.015625" y="0" z="0" u="0" v="0"/>
+				<vert x="0.015625" y="1" z="0" u="1" v="0"/>
+				<vert x="0.015625" y="1" z="1" u="1" v="1"/>
+				<vert x="0.015625" y="0" z="1" u="0" v="1"/>
+			</quad>
+		</negx>
+		<posx index="1">
+			<quad>
+				<vert x="0.984375" y="0" z="0" u="0" v="1"/>
+				<vert x="0.984375" y="0" z="1" u="0" v="0"/>
+				<vert x="0.984375" y="1" z="1" u="1" v="0"/>
+				<vert x="0.984375" y="1" z="0" u="1" v="1"/>
+			</quad>
+		</posx>
+		<negz index="2">
+			<quad>
+				<vert x="0" y="0" z="0.015625" u="0" v="1"/>
+				<vert x="1" y="0" z="0.015625" u="0" v="0"/>
+				<vert x="1" y="1" z="0.015625" u="1" v="0"/>
+				<vert x="0" y="1" z="0.015625" u="1" v="1"/>
+			</quad>
+		</negz>
+		<posz index="3">
+			<quad>
+				<vert x="0" y="0" z="0.984375" u="0" v="0"/>
+				<vert x="0" y="1" z="0.984375" u="1" v="0"/>
+				<vert x="1" y="1" z="0.984375" u="1" v="1"/>
+				<vert x="1" y="0" z="0.984375" u="0" v="1"/>
+			</quad>
+		</posz>
+		<negy index="4">
+			<quad>
+				<vert x="0" y="0.015625" z="0" u="0" v="0"/>
+				<vert x="0" y="0.015625" z="1" u="0" v="1"/>
+				<vert x="1" y="0.015625" z="1" u="1" v="1"/>
+				<vert x="1" y="0.015625" z="0" u="1" v="0"/>
+			</quad>
+		</negy>
+		<negy_r90 index="5">
+			<quad>
+				<vert x="0" y="0.015625" z="0" u="1" v="0"/>
+				<vert x="0" y="0.015625" z="1" u="0" v="0"/>
+				<vert x="1" y="0.015625" z="1" u="0" v="1"/>
+				<vert x="1" y="0.015625" z="0" u="1" v="1"/>
+			</quad>
+		</negy_r90>
+		<slope1 index="6">
+			<quad>
+				<vert x="0" y="0.015625" z="0" u="0" v="0"/>
+				<vert x="0" y="1.015625" z="1" u="0" v="1"/>
+				<vert x="1" y="1.015625" z="1" u="1" v="1"/>
+				<vert x="1" y="0.015625" z="0" u="1" v="0"/>
+			</quad>
+		</slope1>
+		<slope2 index="7">
+			<quad>
+				<vert x="0" y="1.015625" z="0" u="0" v="0"/>
+				<vert x="0" y="0.015625" z="1" u="0" v="1"/>
+				<vert x="1" y="0.015625" z="1" u="1" v="1"/>
+				<vert x="1" y="1.015625" z="0" u="1" v="0"/>
+			</quad>
+		</slope2>
+	</dustplane>
+	<flatpiece normalmode="0">
+		<negx index="0">
+			<quad>
+				<vert x="0.015625" y="0" z="0" u="0" v="1"/>
+				<vert x="0.015625" y="1" z="0" u="0" v="0"/>
+				<vert x="0.015625" y="1" z="1" u="1" v="0"/>
+				<vert x="0.015625" y="0" z="1" u="1" v="1"/>
+			</quad>
+		</negx>
+		<posx index="1">
+			<quad>
+				<vert x="0.984375" y="0" z="1" u="0" v="1"/>
+				<vert x="0.984375" y="1" z="1" u="0" v="0"/>
+				<vert x="0.984375" y="1" z="0" u="1" v="0"/>
+				<vert x="0.984375" y="0" z="0" u="1" v="1"/>
+			</quad>
+		</posx>
+		<negz index="2">
+			<quad>
+				<vert x="1" y="0" z="0.015625" u="0" v="1"/>
+				<vert x="1" y="1" z="0.015625" u="0" v="0"/>
+				<vert x="0" y="1" z="0.015625" u="1" v="0"/>
+				<vert x="0" y="0" z="0.015625" u="1" v="1"/>
+			</quad>
+		</negz>
+		<posz index="3">
+			<quad>
+				<vert x="0" y="0" z="0.984375" u="0" v="1"/>
+				<vert x="0" y="1" z="0.984375" u="0" v="0"/>
+				<vert x="1" y="1" z="0.984375" u="1" v="0"/>
+				<vert x="1" y="0" z="0.984375" u="1" v="1"/>
+			</quad>
+		</posz>
+		<negy index="4">
+			<quad>
+				<vert x="0" y="0.015625" z="0" u="0" v="1"/>
+				<vert x="0" y="0.015625" z="1" u="0" v="0"/>
+				<vert x="1" y="0.015625" z="1" u="1" v="0"/>
+				<vert x="1" y="0.015625" z="0" u="1" v="1"/>
+			</quad>
+		</negy>
+		<posy index="5">
+			<quad>
+				<vert x="0" y="0.984375" z="1" u="0" v="1"/>
+				<vert x="0" y="0.984375" z="0" u="0" v="0"/>
+				<vert x="1" y="0.984375" z="0" u="1" v="0"/>
+				<vert x="1" y="0.984375" z="1" u="1" v="1"/>
+			</quad>
+		</posy>
+	</flatpiece>
+	<cocoa modelfile="blocks/cones.obj" normalmode="2">
+		<stage0 index="0"/>
+		<stage1 index="1"/>
+		<stage2 index="2"/>
+	</cocoa>
+	<oxygenfruit modelfile="blocks/oxygenfruit.obj" normalmode="2">
+		<stage0 index="0"/>
+		<stage1 index="1"/>
+		<stage2 index="2"/>
+	</oxygenfruit>
+	<pinecone modelfile="blocks/pinecone.obj" normalmode="2">
+		<stage0 index="0"/>
+		<stage1 index="1"/>
+		<stage2 index="2"/>
+	</pinecone>
+	<Lotus modelfile="blocks/Lotus.obj">
+		<base index="0"/>
+	</Lotus>
+	<chest modelfile="blocks/chest.obj">
+		<close1 index="0"/>
+		<close2 index="2"/>
+		<close3_down index="3"/>
+		<close3_up index="4"/>
+	</chest>
+	<skylight modelfile="blocks/skylight.obj">
+		<top index="0"/>
+		<bottom index="1"/>
+		<side index="2"/>
+		<top_index_0 index="3"/>
+		<top_index_2 index="4"/>
+		<top_index_1 index="5"/>
+	</skylight>
+	<windows modelfile="blocks/windows.obj">
+		<close1 index="0"/>
+		<close2 index="1"/>
+		<open1 index="2"/>
+		<open2 index="3"/>
+	</windows>
+	<switch modelfile="blocks/switch.obj">
+		<base_side index="0"/>
+		<base_ground index="1"/>
+		<switchoff_side index="2"/>
+		<switchoff_ground index="3"/>
+		<switchon_side index="4"/>
+		<switchon_ground index="5"/>
+	</switch>
+	<tripwire modelfile="blocks/tripwire.obj">
+		<base index="0" rotate="90"/>
+		<hook_free index="1"/>
+		<hook_tied index="2"/>
+		<hook_pressed index="3"/>
+	</tripwire>
+	<wire modelfile="blocks/wire.obj">
+		<wire index="0"/>
+	</wire>
+	<repeater modelfile="blocks/repeater.obj">
+		<base index="0"/>
+		<switch index="1"/>
+	</repeater>
+	<comparator modelfile="blocks/comparator.obj">
+		<base index="0"/>
+		<switch index="1"/>
+	</comparator>
+	<fire modelfile="blocks/fire.obj" normalmode="0">
+		<top index="0"/>
+		<center index="1"/>
+		<side index="2"/>
+	</fire>
+	<enchanttable modelfile="blocks/enchanttable.obj">
+		<table index="0"/>
+	</enchanttable>
+	<cake modelfile="blocks/cake.obj">
+		<piece0 index="0"/>
+		<piece1 index="1"/>
+		<piece2 index="2"/>
+		<piece3 index="3"/>
+		<piece4 index="4"/>
+		<piece5 index="5"/>
+	</cake>
+	<cake2 modelfile="blocks/cake2.obj">
+		<piece0 index="0"/>
+		<piece1 index="1"/>
+		<piece2 index="2"/>
+		<piece3 index="3"/>
+		<piece4 index="4"/>
+		<piece5 index="5"/>
+	</cake2>
+	<anvil modelfile="blocks/anvil.obj">
+		<anvil index="0"/>
+	</anvil>
+	<mobspawner modelfile="blocks/mobspawner.obj">
+		<base index="0"/>
+	</mobspawner>
+	<ironfence modelfile="blocks/ironfence.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</ironfence>
+	<glasspane modelfile="blocks/glasspane.obj">
+		<shizi index="0"/>
+		<yiban index="1"/>
+		<men index="2"/>
+		<guaijiao index="3"/>
+		<shizitop index="4"/>
+		<yibantop index="5"/>
+		<mentop index="6"/>
+		<guaijiaotop index="7"/>
+	</glasspane>
+	<fencegate modelfile="blocks/fencegate.obj">
+		<close index="0"/>
+		<open index="1"/>
+	</fencegate>
+	<bed modelfile="blocks/bed.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</bed>
+	<bed1 modelfile="blocks/bed1.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</bed1>
+	<bed2 modelfile="blocks/bed2.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</bed2>
+	<bed3 modelfile="blocks/bed3.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</bed3>
+	<button modelfile="blocks/button.obj">
+		<normal index="0"/>
+		<pressed index="1"/>
+	</button>
+	<pressure modelfile="blocks/pressure.obj">
+		<normal index="0"/>
+		<pressed index="1"/>
+	</pressure>
+	<piston modelfile="blocks/piston.obj">
+		<pressed0 index="0"/>
+		<normal0 index="1"/>
+		<pressed1 index="2"/>
+		<normal1 index="3"/>
+		<pressed2 index="4"/>
+		<normal2 index="5"/>
+	</piston>
+	<hyd_arm modelfile="blocks/hyd_arm.obj">
+		<base index="0"/>
+		<head0 index="1"/>
+		<head1 index="2"/>
+		<obase index="3"/>
+		<ohead0 index="4"/>
+		<ohead1 index="5"/>
+		<arm index="6"/>
+		<base_u index="7"/>
+		<head0_u index="8"/>
+		<head1_u index="9"/>
+		<obase_u index="10"/>
+		<ohead0_u index="11"/>
+		<ohead1_u index="12"/>
+		<arm_u index="13"/>
+	</hyd_arm>
+	<spring modelfile="blocks/spring.obj">
+		<pressed0 index="0"/>
+		<normal0 index="1"/>
+		<pressed1 index="2"/>
+		<normal1 index="3"/>
+		<pressed2 index="4"/>
+		<normal2 index="5"/>
+	</spring>
+	<dragoncup modelfile="blocks/dragoncup.obj">
+		<side index="0"/>
+		<top index="1"/>
+	</dragoncup>
+	<jar modelfile="blocks/jar.obj">
+		<jar1 index="0"/>
+		<jar2 index="1"/>
+		<jar3 index="2"/>
+	</jar>
+	<bag modelfile="blocks/bag.obj">
+		<base index="0"/>
+	</bag>
+	<box modelfile="blocks/box.obj">
+		<close index="0"/>
+		<open index="1"/>
+	</box>
+	<lockbox modelfile="blocks/lockbox.obj">
+		<close index="0"/>
+		<open index="1"/>
+	</lockbox>
+	<notice modelfile="blocks/notice.obj">
+		<notice index="0"/>
+		<notice2 index="1"/>
+	</notice>
+	<firework modelfile="blocks/yanhua1.obj">
+		<base index="0"/>
+	</firework>
+	<kongming_lamp modelfile="blocks/kongming_lamp.obj">
+		<base index="0"/>
+	</kongming_lamp>
+	<funnel modelfile="blocks/funnel.obj">
+		<top index="0"/>
+		<side index="1"/>
+		<top_off index="2"/>
+		<side_off index="3"/>
+	</funnel>
+	<emitter modelfile="blocks/emitter.obj">
+		<side index="0"/>
+		<up index="1"/>
+		<down index="2"/>
+	</emitter>
+	<flag modelfile="blocks/flag.obj">
+		<base index="0"/>
+	</flag>
+	<tnt modelfile="blocks/tnt.obj">
+		<_top index="0"/>
+	</tnt>
+	<bomb1_small modelfile="blocks/bomb1_small.obj">
+		<base index="0"/>
+	</bomb1_small>
+	<bomb4_small modelfile="blocks/bomb4_small.obj">
+		<base index="0"/>
+	</bomb4_small>
+	<bomb1_big modelfile="blocks/bomb1_big.obj">
+		<base index="0"/>
+	</bomb1_big>
+	<bomb4_big modelfile="blocks/bomb4_big.obj">
+		<base index="0"/>
+	</bomb4_big>
+	<etorch modelfile="blocks/etorch.obj">
+		<side index="0"/>
+		<top index="1"/>
+	</etorch>
+	<cactus modelfile="blocks/cactus.obj">
+		<base index="0"/>
+	</cactus>
+	<furnace modelfile="blocks/furnace.obj">
+		<base index="0"/>
+	</furnace>
+	<horse_egg modelfile="blocks/horse_egg.obj">
+		<base index="0"/>
+	</horse_egg>
+	<dragonegg_lava modelfile="blocks/dragonegg_lava.obj">
+		<base index="0"/>
+	</dragonegg_lava>
+	<dragonegg_chaos modelfile="blocks/dragonegg_chaos.obj">
+		<base index="0"/>
+	</dragonegg_chaos>
+	<chair_wood modelfile="blocks/chair_wood.obj">
+		<base index="0"/>
+	</chair_wood>
+	<table_wood modelfile="blocks/table_wood.obj">
+		<base index="0"/>
+	</table_wood>
+	<shafa_wood modelfile="blocks/shafa_wood.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</shafa_wood>
+	<bilu_wood modelfile="blocks/bilu_wood.obj">
+		<base index="0"/>
+	</bilu_wood>
+	<guizi_wood modelfile="blocks/guizi_wood.obj">
+		<close1 index="0"/>
+		<close2 index="2"/>
+		<close3_down index="3"/>
+		<close3_up index="4"/>
+	</guizi_wood>
+	<teamspawn modelfile="blocks/teamspawn.obj">
+		<base index="0"/>
+	</teamspawn>
+	<candlestick modelfile="blocks/candlestick.obj">
+		<base index="0"/>
+	</candlestick>
+	<ceiling_lamp modelfile="blocks/ceiling_lamp.obj">
+		<base index="0"/>
+	</ceiling_lamp>
+	<wall_lamp1 modelfile="blocks/wall_lamp1.obj">
+		<base index="0"/>
+	</wall_lamp1>
+	<wall_lamp2 modelfile="blocks/wall_lamp2.obj">
+		<base index="0"/>
+	</wall_lamp2>
+	<table_lamp modelfile="blocks/table_lamp.obj">
+		<base index="0"/>
+	</table_lamp>
+	<flowerbeds1 modelfile="blocks/flowerbeds1.obj">
+		<base index="0"/>
+	</flowerbeds1>
+	<flowerbeds2 modelfile="blocks/flowerbeds2.obj">
+		<base index="0"/>
+	</flowerbeds2>
+	<flowerbeds3 modelfile="blocks/flowerbeds3.obj">
+		<base index="0"/>
+	</flowerbeds3>
+	<flowerbeds4 modelfile="blocks/flowerbeds4.obj">
+		<base index="0"/>
+	</flowerbeds4>
+	<flowerbeds5 modelfile="blocks/flowerbeds5.obj">
+		<base index="0"/>
+	</flowerbeds5>
+	<plaque modelfile="blocks/plaque.obj">
+		<base index="0"/>
+	</plaque>
+	<photoframe modelfile="blocks/photoframe.obj">
+		<base index="0"/>
+	</photoframe>
+	<chrismas_tree modelfile="blocks/chrismas_tree.obj">
+		<down index="0"/>
+		<up index="1"/>
+	</chrismas_tree>
+	<chrismas_box modelfile="blocks/chrismas_box.obj">
+		<box0 index="0"/>
+		<box1 index="1"/>
+		<box2 index="2"/>
+	</chrismas_box>
+	<chrismas_bell modelfile="blocks/chrismas_bell.obj">
+		<base index="0"/>
+	</chrismas_bell>
+	<chrismas_bell2 modelfile="blocks/chrismas_bell2.obj">
+		<base index="0"/>
+	</chrismas_bell2>
+	<fireworks_1 modelfile="blocks/fireworks_1.obj">
+		<base index="0"/>
+	</fireworks_1>
+	<sunflower modelfile="blocks/sunflower.obj">
+		<down index="0"/>
+		<up index="1"/>
+	</sunflower>
+	<directionarrow modelfile="blocks/directionarrow.obj">
+		<base index="0"/>
+	</directionarrow>
+	<stoppoint modelfile="blocks/stoppoint.obj">
+		<base index="0"/>
+	</stoppoint>
+	<hardwire modelfile="blocks/hardwire.obj">
+		<center index="0"/>
+		<up index="1"/>
+		<down index="2"/>
+		<side0 index="3"/>
+		<side1 index="4"/>
+		<side2 index="5"/>
+	</hardwire>
+	<mecha_rotate modelfile="blocks/mecha_rotate.obj">
+		<base index="0"/>
+		<up index="1"/>
+		<down index="2"/>
+	</mecha_rotate>
+	<ladder modelfile="blocks/ladder.obj">
+		<base index="0"/>
+	</ladder>
+	<chickennest modelfile="blocks/chickennest.obj">
+		<base index="0"/>
+	</chickennest>
+	<feedpan modelfile="blocks/feedpan.obj">
+		<piece0 index="0"/>
+		<piece1 index="1"/>
+		<piece2 index="2"/>
+		<piece3 index="3"/>
+		<piece4 index="4"/>
+		<piece5 index="5"/>
+		<pan index="6"/>
+	</feedpan>
+	<starcup modelfile="blocks/starcup.obj">
+		<base index="0"/>
+		<destroy index="1"/>
+	</starcup>
+	<sapling normalmode="0">
+		<cross index="0">
+			<quad>
+				<vert x="0.2" y="0" z="0.2" u="0" v="1"/>
+				<vert x="0.2" y="1" z="0.2" u="0" v="0"/>
+				<vert x="0.8" y="1" z="0.8" u="1" v="0"/>
+				<vert x="0.8" y="0" z="0.8" u="1" v="1"/>
+			</quad>
+			<quad>
+				<vert x="0.2" y="0" z="0.8" u="0" v="1"/>
+				<vert x="0.2" y="1" z="0.8" u="0" v="0"/>
+				<vert x="0.8" y="1" z="0.2" u="1" v="0"/>
+				<vert x="0.8" y="0" z="0.2" u="1" v="1"/>
+			</quad>
+		</cross>
+		<front index="1">
+			<quad>
+				<vert x="1" y="0.2" z="0" u="0" v="1"/>
+				<vert x="0.2" y="1" z="0" u="0" v="0"/>
+				<vert x="0.2" y="1" z="1" u="1" v="0"/>
+				<vert x="1" y="0.2" z="1" u="1" v="1"/>
+			</quad>
+		</front>
+		<back index="2">
+			<quad>
+				<vert x="1" y="0.2" z="0" u="0" v="1"/>
+				<vert x="1" y="0.2" z="1" u="1" v="1"/>
+				<vert x="0.2" y="1" z="1" u="1" v="0"/>
+				<vert x="0.2" y="1" z="0" u="0" v="0"/>
+			</quad>
+		</back>
+		<model modelfile="blocks/sapling_model.obj">
+			<down index="3"/>
+			<up index="4"/>
+		</model>
+	</sapling>
+	<flowergrow normalmode="0">
+		<cross index="0">
+			<quad>
+				<vert x="0.2" y="0" z="0.2" u="0" v="1"/>
+				<vert x="0.2" y="1" z="0.2" u="0" v="0"/>
+				<vert x="0.8" y="1" z="0.8" u="1" v="0"/>
+				<vert x="0.8" y="0" z="0.8" u="1" v="1"/>
+			</quad>
+			<quad>
+				<vert x="0.2" y="0" z="0.8" u="0" v="1"/>
+				<vert x="0.2" y="1" z="0.8" u="0" v="0"/>
+				<vert x="0.8" y="1" z="0.2" u="1" v="0"/>
+				<vert x="0.8" y="0" z="0.2" u="1" v="1"/>
+			</quad>
+		</cross>
+		<model modelfile="blocks/sunflower_middle.obj">
+			<base index="1"/>
+		</model>
+	</flowergrow>
+	<eresist modelfile="blocks/eresist.obj">
+		<base index="0"/>
+	</eresist>
+	<tooltable modelfile="blocks/tooltable.obj">
+		<base index="0"/>
+	</tooltable>
+	<leaves modelfile="blocks/leaves_model.obj">
+		<base index="0"/>
+	</leaves>
+	<bookcase modelfile="blocks/bookcase.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+	</bookcase>
+	<railknot modelfile="blocks/railknot.obj">
+		<side index="0"/>
+		<top index="1"/>
+	</railknot>
+	<bamboo modelfile="blocks/bamboo_planks.obj">
+		<base index="0"/>
+	</bamboo>
+	<bamboo_shoots modelfile="blocks/bamboo_shoots.obj">
+		<base index="0"/>
+	</bamboo_shoots>
+	<trap modelfile="blocks/trap.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</trap>
+	<totem modelfile="blocks/totem.obj">
+		<base index="0"/>
+	</totem>
+	<thrower modelfile="blocks/thrower.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</thrower>
+	<glassjar modelfile="blocks/glassjar.obj">
+		<base index="0"/>
+	</glassjar>
+	<fence_bamboo modelfile="blocks/fence_bamboo.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</fence_bamboo>
+	<fencegate_boo modelfile="blocks/fencegate_boo.obj">
+		<close index="0"/>
+		<open index="1"/>
+	</fencegate_boo>
+	<readypoint modelfile="blocks/readypoint.obj">
+		<base index="0"/>
+	</readypoint>
+	<goalblock modelfile="blocks/goalblock.obj">
+		<base index="0"/>
+	</goalblock>
+	<alientotemcenter modelfile="blocks/alientotemcenter.obj">
+		<base index="0"/>
+	</alientotemcenter>
+	<alientotem2 modelfile="blocks/alientotem2.obj">
+		<base index="0"/>
+	</alientotem2>
+	<alientotem1 modelfile="blocks/alientotem1.obj">
+		<base index="0"/>
+	</alientotem1>
+	<airrefiner modelfile="blocks/airrefiner.obj">
+		<base index="0"/>
+	</airrefiner>
+	<airbottle modelfile="blocks/airbottle.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</airbottle>
+	<totemgem modelfile="blocks/totemgem.obj">
+		<base index="0"/>
+	</totemgem>
+	<radioproducer modelfile="blocks/radioproducer.obj">
+		<base index="0"/>
+		<switch0 index="1"/>
+		<switch1 index="2"/>
+		<switch2 index="3"/>
+		<switch3 index="4"/>
+		<switch4 index="5"/>
+		<switch5 index="6"/>
+		<switch6 index="7"/>
+		<switch7 index="8"/>
+	</radioproducer>
+	<radioreceiver modelfile="blocks/radioreceiver.obj">
+		<base index="0"/>
+		<switch0 index="1"/>
+		<switch1 index="2"/>
+		<switch2 index="3"/>
+		<switch3 index="4"/>
+		<switch4 index="5"/>
+		<switch5 index="6"/>
+		<switch6 index="7"/>
+		<switch7 index="8"/>
+	</radioreceiver>
+	<signalparser modelfile="blocks/signalparser.obj">
+		<base index="0"/>
+		<switch0 index="1"/>
+		<switch1 index="2"/>
+		<switch2 index="3"/>
+		<switch3 index="4"/>
+	</signalparser>
+	<chest_password modelfile="blocks/codechest.obj">
+		<close index="0"/>
+		<open index="1"/>
+	</chest_password>
+	<mysterious_fossil modelfile="blocks/mysterious_fossil.obj">
+		<base index="0"/>
+	</mysterious_fossil>
+	<stonecore modelfile="blocks/stone_core.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</stonecore>
+	<stone_monument modelfile="blocks/stone_monument.obj">
+		<base index="0"/>
+	</stone_monument>
+	<reflect_glass modelfile="blocks/reflect_glass.obj">
+		<base index="0"/>
+	</reflect_glass>
+	<blueprint_construction modelfile="blocks/blueprint_construction.obj">
+		<base index="0"/>
+	</blueprint_construction>
+	<blueprint_workbench modelfile="blocks/blueprint_workbench.obj">
+		<base index="0"/>
+	</blueprint_workbench>
+	<range_finder modelfile="blocks/range_finder.obj">
+		<base index="0"/>
+	</range_finder>
+	<block modelfile="blocks/block.obj">
+		<base index="0"/>
+	</block>
+	<modelcraft modelfile="blocks/modelcraft.obj">
+		<base index="0"/>
+	</modelcraft>
+	<modelcraft1 modelfile="blocks/modelcraft1.obj">
+		<base index="0"/>
+	</modelcraft1>
+	<brushmonsterblock modelfile="blocks/brushmonsterblock.obj">
+		<base index="0"/>
+	</brushmonsterblock>
+	<plum_screen modelfile="blocks/plum_screen.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</plum_screen>
+	<red_candle modelfile="blocks/red_candle.obj">
+		<base index="0"/>
+	</red_candle>
+	<wheel modelfile="blocks/wheel.obj">
+		<wheel index="0"/>
+	</wheel>
+	<transfer_block modelfile="blocks/transfer_block.obj">
+		<base index="0"/>
+	</transfer_block>
+	<cheshen modelfile="blocks/cheshen.obj">
+		<base index="0"/>
+	</cheshen>
+	<book_editortable modelfile="blocks/book_editortable.obj">
+		<base index="0"/>
+	</book_editortable>
+	<bookcabinet modelfile="blocks/book_cabinet.obj">
+		<base index="0"/>
+		<book1 index="1"/>
+		<book2 index="2"/>
+		<book3 index="3"/>
+		<book4 index="4"/>
+		<book5 index="5"/>
+		<book6 index="6"/>
+	</bookcabinet>
+	<limitengine modelfile="blocks/limitengine.obj">
+		<base_up1 index="0"/>
+		<base_up index="1"/>
+		<indicator1_on index="2"/>
+		<indicator2_on index="3"/>
+		<indicator3_on index="4"/>
+		<indicator4_on index="5"/>
+		<indicator5_on index="6"/>
+		<indicator1_off index="7"/>
+		<indicator2_off index="8"/>
+		<indicator3_off index="9"/>
+		<indicator4_off index="10"/>
+		<indicator5_off index="11"/>
+	</limitengine>
+	<unlimitengine modelfile="blocks/unlimitengine.obj">
+		<base index="0"/>
+	</unlimitengine>
+	<steeringwheel modelfile="blocks/steeringwheel.obj">
+		<base index="0"/>
+	</steeringwheel>
+	<driverseat modelfile="blocks/driverseat.obj">
+		<base index="0"/>
+	</driverseat>
+	<passengerseat modelfile="blocks/passengerseat.obj">
+		<base index="0"/>
+	</passengerseat>
+	<mechineworkshop modelfile="blocks/mechineworkshop.obj">
+		<base index="0"/>
+	</mechineworkshop>
+	<modeleditor modelfile="blocks/modeleditor.obj">
+		<base index="0"/>
+	</modeleditor>
+	<basket modelfile="blocks/basket.obj">
+		<base index="0"/>
+	</basket>
+	<connector modelfile="blocks/connector.obj">
+		<base_ground index="0"/>
+		<base_side index="1"/>
+	</connector>
+	<propeller modelfile="blocks/propeller.obj">
+		<base_side index="0"/>
+		<base_up index="1"/>
+		<base_down index="2"/>
+		<heat1_side index="3"/>
+		<heat1_up index="4"/>
+		<heat1_down index="5"/>
+		<heat2_side index="6"/>
+		<heat2_up index="7"/>
+		<heat2_down index="8"/>
+		<heat3_side index="9"/>
+		<heat3_up index="10"/>
+		<heat3_down index="11"/>
+		<heat4_side index="12"/>
+		<heat4_up index="13"/>
+		<heat4_down index="14"/>
+		<heat5_side index="15"/>
+		<heat5_up index="16"/>
+		<heat5_down index="17"/>
+	</propeller>
+	<arm_prismatic modelfile="blocks/hydraulic_arm.obj">
+		<base index="0"/>
+		<obase index="1"/>
+		<arm index="2"/>
+		<ohead index="3"/>
+		<base_u index="4"/>
+		<obase_u index="5"/>
+		<arm_u index="6"/>
+		<ohead_u index="7"/>
+	</arm_prismatic>
+	<t_revolute modelfile="blocks/t_hinge.obj">
+		<top0 index="0"/>
+		<bottom0 index="1"/>
+		<top1 index="2"/>
+		<bottom1 index="3"/>
+	</t_revolute>
+	<rope modelfile="blocks/twisted_rope.obj">
+		<head0 index="0"/>
+		<ohead0 index="1"/>
+		<arm index="2"/>
+		<head_u index="3"/>
+		<ohead_u index="4"/>
+		<arm_u index="5"/>
+		<arm1 index="6"/>
+	</rope>
+	<suspend modelfile="blocks/suspension.obj">
+		<obase0 index="0"/>
+		<ohead0 index="1"/>
+		<obase1 index="2"/>
+		<ohead1 index="3"/>
+		<obase2 index="4"/>
+		<ohead2 index="5"/>
+	</suspend>
+	<wings modelfile="blocks/wings.obj">
+		<wings_1 index="0"/>
+		<wings_2 index="1"/>
+	</wings>
+	<triangle_wings modelfile="blocks/triangle_wings.obj">
+		<empennage_down_1 index="0"/>
+		<empennage_down_2 index="1"/>
+		<empennage_up_1 index="2"/>
+		<empennage_up_2 index="3"/>
+		<empennage_up_3 index="4"/>
+	</triangle_wings>
+	<Spacecraft_thruster modelfile="blocks/Spacecraft_thruster.obj">
+		<base_side index="0"/>
+		<base_up index="1"/>
+		<base_down index="2"/>
+	</Spacecraft_thruster>
+	<spherical modelfile="blocks/ball_hinge.obj">
+		<head_u index="0"/>
+		<ohead_u index="1"/>
+	</spherical>
+	<fuel_tank modelfile="blocks/gas_tank.obj">
+		<base_up index="0"/>
+		<indicator1_on index="1"/>
+		<indicator2_on index="2"/>
+		<indicator3_on index="3"/>
+		<indicator4_on index="4"/>
+		<indicator5_on index="5"/>
+		<indicator1_off index="6"/>
+		<indicator2_off index="7"/>
+		<indicator3_off index="8"/>
+		<indicator4_off index="9"/>
+		<indicator5_off index="10"/>
+	</fuel_tank>
+	<sensorvalueblock modelfile="blocks/induction.obj">
+		<base index="0"/>
+	</sensorvalueblock>
+	<absorb_claws modelfile="blocks/absorb_claws.obj">
+		<base index="0"/>
+	</absorb_claws>
+	<bonfire modelfile="blocks/bonfire.obj">
+		<slake index="0"/>
+		<burn index="1"/>
+		<grill index="2"/>
+		<raw index="3"/>
+		<cooked index="4"/>
+		<charred index="5"/>
+	</bonfire>
+	<monument modelfile="blocks/monument.obj">
+		<stele index="0"/>
+		<boarman index="1"/>
+		<speargoblin index="2"/>
+		<jockey index="3"/>
+		<unemployed index="4"/>
+		<woodcutter index="5"/>
+		<swordsman index="6"/>
+		<farmer index="7"/>
+		<archer index="8"/>
+		<helper index="9"/>
+	</monument>
+	<villagetotem modelfile="blocks/villagetotem.obj">
+		<base index="0"/>
+		<base1 index="1"/>
+	</villagetotem>
+	<villagerflag modelfile="blocks/villageflag.obj">
+		<base index="0"/>
+	</villagerflag>
+	<weatherforecast modelfile="blocks/forecast.obj">
+		<base index="0"/>
+		<rain_up index="1"/>
+		<thunder_up index="2"/>
+		<sun_up index="3"/>
+		<thunder_down index="4"/>
+		<sun_down index="5"/>
+		<rain_down index="6"/>
+	</weatherforecast>
+	<altar modelfile="blocks/altar.obj">
+		<base index="0"/>
+	</altar>
+	<statue modelfile="blocks/statue.obj">
+		<broken index="0"/>
+		<complete index="1"/>
+	</statue>
+	<statuebase modelfile="blocks/statuebase.obj">
+		<down index="0"/>
+		<up index="1"/>
+	</statuebase>
+	<pillar modelfile="blocks/glyphpillar.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+	</pillar>
+	<bananatree modelfile="blocks/log_banana.obj">
+		<base index="0"/>
+	</bananatree>
+	<bananasapling modelfile="blocks/sapling_banana.obj">
+		<base index="0"/>
+	</bananasapling>
+	<bananaleaf modelfile="blocks/leaves_banana.obj">
+		<base index="0"/>
+		<base1 index="1"/>
+	</bananaleaf>
+	<banana modelfile="blocks/banana.obj">
+		<base index="0"/>
+	</banana>
+	<thicket modelfile="blocks/bush.obj">
+		<base index="0"/>
+	</thicket>
+	<arborfruit modelfile="blocks/arborfruit.obj">
+		<stage1 index="0"/>
+		<stage0 index="1"/>
+	</arborfruit>
+	<sleepingbag modelfile="blocks/sleepingbag.obj">
+		<wei_close index="0"/>
+		<wei_open index="1"/>
+		<tou_close index="2"/>
+		<tou_open index="3"/>
+	</sleepingbag>
+	<furniture_bed modelfile="blocks/furniture_bed.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</furniture_bed>
+	<furniture_bathtub modelfile="blocks/furniture_bathtub.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</furniture_bathtub>
+	<furniture_desk modelfile="blocks/furniture_desk.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</furniture_desk>
+	<furniture_screen modelfile="blocks/furniture_screen.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</furniture_screen>
+	<furniture_sofa modelfile="blocks/furniture_sofa.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</furniture_sofa>
+	<furniture_table modelfile="blocks/furniture_table.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+		<base4 index="3"/>
+	</furniture_table>
+	<furniture_window modelfile="blocks/furniture_window.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</furniture_window>
+	<furniture_door modelfile="blocks/furniture_door.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+	</furniture_door>
+	<furniture_ceiling_light modelfile="blocks/furniture_ceiling_light.obj">
+		<base index="0"/>
+	</furniture_ceiling_light>
+	<furniture_wall_light modelfile="blocks/furniture_wall_light.obj">
+		<base index="0"/>
+	</furniture_wall_light>
+	<furniture_erect_light modelfile="blocks/furniture_erect_light.obj">
+		<base index="0"/>
+	</furniture_erect_light>
+	<furniture_toilet modelfile="blocks/furniture_toilet.obj">
+		<base index="0"/>
+	</furniture_toilet>
+	<furniture_chair modelfile="blocks/furniture_chair.obj">
+		<base index="0"/>
+	</furniture_chair>
+	<furniture_half_cabinet modelfile="blocks/furniture_half_cabinet.obj">
+		<base0 index="0"/>
+		<base2 index="1"/>
+		<base3 index="2"/>
+	</furniture_half_cabinet>
+	<furniture_stairs modelfile="blocks/furniture_stairs.obj">
+		<base index="0"/>
+	</furniture_stairs>
+	<furniture_tea_table modelfile="blocks/furniture_tea_table.obj">
+		<base index="0"/>
+	</furniture_tea_table>
+	<furniture_wash_table modelfile="blocks/furniture_wash_table.obj">
+		<base index="0"/>
+	</furniture_wash_table>
+	<furniture_cabinet modelfile="blocks/furniture_cabinet.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+	</furniture_cabinet>
+	<furniture_group_cabinet modelfile="blocks/furniture_group_cabinet.obj">
+		<close1 index="0"/>
+		<close2 index="2"/>
+		<close3_down index="3"/>
+		<close3_up index="4"/>
+	</furniture_group_cabinet>
+	<gravity_device modelfile="blocks/gravity_device.obj">
+		<base index="0"/>
+		<sphere_03 index="1"/>
+		<sphere_02 index="2"/>
+		<sphere_01 index="3"/>
+	</gravity_device>
+	<furniture_rail modelfile="blocks/furniture_rail.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</furniture_rail>
+	<furniture_closet modelfile="blocks/furniture_closet.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</furniture_closet>
+	<music_box modelfile="blocks/music_box.obj">
+		<base index="0"/>
+	</music_box>
+	<weather_control modelfile="blocks/weather_control.obj">
+		<base index="0"/>
+	</weather_control>
+	<honor_frame modelfile="blocks/honor_frame.obj">
+		<base index="0"/>
+	</honor_frame>
+  <refrigerator1 modelfile="blocks/refrigerator1.obj">
+    <lower index="0"/>
+    <upper index="1"/>
+  </refrigerator1>
+  <refrigerator2 modelfile="blocks/refrigerator2.obj">
+    <lower index="0"/>
+    <upper index="1"/>
+  </refrigerator2>
+  <refrigerator3 modelfile="blocks/refrigerator3.obj">
+    <lower index="0"/>
+    <upper index="1"/>
+  </refrigerator3>
+  <rug modelfile="blocks/rug.obj">
+    <base index="0"/>
+  </rug>
+  <rice_cooker1 modelfile="blocks/rice_cooker1.obj">
+    <base index="0"/>
+  </rice_cooker1>
+  <rice_cooker2 modelfile="blocks/rice_cooker2.obj">
+    <base index="0"/>
+  </rice_cooker2>
+  <rice_cooker3 modelfile="blocks/rice_cooker3.obj">
+    <base index="0"/>
+  </rice_cooker3>
+  <adorn1_hang modelfile="blocks/adorn1_hang.obj">
+    <base index="0"/>
+  </adorn1_hang>
+  <adorn2_hang modelfile="blocks/adorn2_hang.obj">
+    <base index="0"/>
+  </adorn2_hang>
+  <vase1 modelfile="blocks/vase1.obj">
+    <base index="0"/>
+  </vase1>
+  <vase2 modelfile="blocks/vase2.obj">
+    <base index="0"/>
+  </vase2>
+  <vase3 modelfile="blocks/vase3.obj">
+    <base index="0"/>
+  </vase3>
+  <picture1 modelfile="blocks/picture1.obj">
+    <base index="0"/>
+    <base1 index="1"/>
+  </picture1>
+  <picture2 modelfile="blocks/picture2.obj">
+    <base index="0"/>
+    <base1 index="1"/>
+  </picture2>
+  <oven1 modelfile="blocks/oven1.obj">
+    <base index="0"/>
+  </oven1>
+  <oven2 modelfile="blocks/oven2.obj">
+    <base index="0"/>
+  </oven2>
+  <oven3 modelfile="blocks/oven3.obj">
+    <base index="0"/>
+  </oven3>
+  <bookshelf modelfile="blocks/bookshelf.obj">
+    <base index="0"/>
+    <base1 index="1"/>
+  </bookshelf>
+  <hearth1 modelfile="blocks/hearth1.obj">
+    <base index="0"/>
+  </hearth1>
+  <hearth2 modelfile="blocks/hearth2.obj">
+    <base index="0"/>
+  </hearth2>
+  <hearth3 modelfile="blocks/hearth3.obj">
+    <base index="0"/>
+  </hearth3>
+  <china_bed modelfile="blocks/china_bed.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</china_bed>
+	<china_bathtub modelfile="blocks/china_bathtub.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</china_bathtub>
+	<china_desk modelfile="blocks/china_desk.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</china_desk>
+	<china_screen modelfile="blocks/china_screen.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</china_screen>
+	<china_sofa modelfile="blocks/china_sofa.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</china_sofa>
+	<china_table modelfile="blocks/china_table.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+		<base4 index="3"/>
+	</china_table>
+	<china_window modelfile="blocks/china_window.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</china_window>
+	<china_door modelfile="blocks/china_door.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+	</china_door>
+	<china_ceiling_light modelfile="blocks/china_ceiling_light.obj">
+		<base index="0"/>
+	</china_ceiling_light>
+	<china_wall_light modelfile="blocks/china_wall_light.obj">
+		<base index="0"/>
+	</china_wall_light>
+	<china_erect_light modelfile="blocks/china_erect_light.obj">
+		<base index="0"/>
+	</china_erect_light>
+	<china_toilet modelfile="blocks/china_toilet.obj">
+		<base index="0"/>
+	</china_toilet>
+	<china_chair modelfile="blocks/china_chair.obj">
+		<base index="0"/>
+	</china_chair>
+	<china_half_cabinet modelfile="blocks/china_half_cabinet.obj">
+		<base0 index="0"/>
+		<base2 index="1"/>
+		<base3 index="2"/>
+	</china_half_cabinet>
+	<china_stairs modelfile="blocks/china_stairs.obj">
+		<base index="0"/>
+	</china_stairs>
+	<china_tea_table modelfile="blocks/china_tea_table.obj">
+		<base index="0"/>
+	</china_tea_table>
+	<china_wash_table modelfile="blocks/china_wash_table.obj">
+		<base index="0"/>
+	</china_wash_table>
+	<china_cabinet modelfile="blocks/china_cabinet.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+	</china_cabinet>
+	<china_group_cabinet modelfile="blocks/china_group_cabinet.obj">
+		<close1 index="0"/>
+		<close2 index="2"/>
+		<close3_down index="3"/>
+		<close3_up index="4"/>
+	</china_group_cabinet>
+	<gravity_device modelfile="blocks/gravity_device.obj">
+		<base index="0"/>
+		<sphere_03 index="1"/>
+		<sphere_02 index="2"/>
+		<sphere_01 index="3"/>
+	</gravity_device>
+	<china_rail modelfile="blocks/china_rail.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</china_rail>
+	<china_closet modelfile="blocks/china_closet.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</china_closet>
+<modern_bed modelfile="blocks/modern_bed.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</modern_bed>
+	<modern_bathtub modelfile="blocks/modern_bathtub.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</modern_bathtub>
+	<modern_desk modelfile="blocks/modern_desk.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</modern_desk>
+	<modern_screen modelfile="blocks/modern_screen.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</modern_screen>
+	<modern_sofa modelfile="blocks/modern_sofa.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</modern_sofa>
+
+	<modern_window modelfile="blocks/modern_window.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</modern_window>
+	<modern_door modelfile="blocks/modern_door.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+	</modern_door>
+	<modern_ceiling_light modelfile="blocks/modern_ceiling_light.obj">
+		<base index="0"/>
+	</modern_ceiling_light>
+	<modern_wall_light modelfile="blocks/modern_wall_light.obj">
+		<base index="0"/>
+	</modern_wall_light>
+	<modern_erect_light modelfile="blocks/modern_erect_light.obj">
+		<base index="0"/>
+	</modern_erect_light>
+	<modern_toilet modelfile="blocks/modern_toilet.obj">
+		<base index="0"/>
+	</modern_toilet>
+	<modern_chair modelfile="blocks/modern_chair.obj">
+		<base index="0"/>
+	</modern_chair>
+	<modern_half_cabinet modelfile="blocks/modern_half_cabinet.obj">
+		<base0 index="0"/>
+		<base2 index="1"/>
+		<base3 index="2"/>
+	</modern_half_cabinet>
+	<modern_stairs modelfile="blocks/modern_stairs.obj">
+		<base index="0"/>
+	</modern_stairs>
+	<modern_tea_table modelfile="blocks/modern_tea_table.obj">
+		<base index="0"/>
+	</modern_tea_table>
+	<modern_wash_table modelfile="blocks/modern_wash_table.obj">
+		<base index="0"/>
+	</modern_wash_table>
+	<modern_cabinet modelfile="blocks/modern_cabinet.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+	</modern_cabinet>
+	<modern_group_cabinet modelfile="blocks/modern_group_cabinet.obj">
+		<close1 index="0"/>
+		<close2 index="2"/>
+		<close3_down index="3"/>
+		<close3_up index="4"/>
+	</modern_group_cabinet>
+	<gravity_device modelfile="blocks/gravity_device.obj">
+		<base index="0"/>
+		<sphere_03 index="1"/>
+		<sphere_02 index="2"/>
+		<sphere_01 index="3"/>
+	</gravity_device>
+	<modern_rail modelfile="blocks/modern_rail.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+		<pillow1 index="2"/>
+
+	</modern_rail>
+	<modern_closet modelfile="blocks/modern_closet.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</modern_closet>
+	<tale_bed modelfile="blocks/tale_bed.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</tale_bed>
+	<tale_bathtub modelfile="blocks/tale_bathtub.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</tale_bathtub>
+	<tale_desk modelfile="blocks/tale_desk.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</tale_desk>
+	<tale_screen modelfile="blocks/tale_screen.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</tale_screen>
+	<tale_sofa modelfile="blocks/tale_sofa.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</tale_sofa>
+	<tale_table modelfile="blocks/tale_table.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+		<base4 index="3"/>
+		<base5 index="4"/>
+	</tale_table>
+	<tale_window modelfile="blocks/tale_window.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</tale_window>
+	<tale_door modelfile="blocks/tale_door.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+	</tale_door>
+	<tale_ceiling_light modelfile="blocks/tale_ceiling_light.obj">
+		<base index="0"/>
+	</tale_ceiling_light>
+	<tale_wall_light modelfile="blocks/tale_wall_light.obj">
+		<base index="0"/>
+	</tale_wall_light>
+	<tale_erect_light modelfile="blocks/tale_erect_light.obj">
+		<base index="0"/>
+	</tale_erect_light>
+	<tale_toilet modelfile="blocks/tale_toilet.obj">
+		<base index="0"/>
+	</tale_toilet>
+	<tale_chair modelfile="blocks/tale_chair.obj">
+		<base index="0"/>
+	</tale_chair>
+	<tale_half_cabinet modelfile="blocks/tale_half_cabinet.obj">
+		<base0 index="0"/>
+		<base2 index="1"/>
+		<base3 index="2"/>
+	</tale_half_cabinet>
+	<tale_stairs modelfile="blocks/tale_stairs.obj">
+		<base index="0"/>
+	</tale_stairs>
+	<tale_tea_table modelfile="blocks/tale_tea_table.obj">
+		<base index="0"/>
+	</tale_tea_table>
+	<tale_wash_table modelfile="blocks/tale_wash_table.obj">
+		<base index="0"/>
+	</tale_wash_table>
+	<tale_cabinet modelfile="blocks/tale_cabinet.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+	</tale_cabinet>
+	<tale_group_cabinet modelfile="blocks/tale_group_cabinet.obj">
+		<close1 index="0"/>
+		<close2 index="2"/>
+		<close3_down index="3"/>
+		<close3_up index="4"/>
+	</tale_group_cabinet>
+	<gravity_device modelfile="blocks/gravity_device.obj">
+		<base index="0"/>
+		<sphere_03 index="1"/>
+		<sphere_02 index="2"/>
+		<sphere_01 index="3"/>
+	</gravity_device>
+	<tale_rail modelfile="blocks/tale_rail.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+		<pillow1 index="2"/>
+	</tale_rail>
+	<tale_closet modelfile="blocks/tale_closet.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</tale_closet>
+	<scifi_bed modelfile="blocks/scifi_bed.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</scifi_bed>
+	<scifi_bathtub modelfile="blocks/scifi_bathtub.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</scifi_bathtub>
+	<scifi_desk modelfile="blocks/scifi_desk.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</scifi_desk>
+	<scifi_screen modelfile="blocks/scifi_screen.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+	</scifi_screen>
+	<scifi_sofa modelfile="blocks/scifi_sofa.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</scifi_sofa>
+	<scifi_table modelfile="blocks/scifi_table.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+		<base4 index="3"/>
+	</scifi_table>
+	<scifi_window modelfile="blocks/scifi_window.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</scifi_window>
+	<scifi_door modelfile="blocks/scifi_door.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+	</scifi_door>
+	<scifi_ceiling_light modelfile="blocks/scifi_ceiling_light.obj">
+		<base index="0"/>
+	</scifi_ceiling_light>
+	<scifi_wall_light modelfile="blocks/scifi_wall_light.obj">
+		<base index="0"/>
+	</scifi_wall_light>
+	<scifi_erect_light modelfile="blocks/scifi_erect_light.obj">
+		<base index="0"/>
+	</scifi_erect_light>
+	<scifi_toilet modelfile="blocks/scifi_toilet.obj">
+		<base index="0"/>
+	</scifi_toilet>
+	<scifi_chair modelfile="blocks/scifi_chair.obj">
+		<base index="0"/>
+	</scifi_chair>
+	<scifi_half_cabinet modelfile="blocks/scifi_half_cabinet.obj">
+		<base0 index="0"/>
+		<base2 index="1"/>
+		<base3 index="2"/>
+	</scifi_half_cabinet>
+	<scifi_stairs modelfile="blocks/scifi_stairs.obj">
+		<base index="0"/>
+	</scifi_stairs>
+	<scifi_tea_table modelfile="blocks/scifi_tea_table.obj">
+		<base index="0"/>
+	</scifi_tea_table>
+	<scifi_wash_table modelfile="blocks/scifi_wash_table.obj">
+		<base index="0"/>
+	</scifi_wash_table>
+	<scifi_cabinet modelfile="blocks/scifi_cabinet.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+	</scifi_cabinet>
+	<scifi_group_cabinet modelfile="blocks/scifi_group_cabinet.obj">
+		<close1 index="0"/>
+		<close2 index="2"/>
+		<close3_down index="3"/>
+		<close3_up index="4"/>
+	</scifi_group_cabinet>
+	<gravity_device modelfile="blocks/gravity_device.obj">
+		<base index="0"/>
+		<sphere_03 index="1"/>
+		<sphere_02 index="2"/>
+		<sphere_01 index="3"/>
+	</gravity_device>
+	<scifi_rail modelfile="blocks/scifi_rail.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+	</scifi_rail>
+	<scifi_closet modelfile="blocks/scifi_closet.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</scifi_closet>
+	<european_bed modelfile="blocks/european_bed.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</european_bed>
+	<european_bathtub modelfile="blocks/european_bathtub.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</european_bathtub>
+	<european_desk modelfile="blocks/european_desk.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</european_desk>
+	<european_screen modelfile="blocks/european_screen.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</european_screen>
+	<european_sofa modelfile="blocks/european_sofa.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</european_sofa>
+	<european_table modelfile="blocks/european_table.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+		<base4 index="3"/>
+	</european_table>
+	<european_window modelfile="blocks/european_window.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</european_window>
+	<european_door modelfile="blocks/european_door.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+	</european_door>
+	<european_ceiling_light modelfile="blocks/european_ceiling_light.obj">
+		<base index="0"/>
+	</european_ceiling_light>
+	<european_wall_light modelfile="blocks/european_wall_light.obj">
+		<base index="0"/>
+	</european_wall_light>
+	<european_erect_light modelfile="blocks/european_erect_light.obj">
+		<base index="0"/>
+	</european_erect_light>
+	<european_toilet modelfile="blocks/european_toilet.obj">
+		<base index="0"/>
+	</european_toilet>
+	<european_chair modelfile="blocks/european_chair.obj">
+		<base index="0"/>
+	</european_chair>
+	<european_half_cabinet modelfile="blocks/european_half_cabinet.obj">
+		<base0 index="0"/>
+		<base2 index="1"/>
+		<base3 index="2"/>
+	</european_half_cabinet>
+	<european_stairs modelfile="blocks/european_stairs.obj">
+		<base index="0"/>
+	</european_stairs>
+	<european_tea_table modelfile="blocks/european_tea_table.obj">
+		<base index="0"/>
+	</european_tea_table>
+	<european_wash_table modelfile="blocks/european_wash_table.obj">
+		<base index="0"/>
+	</european_wash_table>
+	<european_cabinet modelfile="blocks/european_cabinet.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+	</european_cabinet>
+	<european_group_cabinet modelfile="blocks/european_group_cabinet.obj">
+		<close1 index="0"/>
+		<close2 index="2"/>
+		<close3_down index="3"/>
+		<close3_up index="4"/>
+	</european_group_cabinet>
+	<gravity_device modelfile="blocks/gravity_device.obj">
+		<base index="0"/>
+		<sphere_03 index="1"/>
+		<sphere_02 index="2"/>
+		<sphere_01 index="3"/>
+	</gravity_device>
+	<european_rail modelfile="blocks/european_rail.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+		<pillow1 index="2"/>
+	</european_rail>
+	<european_closet modelfile="blocks/european_closet.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</european_closet>
+	<rawtree modelfile="blocks/rawtree.obj">
+		<base index="0"/>
+	</rawtree>
+    <homefruit modelfile="blocks/homefruit.obj">
+        <saplings_small index="0"/>
+        <saplings_big index="1"/>
+        <trunk index="2"/>
+        <leaves index="3"/>
+        <banana_tree index="4"/>
+        <ballbean index="5"/>
+        <oxy index="6"/>
+        <banana index="7"/>
+        <mango index="8"/>
+        <pear index="9"/>
+        <peach index="10"/>
+	</homefruit>
+	<modern_table modelfile="blocks/modern_table.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+		<base2 index="2"/>
+		<base4 index="3"/>
+		<base5 index="4"/>
+	</modern_table>
+	<homeshrub modelfile="blocks/homeshrub.obj">
+		<homeshrub_saplings_small index="0"/>
+		<homeshrub_saplings_big index="1"/>
+		<homeshrub index="2"/>
+		<coffee_tree index="3"/>
+		<tea_tree index="4"/>
+		<orange_trre index="5"/>
+		<cotton_tree index="6"/>
+		<chili_tree index="7"/>
+	</homeshrub>
+    <pet_house modelfile="blocks/pet_house.obj">
+        <base index="0"/>
+    </pet_house>
+    <dunhuang_painting1 modelfile="blocks/dunhuang_painting1.obj">
+        <base index="0"/>
+    </dunhuang_painting1>
+    <dunhuang_painting2 modelfile="blocks/dunhuang_painting2.obj">
+        <base index="0"/>
+        <base1 index="1"/>
+    </dunhuang_painting2>
+    <dunhuang_painting3 modelfile="blocks/dunhuang_painting3.obj">
+        <base index="0"/>
+    </dunhuang_painting3>
+    <dunhuang_sculpture1 modelfile="blocks/dunhuang_sculpture1.obj">
+        <base index="0"/>
+    </dunhuang_sculpture1>
+    <dunhuang_sculpture2 modelfile="blocks/dunhuang_sculpture2.obj">
+        <base index="0"/>
+    </dunhuang_sculpture2>
+    <dunhuang_sculpture3 modelfile="blocks/dunhuang_sculpture3.obj">
+        <base index="0"/>
+    </dunhuang_sculpture3>
+    <western_carpet modelfile="blocks/western_carpet.obj">
+        <base index="0"/>
+    </western_carpet>
+  <western_table modelfile="blocks/western_table.obj">
+    <base0 index="0"/>
+    <base1 index="1"/>
+    <base2 index="2"/>
+    <base4 index="3"/>
+  </western_table>
+  <western_cabinet modelfile="blocks/western_cabinet.obj">
+    <base0 index="0"/>
+    <base1 index="1"/>
+    <base2 index="2"/>
+  </western_cabinet>
+  <western_half_cabinet modelfile="blocks/western_half_cabinet.obj">
+    <base0 index="0"/>
+    <base2 index="1"/>
+    <base3 index="2"/>
+  </western_half_cabinet>
+  <western_group_cabinet modelfile="blocks/western_group_cabinet.obj">
+    <close1 index="0"/>
+    <close2 index="2"/>
+    <close3_down index="3"/>
+    <close3_up index="4"/>
+  </western_group_cabinet>
+  <populus_tea_table modelfile="blocks/populus_tea_table.obj">
+    <base index="0"/>
+  </populus_tea_table>
+  <populus_chair modelfile="blocks/populus_chair.obj">
+    <base index="0"/>
+  </populus_chair>
+  <western_bed modelfile="blocks/western_bed.obj">
+		<wei index="0"/>
+		<tou index="1"/>
+	</western_bed>
+  <western_sofa modelfile="blocks/western_sofa.obj">
+		<base0 index="0"/>
+		<base1 index="1"/>
+	</western_sofa>
+  <western_desk modelfile="blocks/western_desk.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</western_desk>
+  <western_wash_table modelfile="blocks/western_wash_table.obj">
+		<base index="0"/>
+	</western_wash_table>
+  <western_chair modelfile="blocks/western_chair.obj">
+		<base index="0"/>
+	</western_chair>
+  <western_toilet modelfile="blocks/western_toilet.obj">
+		<base index="0"/>
+	</western_toilet>
+ <western_bathtub modelfile="blocks/western_bathtub.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</western_bathtub>
+  <western_rail modelfile="blocks/western_rail.obj">
+		<pillow index="0"/>
+		<bar index="1"/>
+		<pillow1 index="2"/>
+	</western_rail>
+  <western_tea_table modelfile="blocks/western_tea_table.obj">
+		<base index="0"/>
+	</western_tea_table>
+  <western_screen modelfile="blocks/western_screen.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</western_screen>
+   <western_erect_light modelfile="blocks/western_erect_light.obj">
+		<base index="0"/>
+	</western_erect_light>
+  <western_ceiling_light modelfile="blocks/western_ceiling_light.obj">
+		<base index="0"/>
+	</western_ceiling_light>
+   <western_wall_light modelfile="blocks/western_wall_light.obj">
+		<base index="0"/>
+	</western_wall_light>
+  <western_stairs modelfile="blocks/western_stairs.obj">
+		<base index="0"/>
+	</western_stairs>
+  <western_closet modelfile="blocks/western_closet.obj">
+		<base1 index="0"/>
+		<base2 index="1"/>
+	</western_closet>
+  <western_window modelfile="blocks/western_window.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+		<lower1 index="2"/>
+		<upper1 index="3"/>
+	</western_window>
+	<western_door modelfile="blocks/western_door.obj">
+		<lower index="0"/>
+		<upper index="1"/>
+	</western_door>
+</Blocks>

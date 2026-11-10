@@ -1,0 +1,1250 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<Ui>
+    <Script file="luascript/survivegameconfig.lua"/>
+    <Script file="ui/mobile/battle.lua"/>
+    <Button name="BattlePlayerInfoTemplate" virtual="true" hidden="true">
+        <Size>
+            <AbsDimension x="566" y="64"/>
+        </Size>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentNormal" inherits="TemplateBkg8"/>
+                <Texture name="$parentMy" inherits="TemplateBigBkg6" hidden="true"/>
+                <Texture name="$parentHead" file="ui/roleicons/1.png">
+                    <Size>
+                        <AbsDimension x="58" y="54"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="left" relativeTo="$parent" relativePoint="left">
+                            <Offset>
+                                <AbsDimension x="7" y="-1"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentFrame" file="ui/headframes/1.png">
+                    <Size>
+                        <AbsDimension x="75" y="71"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativeTo="$parentHead" relativePoint="center" />
+                    </Anchors>
+                </Texture>
+                <!--<Texture name="$parentHeadBox" file="ui/mobile/ui1.png" x="606" y="397" w="140" h="140" hidden="true">-->
+                <!--<Size>-->
+                <!--<AbsDimension x="70" y="70"/>-->
+                <!--</Size>-->
+                <!--<Anchors>-->
+                <!--<Anchor point="center" relativePoint="center" relativeTo="$parentHead">-->
+                <!--<Offset>-->
+                <!--<AbsDimension x="0" y="0"/>-->
+                <!--</Offset>-->
+                <!--</Anchor>-->
+                <!--</Anchors>-->
+                <!--</Texture>-->
+                <FontString name="$parentName" justifyH="center" fonttype="BlackFont22" lineInterval="2" fontStyle="normal" text="名字有七个字啊">
+                    <Color r="255" g="255" b="255"/>
+                    <Size>
+                        <AbsDimension x="185" y="21"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="left" relativePoint="right" relativeTo="$parentHead">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentTeam" justifyH="center" fonttype="BlackFont22" lineInterval="2" fontStyle="normal" text="红队">
+                    <Color r="255" g="255" b="255"/>
+                    <Size>
+                        <AbsDimension x="90" y="21"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="left" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="373" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentKillNum" justifyH="center" fonttype="BlackFont22" lineInterval="2" fontStyle="normal" text="10">
+                    <Color r="255" g="255" b="255"/>
+                    <Size>
+                        <AbsDimension x="73" y="21"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="right" relativePoint="right" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="-3" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentAddFriend">
+                <Size>
+                    <AbsDimension x="51" y="54"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="right" relativePoint="right" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="-13" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="overlay">
+                        <Texture name="$parentIcon" file="ui/mobile/texture2/shop.xml" uvname="icon_add_btn.png" abs_x="20" abs_y="20">
+                            <Anchors>
+                                <Anchor point="center" relativeTo="$parent" relativePoint="center" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <NormalTexture name="$parentNormal" inherits="TemplateBkg5" />
+                <PushedTexture name="$parentPushedBG" inherits="TemplateBkg5" >
+                    <Size>
+                        <AbsDimension x="48" y="51"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </PushedTexture>
+                <Scripts>
+                    <OnClick>BattlePlayerInfoTemplateAddFriend_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Button>
+    <Frame name="BattleFrame" parent="UIClient" frameStrata="MEDIUM" hidden="true" framelevel="7000">
+        <Size>
+            <RelDimension x="1" y="1"/>
+        </Size>
+        <Anchors>
+            <Anchor point="topleft" relativePoint="topleft" relativeTo="">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBkg" file="ui/white.png" stretchedge="true" color="A0000000">
+                    <Size>
+                        <RelDimension x="1" y="1"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentChenDi" inherits="TemplateBkg1">
+                    <Size>
+                        <AbsDimension x="627" y="640"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="5"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentChenDi2" inherits="TemplateBigBkg11">
+                    <Size>
+                        <AbsDimension x="580" y="460"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="top" relativePoint="top" relativeTo="$parentChenDi">
+                            <Offset>
+                                <AbsDimension x="0" y="81"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentChenDi2TitleBkg" inherits="TemplateBkg25">
+                    <Size>
+                        <AbsDimension x="580" y="43"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="top" relativePoint="top" relativeTo="$parentChenDi2">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentTitleIcon" inherits="TemplateBigBkg31">
+                    <Size>
+                        <AbsDimension x="614" y="67"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentChenDi">
+                            <Offset>
+                                <AbsDimension x="4" y="6"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentTitleHuaWen" inherits="TemplateBigBkg7_flat">
+                    <Anchors>
+                        <Anchor point="topleft" relativeTo="$parentTitleIcon" relativePoint="topleft" />
+                        <Anchor point="bottomright" relativeTo="$parentTitleIcon" relativePoint="bottomright" />
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentDecorate1" file="ui/mobile/texture2/bigtex/empty.png"   hidden="true">
+                    <Size>
+                        <AbsDimension x="136" y="131"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentTitleIcon">
+                            <Offset>
+                                <AbsDimension x="-33" y="-5"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentDecorate2" file="ui/mobile/texture2/bigtex/empty.png"  hidden="true">
+                    <Size>
+                        <AbsDimension x="136" y="131"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topright" relativePoint="topright" relativeTo="$parentTitleIcon">
+                            <Offset>
+                                <AbsDimension x="30" y="-5"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString name="$parentTitle" justifyH="center" fonttype="BlackFont30" lineInterval="2" fontStyle="normal" text="$208">
+                    <Color r="77" g="112" b="117"/>
+                    <Size>
+                        <AbsDimension x="614" y="29"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="top" relativePoint="top" relativeTo="$parentTitleIcon">
+                            <Offset>
+                                <AbsDimension x="0" y="17"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentCloseBtn" inherits="TemplateCloseBtn0">
+                <Size>
+                    <AbsDimension x="36" y="46"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="topright" relativePoint="topright" relativeTo="$parentChenDi">
+                        <Offset>
+                            <AbsDimension x="-20" y="16"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>BattleFrameCloseBtn_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+            <Frame name="$parentColsTitle">
+                <Size>
+                    <AbsDimension x="580" y="42"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="top" relativePoint="top" relativeTo="$parentChenDi2">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture name="$parentBkg" file="ui/mobile/texture2/bigtex/empty.png" hidden="true">
+                            <Size>
+                                <RelDimension x="1" y="1"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                            <Center>
+                                <Left offsetX="0" offsetY="0" w="20" h="37"/>
+                                <Center offsetX="20" offsetY="0" w="20" h="37"/>
+                                <Right offsetX="40" offsetY="0" w="20" h="37"/>
+                            </Center>
+                        </Texture>
+                        <FontString name="$parentHeadTitle" justifyH="center" fonttype="BlackFont22" lineInterval="2" fontStyle="normal" text="$211">
+                            <Color r="77" g="112" b="117"/>
+                            <Size>
+                                <AbsDimension x="89" y="21"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="left" relativePoint="left" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentNameTitle" justifyH="center" fonttype="BlackFont22" lineInterval="2" fontStyle="normal" text="$212">
+                            <Color r="77" g="112" b="117"/>
+                            <Size>
+                                <AbsDimension x="156" y="21"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="left" relativePoint="right" relativeTo="$parentHeadTitle">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentTeamTitle" justifyH="center" fonttype="BlackFont22" lineInterval="2" fontStyle="normal" text="$711">
+                            <Color r="77" g="112" b="117"/>
+                            <Size>
+                                <AbsDimension x="222" y="21"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="center" relativePoint="center" relativeTo="$parentKillTitle">
+                                    <Offset>
+                                        <AbsDimension x="-113" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentKillTitle" justifyH="center" fonttype="BlackFont22" lineInterval="2" fontStyle="normal" text="$712">
+                            <Color r="77" g="112" b="117"/>
+                            <Size>
+                                <AbsDimension x="88" y="21"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="center" relativePoint="left" relativeTo="$parentAddFriendTitle">
+                                    <Offset>
+                                        <AbsDimension x="-51" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentAddFriendTitle" hidden="true" fonttype="BlackFont22" justifyH="center" fontStyle="normal" text="$214">
+                            <Color r="77" g="112" b="117"/>
+                            <Size>
+                                <AbsDimension x="81" y="21"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="right" relativePoint="right" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+            <SlidingFrame name="$parentInfo" slidingY="true" slideplane="$parentPlane">
+                <Size>
+                    <AbsDimension x="574" y="412"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="top" relativePoint="top" relativeTo="$parentChenDi2">
+                        <Offset>
+                            <AbsDimension x="0" y="42"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Frames>
+                    <Frame name="$parentPlane" hidden="true">
+                        <Anchors>
+                            <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                                <Offset>
+                                    <AbsDimension x="0" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Size>
+                            <AbsDimension x="580" y="418"/>
+                        </Size>
+                    </Frame>
+                    <Button name="$parentPlayer1" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer2" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer3" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer4" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer5" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer6" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer7" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer8" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer9" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer10" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer11" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer12" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer13" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer14" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer15" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer16" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer17" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer18" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer19" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer20" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer21" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer22" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer23" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer24" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer25" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer26" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer27" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer28" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer29" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer30" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer31" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer32" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer33" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer34" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer35" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer36" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer37" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer38" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer39" inherits="BattlePlayerInfoTemplate"/>
+                    <Button name="$parentPlayer40" inherits="BattlePlayerInfoTemplate"/>
+                </Frames>
+            </SlidingFrame>
+            <Button name="$parentReopen" inherits="BtnTemplate6" hidden="true">
+                <Anchors>
+                    <Anchor point="bottom" relativeTo="$parentChenDi" relativePoint="bottom">
+                        <Offset>
+                            <AbsDimension x="-165" y="-9"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentName" fonttype="BlackFont28" justifyH="center" lineInterval="2" fontStyle="border" text="$4886">
+                            <Color r="255" g="255" b="255"/>
+                            <Size>
+                                <AbsDimension x="160" y="29"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>BattleFrameReopen_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentBackMenu" inherits="BtnTemplate7" hidden="true">
+                <Anchors>
+                    <Anchor point="bottom" relativeTo="$parentChenDi" relativePoint="bottom">
+                        <Offset>
+                            <AbsDimension x="165" y="-9"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentName" fonttype="BlackFont28" justifyH="center" lineInterval="2" fontStyle="border" text="$3052">
+                            <Color r="255" g="255" b="255"/>
+                            <Size>
+                                <AbsDimension x="160" y="29"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>BattleFrameBackMenu_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnLoad>BattleFrame_OnLoad();</OnLoad>
+            <OnEvent>BattleFrame_OnEvent();</OnEvent>
+            <OnShow>BattleFrame_OnShow();</OnShow>
+            <OnHide>BattleFrame_OnHide();</OnHide>
+        </Scripts>
+    </Frame>
+    <Frame name="BattleEndShadeFrame" parent="UIClient" frameStrata="MEDIUM" hidden="true" framelevel="8000">
+        <Size>
+            <RelDimension x="1" y="1"/>
+        </Size>
+        <Anchors>
+            <Anchor point="center" relativePoint="center" relativeTo="">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBkg" file="ui/white.png" stretchedge="true" color="8c000000">
+                    <Size>
+                        <RelDimension x="1" y="1"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <ModelView name="$parentView">
+                    <Size>
+                        <RelDimension x="1" y="1"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </ModelView>
+                <FontString name="$parentResult" fonttype="BlackFont60" justifyH="center" fontStyle="border" text="" hidden="true">
+                    <Color r="254" g="250" b="231"/>
+                    <Size>
+                        <AbsDimension x="550" y="80"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="-30"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>BattleEndShadeFrame_OnLoad();</OnLoad>
+            <OnUpdate>BattleEndShadeFrame_OnUpdate();</OnUpdate>
+            <OnShow>BattleEndShadeFrame_OnShow();</OnShow>
+        </Scripts>
+    </Frame>
+    <Frame name="BattleInfoTemplate" virtual="true" hidden="true">
+        <Size>
+            <AbsDimension x="200" y="400"/>
+        </Size>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentScoreBkg" file="ui/mobile/texture2/bigtex/empty.png"   hidden="true">
+                    <Size>
+                        <AbsDimension x="90" y="53"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="bottom" relativeTo="$parent" relativePoint="bottom">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString name="$parentScore" fonttype="BlackFont28" justifyH="center" fontStyle="border" text="" hidden="true">
+                    <Color r="55" g="54" b="49"/>
+                    <Size>
+                        <AbsDimension x="88" y="29"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parentScoreBkg">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <Texture name="$parentHostIcon" file="ui/mobile/texture2/outgame2/uitex3.xml" uvname="sljm_fangzhu">
+                    <Size>
+                        <AbsDimension x="42" y="38"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="bottom" relativeTo="$parentScoreBkg" relativePoint="top">
+                            <Offset>
+                                <AbsDimension x="0" y="-2"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentCupIcon" file="ui/mobile/texture2/outgame2/uitex.xml" uvname="sljm_huangguan" hidden="true">
+                    <Size>
+                        <AbsDimension x="106" y="75"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="bottom" relativeTo="$parent" relativePoint="top">
+                            <Offset>
+                                <AbsDimension x="0" y="-10"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentIcon" file="ui/mobile/texture2/achievement.xml" uvname="cj_chixudenglu"  hidden="true">
+                    <Size>
+                        <AbsDimension x="30" y="30"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="right" relativePoint="left" relativeTo="$parentNickName">
+                            <Offset>
+                                <AbsDimension x="-12" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentFrame" file="ui/mobile/texture2/achievement.xml" uvname="cj_gold"  hidden="true">
+                    <Size>
+                        <AbsDimension x="49" y="49"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parentIcon"/>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentMask" file="ui/mobile/effect/ico_medalf_4.png" hidden="true">
+                    <Size>
+                        <AbsDimension x="49" y="49"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parentIcon"/>
+                    </Anchors>
+                    <UVAnimation texrows="4" texcols="4"/>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <RichText name="$parentNickName" fonttype="BlackFont20" fontStyle="border">
+                <Size>
+                    <AbsDimension x="160" y="20"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+            </RichText>
+            <Button name="$parentAddFriend" hidden="true">
+                <Size>
+                    <AbsDimension x="40" y="42"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="topright" relativePoint="topright" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="0" y="0"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <NormalTexture name="$parentNormal" file="ui/mobile/texture2/shop.xml" uvname="icon_add_btn.png" alphamode="alphablend" color="8Affffff"/>
+                <PushedTexture name="$parentPushedBG" file="ui/mobile/texture2/shop.xml" uvname="icon_add_btn.png">
+                    <Size>
+                        <AbsDimension x="37" y="39"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </PushedTexture>
+                <Scripts>
+                    <OnClick>BattleInfoTemplateAddFriend_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Frame>
+    <Frame name="BattleEndFrame" parent="UIClient" frameStrata="MEDIUM" hidden="true" framelevel="6000">
+        <Size>
+            <RelDimension x="1" y="1"/>
+        </Size>
+        <Anchors>
+            <Anchor point="topleft" relativePoint="topleft" relativeTo="">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBkg" file="ui/mobile/texture2/bigtex/sljm_beijing.png"  alphamode="alphablend">
+                    <Size>
+                        <RelDimension x="1" y="1"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentShadow1" file="ui/mobile/texture2/outgame2/uitex3.xml" uvname="sljm_touying" hidden="true">
+                    <Anchors>
+                        <Anchor point="center" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="638" y="514"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <Size>
+                        <AbsDimension x="99" y="19"/>
+                    </Size>
+                </Texture>
+                <Texture name="$parentShadow2" file="ui/mobile/texture2/outgame2/uitex3.xml" uvname="sljm_touying" hidden="true">
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <Size>
+                        <AbsDimension x="125" y="24"/>
+                    </Size>
+                </Texture>
+                <Texture name="$parentShadow3" file="ui/mobile/texture2/outgame2/uitex3.xml" uvname="sljm_touying" hidden="true">
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <Size>
+                        <AbsDimension x="125" y="24"/>
+                    </Size>
+                </Texture>
+                <Texture name="$parentShadow4" file="ui/mobile/texture2/outgame2/uitex3.xml" uvname="sljm_touying" hidden="true">
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <Size>
+                        <AbsDimension x="125" y="24"/>
+                    </Size>
+                </Texture>
+                <Texture name="$parentShadow5" file="ui/mobile/texture2/outgame2/uitex3.xml" uvname="sljm_touying" hidden="true">
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <Size>
+                        <AbsDimension x="125" y="24"/>
+                    </Size>
+                </Texture>
+                <Texture name="$parentShadow6" file="ui/mobile/texture2/outgame2/uitex3.xml" uvname="sljm_touying" hidden="true">
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                    <Size>
+                        <AbsDimension x="125" y="24"/>
+                    </Size>
+                </Texture>
+                <ModelView name="$parentView">
+                    <Size>
+                        <RelDimension x="1" y="1"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </ModelView>
+                <Texture name="$parentResultBkg" file="ui/mobile/texture2/bigtex/img_tips_victory.png" hidden="false">
+                    <Size>
+                        <AbsDimension x="399" y="46"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="top" relativePoint="bottom" relativeTo="BattleBtn">
+                            <Offset>
+                                <AbsDimension x="0" y="28"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString name="$parentResult" fonttype="BlackFont28" justifyH="center" fontStyle="border">
+                    <Color r="55" g="54" b="49"/>
+                    <Size>
+                        <AbsDimension x="300" y="28"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parentResultBkg">
+                            <Offset>
+                                <AbsDimension x="-16" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentLeftTitle" fonttype="BlackFont34" justifyH="right" fontStyle="border" hidden="true" text="第1">
+                    <Color r="254" g="215" b="43"/>
+                    <Size>
+                        <AbsDimension x="160" y="35"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topright" relativePoint="top" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="-8" y="22"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentRightTitle" fonttype="BlackFont24" justifyH="left" fontStyle="border" hidden="true" text="/40">
+                    <Color r="238" g="238" b="238"/>
+                    <Size>
+                        <AbsDimension x="160" y="25"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="top" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="-6" y="30"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentLeftDesc" fonttype="BlackFont24" fontStyle="border" hidden="true" text="大吉大利，我是第一">
+                    <Color r="254" g="215" b="43"/>
+                    <Size>
+                        <AbsDimension x="400" y="25"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="75" y="25"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentLeftLittleDesc" fonttype="BlackFont18" fontStyle="border" hidden="true" text="排名1">
+                    <Color r="238" g="238" b="238"/>
+                    <Size>
+                        <AbsDimension x="130" y="19"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentLeftDesc">
+                            <Offset>
+                                <AbsDimension x="0" y="35"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentRightLittleDesc" fonttype="BlackFont18" fontStyle="border" hidden="true" text="战胜4">
+                    <Color r="238" g="238" b="238"/>
+                    <Size>
+                        <AbsDimension x="130" y="19"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parentLeftLittleDesc">
+                            <Offset>
+                                <AbsDimension x="133" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentMapDesc" fonttype="BlackFont21" fontStyle="border" lineInterval="7">
+                    <Color r="238" g="238" b="238"/>
+                    <Size>
+                        <AbsDimension x="400" y="120"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="bottomleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="13" y="-132"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentCloseBtn" inherits="TemplateBtn2">
+                <Size>
+                    <AbsDimension x="182" y="81"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="bottom" relativePoint="bottom" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="-160" y="-45"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentName" fonttype="BlackFont28" justifyH="center" justifyV="middle" lineInterval="2" text="$8041">
+                            <Color r="51" g="55" b="55"/>
+                            <Size>
+                                <AbsDimension x="182" y="29"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>BattleEndFrameCloseBtn_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentScoreboardBtn" inherits="TemplateBtn17">
+                <Size>
+                    <AbsDimension x="59" y="63"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="10" y="10"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="overlay">
+                        <Texture name="$parentUvA" file="ui/mobile/effect/ui_button_2.png" hidden="true">
+                            <Size>
+                                <AbsDimension x="140" y="140"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                            <UVAnimation texrows="4" texcols="4"/>
+                        </Texture>
+                        <Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_score_board.png">
+                            <Size>
+                                <AbsDimension x="24" y="28"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>BattleBtn_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+            <Frame name="$parentPlayerInfo1" inherits="BattleInfoTemplate" hidden="true"/>
+            <Frame name="$parentPlayerInfo2" inherits="BattleInfoTemplate" hidden="true"/>
+            <Frame name="$parentPlayerInfo3" inherits="BattleInfoTemplate" hidden="true"/>
+            <Frame name="$parentPlayerInfo4" inherits="BattleInfoTemplate" hidden="true"/>
+            <Frame name="$parentPlayerInfo5" inherits="BattleInfoTemplate" hidden="true"/>
+            <Frame name="$parentPlayerInfo6" inherits="BattleInfoTemplate" hidden="true"/>
+            <Button name="$parentSpectatorModeBtn" inherits="TemplateBtn2" hidden="true">
+                <Size>
+                    <AbsDimension x="182" y="61"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="bottom" relativePoint="bottom" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="160" y="-45"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentName" fonttype="BlackFont24" justifyH="center" justifyV="middle" lineInterval="2" text="$8042">
+                            <Color r="51" g="55" b="55"/>
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                                <Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentTips" fonttype="BlackFont21" justifyH="center" fontStyle="border">
+                            <Color r="55" g="54" b="49"/>
+                            <Size>
+                                <AbsDimension x="200" y="29"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="top" relativePoint="bottom" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="5"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>BattleEndFrameSpectatorModeBtn_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+                        <Button name="$parentReopen" inherits="TemplateBtn3">
+                <Size>
+                    <AbsDimension x="182" y="81"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="bottom" relativePoint="bottom" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="160" y="-45"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentName" fonttype="BlackFont24" justifyH="center" justifyV="middle" lineInterval="2" text="$4887">
+                            <Color r="55" g="54" b="51"/>
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                                <Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>BattleFrameReopen_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentJoinBtn" inherits="TemplateBtn3" hidden="true">
+                <Size>
+                    <AbsDimension x="182" y="81"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="bottom" relativePoint="bottom" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="160" y="-45"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentName" fonttype="BlackFont24" justifyH="center" justifyV="middle" lineInterval="2" text="$4887">
+                            <Color r="55" g="54" b="51"/>
+                            <Size>
+                                <AbsDimension x="160" y="29"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="center" relativePoint="center" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="0"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentTips" fonttype="BlackFont21" justifyH="center" fontStyle="normal">
+                            <Color r="55" g="54" b="51"/>
+                            <Size>
+                                <AbsDimension x="200" y="22"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="top" relativePoint="bottom" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="0" y="6"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>BattleEndFrameJoinBtn_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentShareBtn" inherits="TemplateBtn2">
+                <Size>
+                    <AbsDimension x="182" y="61"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="bottomright" relativePoint="bottomright" relativeTo="$parent">
+                        <Offset>
+                            <AbsDimension x="-62" y="-45"/>
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentIcon" file="ui/mobile/texture2/common_icon.xml" uvname="icon_share.png">
+                            <Size>
+                                <AbsDimension x="25" y="24"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                                    <Offset>
+                                        <AbsDimension x="48" y="16"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                        <FontString name="$parentName" fonttype="BlackFont24" justifyV="middle" justifyH="left" text="$1070">
+                            <Color r="51" g="55" b="55"/>
+                            <Size>
+                                <AbsDimension x="94" y="31"/>
+                            </Size>
+                            <Anchors>
+                                <Anchor point="left" relativePoint="right" relativeTo="$parentIcon">
+                                    <Offset>
+                                        <AbsDimension x="9" y="1"/>
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>BattleEndFrameShareBtn_OnClick();</OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnLoad>BattleEndFrame_OnLoad();</OnLoad>
+            <OnUpdate>BattleEndFrame_OnUpdate();</OnUpdate>
+            <OnShow>BattleEndFrame_OnShow();</OnShow>
+            <OnHide>BattleEndFrame_OnHide();</OnHide>
+        </Scripts>
+    </Frame>
+    <Frame name="BattleDeathFrame" parent="UIClient" frameStrata="BACKGROUND" hidden="true" framelevel="4000">
+        <Size>
+            <RelDimension x="1" y="1"/>
+        </Size>
+        <Anchors>
+            <Anchor point="topleft" relativePoint="topleft" relativeTo="">
+                <Offset>
+                    <AbsDimension x="0" y="0"/>
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBkg" file="ui/white.png" stretchedge="true" color="A0000000">
+                    <Size>
+                        <RelDimension x="1" y="1"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="topleft" relativePoint="topleft" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentTitleBkg" file="ui/mobile/texture2/bigtex/lzy_22.png">
+                    <Size>
+                        <AbsDimension x="533" y="186"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="top" relativePoint="top" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="70"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString name="$parentName" fonttype="BlackFont34" justifyH="center" lineInterval="2" fontStyle="border" text="$217">
+                    <Color r="255" g="255" b="255"/>
+                    <Size>
+                        <AbsDimension x="400" y="34"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="center" relativePoint="center" relativeTo="$parentTitleBkg">
+                            <Offset>
+                                <AbsDimension x="0" y="15"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <Texture name="$parentDescBkg" file="ui/mobile/texture2/bigtex/lzy_21.png">
+                    <Size>
+                        <AbsDimension x="386" y="307"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="top" relativePoint="bottom" relativeTo="$parentTitleBkg">
+                            <Offset>
+                                <AbsDimension x="0" y="0"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString name="$parentCause" fonttype="BlackFont21" justifyH="center" fontStyle="border" text="呃，野外冒险总是有点危险的..." shadowcolor="ff4c094e" hidden="true">
+                    <Color r="255" g="254" b="189"/>
+                    <Size>
+                        <AbsDimension x="1000" y="34"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="bottom" relativePoint="bottom" relativeTo="$parent">
+                            <Offset>
+                                <AbsDimension x="0" y="-95"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentTime" fonttype="BlackFont30" justifyH="center" fontStyle="border">
+                    <Color r="255" g="255" b="255"/>
+                    <Size>
+                        <AbsDimension x="260" y="31"/>
+                    </Size>
+                    <Anchors>
+                        <Anchor point="top" relativePoint="top" relativeTo="$parentDescBkg">
+                            <Offset>
+                                <AbsDimension x="0" y="113"/>
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>BattleDeathFrame_OnLoad();</OnLoad>
+            <OnEvent>BattleDeathFrame_OnEvent();</OnEvent>
+            <OnShow>BattleDeathFrame_OnShow();</OnShow>
+            <OnHide>BattleDeathFrame_OnHide();</OnHide>
+            <OnUpdate>BattleDeathFrame_OnUpdate();</OnUpdate>
+        </Scripts>
+    </Frame>
+</Ui>

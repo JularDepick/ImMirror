@@ -1,0 +1,73 @@
+剧情ID,剧情名称,剧情图标[生物图标：mob_ID，道具图标：item_ID],触发目标ID,"前置条件[0=无，1=前置任务，2=时间，3=拥有道具]，例子：[{""Type"":0},{""Type"":1,""TaskID1"":1,""TaskID2"":2,""TaskID3"":3},{""Type"":2,""StartTime"":8,""EndTime"":10},{""Type"":3,""ItemID"":200,""Num"":10}]","内容[FuncType，0=继续对话，1=跳转对话，2=终止对话，3=接受任务]，例子：[""FuncType"": 3,""Val"": 6]，[""FuncType"": 1,""Val"": 1]",插件编辑类型,插件编辑模板[0=不是模板，1=作为模板]
+PlotID,PlotName,PlotIcon,InteractID,Condition,Content,EditType,IsTemplate
+1,@10801,mob_3401,,,"[
+    {
+        ""ID"": 1,
+        ""Text"": ""@10802"",
+        ""Answer"": [
+            {
+                ""Text"": ""@10803"",
+                ""FuncType"": 3,
+                ""Val"": 1
+            }
+        ]
+    }
+]",1,1
+2,@10810,mob_3400,,,"[
+    {
+        ""ID"": 1,
+        ""Text"": ""@10811"",
+        ""Answer"": [
+            {
+                ""Text"": ""@10812"",
+                ""FuncType"": 3,
+                ""Val"": 2
+            },
+            {
+                ""Text"": ""@10813"",
+                ""FuncType"": 2
+            }
+        ]
+    }
+]",1,1
+3,@10820,item_200,,,"[
+    {
+        ""ID"": 1,
+        ""Text"": ""@10821"",
+        ""Answer"": [
+            {
+                ""Text"": ""@10822"",
+                ""FuncType"": 3,
+                ""Val"": 3
+            },
+            {
+                ""Text"": ""@10823"",
+                ""FuncType"": 2
+            }
+        ]
+    }
+]",1,1
+4000,,mob_3400,,,"[
+    {
+        ""ID"": 1,
+        ""Text"": """",
+        ""Answer"": [
+            {
+                ""Text"": """",
+                ""FuncType"": 0
+            },
+            {
+                ""Text"": """",
+                ""FuncType"": 0
+            },
+            {
+                ""Text"": """",
+                ""FuncType"": 0
+            },
+            {
+                ""Text"": """",
+                ""FuncType"": 0
+            }
+        ]
+    }
+]",,

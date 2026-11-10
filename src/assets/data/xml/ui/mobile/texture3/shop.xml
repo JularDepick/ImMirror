@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:83f73b78e62f1805c79b18738330f660$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="shop.png" width="512" height="512">
+    <sprite n="icon_act_atk" x="416" y="248" w="40" h="40"/>
+    <sprite n="icon_act_dead" x="374" y="248" w="40" h="40"/>
+    <sprite n="icon_act_lie" x="332" y="218" w="40" h="40"/>
+    <sprite n="icon_act_run" x="290" y="218" w="40" h="40"/>
+    <sprite n="icon_act_set" x="458" y="248" w="40" h="38"/>
+    <sprite n="icon_act_strike" x="248" y="218" w="40" h="40"/>
+    <sprite n="icon_act_swim" x="458" y="206" w="40" h="40"/>
+    <sprite n="icon_act_walk" x="416" y="206" w="40" h="40"/>
+    <sprite n="icon_add_btn_money" x="164" y="122" w="40" h="43"/>
+    <sprite n="icon_animation" x="110" y="122" w="52" h="52"/>
+    <sprite n="icon_animation_act" x="374" y="206" w="40" h="40"/>
+    <sprite n="icon_custom_Expression" x="248" y="176" w="40" h="40"/>
+    <sprite n="icon_custom_all" x="332" y="176" w="40" h="40"/>
+    <sprite n="icon_custom_back" x="290" y="176" w="40" h="40"/>
+    <sprite n="icon_custom_cloth" x="206" y="206" w="40" h="40"/>
+    <sprite n="icon_custom_foot" x="458" y="164" w="40" h="40"/>
+    <sprite n="icon_custom_hands" x="416" y="164" w="40" h="40"/>
+    <sprite n="icon_custom_head" x="374" y="164" w="40" h="40"/>
+    <sprite n="icon_custom_mask" x="332" y="134" w="40" h="40"/>
+    <sprite n="icon_custom_n" x="56" y="122" w="52" h="52"/>
+    <sprite n="icon_custom_pants" x="290" y="134" w="40" h="40"/>
+    <sprite n="icon_custom_record" x="164" y="167" w="40" h="40"/>
+    <sprite n="icon_custom_shoes" x="206" y="164" w="40" h="40"/>
+    <sprite n="icon_dress_n" x="2" y="122" w="52" h="52"/>
+    <sprite n="icon_gambling_n" x="164" y="68" w="52" h="52"/>
+    <sprite n="icon_new_n" x="110" y="68" w="52" h="52"/>
+    <sprite n="icon_pack_n" x="56" y="68" w="52" h="52"/>
+    <sprite n="icon_pet_n" x="2" y="68" w="52" h="52"/>
+    <sprite n="icon_prop_n" x="434" y="110" w="52" h="52"/>
+    <sprite n="icon_recharge_n" x="380" y="110" w="52" h="52"/>
+    <sprite n="icon_recommend_n" x="434" y="56" w="52" h="52"/>
+    <sprite n="icon_role_n" x="380" y="56" w="52" h="52"/>
+    <sprite n="icon_standard_act" x="248" y="134" w="40" h="40"/>
+    <sprite n="icon_star_act" x="206" y="122" w="40" h="40"/>
+    <sprite n="icon_style" x="434" y="2" w="52" h="52"/>
+    <sprite n="icon_tvgift_n" x="380" y="2" w="52" h="52"/>
+    <sprite n="img_icon_custom" x="248" y="2" w="130" h="130"/>
+    <sprite n="line_sep" x="488" y="2" w="13" h="108"/>
+    <sprite n="tab_workshop_n" x="2" y="2" w="244" h="64"/>
+</TextureAtlas>
