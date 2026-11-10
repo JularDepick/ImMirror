@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- 账号接口需要访问服务端; 联调期为明文 HTTP, 见 application 的 usesCleartextTraffic -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- 渲染后端要求 GLES 3.0; Vulkan 作为可选能力, 当前不强制 -->
     <uses-feature
         android:glEsVersion="0x00030000"
@@ -10,18 +13,30 @@
         android:allowBackup="false"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+        android:usesCleartextTraffic="true">
 
-        <!-- 启动界面: 展示版本与设备分级, 提供进入游戏的入口 -->
+        <!-- 入口界面: 已登录直接进入游戏, 未登录进入登录界面; 从游戏返回后作为账号与设备信息页 -->
         <activity
             android:name=".LauncherActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:screenOrientation="sensorLandscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 登录界面: 登录, 注册与找回密码共用一页, 服务端地址可在此修改 -->
+        <activity
+            android:name=".account.LoginActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/account_tab_login"
+            android:screenOrientation="sensorLandscape"
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- 游戏界面: NativeActivity, 主循环与输入全部在原生线程内完成 -->
         <activity
