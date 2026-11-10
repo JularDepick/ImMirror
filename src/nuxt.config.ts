@@ -13,6 +13,7 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   nitro: {
     /* 业务路由由 Fastify 注册, Nitro 不扫描 server/api 目录, 避免生成重复的 h3 路由 */
+    // @ts-expect-error Nitro 支持 ignore 选项, 但 Nuxt 派生出的 Nitro 配置类型未声明该字段
     ignore: ["api/**"],
     sourceMap: false,
   },

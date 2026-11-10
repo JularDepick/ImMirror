@@ -27,12 +27,16 @@ export function randomNumericCode(digits = 6): string {
   return code;
 }
 
+// UID 长度: 9 位十进制
+export const UID_LENGTH = 9;
+
 /**
- * 生成 8 位十进制 UID, 首位非 0
+ * 逐位随机生成 UID
+ * 每一位取 0 到 9 的数字, 首位取 1 到 9, 因此结果固定为 9 位且没有前导 0
  */
 export function randomUid(): string {
   let uid = String(randomInt(1, 10));
-  while (uid.length < 8) {
+  while (uid.length < UID_LENGTH) {
     uid += String(randomInt(0, 10));
   }
   return uid;

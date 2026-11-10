@@ -29,13 +29,15 @@ describe("注册", () => {
     expect(data.cooldown).toBe(0);
   });
 
-  it("邮箱加验证码加密码注册成功并返回 8 位 UID 与令牌", async () => {
+  it("邮箱加验证码加密码注册成功并返回 9 位 UID 与令牌", async () => {
     await app.post("/api/v1/auth/register/code", { email: EMAIL });
     const code = app.readCode(EMAIL, "register");
     const response = await app.post("/api/v1/auth/register", { email: EMAIL, code, password: PASSWORD });
     expect(response.status).toBe(200);
     const data = expectOk<{ uid: string; email: string; token: string; expiresAt: number }>(response);
-    expect(data.uid).toMatch(/^[1-9]\d{7}$/);
+    expect(data.uid).toMatch(/^[1-9]\d{8}$/);
+    expect(data.uid).toHaveLength(9);
+    expect(data.uid.startsWith("0")).toBe(false);
     expect(data.email).toBe(EMAIL);
     expect(data.token).toMatch(/^[0-9a-f]{64}$/);
     expect(data.expiresAt).toBeGreaterThan(app.clock.now());
