@@ -8,3 +8,7 @@ releases/
 
 # 业务仓库
 single-branch/
+
+# pip 临时解包目录与临时文件
+pip-unpack-*/
+tmp*/tmp*.tmp
