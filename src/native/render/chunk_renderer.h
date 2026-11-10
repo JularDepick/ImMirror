@@ -38,6 +38,9 @@ public:
     /* 提交全部可见区块. */
     void Draw();
 
+    /* 图集纹理句柄, 供界面层绘制方块图标时共享. */
+    uint32_t AtlasTexture() const { return atlasTexture_; }
+
     int32_t DrawnChunks() const;
     int32_t DrawnTriangles() const;
 

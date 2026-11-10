@@ -40,6 +40,13 @@ constexpr uint32_t kWorldSeed = 20260101u;
 /* 自动存档间隔. */
 constexpr double kAutoSaveSeconds = 20.0;
 
+/* 底部方块栏依次对应的方块, 与界面层图集格顺序一致. */
+const voxel::BlockId kSlotBlocks[ui::HudRenderer::kSlotCount] = {
+    voxel::block::Grass, voxel::block::Dirt,      voxel::block::Stone, voxel::block::Sand,
+    voxel::block::Wood,  voxel::block::Leaves,    voxel::block::Brick, voxel::block::Cobblestone,
+    voxel::block::Snow,
+};
+
 void MakePerspective(float* out, float fovYDegrees, float aspect, float nearPlane, float farPlane) {
     const float radians = fovYDegrees * 3.14159265358979f / 180.0f;
     const float f = 1.0f / std::tan(radians * 0.5f);
@@ -97,7 +104,7 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     }
     world_->Update(player_->Position(), viewDistanceChunks_);
     hud_.SetViewport(width_, height_);
-    hud_.Initialize();
+    hud_.Initialize(renderer_->AtlasTexture());
     IM_LOGI(kTag, "game shell ready, chunks=%d", world_->LoadedChunkCount());
 }
 
@@ -187,6 +194,15 @@ void GameShell::HandleTapActions(const platform::InputSnapshot& input) {
         const float dx = input.pointerX - pointerDownX_;
         const float dy = input.pointerY - pointerDownY_;
         const float moved = std::sqrt(dx * dx + dy * dy);
+        /* 方块栏优先: 落在栏位内即切换当前方块, 不触发破坏或放置. */
+        const int32_t slot = moved < kTapMoveLimit ? hud_.HitTestSlot(pointerDownX_, pointerDownY_) : -1;
+        if (slot >= 0) {
+            selectedSlot_ = slot;
+            selectedBlock_ = kSlotBlocks[slot];
+            IM_LOGI(kTag, "block slot %d selected, id=%u", slot, static_cast<uint32_t>(selectedBlock_));
+            previousPointerDown_ = input.pointerDown;
+            return;
+        }
         /* 编辑动作只在右半屏生效, 左半屏留给移动摇杆与跳跃, 避免手势互相干扰. */
         const bool editZone = pointerDownX_ > 0.5f;
         if (editZone && moved < kTapMoveLimit) {
@@ -196,8 +212,8 @@ void GameShell::HandleTapActions(const platform::InputSnapshot& input) {
                     IM_LOGI(kTag, "block broken");
                 }
             } else {
-                /* 长按放置: 以草方块为默认材料, 后续接入物品栏再改. */
-                if (player_->PlaceBlock(*world_, voxel::block::Grass)) {
+                /* 长按放置: 使用方块栏当前选中的材料. */
+                if (player_->PlaceBlock(*world_, selectedBlock_)) {
                     audio::AudioEngine::Instance().Play(audio::SoundId::kPlaceGrass);
                     IM_LOGI(kTag, "block placed");
                 }
@@ -235,7 +251,7 @@ void GameShell::RenderScene() {
         stickX = stickX < -1.0f ? -1.0f : (stickX > 1.0f ? 1.0f : stickX);
         stickY = stickY < -1.0f ? -1.0f : (stickY > 1.0f ? 1.0f : stickY);
     }
-    hud_.Render(stickX, stickY, stickActive);
+    hud_.Render(stickX, stickY, stickActive, selectedSlot_);
 }
 
 void GameShell::LogStatus(double deltaSeconds) {

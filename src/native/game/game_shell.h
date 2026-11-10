@@ -7,6 +7,8 @@
 #include "audio/audio_engine.h"
 #include "platform/input_state.h"
 #include "ui/hud_renderer.h"
+#include "voxel/block_registry.h"
+#include "voxel/voxel_types.h"
 
 struct AAssetManager;
 
@@ -91,6 +93,8 @@ private:
     double saveAccumulator_ = 0.0;
     std::string savePath_;
     int32_t viewDistanceChunks_ = 4;
+    int32_t selectedSlot_ = 0;
+    voxel::BlockId selectedBlock_ = voxel::block::Grass;
     const char* qualityGrade_ = "high";
 };
 
