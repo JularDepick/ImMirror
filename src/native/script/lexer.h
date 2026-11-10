@@ -97,7 +97,8 @@ private:
     bool LexString(Token& token, Diagnostic& error);
     bool LexIdentifierOrKeyword(Token& token);
 
-    const std::string& source_;
+    /* 按值保存源码: 调用方常以字面量构造临时 std::string, 引用会悬垂 */
+    std::string source_;
     size_t index_ = 0;
     uint32_t line_ = 1;
     uint32_t column_ = 1;

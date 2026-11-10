@@ -341,7 +341,7 @@ const BindingDef* BindingRegistry::Find(const std::string& name) const {
 void RegisterStandardBindings(BindingRegistry& registry) {
     std::string error;
     registry.RegisterFunction("log", &NativeLog, {}, 4, "输出日志到宿主", error);
-    registry.RegisterFunction("type", &NativeType, {ValueType::Nil}, 1, "返回值的类型名", error);
+    registry.RegisterFunction("type", &NativeType, {}, 1, "返回值的类型名", error);
     registry.RegisterFunction("tostring", &NativeToString, {}, 1, "转换为文本", error);
     registry.RegisterFunction("tonumber", &NativeToNumber, {}, 1, "转换为数值, 失败返回 nil", error);
     registry.RegisterFunction("len", &NativeLen, {}, 1, "字符串或表的长度", error);

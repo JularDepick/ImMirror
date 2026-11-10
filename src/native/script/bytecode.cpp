@@ -10,8 +10,7 @@ namespace {
 const char kMagic[4] = {'I', 'M', 'S', 'C'};
 const uint16_t kFormatVersion = 1;
 
-/* 单条指令允许的最大实参个数, 与寄存器数量同量级 */
-const uint32_t kMaxArguments = kMaxRegisters;
+/* 单条指令允许的最大结果个数, 与寄存器数量同量级 */
 const uint32_t kMaxResults = kMaxRegisters;
 
 std::string EscapeText(const std::string& text) {
@@ -381,10 +380,6 @@ const char* OpName(Op op) {
         case Op::Count: break;
     }
     return "<非法>";
-}
-
-bool IsJumpInstruction(Op op) {
-    return op == Op::Jmp || op == Op::JmpIf || op == Op::JmpIfNot;
 }
 
 std::string FormatInstruction(const Program& program, const Proto& proto, uint32_t pc) {

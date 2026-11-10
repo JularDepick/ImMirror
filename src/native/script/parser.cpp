@@ -26,7 +26,14 @@ ast::StmtPtr MakeStmt(ast::StmtKind kind, uint32_t line) {
 }  /* namespace */
 
 Parser::Parser(std::vector<Token> tokens, std::string chunkName)
-    : chunkName_(std::move(chunkName)), tokens_(std::move(tokens)) {}
+    : chunkName_(std::move(chunkName)), tokens_(std::move(tokens)) {
+    /* 词法分析失败时序列可能为空, 补一个结束标记保证 Peek 始终安全 */
+    if (tokens_.empty()) {
+        Token end;
+        end.type = TokenType::EndOfFile;
+        tokens_.push_back(std::move(end));
+    }
+}
 
 const Token& Parser::Peek(size_t offset) const {
     const size_t position = index_ + offset;
@@ -488,6 +495,11 @@ bool Parser::ParseExpressionList(std::vector<ast::ExprPtr>& out) {
         if (!ParseExpression(expr)) {
             return false;
         }
+        if (!expr) {
+            /* 语法分析内部不一致时立刻报错, 避免空表达式流入编译器 */
+            ReportError(Current().line, Current().column, "内部错误: 表达式为空");
+            return false;
+        }
         out.push_back(std::move(expr));
         if (!Match(TokenType::Comma)) {
             break;
@@ -834,7 +846,11 @@ bool Parser::ParseTable(ast::ExprPtr& out) {
         }
         break;
     }
-    return Expect(TokenType::RBrace, "}");
+    if (!Expect(TokenType::RBrace, "}")) {
+        return false;
+    }
+    out = std::move(table);
+    return true;
 }
 
 bool Parser::ParseFunctionExpression(ast::ExprPtr& out) {

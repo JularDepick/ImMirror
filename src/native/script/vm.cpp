@@ -666,8 +666,8 @@ void Vm::Run() {
                     break;
                 }
                 table->SetMemoryHook(&Vm::TableMemoryHook, this);
-                if (b > 0) {
-                    table->Set(MakeInt(1), NilValue());
+                if (b > 0 || c > 0) {
+                    table->Reserve(b, c);
                 }
                 regs[a] = MakeTable(table);
                 ++sandbox_.Stats().tablesCreated;
@@ -712,7 +712,7 @@ void Vm::Run() {
                 Value value;
                 const StringObject* key = stringConstants_[protoIndex][c];
                 const VmError status =
-                    IndexValue(regs[a], MakeString(const_cast<StringObject*>(key)), value);
+                    IndexValue(regs[b], MakeString(const_cast<StringObject*>(key)), value);
                 if (status != VmError::None) {
                     error_ = status;
                     errorMessage_ = std::string("字段访问失败: ") + VmErrorName(status);

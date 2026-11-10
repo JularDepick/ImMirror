@@ -170,6 +170,9 @@ public:
 
     void SetMemoryHook(TableMemoryHook hook, void* context);
 
+    /* 按容量提示预留空间, 避免构造时反复扩容 */
+    void Reserve(uint32_t arrayCount, uint32_t hashCount);
+
     /* 供 pairs 类扩展使用的遍历接口: 依次返回数组部分与哈希部分 */
     const std::vector<Value>& ArrayPart() const { return array_; }
     const std::unordered_map<TableKey, Value, TableKeyHash>& HashPart() const { return hash_; }

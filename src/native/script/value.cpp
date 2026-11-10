@@ -269,6 +269,16 @@ void Table::SetMemoryHook(TableMemoryHook hook, void* context) {
     accounted_ = MemorySize();
 }
 
+void Table::Reserve(uint32_t arrayCount, uint32_t hashCount) {
+    if (arrayCount > 0) {
+        array_.reserve(arrayCount);
+    }
+    if (hashCount > 0) {
+        hash_.reserve(hashCount);
+    }
+    NotifyMemory();
+}
+
 size_t Table::MemorySize() const {
     return sizeof(Table) + array_.capacity() * sizeof(Value) + hash_.size() * kHashEntryEstimate;
 }

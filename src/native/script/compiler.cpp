@@ -117,7 +117,8 @@ private:
     bool CompileWhile(const ast::Stmt& stmt);
     bool CompileFor(const ast::Stmt& stmt);
     bool CompileReturn(const ast::Stmt& stmt);
-    bool CompileLoopJump(Op op, uint32_t line);
+    bool CompileBreak(uint32_t line);
+    bool CompileContinue(uint32_t line);
 
     int CompileExpr(const ast::Expr& expr);
     void CompileExprInto(const ast::Expr& expr, int target);
@@ -622,9 +623,9 @@ bool Compiler::CompileStatement(const ast::Stmt& stmt) {
         case ast::StmtKind::For:
             return CompileFor(stmt);
         case ast::StmtKind::Break:
-            return CompileLoopJump(Op::Jmp, stmt.line);
+            return CompileBreak(stmt.line);
         case ast::StmtKind::Continue:
-            return CompileLoopJump(Op::Jmp, stmt.line);
+            return CompileContinue(stmt.line);
         case ast::StmtKind::Return:
             return CompileReturn(stmt);
         case ast::StmtKind::Block: {
@@ -637,9 +638,22 @@ bool Compiler::CompileStatement(const ast::Stmt& stmt) {
     return Error(stmt.line, "未知的语句种类");
 }
 
-bool Compiler::CompileLoopJump(Op op, uint32_t line) {
-    (void)op;
-    return Error(line, "内部错误: 循环跳转未指定类型");
+bool Compiler::CompileBreak(uint32_t line) {
+    if (Fs().loops.empty()) {
+        return Error(line, "break 只能出现在循环体内");
+    }
+    const uint32_t jump = EmitJumpPlaceholder(Op::Jmp, 0, line);
+    Fs().loops.back().breaks.push_back(jump);
+    return true;
+}
+
+bool Compiler::CompileContinue(uint32_t line) {
+    if (Fs().loops.empty()) {
+        return Error(line, "continue 只能出现在循环体内");
+    }
+    const uint32_t jump = EmitJumpPlaceholder(Op::Jmp, 0, line);
+    Fs().loops.back().continues.push_back(jump);
+    return true;
 }
 
 bool Compiler::CompileVarDecl(const ast::Stmt& stmt) {

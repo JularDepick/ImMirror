@@ -74,7 +74,6 @@ private:
     };
 
     void SetError(VmError error, const std::string& message);
-    void SetTypeError(const char* what);
 
     template <typename T>
     T* NewArenaObject();

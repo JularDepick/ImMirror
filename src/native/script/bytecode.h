@@ -155,9 +155,6 @@ struct Program {
 /* 操作码名称, 反汇编与日志共用 */
 const char* OpName(Op op);
 
-/* 指令是否带有需要校验的跳转操作数 */
-bool IsJumpInstruction(Op op);
-
 /* 反汇编单条指令, 输出形如 "ADD  R3, R1, R2" 的可读文本 */
 std::string FormatInstruction(const Program& program, const Proto& proto, uint32_t pc);
 

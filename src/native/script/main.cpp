@@ -325,6 +325,10 @@ int main(int argc, char** argv) {
         std::printf("%s", kUsage);
         return 0;
     }
+    if (command == "--version") {
+        std::printf("immirror-script, 字节码格式 %s\n", ScriptVersion());
+        return 0;
+    }
     std::printf("未知命令: %s\n", command.c_str());
     std::printf("%s", kUsage);
     return 1;

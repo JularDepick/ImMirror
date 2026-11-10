@@ -27,6 +27,7 @@ add_subdirectory(world)
 add_subdirectory(settings)
 add_subdirectory(render)
 add_subdirectory(player)
+add_subdirectory(script)
 add_subdirectory(game)
 
 # 引擎运行时: 基础库, 平台适配, 渲染后端与 JNI 导出
