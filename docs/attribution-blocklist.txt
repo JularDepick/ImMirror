@@ -17,3 +17,8 @@ assets/ui/mobile/texture0/bigtex/giflogo_70.gif
 assets/IdreamskyLogo.png
 res/drawable-hdpi-v4/mintegral_reward_end_pager_logo.png
 res/drawable-xhdpi-v4/tt_playable_l_logo.png
+assets/ui/splash_screen_bg.ktx
+assets/ui/splash_screen_bg_en.ktx
+res/drawable-xxhdpi-v4/splashscreen.png
+assets/ui/mobile/texture0/minilobby.ktx
+assets/ui/mobile/texture0/bigtex/dy_img_2.ktx

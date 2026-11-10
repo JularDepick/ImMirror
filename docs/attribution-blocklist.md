@@ -13,6 +13,12 @@
 | 文件 | 识别文字 |
 |:---:|:---|
 | `assets/ui/login_logo_alpha.ktx` | 迷你世界 |
+| `assets/ui/splash_screen_bg.ktx` | 迷你玩 / MINIWAN |
+| `assets/ui/splash_screen_bg_en.ktx` | 迷你玩 / MINIWAN |
+| `res/drawable-xxhdpi-v4/splashscreen.png` | MINIWAN |
+| `assets/ui/mobile/texture0/minilobby.ktx` | 4399 账号 / 4399 游戏 |
+| `assets/ui/mobile/texture0/bigtex/dy_img_1.ktx` | 公众号 迷你世界粉丝阵地 |
+| `assets/ui/mobile/texture0/bigtex/dy_img_2.ktx` | 公众号 迷你宇宙 |
 | `assets/ui/mobile/texture0/bigtex/dy_img_1.ktx` | 周礼包 / 背后的秘密 / 限定皮肤 |
 | `assets/ui/mobile/texture0/bigtex/fx_font.ktx` | 一起玩迷你世界 |
 | `assets/ui/mobile/texture0/bigtex/fx_font_alpha.ktx` | 一起玩迷你世界 |
