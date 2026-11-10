@@ -1,0 +1,19 @@
+# 机器可读排除清单, 每行一个相对路径, 以 # 开头为注释
+assets/ui/mobile/texture0/bigtex/arblueprintcn.png
+assets/ui/login_logo_alpha.ktx
+assets/ui/mobile/texture0/bigtex/dy_img_1.ktx
+assets/ui/mobile/texture0/bigtex/fx_font.ktx
+assets/ui/mobile/texture0/bigtex/fx_font_alpha.ktx
+assets/ui/roleicons/avatar_icon1000_405.ktx
+assets/ui/wechat_alipay.ktx
+assets/ui/mobile/texture0/bigtex/transformers_icon1.gif
+assets/ui/mobile/texture0/bigtex/transformers_icon2.gif
+assets/ui/mobile/texture0/bigtex/transformers_icon1_hw.gif
+assets/ui/mobile/texture0/bigtex/transformers_icon2_hw.gif
+assets/ui/mobile/texture0/bigtex/common.ktx
+assets/ui/mobile/texture0/bigtex/4399_acc01.ktx
+assets/ui/mobile/texture0/bigtex/img_adv_kuaishou.ktx
+assets/ui/mobile/texture0/bigtex/giflogo_70.gif
+assets/IdreamskyLogo.png
+res/drawable-hdpi-v4/mintegral_reward_end_pager_logo.png
+res/drawable-xhdpi-v4/tt_playable_l_logo.png
