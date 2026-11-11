@@ -7,6 +7,12 @@
 namespace immirror::voxel {
 namespace {
 
+/*
+ * 生成表所在命名空间的别名: 生成表定义在 immirror::game::gen,
+ * 体素侧按非限定名 gen:: 无法解析到它, 这里固定指向生成表命名空间.
+ */
+namespace gen = immirror::game::gen;
+
 /* 图集格未指定时的回落标记, 与 BlockInfo 的约定一致. */
 constexpr uint8_t kAtlasFallback = 0xFF;
 
