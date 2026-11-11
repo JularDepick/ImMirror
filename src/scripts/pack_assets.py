@@ -15,14 +15,6 @@ SRC_ROOT = os.path.dirname(SCRIPT_DIR)
 ASSETS_ROOT = os.path.join(SRC_ROOT, "assets")
 TARGET_ROOT = os.path.join(SRC_ROOT, "android", "app", "src", "main", "assets")
 
-# 音效: blockd 破坏族全部 34 个 + blocks 行走族全部 (按原版 blockdef 取值全量覆盖)
-SOUND_ENTRIES = [
-    ("sounds/" + name, "sounds/" + name)
-    for name in sorted(os.listdir(os.path.join(ASSETS_ROOT, "sounds")))
-    if name.endswith(".ogg")
-]
-MANIFEST = MANIFEST + SOUND_ENTRIES
-
 # 界面素材按用途分目录, 全部随包下发
 UI_DIRS = ("button", "panel", "dialog", "tab", "slot", "icon", "misc")
 
@@ -59,7 +51,13 @@ def collect_ui_entries():
 def main() -> int:
     copied = 0
     missing = []
-    for source_rel, target_rel in MANIFEST + collect_ui_entries() + collect_item_entries():
+    # 音效: blockd 破坏族全部 34 个 + blocks 行走族全部 (按原版 blockdef 取值全量覆盖)
+    sound_entries = [
+        ("sounds/" + name, "sounds/" + name)
+        for name in sorted(os.listdir(os.path.join(ASSETS_ROOT, "sounds")))
+        if name.endswith(".ogg")
+    ]
+    for source_rel, target_rel in MANIFEST + sound_entries + collect_ui_entries() + collect_item_entries():
         source = os.path.join(ASSETS_ROOT, source_rel)
         target = os.path.join(TARGET_ROOT, target_rel)
         if not os.path.exists(source):
