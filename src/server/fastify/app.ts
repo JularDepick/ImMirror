@@ -16,6 +16,7 @@ import { SessionService } from "../services/session";
 import { WalletService } from "../services/wallet";
 import type { AppConfig } from "../utils/config";
 import { loadConfig } from "../utils/config";
+import { startDiscoveryListener, stopDiscoveryListener } from "../discovery";
 import { AppError, isAppError } from "../utils/errors";
 import { fail } from "../utils/response";
 import type { AppContext, AppLimiters } from "./context";
