@@ -93,6 +93,35 @@ public final class ApiClient {
         submit(callback, () -> parseProfile(send("GET", "/me", null, session == null ? null : session.token())));
     }
 
+    /*
+     * 成就与任务接口.
+     * 响应统一交回原文 JSON 对象, 由进度界面自行解析: 服务端补充字段时
+     * 账号层不需要跟着改解析结构, 两个模块的接口演进互不牵连.
+     */
+    public void fetchAchievements(Session session, Callback<JSONObject> callback) {
+        submit(callback, () -> send("GET", "/achievements", null, tokenOf(session)));
+    }
+
+    public void fetchDailyTasks(Session session, Callback<JSONObject> callback) {
+        submit(callback, () -> send("GET", "/achievements/daily", null, tokenOf(session)));
+    }
+
+    /* 领取单条成就奖励; 服务端若已自动发放, 会按幂等处理返回当前状态. */
+    public void claimAchievement(Session session, int achievementId, Callback<JSONObject> callback) {
+        submit(callback, () -> send("POST", "/achievements/claim",
+                makeBody("id", String.valueOf(achievementId)), tokenOf(session)));
+    }
+
+    /* 领取单条每日任务奖励. */
+    public void claimDailyTask(Session session, int slot, Callback<JSONObject> callback) {
+        submit(callback, () -> send("POST", "/achievements/daily/claim",
+                makeBody("slot", String.valueOf(slot)), tokenOf(session)));
+    }
+
+    private static String tokenOf(Session session) {
+        return session == null ? null : session.token();
+    }
+
     public void logout(Session session, Callback<Void> callback) {
         submit(callback, () -> {
             if (session != null) {

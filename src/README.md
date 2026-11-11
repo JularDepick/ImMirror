@@ -209,7 +209,8 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 | `native/voxel/` | 方块注册表, 16x256x16 区块列, 值噪声地形生成, 面剔除网格构建 |
 | `native/world/` | 区块流式加载与卸载, 方块读写, 相邻列网格修补, 世界存档读写 |
 | `native/render/` | 纹理图集加载, 区块顶点缓冲增量同步, 区块绘制 |
-| `native/player/` | 第一人称相机, 触摸输入映射, AABB 碰撞, 视线射线拾取 |
+| `native/player/` | 第一人称相机, 触摸输入映射, AABB 碰撞, 视线射线拾取, 玩家生命与受伤 |
+| `native/entity/` | 生物数据表, 实体基类与生物实体, 状态机 AI, 体素盒碰撞, 地表生成与战斗结算 |
 | `native/game/` | 装配层, 把世界, 玩家, 渲染与音频接到主循环 |
 | `native/audio/` | 方块交互音效, 经平台音频池播放 |
 | `native/ui/` | 游戏内界面覆盖层, 准星, 虚拟摇杆与跳跃按钮 |
