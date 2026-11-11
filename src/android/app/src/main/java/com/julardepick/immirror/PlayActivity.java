@@ -14,6 +14,7 @@ import com.julardepick.immirror.account.ApiClient;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
 import com.julardepick.immirror.editor.EditorBridge;
+import com.julardepick.immirror.net.PresenceApi;
 import com.julardepick.immirror.progress.ProgressApi;
 import com.julardepick.immirror.progress.ProgressBoard;
 import android.view.WindowManager;
@@ -54,6 +55,11 @@ public final class PlayActivity extends NativeActivity {
 
     /* 成就统计的上报周期. */
     private static final long PROGRESS_REPORT_INTERVAL_MS = 30000L;
+    private static final long PRESENCE_INTERVAL_MS = 10000L;
+    private PresenceApi presenceApi;
+    private Handler presenceHandler;
+    private Runnable presenceRunnable;
+    private Session presenceSession;
 
     private SoundPool soundPool;
     private Handler progressHandler;
@@ -77,6 +83,7 @@ public final class PlayActivity extends NativeActivity {
         setupAudio();
         NativeBridge.start();
         startProgressReporting();
+        startPresenceReporting();
     }
 
     @Override
@@ -117,6 +124,65 @@ public final class PlayActivity extends NativeActivity {
             }
         };
         progressHandler.postDelayed(progressRunnable, PROGRESS_REPORT_INTERVAL_MS);
+    }
+
+    /* 位置轮询: 上报自身并拉取他人, 10 秒周期. */
+    private void startPresenceReporting() {
+        presenceSession = SessionStore.load(this);
+        if (presenceSession == null || !presenceSession.isUsable()) {
+            return;
+        }
+        if (presenceApi == null) {
+            presenceApi = new PresenceApi(this);
+        }
+        if (presenceHandler == null) {
+            presenceHandler = new Handler(Looper.getMainLooper());
+        }
+        presenceRunnable = new Runnable() {
+            @Override
+            public void run() {
+                presenceTick(presenceSession);
+                presenceHandler.postDelayed(this, PRESENCE_INTERVAL_MS);
+            }
+        };
+        presenceHandler.postDelayed(presenceRunnable, PRESENCE_INTERVAL_MS);
+    }
+
+    private void stopPresenceReporting() {
+        if (presenceHandler != null && presenceRunnable != null) {
+            presenceHandler.removeCallbacks(presenceRunnable);
+        }
+        presenceRunnable = null;
+    }
+
+    private void presenceTick(final Session session) {
+        final String pose = NativeBridge.takePlayerPose();
+        if (pose == null || pose.length() <= 2) {
+            return;
+        }
+        try {
+            final org.json.JSONObject self = new org.json.JSONObject(pose);
+            presenceApi.reportAndFetch(session,
+                    (float) self.optDouble("x", 0),
+                    (float) self.optDouble("y", 0),
+                    (float) self.optDouble("z", 0),
+                    (float) self.optDouble("yaw", 0),
+                    (float) self.optDouble("pitch", 0),
+                    new PresenceApi.Callback() {
+                        @Override
+                        public void onSuccess(java.util.List<com.julardepick.immirror.net.PresenceApi.Snapshot> others,
+                                              long serverTime) {
+                            Log.d(TAG, "presence ok, others=" + others.size());
+                        }
+
+                        @Override
+                        public void onFailure(com.julardepick.immirror.account.ApiException error) {
+                            Log.w(TAG, "presence failed: " + error);
+                        }
+                    });
+        } catch (org.json.JSONException | RuntimeException error) {
+            Log.w(TAG, "presence tick failed: " + error);
+        }
     }
 
     private void stopProgressReporting() {
@@ -160,6 +226,7 @@ public final class PlayActivity extends NativeActivity {
          * 因此这里只表达“离开游戏”, 不表达“关闭进程内的原生线程”.
          */
         stopProgressReporting();
+        stopPresenceReporting();
         NativeBridge.stop();
         NativeBridge.flushSettings();
         NativeBridge.detachAudio();
