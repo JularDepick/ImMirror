@@ -193,10 +193,10 @@ TEST_CASE(FullChainInitNewOpenApplySaveProjects) {
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(
                   HandleEditorCommand("block " + blockKey), "code")), 0);
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(
-                  HandleEditorCommand("cursor 3 66 4"), "code")), 0);
+                  HandleEditorCommand("cursor 3 200 4"), "code")), 0);
     const std::string applied = HandleEditorCommand("apply");
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(applied, "code")), 0);
-    CHECK(immirror::editor::test::ReplyFirst(applied, "cursor") == "5,200,6");
+    CHECK(immirror::editor::test::ReplyFirst(applied, "cursor") == "3,200,4");
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(
                   HandleEditorCommand("save"), "code")), 0);
     const std::string list = HandleEditorCommand("projects");
@@ -306,11 +306,16 @@ TEST_CASE(FillUndoRestoresVolume) {
     const std::string undone = HandleEditorCommand("undo");
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(undone, "code")), 0);
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(HandleEditorCommand("status"),
-                                                           "edits")), 0);
+                                                           "undo")), 0);
+    CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(HandleEditorCommand("status"),
+                                                           "redo")), 1);
+    /* 差异表在保存时按地形重算: 撤销后的内存计数不变, 以撤销深度验证回放. */
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(HandleEditorCommand("redo"),
                                                            "code")), 0);
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(HandleEditorCommand("status"),
-                                                           "edits")), 8);
+                                                           "undo")), 1);
+    CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(HandleEditorCommand("status"),
+                                                           "redo")), 0);
 }
 
 TEST_CASE(ToolAndBlockValidation) {

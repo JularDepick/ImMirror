@@ -1,6 +1,8 @@
 # 编辑器命令层的单元测试, 只在主机工具链开启时参与构建:
-#   cmake -S src/native/tests -B build/tests && cmake --build build/tests && ctest --test-dir build/tests
-# 不进入 Android 库, 构建入口由测试目录自己的 CMakeLists 承担.
+#   cmake -S src/native/tests -B native/temp/editor-tests-build
+#   cmake --build native/temp/editor-tests-build
+#   ctest --test-dir native/temp/editor-tests-build
+# 不进入 Android 库, 构建入口由本目录自己的 CMakeLists 承担.
 cmake_minimum_required(VERSION 3.16)
 project(immirror-editor-tests LANGUAGES CXX)
 
@@ -14,12 +16,16 @@ endif()
 # 原生源码根目录, 以本目录的上一级为准.
 get_filename_component(IMMIRROR_NATIVE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
 
+# 用例与被测源码一起编进测试可执行文件.
+# host_log_stub.cpp 顶替 core/log.cpp: 后者依赖 android/log.h, 主机没有 NDK 头.
+# host_mingw_compat.h 通过 -include 注入: MinGW 的 mkdir 只有单参, 工程格式层按 POSIX 两参调用.
 add_executable(immirror-editor-tests
     test_main.cpp
     test_editor_command.cpp
-    android_log_stub.cpp
+    host_log_stub.cpp
     ../editor/editor_command.cpp
     ../editor/project_format.cpp
+    ../editor/editor_session.cpp
     ../editor/editor_types.cpp
     ../editor/editor_json.cpp
     ../editor/trigger_model.cpp
@@ -37,7 +43,12 @@ target_include_directories(immirror-editor-tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Windows 主机编译需要 area 与 timezone 修正, 与 NDK 行为一致的宽宏处理.
+# MinGW 主机注入 mkdir 兼容宏, 其他工具链不需要.
+if(MINGW)
+    target_compile_options(immirror-editor-tests PRIVATE
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/host_mingw_compat.h)
+endif()
+
 target_compile_options(immirror-editor-tests PRIVATE
     $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wno-unused-parameter>
 )
