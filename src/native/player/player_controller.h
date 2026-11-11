@@ -81,8 +81,51 @@ public:
     /* 破坏视线命中的方块; 返回是否命中并修改了世界. */
     bool BreakBlock(world::World& world);
 
+    /*
+     * 只读查询视线命中的方块 id, 命中非空气方块时返回 true.
+     * 破坏前先取一次, 用于按方块查掉落物; 不修改世界, 不改动破坏路径的返回值.
+     */
+    bool ProbeBlock(const world::World& world, voxel::BlockId& outBlock) const;
+
     /* 在命中面的外侧放置方块. */
     bool PlaceBlock(world::World& world, voxel::BlockId id);
+
+    /*
+     * 一次挖掘会话的本帧结果. 控制器只汇报进度与事件, 音效, 进度环与日志
+     * 由总装按这份结果处理, 控制器本身不触碰音频与界面.
+     */
+    struct MineTick {
+        bool digSound = false;    /* 本帧应播放一次挖掘音, 起手与完成各算一次 */
+        bool destroyed = false;   /* 本帧完成破坏, 方块已经从世界移除 */
+        voxel::BlockId block = 0; /* 本次挖掘的目标方块 id, 供音效与日志取材质 */
+        float progress = 0.0f;    /* 当前进度, 0 到 1 */
+        float elapsed = 0.0f;     /* 已累计的挖掘秒数 */
+        float duration = 0.0f;    /* 该方块所需的总秒数, 由硬度换算 */
+    };
+
+    /*
+     * 对准视线命中的方块开始挖掘. 未命中, 或目标硬度为 -1 (水, 基岩) 时返回 false,
+     * 此时既不累计进度也不响应破坏.
+     */
+    bool BeginMining(world::World& world);
+
+    /* 推进挖掘进度; 按住期间逐帧调用, 累计到所需时长时当场破坏方块. */
+    MineTick AdvanceMining(double dt, world::World& world);
+
+    /* 放弃当前挖掘, 进度清零; 松手或被取消时调用. */
+    void CancelMining();
+
+    /* 当前是否处于挖掘中. */
+    bool Mining() const { return mine_.active; }
+
+    /* 当前挖掘进度, 0 到 1; 未挖掘时为 0, 界面据此在归零时隐藏进度环. */
+    float MiningProgress() const;
+
+    /* 当前挖掘目标的方块 id, 未挖掘时为空气. */
+    voxel::BlockId MiningBlock() const { return mine_.active ? mine_.id : 0; }
+
+    /* 当前挖掘所需的总秒数, 未挖掘时为 0. */
+    float MiningDuration() const { return mine_.active ? mine_.duration : 0.0f; }
 
 private:
     /* 把多指针快照翻译成摇杆量, 视角增量与跳跃请求. */
@@ -130,6 +173,19 @@ private:
     core::Vec3 EyePosition() const;
     core::Vec3 ForwardDirection() const;
 
+    /*
+     * 一次挖掘会话: 目标格, 方块 id, 已累计秒数与总时长.
+     * 进度只由硬度换算, 目标格固定不变, 抬手即清零, 与按住这个手势一一对应.
+     */
+    struct MineSession {
+        bool active = false;
+        voxel::BlockPos block{};
+        voxel::BlockId id = 0;
+        float elapsed = 0.0f;
+        float duration = 0.0f;
+        float nextSoundSeconds = 0.0f; /* 下一次挖掘音的剩余间隔 */
+    };
+
     core::Vec3 position_{0.0f, 0.0f, 0.0f};  /* 脚底中心 */
     core::Vec3 velocity_{0.0f, 0.0f, 0.0f};
     core::Vec3 spawnPosition_{0.0f, 0.0f, 0.0f};
@@ -158,6 +214,7 @@ private:
 
     LookTuning look_;
     StickTuning stick_;
+    MineSession mine_;
 };
 
 }  /* namespace immirror::player */

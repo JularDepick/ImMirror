@@ -81,6 +81,10 @@ if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
 fi
 "$PYTHON_BIN" "$SCRIPT_DIR/gen_ui_resources.py" --no-assets
 
+# ---------------------------------------------------------------- 方块数据表
+# 方块中文名与掉落物只在素材仓库的 blockdef.csv 维护, 构建前生成原生头文件
+"$PYTHON_BIN" "$SCRIPT_DIR/gen_block_data.py"
+
 printf '原生构建配置\n'
 printf '  源码目录     : %s\n' "$NATIVE_DIR"
 printf '  构建根目录   : %s\n' "$BUILD_ROOT"

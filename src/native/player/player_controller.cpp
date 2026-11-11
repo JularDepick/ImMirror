@@ -5,6 +5,7 @@
 
 #include "core/log.h"
 #include "core/vec3.h"
+#include "player/mining_tuning.h"
 #include "voxel/block_registry.h"
 #include "world/world.h"
 
@@ -84,6 +85,18 @@ float AxisHalfExtentNeg(int32_t axis) {
  */
 bool IsSolidBlock(voxel::BlockId id) {
     return voxel::BlockRegistry::Instance().Info(id).solid;
+}
+
+/*
+ * 挖掘所需秒数: 硬度乘比例系数, 并抬到最短时长.
+ * 硬度为 -1 表示不可破坏, 返回 0 作为拒绝累计进度的信号.
+ */
+float MineDurationOf(float hardness) {
+    if (hardness < 0.0f) {
+        return 0.0f;
+    }
+    const float seconds = hardness * mining::kSecondsPerHardness;
+    return seconds < mining::kMinMineSeconds ? mining::kMinMineSeconds : seconds;
 }
 
 }  /* namespace */
@@ -224,6 +237,15 @@ bool PlayerController::BreakBlock(world::World& world) {
     return world.SetBlock(hit.block.x, hit.block.y, hit.block.z, 0);
 }
 
+bool PlayerController::ProbeBlock(const world::World& world, voxel::BlockId& outBlock) const {
+    RayHit hit;
+    if (!CastRay(world, hit)) {
+        return false;
+    }
+    outBlock = world.GetBlock(hit.block.x, hit.block.y, hit.block.z);
+    return outBlock != 0;
+}
+
 bool PlayerController::PlaceBlock(world::World& world, voxel::BlockId id) {
     if (id == 0) {
         return false;
@@ -245,6 +267,94 @@ bool PlayerController::PlaceBlock(world::World& world, voxel::BlockId id) {
         return false;
     }
     return world.SetBlock(target.x, target.y, target.z, id);
+}
+
+bool PlayerController::BeginMining(world::World& world) {
+    /* 重新开始挖掘时先丢弃上一段进度, 每个会话只对应一次按下. */
+    CancelMining();
+
+    RayHit hit;
+    if (!CastRay(world, hit)) {
+        return false;
+    }
+    const voxel::BlockId id = world.GetBlock(hit.block.x, hit.block.y, hit.block.z);
+    const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(id);
+    const float duration = MineDurationOf(info.hardness);
+    if (duration <= 0.0f) {
+        /* 硬度 -1 的水与基岩: 不累计进度, 也不响应破坏. */
+        return false;
+    }
+
+    mine_.active = true;
+    mine_.block = hit.block;
+    mine_.id = id;
+    mine_.elapsed = 0.0f;
+    mine_.duration = duration;
+    mine_.nextSoundSeconds = 0.0f;
+    return true;
+}
+
+PlayerController::MineTick PlayerController::AdvanceMining(double dt, world::World& world) {
+    MineTick tick;
+    if (!mine_.active) {
+        return tick;
+    }
+    tick.block = mine_.id;
+    tick.duration = mine_.duration;
+
+    /* 目标格被其他途径改动时结束本次挖掘, 不把进度算到别的方块上. */
+    if (world.GetBlock(mine_.block.x, mine_.block.y, mine_.block.z) != mine_.id) {
+        CancelMining();
+        return tick;
+    }
+
+    const float seconds = dt > 0.0 ? static_cast<float>(dt) : 0.0f;
+    mine_.elapsed += seconds;
+
+    /*
+     * 挖掘音按固定间隔重复: 起手立即播一次, 之后每 kDigSoundIntervalSeconds 播一次,
+     * 破坏完成那一帧再补一次收尾音.
+     */
+    mine_.nextSoundSeconds -= seconds;
+    if (mine_.nextSoundSeconds <= 0.0f) {
+        tick.digSound = true;
+        mine_.nextSoundSeconds += mining::kDigSoundIntervalSeconds;
+    }
+
+    tick.elapsed = mine_.elapsed;
+    if (mine_.elapsed < mine_.duration) {
+        tick.progress = mine_.elapsed / mine_.duration;
+        return tick;
+    }
+
+    /* 累计到所需时长才算破坏, 达成后立即写入世界并结束会话. */
+    tick.progress = 1.0f;
+    tick.destroyed = world.SetBlock(mine_.block.x, mine_.block.y, mine_.block.z, 0);
+    if (tick.destroyed) {
+        tick.digSound = true;
+    }
+    CancelMining();
+    return tick;
+}
+
+void PlayerController::CancelMining() {
+    mine_.active = false;
+    mine_.block = voxel::BlockPos{};
+    mine_.id = 0;
+    mine_.elapsed = 0.0f;
+    mine_.duration = 0.0f;
+    mine_.nextSoundSeconds = 0.0f;
+}
+
+float PlayerController::MiningProgress() const {
+    if (!mine_.active || mine_.duration <= 0.0f) {
+        return 0.0f;
+    }
+    const float ratio = mine_.elapsed / mine_.duration;
+    if (ratio < 0.0f) {
+        return 0.0f;
+    }
+    return ratio > 1.0f ? 1.0f : ratio;
 }
 
 void PlayerController::ProcessInput(float dt, platform::InputSnapshot& input) {
@@ -672,6 +782,8 @@ void PlayerController::Respawn() {
     velocity_ = core::Vec3{};
     onGround_ = false;
     jumpRequested_ = false;
+    /* 回到出生点后旧目标格已经无意义, 顺带清掉挖掘进度. */
+    CancelMining();
     stickPointerId_ = -1;
     lookPointerId_ = -1;
     stickValueX_ = 0.0f;

@@ -8,7 +8,10 @@
 
 #include "core/log.h"
 #include "core/vec3.h"
+#include "game/generated/block_data_gen.h"
+#include "game/inventory.h"
 #include "player/input_tuning.h"
+#include "player/mining_tuning.h"
 #include "player/player_controller.h"
 #include "platform/input_state.h"
 #include "render/chunk_renderer.h"
@@ -32,7 +35,7 @@ constexpr float kNearPlane = 0.05f;
 constexpr float kFarPlane = 320.0f;
 constexpr float kEyeHeight = 1.62f;
 
-/* 短按破坏与长按放置, 以及方块栏长按显示名称的判定阈值. */
+/* 方块栏长按显示名称的判定阈值, 以及编辑手势判定轻点的最大位移. */
 constexpr double kLongPressSeconds = 0.5;
 constexpr float kTapMoveLimit = 0.03f;
 
@@ -42,11 +45,78 @@ constexpr float kEditZoneSplitX = 0.5f;
 /* 方块名标签在长按触发后继续显示的秒数. */
 constexpr double kNamePlateSeconds = 1.5;
 
+/* 方块栏提示的显示秒数. */
+constexpr double kTipSeconds = 1.6;
+
+/* 数量耗尽时的提示文本, 界面点阵字只收录 ASCII, 因此提示用英文. */
+constexpr const char* kTipEmptySlot = "EMPTY SLOT";
+
+/*
+ * 物品栏槽位与方块栏共享同一张槽位表, 生成表与方块注册表条目等长;
+ * 两处不一致时在编译期报错, 避免界面图标、物品栏与数据表三处错位.
+ */
+static_assert(Inventory::kSlotCount == ui::kHudSlotCount, "物品栏槽位数与方块栏槽位数不一致");
+static_assert(gen::kBlockDataCount == static_cast<int32_t>(voxel::block::Count),
+              "方块数据表条目数与方块注册表不一致, 请重新运行 scripts/gen_block_data.py");
+
 /* 世界种子, 固定值便于复现地形. */
 constexpr uint32_t kWorldSeed = 20260101u;
 
 /* 自动存档间隔. */
 constexpr double kAutoSaveSeconds = 20.0;
+
+/*
+ * 采集材质族到音效的换算. 方块的材质族在注册表里给出, 音频枚举按同一族名排列,
+ * 这里只做一次族名到枚举的翻译. 族为 kNone (水, 基岩) 时返回 kCount, 表示不发声.
+ */
+audio::SoundId DigSoundOf(voxel::HarvestMaterial material) {
+    switch (material) {
+        case voxel::HarvestMaterial::kGrass:
+            return audio::SoundId::kDigGrass;
+        case voxel::HarvestMaterial::kStone:
+            return audio::SoundId::kDigStone;
+        case voxel::HarvestMaterial::kSand:
+            return audio::SoundId::kDigSand;
+        case voxel::HarvestMaterial::kWood:
+            return audio::SoundId::kDigWood;
+        case voxel::HarvestMaterial::kSnow:
+            return audio::SoundId::kDigSnow;
+        case voxel::HarvestMaterial::kGravel:
+            return audio::SoundId::kDigGravel;
+        case voxel::HarvestMaterial::kNone:
+            break;
+    }
+    return audio::SoundId::kCount;
+}
+
+audio::SoundId PlaceSoundOf(voxel::HarvestMaterial material) {
+    switch (material) {
+        case voxel::HarvestMaterial::kGrass:
+            return audio::SoundId::kPlaceGrass;
+        case voxel::HarvestMaterial::kStone:
+            return audio::SoundId::kPlaceStone;
+        case voxel::HarvestMaterial::kSand:
+            return audio::SoundId::kPlaceSand;
+        case voxel::HarvestMaterial::kWood:
+            return audio::SoundId::kPlaceWood;
+        case voxel::HarvestMaterial::kSnow:
+            return audio::SoundId::kPlaceSnow;
+        case voxel::HarvestMaterial::kGravel:
+            return audio::SoundId::kPlaceGravel;
+        case voxel::HarvestMaterial::kNone:
+            break;
+    }
+    return audio::SoundId::kCount;
+}
+
+/* 按方块材质播放挖掘音或放置音, 没有音效的材质直接跳过. */
+void PlayHarvestSound(voxel::BlockId block, bool placement) {
+    const voxel::HarvestMaterial material = voxel::BlockRegistry::Instance().Info(block).material;
+    const audio::SoundId sound = placement ? PlaceSoundOf(material) : DigSoundOf(material);
+    if (sound != audio::SoundId::kCount) {
+        audio::AudioEngine::Instance().Play(sound);
+    }
+}
 
 int32_t FloorToInt(float value) {
     return static_cast<int32_t>(std::floor(value));
@@ -122,6 +192,13 @@ GameShell::GameShell()
     settings_ = &settings::Settings::Instance();
     viewDistanceChunks_ = settings_->ViewDistanceChunks();
     selectedBlock_ = ui::BlockSlotId(selectedSlot_);
+
+    /* 物品栏按方块栏共享表播种, 开局每种方块 kInitialStack 个. */
+    voxel::BlockId slotBlocks[Inventory::kSlotCount];
+    for (int32_t slot = 0; slot < Inventory::kSlotCount; ++slot) {
+        slotBlocks[slot] = ui::BlockSlotId(slot);
+    }
+    inventory_.Reset(slotBlocks, Inventory::kSlotCount, 2);  /* TEMP-VERIFY */
 }
 
 GameShell::~GameShell() = default;
@@ -180,6 +257,10 @@ void GameShell::ResetInputState() {
     editLastX_ = 0.0f;
     editLastY_ = 0.0f;
     editDownSeconds_ = 0.0;
+    tipText_ = nullptr;
+    tipRemainSeconds_ = 0.0;
+    /* 表面重建会丢弃旧指针, 挖掘进度一并作废, 不带进新画面. */
+    player_->CancelMining();
 }
 
 void GameShell::PrepareSavePath(const char* dataPath) {
@@ -267,8 +348,9 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     UpdateHudButtons(lastInput_, deltaSeconds);
     MaybeRequestAutoJump();
     player_->Update(deltaSeconds, lastInput_, *world_);
-    UpdateEditGesture(lastInput_);
+    UpdateEditGesture(lastInput_, deltaSeconds);
     UpdateNamePlate(deltaSeconds);
+    UpdateTip(deltaSeconds);
     LogStatus(deltaSeconds);
     previousDownMask_ = lastInput_.downMask;
 
@@ -377,7 +459,12 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
     }
 }
 
-void GameShell::UpdateEditGesture(platform::InputSnapshot& input) {
+/*
+ * 编辑手势. 破坏必须按硬度累积进度, 因此按住与轻点各自绑定一种动作:
+ * 按住不松手走进度, 挖满才破坏; 轻点(按住不足轻点窗口且没有位移)放置当前材料.
+ * 进度从按下那一刻开始累计, 抬手即清零, 与原版"按住挖掘, 松手作废"的语义一致.
+ */
+void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSeconds) {
     const uint64_t pressed = input.downMask & ~previousDownMask_;
     const uint64_t released = previousDownMask_ & ~input.downMask;
 
@@ -397,6 +484,7 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input) {
             editLastX_ = pointer.x;
             editLastY_ = pointer.y;
             editDownSeconds_ = elapsedSeconds_;
+            BeginEditMining();
             break;
         }
     }
@@ -409,31 +497,124 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input) {
     if (pointer != nullptr) {
         editLastX_ = pointer->x;
         editLastY_ = pointer->y;
+        /* 按住期间逐帧推进进度, 挖满当场破坏. */
+        AdvanceEditMining(deltaSeconds);
         return;
     }
     if ((released & BitOf(editPointerId_)) == 0ull) {
         /* 指针既不在按下集合也不在释放集合: 帧内被取消, 结束这次手势. */
+        player_->CancelMining();
         editPointerId_ = -1;
         return;
     }
 
+    /* 抬手结算: 只有轻点且没有位移才算放置, 长按只结束挖掘, 进度清零. */
     const double held = elapsedSeconds_ - editDownSeconds_;
     const float movedX = editLastX_ - editDownX_;
     const float movedY = editLastY_ - editDownY_;
     const float moved = std::sqrt(movedX * movedX + movedY * movedY);
-    if (moved < kTapMoveLimit) {
-        if (held < kLongPressSeconds) {
-            if (player_->BreakBlock(*world_)) {
-                audio::AudioEngine::Instance().Play(audio::SoundId::kDigGrass);
-                IM_LOGI(kTag, "block broken");
-            }
-        } else if (player_->PlaceBlock(*world_, selectedBlock_)) {
-            /* 长按放置: 使用方块栏当前选中的材料. */
-            audio::AudioEngine::Instance().Play(audio::SoundId::kPlaceGrass);
-            IM_LOGI(kTag, "block placed");
+    player_->CancelMining();
+    if (held < player::mining::kTapSeconds && moved < kTapMoveLimit) {
+        /* 轻点放置: 使用方块栏当前选中的材料, 成功放置才扣减数量. */
+        if (TryPlaceSelectedBlock()) {
+            PlayHarvestSound(selectedBlock_, true);
+            /* 放置音按方块材质选择, 日志记下材质与音效编号, 便于实机核对. */
+            IM_LOGI(kTag, "place sound material=%d place=%d",
+                    static_cast<int32_t>(
+                        voxel::BlockRegistry::Instance().Info(selectedBlock_).material),
+                    static_cast<int32_t>(PlaceSoundOf(
+                        voxel::BlockRegistry::Instance().Info(selectedBlock_).material)));
         }
     }
     editPointerId_ = -1;
+}
+
+bool GameShell::BeginEditMining() {
+    if (!player_->BeginMining(*world_)) {
+        return false;
+    }
+    const voxel::BlockId block = player_->MiningBlock();
+    const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(block);
+    /*
+     * 起手日志记录硬度与所需秒数, 同一行里的 need 就是 kSecondsPerHardness 的换算结果,
+     * 实测时与完成日志的 elapsed 对照即可确认进度确实按硬度累计.
+     */
+    IM_LOGI(kTag, "mine begin block=%s hardness=%.2f material=%d need=%.2fs dig=%d", info.name,
+            static_cast<double>(info.hardness), static_cast<int32_t>(info.material),
+            static_cast<double>(player_->MiningDuration()),
+            static_cast<int32_t>(DigSoundOf(info.material)));
+    return true;
+}
+
+void GameShell::AdvanceEditMining(double deltaSeconds) {
+    const player::PlayerController::MineTick tick = player_->AdvanceMining(deltaSeconds, *world_);
+    /* 进度推进期间按固定节拍播放挖掘音, 音色按方块材质族选择. */
+    if (tick.digSound) {
+        PlayHarvestSound(tick.block, false);
+    }
+    if (!tick.destroyed) {
+        return;
+    }
+    const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(tick.block);
+    IM_LOGI(kTag, "mine done block=%s hardness=%.2f need=%.2fs elapsed=%.2fs dig=%d", info.name,
+            static_cast<double>(info.hardness), static_cast<double>(tick.duration),
+            static_cast<double>(tick.elapsed), static_cast<int32_t>(DigSoundOf(info.material)));
+    CollectDrop(tick.block);
+    /* 破坏后手指仍按住时接着挖下一格, 与连续挖掘的原版手感一致. */
+    BeginEditMining();
+}
+
+void GameShell::CollectDrop(voxel::BlockId brokenBlock) {
+    const voxel::BlockId drop = static_cast<voxel::BlockId>(gen::DropBlockOf(brokenBlock));
+    if (drop == voxel::block::Air) {
+        IM_LOGI(kTag, "block has no drop, block=%u", static_cast<uint32_t>(brokenBlock));
+        return;
+    }
+    const int32_t slot = inventory_.SlotOf(drop);
+    const char* name = voxel::BlockRegistry::Instance().Info(drop).name;
+    const char* sourceName = voxel::BlockRegistry::Instance().Info(brokenBlock).name;
+    if (inventory_.Add(drop, 1)) {
+        IM_LOGI(kTag, "drop collected from=%s drop=%s slot=%d count=%d", sourceName, name, slot,
+                inventory_.Count(slot));
+        return;
+    }
+    /* 槽位堆满或没有对应槽位时丢弃, 只累计数量并写警告, 不影响破坏本身. */
+    IM_LOGW(kTag, "inventory full, drop discarded drop=%s slot=%d discarded=%d", name, slot,
+            inventory_.Discarded());
+}
+
+bool GameShell::TryPlaceSelectedBlock() {
+    if (inventory_.Empty(selectedSlot_)) {
+        /* 数量为 0 时拒绝放置, 只给提示, 不改动世界与数量. */
+        ShowTip(kTipEmptySlot);
+        IM_LOGW(kTag, "place rejected, slot=%d block=%s count=0", selectedSlot_,
+                ui::BlockSlotName(selectedSlot_));
+        return false;
+    }
+    if (!player_->PlaceBlock(*world_, selectedBlock_)) {
+        return false;
+    }
+    inventory_.Consume(selectedSlot_, 1);
+    IM_LOGI(kTag, "block placed slot=%d block=%s remain=%d", selectedSlot_,
+            ui::BlockSlotName(selectedSlot_), inventory_.Count(selectedSlot_));
+    return true;
+}
+
+void GameShell::ShowTip(const char* text) {
+    tipText_ = text;
+    tipRemainSeconds_ = kTipSeconds;
+}
+
+void GameShell::UpdateTip(double deltaSeconds) {
+    if (tipRemainSeconds_ <= 0.0) {
+        tipText_ = nullptr;
+        return;
+    }
+    tipRemainSeconds_ -= deltaSeconds;
+    if (tipRemainSeconds_ <= 0.0) {
+        tipRemainSeconds_ = 0.0;
+        tipText_ = nullptr;
+    }
 }
 
 void GameShell::UpdateNamePlate(double deltaSeconds) {
@@ -564,6 +745,19 @@ void GameShell::RenderScene() {
     frame.stick = player_->GetStickVisual();
     frame.jumpPressed = jumpHeld_;
     frame.nameSlot = nameSlot_;
+    /* 数量取自物品栏, 与方块栏共享槽位顺序; 提示只在有效期内显示. */
+    for (int32_t slot = 0; slot < ui::kHudSlotCount; ++slot) {
+        frame.slotCounts[slot] = inventory_.Count(slot);
+    }
+    frame.tipText = tipText_;
+    /*
+     * 破坏进度只在按住超过轻点窗口后显示: 轻点放置时进度虽然累计了几帧,
+     * 但不会闪出一个进度环; 进度归零时界面层不绘制.
+     */
+    if (editPointerId_ >= 0 && player_->Mining() &&
+        elapsedSeconds_ - editDownSeconds_ >= player::mining::kTapSeconds) {
+        frame.mineProgress = player_->MiningProgress();
+    }
     if (settings_->ClassicalMoveMode()) {
         frame.stick.active = true;
         frame.stick.anchorX = settings::tuning::kPadCenterX;

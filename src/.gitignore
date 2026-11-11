@@ -29,3 +29,6 @@ android/app/src/main/assets/ui/
 # 由 scripts/gen_ui_resources.py 生成的界面参数表: Java 常量类与原生头文件
 android/app/src/main/java/com/julardepick/immirror/generated/
 native/ui/generated/
+
+# 由 scripts/gen_block_data.py 生成的方块数据表: 中文名与掉落物
+native/game/generated/

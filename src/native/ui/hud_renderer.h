@@ -18,6 +18,12 @@ struct HudFrame {
     bool jumpPressed = false;  /* 跳跃按钮按下中, 用于视觉反馈 */
     int32_t nameSlot = -1;     /* 长按显示方块名的槽位, 负值表示不显示 */
     float health = 1.0f;       /* 血量比例, 0 到 1, 供左上角血条取长度 */
+    float mineProgress = 0.0f; /* 破坏进度, 0 到 1, 归零时不绘制进度环 */
+
+    /* 每格剩余数量, 由物品栏逐帧填入; 数量为 0 时该格变暗, 数字仍显示 0. */
+    int32_t slotCounts[kHudSlotCount] = {};
+    /* 方块栏上方的操作提示, 空指针表示不显示, 用于数量耗尽这类即时反馈. */
+    const char* tipText = nullptr;
 };
 
 /*

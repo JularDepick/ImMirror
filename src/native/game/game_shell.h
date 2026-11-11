@@ -5,6 +5,7 @@
 #include <string>
 
 #include "audio/audio_engine.h"
+#include "game/inventory.h"
 #include "platform/input_state.h"
 #include "ui/hud_renderer.h"
 #include "voxel/block_registry.h"
@@ -77,11 +78,30 @@ private:
     /* 界面按钮与方块栏的认领与结算: 跳跃按钮按下即跳, 方块栏短按选中, 长按显示名称. */
     void UpdateHudButtons(platform::InputSnapshot& input, double deltaSeconds);
 
-    /* 编辑手势: 右半屏短按破坏, 长按放置, 与摇杆和视角各自独立. */
-    void UpdateEditGesture(platform::InputSnapshot& input);
+    /*
+     * 编辑手势: 右半屏按住不松手按硬度累积破坏进度, 轻点放置当前材料,
+     * 与摇杆和视角各自独立.
+     */
+    void UpdateEditGesture(platform::InputSnapshot& input, double deltaSeconds);
 
-    /* 方块名标签的显示时长倒计时. */
+    /* 对准视线命中的方块开始挖掘; 目标不可破坏时返回 false, 本次手势只能结算为放置. */
+    bool BeginEditMining();
+
+    /* 推进挖掘进度: 按节拍播放挖掘音, 挖满时破坏方块并收取掉落物. */
+    void AdvanceEditMining(double deltaSeconds);
+
+    /* 把这次破坏的掉落物放进物品栏, 堆满或没有对应槽位时只累计丢弃数. */
+    void CollectDrop(voxel::BlockId brokenBlock);
+
+    /* 用当前选中槽位的方块放置一次; 数量为 0 时拒绝放置并给出提示. */
+    bool TryPlaceSelectedBlock();
+
+    /* 方块栏提示: 登记提示文本并重置显示时长, 到时自动消失. */
+    void ShowTip(const char* text);
+
+    /* 方块名标签与方块栏提示的显示时长倒计时. */
     void UpdateNamePlate(double deltaSeconds);
+    void UpdateTip(double deltaSeconds);
 
     /* 自动跳跃: 前推量足够且前方是一格高台阶时补一次跳跃请求. */
     void MaybeRequestAutoJump();
@@ -136,6 +156,13 @@ private:
     /* 方块名标签: 显示中的槽位与剩余秒数. */
     int32_t nameSlot_ = -1;
     double nameRemainSeconds_ = 0.0;
+
+    /* 物品栏: 九格数量与方块栏一一对应, 放置时扣减, 破坏掉落入栏. */
+    Inventory inventory_;
+
+    /* 方块栏提示文本与剩余显示秒数, 空指针表示不显示. */
+    const char* tipText_ = nullptr;
+    double tipRemainSeconds_ = 0.0;
 
     /* 编辑手势持有的指针与按下点. */
     int32_t editPointerId_ = -1;

@@ -46,6 +46,33 @@ struct MeshData {
     size_t TriangleCount() const { return indices.size() / 3; }
 };
 
+/*
+ * 采集工具. 取值与原版方块定义表的工具字段一致: 0 徒手, 1 斧, 2 镐, 3 铲.
+ * 客户端当前还没有工具物品, 该字段只作为数据保留: 后续接入工具后,
+ * 由手持工具档位与这里的期望档位比较决定挖掘倍率, 不改变硬度本身的语义.
+ */
+enum class HarvestTool : uint8_t {
+    kHand = 0,
+    kAxe = 1,
+    kPickaxe = 2,
+    kShovel = 3,
+};
+
+/*
+ * 采集材质族, 决定挖掘音与放置音用哪一族音效.
+ * 取值与 audio::SoundId 的分族顺序一一对应, kNone 表示没有音效 (水与基岩).
+ * 方块层不引用音频枚举, 以免体素模块反向依赖 JNI 侧的头文件.
+ */
+enum class HarvestMaterial : uint8_t {
+    kNone = 0,
+    kGrass,
+    kStone,
+    kSand,
+    kWood,
+    kSnow,
+    kGravel,
+};
+
 /* 方块静态属性, 由注册表持有, 生存期与进程一致. */
 struct BlockInfo {
     const char* name = "air";
@@ -55,6 +82,13 @@ struct BlockInfo {
     uint8_t atlasTop = 0xFF;    /* 顶面图集格, 0xFF 表示回落到 atlasIndex */
     uint8_t atlasSide = 0xFF;   /* 侧面图集格, 0xFF 表示回落到 atlasIndex */
     uint8_t atlasBottom = 0xFF; /* 底面图集格, 0xFF 表示回落到 atlasIndex */
+    /*
+     * 原版硬度, 合法范围 -1 到 200, 步长 0.5.
+     * -1 表示不可破坏 (空气, 水, 基岩), 既不累计挖掘进度也不响应破坏.
+     */
+    float hardness = -1.0f;
+    HarvestTool tool = HarvestTool::kHand;             /* 采集工具档位 */
+    HarvestMaterial material = HarvestMaterial::kNone; /* 采集材质族, 决定音效 */
 };
 
 }  /* namespace immirror::voxel */
