@@ -15,8 +15,8 @@ namespace immirror::render {
  */
 class TextureAtlas {
 public:
-    static constexpr int32_t kGridSize = 16;
-    static constexpr int32_t kCellPixels = 128;
+    static constexpr int32_t kGridSize = 64;
+    static constexpr int32_t kCellPixels = 64;
     static constexpr int32_t kTexturePixels = kGridSize * kCellPixels;
     static constexpr int32_t kCellCount = kGridSize * kGridSize;
     static constexpr size_t kByteSize =

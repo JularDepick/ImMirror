@@ -34,8 +34,8 @@ constexpr int32_t kFloatsPerVertex = 8;
  */
 constexpr int32_t kVertexCapacity = 32768;
 
-/* 方块图集为 16x16 格. */
-constexpr float kAtlasGrid = 16.0f;
+/* 方块图集为 64x64 格. */
+constexpr float kAtlasGrid = 64.0f;
 
 /*
  * 纹理通道编码: 顶点 uv 复用一对 float, 按 uv.x 的取值范围区分三路来源.

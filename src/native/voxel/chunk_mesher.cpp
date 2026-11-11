@@ -9,7 +9,7 @@ namespace {
 constexpr int32_t kFaceCount = 6;
 
 /* 图集按 16x16 格切分, 每格在 uv 上占 1/16; 列 = 格索引 % 16, 行 = 格索引 / 16. */
-constexpr int32_t kTileGridSize = 16;
+constexpr int32_t kTileGridSize = 64;
 constexpr float kTileExtent = 1.0f / static_cast<float>(kTileGridSize);
 
 /* 面未指定图集格时的回落标记, 与 BlockInfo 的约定一致. */
