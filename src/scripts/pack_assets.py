@@ -43,7 +43,7 @@ def collect_ui_entries():
             continue
         for entry in sorted(os.listdir(directory)):
             if entry.lower().endswith(".png"):
-                entries.append(("ui/" + name + "/" + entry, "ui/" + name + "/" + entry))
+                entries.append((os.path.join(directory, entry), "ui/" + name + "/" + entry))
     return entries
 
 
