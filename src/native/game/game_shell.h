@@ -83,6 +83,19 @@ public:
     int32_t SelectedSlot() const { return selectedSlot_; }
     void SelectSlotPublic(int32_t index) { SelectSlot(index); }
 
+    /*
+     * 成就统计计数器: 原生侧聚合, Java 侧周期拉取并上报服务端.
+     * 拉取即取走并清零, 单调累计放在服务端, 这里只保存未上报的增量.
+     */
+    struct ProgressCounters {
+        int64_t breakBlocks = 0;
+        int64_t placeBlocks = 0;
+        int64_t pickedItems = 0;
+        int64_t walkedMeters = 0;
+    };
+    ProgressCounters TakeProgressCounters();
+    void CountProgressEvent(int32_t kind);
+
 private:
     /*
      * 把设置项折算成控制器参数: 灵敏度与反转 Y 进 LookTuning,
@@ -246,6 +259,7 @@ private:
     double saveAccumulator_ = 0.0;
     std::string savePath_;
     int32_t viewDistanceChunks_ = 4;
+    ProgressCounters progressCounters_;
     int32_t selectedSlot_ = 0;
     voxel::BlockId selectedBlock_ = voxel::block::Grass;
     const char* qualityGrade_ = "high";

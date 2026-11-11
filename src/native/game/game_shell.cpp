@@ -442,6 +442,28 @@ void GameShell::ApplyControlSettings() {
     player_->SetStickTuning(stick);
 }
 
+void GameShell::CountProgressEvent(int32_t kind) {
+    switch (kind) {
+        case 1:
+            progressCounters_.breakBlocks += 1;
+            break;
+        case 2:
+            progressCounters_.placeBlocks += 1;
+            break;
+        case 3:
+            progressCounters_.pickedItems += 1;
+            break;
+        default:
+            break;
+    }
+}
+
+game::GameShell::ProgressCounters GameShell::TakeProgressCounters() {
+    const ProgressCounters snapshot = progressCounters_;
+    progressCounters_ = ProgressCounters{};
+    return snapshot;
+}
+
 void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSeconds) {
     const uint64_t pressed = input.downMask & ~previousDownMask_;
     const uint64_t released = previousDownMask_ & ~input.downMask;
@@ -809,6 +831,7 @@ void GameShell::CollectDrop(voxel::BlockId brokenBlock) {
         IM_LOGI(kTag, "block has no drop, block=%u", static_cast<uint32_t>(brokenBlock));
         return;
     }
+    CountProgressEvent(1);
     const char* sourceName = voxel::BlockRegistry::Instance().Info(brokenBlock).name;
     const char* name = items.Info(dropItem).key;
     const int32_t slot = inventory_.SlotOf(dropItem);
@@ -847,6 +870,7 @@ bool GameShell::TryPlaceSelectedBlock() {
         return false;
     }
     inventory_.Consume(selectedSlot_, 1);
+    CountProgressEvent(2);
     IM_LOGI(kTag, "block placed slot=%d item=%s block=%s remain=%d", selectedSlot_,
             items.Info(stack.item).key, voxel::BlockRegistry::Instance().Info(block).name,
             inventory_.Count(selectedSlot_));
