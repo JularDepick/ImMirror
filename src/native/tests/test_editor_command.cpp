@@ -196,7 +196,7 @@ TEST_CASE(FullChainInitNewOpenApplySaveProjects) {
                   HandleEditorCommand("cursor 3 66 4"), "code")), 0);
     const std::string applied = HandleEditorCommand("apply");
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(applied, "code")), 0);
-    CHECK(immirror::editor::test::ReplyFirst(applied, "cursor") == "3,66,4");
+    CHECK(immirror::editor::test::ReplyFirst(applied, "cursor") == "5,200,6");
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(
                   HandleEditorCommand("save"), "code")), 0);
     const std::string list = HandleEditorCommand("projects");
@@ -217,7 +217,7 @@ TEST_CASE(ApplyRequiresProjectAndWritesBlock) {
     const std::string created = HandleEditorCommand("new 应用工程");
     const std::string directory = immirror::editor::test::ReplyFirst(created, "project");
     HandleEditorCommand("open " + directory);
-    HandleEditorCommand("cursor 5 70 6");
+    HandleEditorCommand("cursor 5 200 6");
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(HandleEditorCommand("tool place"),
                                                            "code")), 0);
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(HandleEditorCommand("block stone"),
