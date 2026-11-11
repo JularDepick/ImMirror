@@ -118,11 +118,14 @@ public final class CheckinCardView extends LinearLayout {
         }
     }
 
-    /* 签到请求期间锁按钮, 避免连点重复提交. */
+    /*
+     * 签到请求期间锁按钮, 避免连点重复提交.
+     * 恢复可用性交给随后的 render: 未签恢复可点, 已签保持禁用.
+     */
     public void setBusy(boolean value) {
         busy = value;
-        if (checkinButton.isEnabled() || value) {
-            checkinButton.setEnabled(!value);
+        if (value) {
+            checkinButton.setEnabled(false);
         }
     }
 }
