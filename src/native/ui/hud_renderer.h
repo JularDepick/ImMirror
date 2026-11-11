@@ -159,4 +159,22 @@ private:
     uint32_t atlasTexture_ = 0;
 };
 
+/*
+ * 远端玩家的世界坐标占位标记: 一根竖条立在玩家脚底, 相机背后的条目自动跳过.
+ * viewProjection 为列主序 4x4 视投影矩阵, 与区块渲染共用同一份, 空指针时不绘制.
+ * 渲染管线约定与 HudRenderer::Render 相同: 必须在区块绘制之后调用,
+ * 使用共享顶点程序与图集通道, 由本函数自行恢复深度与剔除状态.
+ * 远端列表来自 net::RemotePlayerManager, 界面层不依赖玩家层与网络层.
+ */
+struct RemoteMarkerView {
+    const char* const* uids; /* 脱敏昵称数组, 仅用于日志, 不绘制文字 */
+    const float* xs;
+    const float* ys;
+    const float* zs;
+    int32_t count;           /* 条目数量, 负数按零处理 */
+};
+
+void RenderRemoteMarkers(const RemoteMarkerView& markers, const float* viewProjection,
+                         int32_t width, int32_t height);
+
 }  /* namespace immirror::ui */

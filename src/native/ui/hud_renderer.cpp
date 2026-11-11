@@ -419,6 +419,37 @@ void PushNineSlice(float* out, int32_t& offset, float centerX, float centerY, fl
     }
 }
 
+/*
+ * 粗线段: 两端外扩半粗细围成四边形, 主要供远端玩家的世界坐标标记使用.
+ * 与 PushRect 一致使用设计坐标, scale 负责横向等比.
+ */
+void PushLine(float* out, int32_t& offset, float x0, float y0, float x1, float y1,
+              float thickness, float scale, const float color[4]) {
+    const float dx = x1 - x0;
+    const float dy = y1 - y0;
+    const float length = std::sqrt(dx * dx + dy * dy);
+    if (length < 0.0001f || !HasRoom(offset, 6)) {
+        return;
+    }
+    const float nx = -dy / length * thickness * 0.5f;
+    const float ny = dx / length * thickness * 0.5f;
+    const float positions[4][2] = {
+        {x0 + nx, y0 + ny}, {x1 + nx, y1 + ny}, {x1 - nx, y1 - ny}, {x0 - nx, y0 - ny}};
+    const int32_t order[6] = {0, 1, 2, 0, 2, 3};
+    for (int32_t index = 0; index < 6; ++index) {
+        float* target = out + static_cast<size_t>(offset) * kFloatsPerVertex;
+        target[0] = positions[order[index]][0] * scale;
+        target[1] = positions[order[index]][1];
+        target[2] = -1.0f;
+        target[3] = -1.0f;
+        target[4] = color[0];
+        target[5] = color[1];
+        target[6] = color[2];
+        target[7] = color[3];
+        offset += 1;
+    }
+}
+
 /* 圆环, thickness 等于 radius 时退化为实心圆. 横纵等比, 屏幕上始终是正圆. */
 void PushRing(float* out, int32_t& offset, float centerX, float centerY, float radius,
               float thickness, float scale, const float color[4], int32_t segments) {
@@ -548,6 +579,16 @@ bool InsideBox(float x, float y, float centerX, float centerY, float halfWidth, 
     return x >= centerX - halfWidth && x <= centerX + halfWidth && y >= centerY - halfHeight &&
            y <= centerY + halfHeight;
 }
+
+/*
+ * 远端玩家占位标记的配色: 亮青色, 与方块世界的暖色地形拉开对比.
+ * 半透明, 避免遮挡背后场景; 正式形象接入前只做"这里有人"的视觉提示.
+ */
+constexpr float kRemoteMarkerColor[4] = {0.35f, 0.95f, 0.90f, 0.80f};
+
+/* 远端标记绘制与 HUD 共享的着色程序与图集句柄, 由 HudRenderer::Initialize 装填. */
+uint32_t program_shared = 0;
+uint32_t atlasTexture_shared = 0;
 
 /* 背包面板的几何结果, 绘制与命中判定都从这里取坐标, 两处不再各写一套数字. */
 struct InventoryPanelGeometry {
@@ -807,6 +848,9 @@ bool HudRenderer::Initialize(uint32_t atlasTexture) {
         return false;
     }
     uniformAtlasLocation_ = glGetUniformLocation(program_, "uAtlas");
+    /* 远端标记绘制复用同一份程序与图集, 生命周期跟随 HudRenderer. */
+    program_shared = program_;
+    atlasTexture_shared = atlasTexture_;
     glGenVertexArrays(1, &vao_);
     glGenBuffers(1, &vbo_);
     glBindVertexArray(vao_);
@@ -843,6 +887,8 @@ void HudRenderer::Shutdown() {
         glDeleteProgram(program_);
         program_ = 0;
     }
+    program_shared = 0;
+    atlasTexture_shared = 0;
     ready_ = false;
 }
 
@@ -1077,6 +1123,126 @@ void HudRenderer::Render(const HudFrame& frame) {
                     static_cast<GLsizeiptr>(offset) * kFloatsPerVertex * sizeof(float), vertices);
     glDrawArrays(GL_TRIANGLES, 0, offset);
     glBindVertexArray(0);
+
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+}
+
+/*
+ * 远端玩家占位标记: 世界坐标竖条.
+ * 复用 HUD 的共享着色程序与顶点格式, 独立顶点缓冲, 不触碰 HudRenderer 的实例状态;
+ * 投影换算与编辑器覆盖层同一套约定: 列主序矩阵, 设计坐标长度取屏高的一半.
+ */
+void RenderRemoteMarkers(const RemoteMarkerView& markers, const float* viewProjection,
+                         int32_t width, int32_t height) {
+    if (viewProjection == nullptr || width <= 0 || height <= 0) {
+        return;
+    }
+    const HudLayout layout(width, height);
+    const float scale = layout.Scale();
+    const int32_t count = markers.count > 0 ? markers.count : 0;
+    if (count == 0) {
+        return;
+    }
+    if (markers.xs == nullptr || markers.ys == nullptr || markers.zs == nullptr) {
+        return;
+    }
+
+    /* 竖条几何: 底在脚底, 顶到约两人高, 线宽取屏宽的千分之六, 远近都认得出. */
+    const float halfWidth = layout.DesignLength(0.003f);
+    const float bottomLift = 0.05f;   /* 底端略抬, 避免插进地面方块纹理里 */
+    const float topHeight = 1.9f;     /* 与玩家碰撞盒高度同量级 */
+
+    static float vertices[kVertexCapacity * kFloatsPerVertex];
+    int32_t offset = 0;
+
+    for (int32_t index = 0; index < count && offset + 6 <= kVertexCapacity; ++index) {
+        const float wx = markers.xs[index];
+        const float wy = markers.ys[index];
+        const float wz = markers.zs[index];
+        const float bx = wx;
+        const float by = wy + bottomLift;
+        const float bz = wz;
+        const float tx = wx;
+        const float ty = wy + topHeight;
+        const float tz = wz;
+
+        /* 列主序投影, 相机背后的点剔除; 与 PushBoxOutline 同一套换算. */
+        const float cx0 = viewProjection[0] * bx + viewProjection[4] * by +
+                          viewProjection[8] * bz + viewProjection[12];
+        const float cy0 = viewProjection[1] * bx + viewProjection[5] * by +
+                          viewProjection[9] * bz + viewProjection[13];
+        const float cx1 = viewProjection[0] * tx + viewProjection[4] * ty +
+                          viewProjection[8] * tz + viewProjection[12];
+        const float cy1 = viewProjection[1] * tx + viewProjection[5] * ty +
+                          viewProjection[9] * tz + viewProjection[13];
+        const float cw = viewProjection[3] * bx + viewProjection[7] * by +
+                         viewProjection[11] * bz + viewProjection[15];
+        if (cw <= 0.0001f) {
+            continue;
+        }
+        const float invW = 1.0f / cw;
+        const float x0 = (cx0 * invW) / (scale > 0.0001f ? scale : 1.0f);
+        const float y0 = cy0 * invW;
+        const float x1 = (cx1 * invW) / (scale > 0.0001f ? scale : 1.0f);
+        const float y1 = cy1 * invW;
+
+        /* 屏外裁剪: 两个端点都越出同一侧才丢弃, 单侧越出交给硬件裁剪. */
+        if ((x0 < -1.2f && x1 < -1.2f) || (x0 > 1.2f && x1 > 1.2f) ||
+            (y0 < -1.2f && y1 < -1.2f) || (y0 > 1.2f && y1 > 1.2f)) {
+            continue;
+        }
+
+        /* 屏内简化: 以两端的中点做方形端帽, 端帽宽度随距离投影自然变化. */
+        const float midX = (x0 + x1) * 0.5f;
+        const float midY = (y0 + y1) * 0.5f;
+        const float capHalf = halfWidth * 1.6f;
+
+        PushLine(vertices, offset, x0, y0, x1, y1, halfWidth * 2.0f, scale, kRemoteMarkerColor);
+        PushRect(vertices, offset, midX, midY, capHalf, capHalf, scale, kRemoteMarkerColor);
+    }
+
+    if (offset == 0) {
+        return;
+    }
+
+    /* 与 HUD 相同的覆盖层状态: 关深度与剔除, 开混合, 画完恢复. */
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glUseProgram(program_shared);
+    const GLint atlasLocation = glGetUniformLocation(program_shared, "uAtlas");
+    if (atlasLocation >= 0 && atlasTexture_shared != 0) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, atlasTexture_shared);
+        glUniform1i(atlasLocation, 0);
+    }
+
+    GLuint vao = 0;
+    GLuint vbo = 0;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(offset) * kFloatsPerVertex * sizeof(float), vertices,
+                 GL_STREAM_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float), nullptr);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float),
+                          reinterpret_cast<const void*>(2 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float),
+                          reinterpret_cast<const void*>(4 * sizeof(float)));
+    glDrawArrays(GL_TRIANGLES, 0, offset);
+    glBindVertexArray(0);
+
+    glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
 
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
