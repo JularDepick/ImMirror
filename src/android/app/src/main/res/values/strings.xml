@@ -136,4 +136,8 @@
     <string name="rebind_notice_login_required">登录状态已失效, 请重新登录后再换绑</string>
     <string name="rebind_notice_same_email">新邮箱与当前邮箱相同</string>
     <string name="rebind_notice_ok">邮箱换绑成功, 请用新邮箱重新登录</string>
+    <string name="account_settings_preset_discover">自动发现</string>
+    <string name="account_notice_discovering">正在搜索局域网服务端...</string>
+    <string name="account_notice_discovered">已找到服务端: %1$s</string>
+    <string name="account_notice_discovery_empty">未发现局域网服务端, 请手动输入地址</string>
 </resources>

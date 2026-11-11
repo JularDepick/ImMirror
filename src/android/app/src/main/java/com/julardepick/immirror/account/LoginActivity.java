@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.julardepick.immirror.LauncherActivity;
 import com.julardepick.immirror.R;
+import com.julardepick.immirror.net.LanDiscovery;
 
 /*
  * 登录界面.
@@ -327,6 +328,10 @@ public final class LoginActivity extends Activity {
         presetLoopback.setOnClickListener(view -> settingsInput.setText(AccountSettings.LOOPBACK_BASE_URL));
         presetRow.addView(presetEmulator);
         presetRow.addView(presetLoopback);
+        TextView presetDiscover = AccountTheme.link(this, getString(R.string.account_settings_preset_discover),
+                AccountTheme.COLOR_ACCENT);
+        presetDiscover.setOnClickListener(view -> runDiscovery(settingsInput, presetDiscover));
+        presetRow.addView(presetDiscover);
         panel.addView(presetRow, AccountTheme.block(this, 4f));
 
         LinearLayout actionRow = new LinearLayout(this);
@@ -348,6 +353,36 @@ public final class LoginActivity extends Activity {
         actionRow.addView(testButton, testParams);
         panel.addView(actionRow, AccountTheme.block(this, 10f));
         return panel;
+    }
+
+    /*
+     * 局域网自动发现: 广播探测包, 收到回应自动填充第一个地址.
+     * 探测期间按钮置灰, 结束后恢复; 找不到时提示手动输入.
+     */
+    private void runDiscovery(android.widget.EditText input, android.view.View button) {
+        button.setEnabled(false);
+        showNotice(getString(R.string.account_notice_discovering), AccountTheme.COLOR_TEXT_MUTED);
+        new LanDiscovery(this).discover(new LanDiscovery.Callback() {
+            @Override
+            public void onFound(java.util.Set<String> addresses) {
+                button.setEnabled(true);
+                if (!addresses.isEmpty()) {
+                    final String first = addresses.iterator().next();
+                    input.setText("http://" + first);
+                    showNotice(getString(R.string.account_notice_discovered, first),
+                            AccountTheme.COLOR_SUCCESS);
+                }
+            }
+
+            @Override
+            public void onFinished(int found) {
+                button.setEnabled(true);
+                if (found == 0) {
+                    showNotice(getString(R.string.account_notice_discovery_empty),
+                            AccountTheme.COLOR_TEXT_MUTED);
+                }
+            }
+        });
     }
 
     private void switchMode(int targetMode) {
