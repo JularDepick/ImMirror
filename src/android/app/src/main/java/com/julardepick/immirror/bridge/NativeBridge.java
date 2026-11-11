@@ -146,7 +146,17 @@ public final class NativeBridge {
         return nativeTakeProgressCounters();
     }
 
+    /* 选择要加载的世界存档; 试玩模式由编辑器导出后传入工程名. */
+    public static void selectWorld(String projectName) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeSelectWorld(projectName == null ? "" : projectName);
+    }
+
     private static native String nativeTakeProgressCounters();
+
+    private static native void nativeSelectWorld(String projectName);
 
     private static native void nativeOnDeviceProfile(String payload);
 

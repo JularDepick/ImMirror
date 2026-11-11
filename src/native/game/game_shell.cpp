@@ -442,6 +442,27 @@ void GameShell::ApplyControlSettings() {
     player_->SetStickTuning(stick);
 }
 
+void GameShell::LoadNamedWorld(const std::string& projectName) {
+    /* 编辑器导出的存档与世界存档同目录, 文件名为安全化的工程名. */
+    if (savePath_.empty()) {
+        return;
+    }
+    const size_t slash = savePath_.find_last_of("/\\");
+    const std::string directory = slash == std::string::npos ? savePath_ : savePath_.substr(0, slash);
+    std::string safe;
+    for (const char c : projectName) {
+        safe += (std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_') ? c : '_';
+    }
+    const std::string path = directory + "/" + safe + ".world";
+    world::World::SaveState state;
+    if (world_->LoadFromFile(path.c_str(), state)) {
+        player_->SetPose(core::Vec3{state.playerX, state.playerY, state.playerZ}, state.yaw, state.pitch);
+        IM_LOGI(kTag, "playtest world loaded, project=%s path=%s", projectName.c_str(), path.c_str());
+    } else {
+        IM_LOGW(kTag, "playtest world missing, project=%s path=%s", projectName.c_str(), path.c_str());
+    }
+}
+
 void GameShell::CountProgressEvent(int32_t kind) {
     switch (kind) {
         case 1:

@@ -69,6 +69,25 @@ JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeS
     immirror::jni::EngineHost::Instance().RequestStop();
 }
 
+/* Java 侧低频入口: 试玩模式选择世界存档; 名字对应编辑器导出的文件. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeSelectWorld(JNIEnv* env, jclass clazz,
+                                                                    jstring projectName) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr || projectName == nullptr) {
+        return;
+    }
+    const char* chars = env->GetStringUTFChars(projectName, nullptr);
+    const std::string name = chars != nullptr ? chars : "";
+    if (chars != nullptr) {
+        env->ReleaseStringUTFChars(projectName, chars);
+    }
+    if (!name.empty()) {
+        shell->LoadNamedWorld(name);
+    }
+}
+
 /* Java 侧低频入口: 取走成就统计增量并清零. */
 JNIEXPORT jstring JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeProgressCounters(JNIEnv* env, jclass clazz) {

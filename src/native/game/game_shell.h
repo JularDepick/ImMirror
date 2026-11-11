@@ -80,6 +80,9 @@ public:
 
     /* 供 JNI 桥读取背包与选中格; 装配前调用无副作用. */
     Inventory& InventoryRef() { return inventory_; }
+
+    /* 试玩模式: 读取编辑器导出的世界存档; 装配后调用, 在下次 Update 前生效. */
+    void LoadNamedWorld(const std::string& projectName);
     int32_t SelectedSlot() const { return selectedSlot_; }
     void SelectSlotPublic(int32_t index) { SelectSlot(index); }
 

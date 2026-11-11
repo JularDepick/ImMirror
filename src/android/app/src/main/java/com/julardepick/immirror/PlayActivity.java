@@ -13,6 +13,7 @@ import android.util.Log;
 import com.julardepick.immirror.account.ApiClient;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
+import com.julardepick.immirror.editor.EditorBridge;
 import com.julardepick.immirror.progress.ProgressApi;
 import com.julardepick.immirror.progress.ProgressBoard;
 import android.view.WindowManager;
@@ -67,6 +68,12 @@ public final class PlayActivity extends NativeActivity {
         /* 设置目录与存档目录同源, 都取应用内部存储根目录; 先初始化再启动主循环. */
         NativeBridge.initSettings(getFilesDir().getAbsolutePath());
         NativeBridge.onDeviceProfile(DeviceProfile.obtain(this).toNativePayload());
+        /* 试玩参数: 从编辑器进入时携带工程名, 原生侧据此加载导出的世界存档. */
+        final String playtestProject = getIntent().getStringExtra(EditorBridge.EXTRA_PLAYTEST);
+        NativeBridge.initSettings(getFilesDir().getAbsolutePath());
+        if (playtestProject != null && !playtestProject.isEmpty()) {
+            NativeBridge.selectWorld(playtestProject);
+        }
         setupAudio();
         NativeBridge.start();
         startProgressReporting();
