@@ -445,7 +445,10 @@ def render_header(entries, legacy_rows, segments):
         "    const char* digSound;    /* 原版挖掘音名, 空串表示没有 */",
         "    const char* placeSound;  /* 原版放置音名, 空串表示没有 */",
         "    const char* walkSound;   /* 原版行走音名, 空串表示没有 */",
-        "    const char* texture;     /* 原版贴图1 名, 空串表示没有 */",
+        "    const char* texture;     /* 原版贴图1 名, 空串表示没有 */
+    uint8_t lightSource;     /* 原版光源强度 0-15, 0 不发光 */
+    uint8_t lightAtten;      /* 原版光衰减 0-15 */
+    uint8_t coverMode;       /* 原版遮挡旁边块 0-4 */",
         "    uint32_t dropSourceId;   /* 原版掉落物物品 id, 0 表示无掉落 */",
         "};",
         "",
@@ -568,7 +571,10 @@ def render_header(entries, legacy_rows, segments):
         "    const char* digSound;    /* 原版挖掘音名, 空串表示没有 */",
         "    const char* placeSound;  /* 原版放置音名, 空串表示没有 */",
         "    const char* walkSound;   /* 原版行走音名, 空串表示没有 */",
-        "    const char* texture;     /* 原版贴图1 名, 空串表示没有 */",
+        "    const char* texture;     /* 原版贴图1 名, 空串表示没有 */
+    uint8_t lightSource;     /* 原版光源强度 0-15, 0 不发光 */
+    uint8_t lightAtten;      /* 原版光衰减 0-15 */
+    uint8_t coverMode;       /* 原版遮挡旁边块 0-4 */",
         "};",
         "",
         "constexpr int32_t kRegistryEntryCount = kBlockEntryCount - kLegacyBlockCount;",

@@ -89,6 +89,14 @@ struct BlockInfo {
     float hardness = -1.0f;
     HarvestTool tool = HarvestTool::kHand;             /* 采集工具档位 */
     HarvestMaterial material = HarvestMaterial::kNone; /* 采集材质族, 决定音效 */
+    /*
+     * 原版光照三列折算: 光源强度 0-15 (0 表示不发光), 光衰减 0-15,
+     * 遮挡旁边块 0 不遮挡 / 1 遮挡 / 2 按厚度 / 3 遮挡同材质.
+     * 光照传播系统接入后由 chunk_mesher 读取, 现阶段仅保留数据.
+     */
+    uint8_t lightSource = 0;
+    uint8_t lightAtten = 0;
+    uint8_t coverMode = 1;
 };
 
 }  /* namespace immirror::voxel */

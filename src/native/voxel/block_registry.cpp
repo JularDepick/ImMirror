@@ -4,6 +4,7 @@
 
 #include "game/generated/block_data_gen.h"
 #include "voxel/generated/atlas_index_gen.h"
+#include "voxel/generated/block_light_gen.h"
 
 namespace immirror::voxel {
 namespace {
@@ -252,6 +253,11 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.solid = entry.solid;
         info.opaque = entry.opaque;
         info.atlasIndex = AtlasSlotOf(entry.texture);
+        const auto& lightEntry = ::immirror::voxel::light::LightEntryOf(
+            static_cast<uint16_t>(block::LegacyCount + index));
+        info.lightSource = lightEntry.lightSource;
+        info.lightAtten = lightEntry.lightAtten;
+        info.coverMode = lightEntry.coverMode;
         info.atlasTop = kAtlasFallback;
         info.atlasSide = kAtlasFallback;
         info.atlasBottom = kAtlasFallback;
