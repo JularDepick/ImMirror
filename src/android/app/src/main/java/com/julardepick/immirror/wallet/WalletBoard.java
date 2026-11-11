@@ -23,7 +23,8 @@ public final class WalletBoard {
     private final CheckinStatus checkin;
     private final List<LedgerEntry> ledger;
 
-    private WalletBoard(long balance, long updatedAt, CheckinStatus checkin, List<LedgerEntry> ledger) {
+    /* 供同包 WalletApi 构造; 字段不可变, 外部只读. */
+    WalletBoard(long balance, long updatedAt, CheckinStatus checkin, List<LedgerEntry> ledger) {
         this.balance = balance;
         this.updatedAt = updatedAt;
         this.checkin = checkin;
