@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "core/log.h"
+#include "editor/editor_command.h"
 #include "editor/editor_session.h"
 #include "editor/editor_types.h"
 #include "editor/project_format.h"
@@ -92,6 +93,21 @@ void ExitToJavaThunk(void* user) {
 }  /* namespace */
 
 extern "C" {
+
+/*
+ * 编辑器统一命令入口: Java 侧的低频调用全部走这一条命令串.
+ * 命令的解释与状态保存在 editor_command.cpp, 这里只做字符串搬运,
+ * 任何情况下都不向 Java 抛异常, 失败以 code 与 message 字段回传.
+ */
+JNIEXPORT jstring JNICALL
+Java_com_julardepick_immirror_editor_EditorBridge_nativeEditorCommand(JNIEnv* env, jclass clazz,
+                                                                     jstring command) {
+    (void)clazz;
+    const std::string text = ToStdString(env, command);
+    const std::string reply = immirror::editor::HandleEditorCommand(text);
+    IM_LOGD(kTag, "editor command: %s", text.c_str());
+    return ToJString(env, reply);
+}
 
 /*
  * 绑定当前 Activity: 保存虚拟机与 Activity 的全局引用, 并注册原生侧的退出回调.
@@ -290,94 +306,6 @@ Java_com_julardepick_immirror_editor_EditorBridge_nativeDescribeProject(JNIEnv* 
         text += "\n";
     }
     return ToJString(env, text);
-}
-
-
-/* 命令状态: dataPath, 当前工程目录, 工具, 方块键, 光标. 进程内单会话, 只在编辑器线程访问. */
-namespace {
-
-std::string gEditorDataPath;
-std::string gEditorProjectDir;
-std::string gEditorStatusExtra;
-
-}  /* namespace */
-
-/*
- * 统一命令入口. Java 侧 EditorBridge.command() 把全部操作折叠成一行文本,
- * 这里按动词分派到上面的细粒度逻辑, 返回 EditorReply 兼容的 key=value 行.
- * 未知动词返回 ok=false 带原因, 不抛异常不崩溃.
- */
-JNIEXPORT jstring JNICALL
-Java_com_julardepick_immirror_editor_EditorBridge_nativeEditorCommand(JNIEnv* env, jclass clazz,
-                                                                      jstring command) {
-    (void)clazz;
-    const std::string line = ToStdString(env, command);
-    const size_t space = line.find(' ');
-    const std::string verb = space == std::string::npos ? line : line.substr(0, space);
-    const std::string argument = space == std::string::npos ? std::string() : line.substr(space + 1);
-    std::string reply = "ok=true\n";
-
-    if (verb == "init") {
-        gEditorDataPath = argument;
-        gEditorStatusExtra = "dataPath set";
-    } else if (verb == "status") {
-        reply = "ok=true\nproject=" + (gEditorProjectDir.empty() ? std::string("(none)")
-                                                                 : gEditorProjectDir) + "\n";
-        reply += "data=" + (gEditorDataPath.empty() ? std::string("(none)") : gEditorDataPath) + "\n";
-        if (!gEditorStatusExtra.empty()) {
-            reply += "extra=" + gEditorStatusExtra + "\n";
-        }
-    } else if (verb == "projects") {
-        const std::string root = immirror::editor::ProjectRoot(gEditorDataPath);
-        std::vector<immirror::editor::ProjectSummary> projects;
-        std::string error;
-        if (!immirror::editor::ListProjects(root, projects, error)) {
-            reply = "ok=false\nerror=" + SanitizeField(error) + "\n";
-        } else {
-            reply = "ok=true\ncount=" + std::to_string(projects.size()) + "\n";
-            for (const auto& project : projects) {
-                reply += "project|" + SanitizeField(project.directory) + "|" + SanitizeField(project.name)
-                       + "|" + std::to_string(project.triggerCount) + "\n";
-            }
-        }
-    } else if (verb == "new") {
-        std::string directory;
-        std::string error;
-        if (!immirror::editor::CreateProject(gEditorDataPath, argument, 0u, directory, error)) {
-            reply = "ok=false\nerror=" + SanitizeField(error) + "\n";
-        } else {
-            gEditorProjectDir = directory;
-            reply = "ok=true\ndirectory=" + SanitizeField(directory) + "\nname=" + SanitizeField(argument) + "\n";
-        }
-    } else if (verb == "open") {
-        immirror::editor::Project project;
-        std::string error;
-        if (!project.Load(argument, error)) {
-            reply = "ok=false\nerror=" + SanitizeField(error) + "\n";
-        } else {
-            gEditorProjectDir = argument;
-            reply = "ok=true\nname=" + SanitizeField(project.Name()) + "\nseed="
-                  + std::to_string(project.Seed()) + "\nchunks=" + std::to_string(project.ChunkCount())
-                  + "\ntriggers=" + std::to_string(project.Triggers().size()) + "\n";
-        }
-    } else if (verb == "save") {
-        if (gEditorProjectDir.empty()) {
-            reply = "ok=false\nerror=no project\n";
-        } else {
-            immirror::editor::Project project;
-            std::string error;
-            if (!project.Load(gEditorProjectDir, error) || !project.Save(error)) {
-                reply = "ok=false\nerror=" + SanitizeField(error) + "\n";
-            }
-        }
-    } else if (verb == "tool" || verb == "block" || verb == "cursor" || verb == "apply"
-               || verb == "sel" || verb == "fill") {
-        /* 工具与画布操作: 世界侧暂未接入, 只记录参数供后续接线, 返回成功. */
-        gEditorStatusExtra = verb + " " + argument;
-    } else {
-        reply = "ok=false\nerror=unknown command " + SanitizeField(verb) + "\n";
-    }
-    return ToJString(env, reply);
 }
 
 /* 导出到游戏存档目录时使用的路径, 供 Java 侧显示. */
