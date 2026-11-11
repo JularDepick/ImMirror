@@ -30,7 +30,7 @@ def collect_sound_entries():
         return entries
     for name in sorted(os.listdir(directory)):
         if name.lower().endswith(".ogg"):
-            entries.append(("sounds/" + name, "sounds/" + name))
+            entries.append((os.path.join(directory, name), "sounds/" + name))
     return entries
 
 
