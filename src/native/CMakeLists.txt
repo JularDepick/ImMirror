@@ -27,8 +27,10 @@ add_subdirectory(world)
 add_subdirectory(settings)
 add_subdirectory(render)
 add_subdirectory(player)
+add_subdirectory(entity)
 add_subdirectory(script)
 add_subdirectory(game)
+add_subdirectory(progress)
 
 # 引擎运行时: 基础库, 平台适配, 渲染后端与 JNI 导出
 add_library(immirror_core SHARED
