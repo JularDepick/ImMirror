@@ -75,6 +75,28 @@ public final class ProgressApi {
         });
     }
 
+
+    /* 上报增量统计; 服务端在 report 内直接发放镜币, 没有单独的领取接口. */
+    public void reportStats(final Session session, final JSONObject stats, final Callback callback) {
+        if (session == null || !session.isUsable()) {
+            postFailure(callback, new ApiException("AUTH_UNAUTHORIZED", "no session"));
+            return;
+        }
+        EXECUTOR.execute(() -> {
+            try {
+                JSONObject body = new JSONObject();
+                body.put("stats", stats);
+                JSONObject achievements = post("/achievements/report", body, session.token());
+                JSONObject daily = get("/achievements/daily", session.token());
+                postSuccess(callback, merge(achievements, daily));
+            } catch (ApiException error) {
+                postFailure(callback, error);
+            } catch (org.json.JSONException | RuntimeException error) {
+                postFailure(callback, new ApiException(ApiException.CODE_PROTOCOL, String.valueOf(error)));
+            }
+        });
+    }
+
     private void postSuccess(final Callback callback, final ProgressBoard board) {
         if (callback == null) {
             return;
@@ -178,5 +200,54 @@ public final class ProgressApi {
             }
             return new String(output.toByteArray(), StandardCharsets.UTF_8);
         }
+    }
+
+    /* 执行一次 POST 并拆包络; 与 get 共用超时与错误处理. */
+    private JSONObject post(String path, JSONObject body, String token) throws ApiException {
+        String baseUrl = AccountSettings.baseUrl(context);
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(baseUrl + PATH_PREFIX + path);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            connection.setReadTimeout(READ_TIMEOUT_MS);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("User-Agent", USER_AGENT);
+            connection.setRequestProperty("Authorization", "Bearer " + token);
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+            connection.getOutputStream().write(body.toString().getBytes("UTF-8"));
+            int status = connection.getResponseCode();
+            String text = readBody(connection, status);
+            return parseEnvelope(text, status);
+        } catch (MalformedURLException error) {
+            throw new ApiException(ApiException.CODE_NETWORK, "bad url " + baseUrl);
+        } catch (IOException error) {
+            throw new ApiException(ApiException.CODE_NETWORK, String.valueOf(error));
+        } catch (org.json.JSONException error) {
+            throw new ApiException(ApiException.CODE_PROTOCOL, "bad json " + error);
+        }
+    }
+
+
+    /* 拆响应包络: ok 为真取 data, 否则把服务端错误码与消息转成 ApiException. */
+    private static JSONObject parseEnvelope(String text, int status)
+            throws org.json.JSONException, ApiException {
+        if (text == null || text.trim().isEmpty()) {
+            throw new ApiException(ApiException.CODE_PROTOCOL, "empty response");
+        }
+        JSONObject envelope = new JSONObject(text);
+        if (envelope.optBoolean("ok", false)) {
+            JSONObject data = envelope.optJSONObject("data");
+            return data == null ? new JSONObject() : data;
+        }
+        JSONObject error = envelope.optJSONObject("error");
+        String code = error == null ? "" : error.optString("code", "");
+        String message = error == null ? "" : error.optString("message", "");
+        if (code.isEmpty()) {
+            throw new ApiException(ApiException.CODE_PROTOCOL, "http " + status);
+        }
+        throw new ApiException(code, message);
     }
 }
