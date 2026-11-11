@@ -15,10 +15,12 @@ SRC_ROOT = os.path.dirname(SCRIPT_DIR)
 ASSETS_ROOT = os.path.join(SRC_ROOT, "assets")
 TARGET_ROOT = os.path.join(SRC_ROOT, "android", "app", "src", "main", "assets")
 
-# 音效文件按材质分族, 破坏音与放置音各一套
-MATERIALS = ("grass", "stone", "sand", "wood", "snow", "gravel")
-MANIFEST = [(f"sounds/dig_{name}.ogg", f"sounds/dig_{name}.ogg") for name in MATERIALS]
-MANIFEST += [(f"sounds/place_{name}.ogg", f"sounds/place_{name}.ogg") for name in MATERIALS]
+# 音效: blockd 破坏族全部 34 个 + blocks 行走族全部 (按原版 blockdef 取值全量覆盖)
+MANIFEST += [
+    ("sounds/" + name, "sounds/" + name)
+    for name in sorted(os.listdir(os.path.join(ASSETS_ROOT, "sounds")))
+    if name.endswith(".ogg")
+]
 
 # 界面素材按用途分目录, 全部随包下发
 UI_DIRS = ("button", "panel", "dialog", "tab", "slot", "icon", "misc")
