@@ -16,11 +16,12 @@ ASSETS_ROOT = os.path.join(SRC_ROOT, "assets")
 TARGET_ROOT = os.path.join(SRC_ROOT, "android", "app", "src", "main", "assets")
 
 # 音效: blockd 破坏族全部 34 个 + blocks 行走族全部 (按原版 blockdef 取值全量覆盖)
-MANIFEST += [
+SOUND_ENTRIES = [
     ("sounds/" + name, "sounds/" + name)
     for name in sorted(os.listdir(os.path.join(ASSETS_ROOT, "sounds")))
     if name.endswith(".ogg")
 ]
+MANIFEST = MANIFEST + SOUND_ENTRIES
 
 # 界面素材按用途分目录, 全部随包下发
 UI_DIRS = ("button", "panel", "dialog", "tab", "slot", "icon", "misc")
