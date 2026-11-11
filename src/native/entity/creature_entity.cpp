@@ -194,7 +194,7 @@ CreatureTick CreatureEntity::Update(double dt, const world::World& world,
                              HasLineOfSight(world, monsterEye, playerEye);
         if (sightOk) {
             attackCooldown_ = def_->attackInterval;
-            tick.playerDamage = def_->attack;
+            tick.playerDamage = def_->attack * tuning::kDamageScale;
             FaceDirection(toPlayer, 1.0f);
         }
     }
