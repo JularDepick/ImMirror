@@ -1,0 +1,89 @@
+#pragma once
+
+#include <cstdint>
+#include <memory>
+#include <vector>
+
+#include "core/vec3.h"
+#include "entity/creature_entity.h"
+#include "voxel/voxel_types.h"
+
+namespace immirror::world {
+class World;
+}
+
+namespace immirror::entity {
+
+/* 生物死亡后待入背包的掉落. 掉落物当前按生物类别折算为方块, 见生成表注释. */
+struct EntityDrop {
+    voxel::BlockId block = 0;
+    int32_t count = 0;
+};
+
+/* 一帧的统计: 对玩家的伤害合计, 以及生成, 死亡与回收数量. */
+struct EntityFrameStats {
+    float playerDamage = 0.0f;
+    int32_t spawned = 0;
+    int32_t deaths = 0;
+    int32_t despawned = 0;
+};
+
+/*
+ * 实体管理器. 持有全部生物, 负责按生物表在地表生成, 按距离休眠与回收,
+ * 逐帧推进 AI 与物理, 并提供视线拾取与伤害结算给玩家攻击路径使用.
+ * 生物对玩家的伤害不在这里施加, 而是汇总到 EntityFrameStats 由总装转交玩家控制器,
+ * 这样实体层不依赖玩家层, 更新顺序完全由总装掌握.
+ * 只在原生主线程使用, 不做加锁.
+ */
+class EntityManager {
+public:
+    EntityManager();
+    ~EntityManager();
+
+    EntityManager(const EntityManager&) = delete;
+    EntityManager& operator=(const EntityManager&) = delete;
+
+    /* 清空全部生物并重新播种; 进入新世界或重新载入存档时调用. */
+    void Reset(uint32_t seed);
+
+    /* 推进全部生物并补充生成, 返回本帧统计. */
+    EntityFrameStats Update(double dt, const world::World& world, const PlayerProbe& player);
+
+    /* 视线拾取最近的生物, 命中返回实体指针, 距离写入 outDistance; 不修改状态. */
+    const Entity* PickRay(const core::Vec3& origin, const core::Vec3& direction, float maxDistance,
+                          float& outDistance) const;
+
+    /* 对指定生物造成伤害; 致死时把掉落放进待收列表并返回 true. */
+    bool Damage(EntityId id, float amount);
+
+    /* 取走累计的掉落, 取走后列表清空. */
+    std::vector<EntityDrop> TakeDrops();
+
+    int32_t Count() const { return static_cast<int32_t>(creatures_.size()); }
+    int32_t AwakeCount() const { return awake_; }
+    /* 同时存在的生物上限. */
+    int32_t Capacity() const;
+
+    /* 只读访问全部生物, 供渲染侧接入生物网格时逐个体取位置, 朝向与状态. */
+    const std::vector<std::unique_ptr<CreatureEntity>>& Creatures() const { return creatures_; }
+
+private:
+    CreatureEntity* Find(EntityId id);
+    /* 回收已死亡或已被标记移除的实体. */
+    void RemoveGone();
+    /* 在玩家周围的地表尝试生成一只生物, 地表不合法或概率未命中时直接返回. */
+    void TrySpawn(const world::World& world, const PlayerProbe& player, EntityFrameStats& stats);
+    /* 把死亡生物的掉落放进待收列表. */
+    void QueueLoot(const CreatureEntity& creature);
+    float NextUnit();
+
+    std::vector<std::unique_ptr<CreatureEntity>> creatures_;
+    std::vector<EntityDrop> drops_;
+    uint32_t rng_ = 1u;
+    EntityId nextId_ = 1u;
+    double spawnAccumulator_ = 0.0;
+    int32_t awake_ = 0;
+    int32_t deathsPending_ = 0;
+};
+
+}  /* namespace immirror::entity */

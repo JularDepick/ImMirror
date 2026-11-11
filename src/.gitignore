@@ -32,3 +32,10 @@ native/ui/generated/
 
 # 由 scripts/gen_block_data.py 生成的方块数据表: 中文名与掉落物
 native/game/generated/
+
+# 由 scripts/gen_monster_data.py 生成的生物数据表: 名称, 生命, 攻击, 尺寸与掉落
+native/entity/generated/
+
+# Python 缓存
+__pycache__/
+*.pyc

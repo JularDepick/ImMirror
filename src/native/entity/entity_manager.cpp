@@ -1,0 +1,232 @@
+#include "entity/entity_manager.h"
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
+
+#include "core/log.h"
+#include "entity/entity_tuning.h"
+#include "entity/monster_table.h"
+#include "voxel/block_registry.h"
+#include "voxel/voxel_types.h"
+#include "world/world.h"
+
+namespace immirror::entity {
+namespace {
+
+constexpr const char* kTag = "ImMirrorEntity";
+constexpr float kPi = 3.14159265358979f;
+constexpr float kTwoPi = 2.0f * kPi;
+
+int32_t FloorToInt(float value) {
+    return static_cast<int32_t>(std::floor(value));
+}
+
+}  /* namespace */
+
+EntityManager::EntityManager() { Reset(1u); }
+
+EntityManager::~EntityManager() = default;
+
+void EntityManager::Reset(uint32_t seed) {
+    creatures_.clear();
+    drops_.clear();
+    rng_ = seed != 0u ? seed : 1u;
+    nextId_ = 1u;
+    awake_ = 0;
+    deathsPending_ = 0;
+    /* 先进一段生成计时, 世界就绪后的首帧就能看到生物, 不必等满一个间隔. */
+    spawnAccumulator_ = tuning::kSpawnIntervalSeconds;
+    const MonsterTable& table = MonsterTable::Instance();
+    IM_LOGI(kTag, "entity manager reset, species=%d spawnable=%d hostile=%d",
+            table.Count(), table.SpawnableCount(), table.HostileCount());
+}
+
+EntityFrameStats EntityManager::Update(double dt, const world::World& world,
+                                       const PlayerProbe& player) {
+    EntityFrameStats stats;
+    float seconds = dt > 0.0 ? static_cast<float>(dt) : 0.0f;
+    if (seconds > tuning::kMaxFrameSeconds) {
+        seconds = tuning::kMaxFrameSeconds;
+    }
+
+    awake_ = 0;
+    for (const auto& creature : creatures_) {
+        if (creature == nullptr || creature->Removed()) {
+            continue;
+        }
+        const core::Vec3 position = creature->Position();
+        const float deltaX = position.x - player.feet.x;
+        const float deltaZ = position.z - player.feet.z;
+        const float distance = std::sqrt(deltaX * deltaX + deltaZ * deltaZ);
+
+        /* 走得太远的生物直接回收, 控制同时存在的实体数量. */
+        if (distance > tuning::kDespawnRadius) {
+            creature->MarkRemoved();
+            ++stats.despawned;
+            continue;
+        }
+        /* 休眠: 远离玩家的生物保留在场但不推进 AI 与物理, 死亡动画照常播完. */
+        if (distance > tuning::kSleepRadius && !creature->Dying()) {
+            continue;
+        }
+        ++awake_;
+        const CreatureTick tick = creature->Update(seconds, world, player);
+        stats.playerDamage += tick.playerDamage;
+    }
+
+    RemoveGone();
+
+    /* 生成按固定间隔结算, 落后多个间隔时只补一轮, 避免卡顿后突然刷出大量生物. */
+    spawnAccumulator_ += seconds;
+    if (spawnAccumulator_ >= tuning::kSpawnIntervalSeconds) {
+        spawnAccumulator_ -= tuning::kSpawnIntervalSeconds;
+        if (spawnAccumulator_ > tuning::kSpawnIntervalSeconds) {
+            spawnAccumulator_ = tuning::kSpawnIntervalSeconds;
+        }
+        for (int32_t attempt = 0; attempt < tuning::kSpawnAttemptsPerTick; ++attempt) {
+            if (Count() >= tuning::kMaxCreatures) {
+                break;
+            }
+            TrySpawn(world, player, stats);
+        }
+    }
+
+    stats.deaths = deathsPending_;
+    deathsPending_ = 0;
+    return stats;
+}
+
+const Entity* EntityManager::PickRay(const core::Vec3& origin, const core::Vec3& direction,
+                                     float maxDistance, float& outDistance) const {
+    const Entity* best = nullptr;
+    float bestDistance = maxDistance;
+    for (const auto& creature : creatures_) {
+        if (creature == nullptr || creature->Removed() || creature->Dying()) {
+            continue;
+        }
+        core::Vec3 minCorner;
+        core::Vec3 maxCorner;
+        creature->Bounds(minCorner, maxCorner);
+        const float distance = RayHitsBox(origin, direction, minCorner, maxCorner);
+        if (distance < 0.0f || distance > maxDistance) {
+            continue;
+        }
+        if (best == nullptr || distance < bestDistance) {
+            best = creature.get();
+            bestDistance = distance;
+        }
+    }
+    outDistance = best != nullptr ? bestDistance : maxDistance;
+    return best;
+}
+
+bool EntityManager::Damage(EntityId id, float amount) {
+    CreatureEntity* creature = Find(id);
+    if (creature == nullptr) {
+        return false;
+    }
+    if (!creature->Damage(amount)) {
+        return false;
+    }
+    QueueLoot(*creature);
+    ++deathsPending_;
+    IM_LOGI(kTag, "creature died id=%u name=%s life=%.0f", id, creature->Definition().name,
+            static_cast<double>(creature->Definition().life));
+    return true;
+}
+
+std::vector<EntityDrop> EntityManager::TakeDrops() {
+    std::vector<EntityDrop> taken;
+    taken.swap(drops_);
+    return taken;
+}
+
+int32_t EntityManager::Capacity() const { return tuning::kMaxCreatures; }
+
+CreatureEntity* EntityManager::Find(EntityId id) {
+    for (const auto& creature : creatures_) {
+        if (creature != nullptr && creature->Id() == id) {
+            return creature.get();
+        }
+    }
+    return nullptr;
+}
+
+void EntityManager::RemoveGone() {
+    creatures_.erase(
+        std::remove_if(creatures_.begin(), creatures_.end(),
+                       [](const std::unique_ptr<CreatureEntity>& creature) {
+                           return creature == nullptr || creature->Removed() ||
+                                  creature->ReadyToRemove();
+                       }),
+        creatures_.end());
+}
+
+void EntityManager::TrySpawn(const world::World& world, const PlayerProbe& player,
+                             EntityFrameStats& stats) {
+    const MonsterTable& table = MonsterTable::Instance();
+    if (!(table.TotalSpawnWeight() > 0.0f)) {
+        return;
+    }
+
+    /* 生成点取玩家周围的一个环带, 太近会突然出现在视野里, 太远则超出视距. */
+    const float angle = NextUnit() * kTwoPi;
+    const float radius = tuning::kSpawnMinRadius +
+                         NextUnit() * (tuning::kSpawnMaxRadius - tuning::kSpawnMinRadius);
+    const int32_t x = FloorToInt(player.feet.x + std::cos(angle) * radius);
+    const int32_t z = FloorToInt(player.feet.z + std::sin(angle) * radius);
+
+    /* HeightAt 返回该列最高非空方块的上方一格, 返回 0 表示该列区块尚未加载. */
+    const int32_t surface = world.HeightAt(x, z);
+    if (surface <= 0 || surface >= voxel::kWorldHeight - 2) {
+        return;
+    }
+
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    /* 脚下要有实心地表, 落脚与头顶两格必须是空的, 避免生在树冠或墙里. */
+    if (!registry.Info(world.GetBlock(x, surface - 1, z)).solid) {
+        return;
+    }
+    if (registry.Info(world.GetBlock(x, surface, z)).solid) {
+        return;
+    }
+    if (registry.Info(world.GetBlock(x, surface + 1, z)).solid) {
+        return;
+    }
+    if (NextUnit() > tuning::kSpawnChancePerAttempt) {
+        return;
+    }
+
+    const float scaled = NextUnit() * table.TotalSpawnWeight();
+    const uint32_t pick = static_cast<uint32_t>(scaled);
+    const MonsterDef& def = table.PickByWeight(pick);
+
+    const core::Vec3 spawn{static_cast<float>(x) + 0.5f, static_cast<float>(surface),
+                           static_cast<float>(z) + 0.5f};
+    const EntityId id = nextId_++;
+    const uint32_t seed = (id * 2654435761u) ^ rng_;
+    creatures_.push_back(std::make_unique<CreatureEntity>(id, def, spawn, seed));
+    ++stats.spawned;
+    IM_LOGD(kTag, "spawn id=%u name=%s kind=%d at %.1f,%.1f,%.1f", id, def.name,
+            static_cast<int32_t>(def.type), static_cast<double>(spawn.x),
+            static_cast<double>(spawn.y), static_cast<double>(spawn.z));
+}
+
+void EntityManager::QueueLoot(const CreatureEntity& creature) {
+    const MonsterDef& def = creature.Definition();
+    if (def.lootBlock == 0 || def.lootCount <= 0) {
+        return;
+    }
+    drops_.push_back(EntityDrop{def.lootBlock, def.lootCount});
+}
+
+float EntityManager::NextUnit() {
+    /* xorshift32: 布局只需要可复现的伪随机, 不引入标准库随机设备. */
+    rng_ ^= rng_ << 13;
+    rng_ ^= rng_ >> 17;
+    rng_ ^= rng_ << 5;
+    return static_cast<float>(rng_ & 0x00FFFFFFu) / static_cast<float>(0x01000000u);
+}
+
+}  /* namespace immirror::entity */
