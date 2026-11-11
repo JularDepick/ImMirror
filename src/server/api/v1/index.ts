@@ -12,6 +12,7 @@ import { registerPasswordResetRoutes } from "./auth/password-reset";
 import { registerRegisterRoutes } from "./auth/register";
 import { registerMeRoutes } from "./me";
 import { registerMetaRoutes } from "./meta";
+import { registerAchievementRoutes } from "./achievements";
 import { registerWalletRoutes } from "./wallet";
 
 export function registerApiRoutes(app: FastifyInstance, ctx: AppContext): void {
@@ -23,4 +24,5 @@ export function registerApiRoutes(app: FastifyInstance, ctx: AppContext): void {
   registerLogoutRoutes(app, ctx);
   registerMeRoutes(app, ctx);
   registerWalletRoutes(app, ctx);
+  registerAchievementRoutes(app, ctx);
 }

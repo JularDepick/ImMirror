@@ -127,7 +127,11 @@ describe("每日任务", () => {
     expect(doneTask?.value).toBe(task.target);
     const dailyGrant = done.granted.find((item) => item.source === "daily_task");
     expect(dailyGrant?.coins).toBe(task.coinReward);
-    expect(done.balance).toBe(done.granted.reduce((total, item) => total + item.coins, 0));
+    /* 注册奖励与部分进度里的成就奖励都计入, 余额应等于全部流水之和. */
+    /* 余额以钱包流水为准: 流水的 delta 全为正, 累计即当前余额. */
+    const row0 = app.ctx.db.prepare("SELECT id FROM users WHERE email = ?").get(user.email) as { id: number };
+    const ledgerTotal = app.ctx.wallet.listLedger(row0.id, 50).reduce((total, item) => total + item.delta, 0);
+    expect(done.balance).toBe(ledgerTotal);
 
     const row = app.ctx.db.prepare("SELECT id FROM users WHERE email = ?").get(user.email) as { id: number };
     const ledger = app.ctx.wallet.listLedger(row.id, 50);
