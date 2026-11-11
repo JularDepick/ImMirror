@@ -2,24 +2,28 @@
 """从原版物品定义表与合成表生成客户端的物品数据与配方数据头文件.
 
 输入:
-  single-branch/assets/project/csvdef/autogen/itemdef.csv  物品定义 (5109 行)
-  single-branch/assets/project/csvdef/crafting.csv         合成配方 (632 行)
-  single-branch/assets/project/csvdef/blockdef.csv         方块定义 (1191 行, 仅用于自检)
+  single-branch/assets/project/csvdef/autogen/itemdef.csv  物品定义
+  single-branch/assets/project/csvdef/crafting.csv         合成配方
+  single-branch/assets/project/csvdef/blockdef.csv         方块定义 (仅用于自检)
+  single-branch/client/src/native/game/generated/block_data_gen.h  全量方块表
 输出:
   single-branch/client/src/native/game/generated/item_data_gen.h
   single-branch/client/src/native/game/generated/recipe_data_gen.h
 
-物品选取分三段, 保证客户端物品 id 稳定且与方块 id 对齐:
-  1. 0 到 14 号: 客户端方块一一对应, 物品 id 与方块 id 同值, 便于掉落与放置互相换算
-  2. 15 号起: 以这批方块为原料可逐层合成的物品闭包 (BFS, 无序合成口径)
-  3. 其余: 按合成表引用次数排序的常见材料, 补足 TARGET_ITEM_COUNT 种
-配方只保留"产物与全部材料都在物品表内"的条目, 表外的配方原样留在原版 CSV 里,
-后续扩充物品表后重新运行本脚本即可自动纳入.
+物品 id 与方块 id 一一对应:
+  0 号是空气, 方块 1 起的物品 id 与客户端方块 id 同值, 每个客户端方块
+  都有一个可放置物品, 放置与掉落通过同值关系直接换算;
+  其余物品以全部方块为原料逐层合成闭包 (BFS, 无序合成口径) 排在方块之后,
+  闭包只认原版物品表里有名有型的条目.
+  客户端方块 id 到原版方块 ID 的对照读自生成的方块表 (kSourceIds),
+  方块表缺失时回落到本脚本的 CLIENT_BLOCKS 兼容段.
 
 原版配方用横占格/竖占格描述摆放区域, 每格记一种材料与数量; 同一材料出现在多格时
 数量按格累加, 也就是"材料数量决定配方"的无序语义 (原版即如此). 因此生成时把配方
 规整成按材料聚合的材料清单, kind 记 kShapeless; 有序配方匹配器同样实现,
 由 SHAPED_RECIPES 显式列出需要按格位精确摆放的配方, 目前表内没有这类数据.
+
+生成物列入 .gitignore, 由 scripts/build-native.sh 在构建前调用.
 """
 
 import csv
@@ -37,15 +41,12 @@ BLOCK_DATA_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "block_d
 OUT_ITEM_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "item_data_gen.h")
 OUT_RECIPE_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "recipe_data_gen.h")
 
-# 客户端方块与原版 blockdef ID 的对应关系, 与 scripts/gen_block_data.py 的 CLIENT_BLOCKS 一致;
-# 生成过方块表时改以 block_data_gen.h 为准, 两者不一致时以本表自检并告警.
+# 兼容段方块与原版 blockdef ID 的对应关系, 与 scripts/gen_block_data.py 的
+# CLIENT_BLOCKS 一致; 正常路径以 block_data_gen.h 的 kSourceIds 为准, 本表只兜底
 CLIENT_BLOCKS = [
     (0, 0), (1, 100), (2, 101), (3, 104), (4, 106), (5, 4), (6, 200), (7, 218),
     (8, 1), (9, 547), (10, 505), (11, 115), (12, 123), (13, 107), (14, 206),
 ]
-
-# 物品表目标条数: 方块 15 种, 可合成闭包约 80 种, 其余补常见材料
-TARGET_ITEM_COUNT = 150
 
 # 需要按格位精确摆放的配方 id; 原版配方是数量制, 这里留作后续手写有序配方的入口
 SHAPED_RECIPES = set()
@@ -83,7 +84,7 @@ def escape(text):
 
 def load_table(path):
     """读取双表头 CSV, 返回以英文字段名为键的行字典列表."""
-    with open(path, "r", encoding="utf-8", newline="") as handle:
+    with open(path, "r", encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.reader(handle))
     if len(rows) < 3:
         raise SystemExit("数据表行数不足: %s" % path)
@@ -96,20 +97,30 @@ def load_table(path):
     return table
 
 
-def client_block_sources():
-    """取客户端方块对应的原版方块 ID 列表, 优先读已生成的方块数据表."""
-    sources = [source for _, source in CLIENT_BLOCKS]
+def read_block_sources():
+    """取客户端方块 id 到原版方块 ID 的对照, 优先读生成的方块数据表.
+
+    方块表里 kSourceIds 的下标即客户端 id, 取值即原版方块 ID, 每行 12 个;
+    读取失败或格式不符时回落到 CLIENT_BLOCKS 兼容段, 保证单独重跑物品
+    生成也能工作, 两处不一致时以方块表为准并给出告警.
+    """
+    pairs = [(client_id, source) for client_id, source in CLIENT_BLOCKS]
     if os.path.isfile(BLOCK_DATA_PATH):
         with open(BLOCK_DATA_PATH, "r", encoding="utf-8") as handle:
             text = handle.read()
-        found = [int(match) for match in re.findall(r"^\s*\{(\d+)u,\s*\"", text, re.MULTILINE)]
-        if len(found) == len(CLIENT_BLOCKS):
-            if found != sources:
-                emit("警告: block_data_gen.h 的原版 ID 与 CLIENT_BLOCKS 不一致, 以本脚本为准")
-            return sources
-        emit("警告: block_data_gen.h 条目数为 %d, 与客户端方块数 %d 不符, 回落到 CLIENT_BLOCKS"
-             % (len(found), len(CLIENT_BLOCKS)))
-    return sources
+        match = re.search(r"kSourceIds\[kBlockEntryCount\] = \{(.*?)\};", text, re.DOTALL)
+        if match:
+            numbers = [int(value) for value in re.findall(r"(\d+)u", match.group(1))]
+            parsed = list(enumerate(numbers))
+            legacy_pairs = sorted(pairs)
+            found_legacy = sorted(parsed[:len(pairs)])
+            if legacy_pairs != found_legacy:
+                emit("提示: 方块表与 CLIENT_BLOCKS 的兼容段映射不一致, 以方块表为准")
+            return parsed
+        emit("警告: block_data_gen.h 的 kSourceIds 无法解析, 回落到 CLIENT_BLOCKS")
+    else:
+        emit("警告: 未找到方块数据表 %s, 回落到 CLIENT_BLOCKS" % BLOCK_DATA_PATH)
+    return pairs
 
 
 def material_counts(recipe):
@@ -174,50 +185,10 @@ def compute_closure(recipes, seed_sources):
     return available, rounds
 
 
-def select_items(items_by_id, recipes, seed_sources):
-    """产出客户端物品 id 到原版物品 ID 的映射列表, 顺序即客户端物品 id."""
-    closure, rounds = compute_closure(recipes, seed_sources)
-    selected = list(seed_sources[1:])  # 跳过空气, 方块 1 到 14 依次占位
-    for source in sorted(closure):
-        if source in seed_sources or source <= 0:
-            continue
-        if source in selected:
-            continue
-        if not item_usable(items_by_id.get(source, {}), source):
-            continue
-        selected.append(source)
-
-    reference_count = {}
-    for recipe in recipes:
-        for item, _ in material_counts(recipe):
-            reference_count[item] = reference_count.get(item, 0) + 1
-        result = to_int(recipe.get("ResultID"))
-        if result > 0:
-            reference_count[result] = reference_count.get(result, 0) + 1
-
-    candidates = []
-    for source, count in reference_count.items():
-        if source <= 0 or source in selected:
-            continue
-        if not item_usable(items_by_id.get(source, {}), source):
-            continue
-        candidates.append((source, count))
-    candidates.sort(key=lambda pair: (-pair[1], pair[0]))
-
-    for source, _ in candidates:
-        if len(selected) + 1 >= TARGET_ITEM_COUNT:
-            break
-        selected.append(source)
-    return selected, closure, rounds
-
-
-def block_item_map(selected, seed_sources):
-    """客户端方块 id 到客户端物品 id 的映射, 与物品表前三段的第一段对应."""
-    index = {source: position for position, source in enumerate(selected)}
-    mapping = {}
-    for client_id, source in CLIENT_BLOCKS:
-        mapping[client_id] = 0 if client_id == 0 else index.get(source, 0) + 1
-    return mapping
+def block_item_map(source_ids):
+    """客户端方块 id 到客户端物品 id 的映射: 同值关系, 空气除外."""
+    return [(client_id, 0 if client_id == 0 else client_id)
+            for client_id, _ in source_ids]
 
 
 def main():
@@ -232,16 +203,31 @@ def main():
         key = to_int(row.get("ID"))
         if key > 0 and key not in items_by_id:
             items_by_id[key] = row
-    seed_sources = client_block_sources()
+    source_pairs = read_block_sources()
+    seed_sources = [source for _, source in source_pairs]
     emit("原版物品 %d 条, 配方 %d 条, 客户端方块 %d 种"
-         % (len(items_by_id), len(recipes), len(seed_sources)))
+         % (len(items_by_id), len(recipes), len(source_pairs)))
 
-    selected, closure, rounds = select_items(items_by_id, recipes, seed_sources)
-    selected = [0] + selected  # 物品 0 为空气, 与方块 0 对齐
-    emit("可合成闭包 %d 种, 展开 %d 层; 物品表共 %d 种" % (len(closure), len(rounds), len(selected)))
+    closure, rounds = compute_closure(recipes, seed_sources)
+    selected = [source for _, source in source_pairs]
+    selected[0] = 0  # 方块 0 是空气, 物品 0 也是空气
+    for source in sorted(closure):
+        if source in seed_sources or source <= 0:
+            continue
+        if source in selected:
+            continue
+        if not item_usable(items_by_id.get(source, {}), source):
+            continue
+        selected.append(source)
+    emit("可合成闭包 %d 种, 展开 %d 层; 物品表共 %d 种"
+         % (len(closure), len(rounds), len(selected)))
 
     key_seen = {}
     item_rows = []
+    source_to_block = {}
+    for client_id, source in source_pairs:
+        if source not in source_to_block or client_id == 0:
+            source_to_block[source] = client_id
     for item_id, source in enumerate(selected):
         if source == 0:
             item_rows.append({
@@ -250,46 +236,59 @@ def main():
             })
             continue
         row = items_by_id.get(source, {})
-        key = (row.get("Key") or "").strip()
-        if not key:
-            key = (row.get("ENName") or "").strip()
-        if not key:
-            key = "Item%d" % source
-        key = re.sub(r"[^0-9A-Za-z_]", "_", key)
-        if key in key_seen:
-            key = "%s_%d" % (key, source)
-        key_seen[key] = True
-        name = (row.get("Name") or "").strip()
-        icon = (row.get("Icon") or "").strip()
-        max_stack = to_int(row.get("StackMax"), 64)
-        if max_stack <= 0:
+        if not item_usable(row, source):
+            # 方块对应的原版物品行缺失时用方块数据兜底, 保证物品与方块同值
+            block_client_id = source_to_block.get(source)
+            if block_client_id is None:
+                raise SystemExit("物品 %d 不在原版物品表且不与方块关联" % source)
+            key = "block_%d" % source
+            name = "未命名"
+            icon = ""
             max_stack = 64
-        filter_type = (row.get("FilterType") or "").strip()
-        category = FILTER_TO_CATEGORY.get(filter_type)
-        if category is None:
-            category = "kBlock" if to_int(row.get("Type")) == 1 else "kMaterial"
-        item_type = to_int(row.get("Type"))
-        block = -1
-        for client_id, client_source in CLIENT_BLOCKS:
-            if client_source == source and client_id != 0:
-                block = client_id
-                break
+            category = "kBlock"
+            item_type = 1
+            emit("提示: 方块 %d 的原版物品行缺失, 物品 %d 用兜底数据"
+                 % (source, item_id))
+        else:
+            key = (row.get("Key") or "").strip()
+            if not key:
+                key = (row.get("ENName") or "").strip()
+            if not key:
+                key = "Item%d" % source
+            key = re.sub(r"[^0-9A-Za-z_]", "_", key)
+            if key in key_seen:
+                key = "%s_%d" % (key, source)
+            key_seen[key] = True
+            name = (row.get("Name") or "").strip()
+            icon = (row.get("Icon") or "").strip()
+            max_stack = to_int(row.get("StackMax"), 64)
+            if max_stack <= 0:
+                max_stack = 64
+            filter_type = (row.get("FilterType") or "").strip()
+            category = FILTER_TO_CATEGORY.get(filter_type)
+            if category is None:
+                category = "kBlock" if to_int(row.get("Type")) == 1 else "kMaterial"
+            item_type = to_int(row.get("Type"))
+        block = source_to_block.get(source, -1)
+        if block == 0:
+            block = -1
         item_rows.append({
             "id": item_id, "source": source, "key": key, "name": name, "icon": icon,
             "max_stack": max_stack, "category": category, "type": item_type, "block": block,
         })
 
-    # 物品 id 与方块 id 对齐检查: 方块 1 到 14 必须落在同值物品上
-    source_to_item = {row["source"]: row["id"] for row in item_rows}
-    for client_id, client_source in CLIENT_BLOCKS:
-        if client_source == 0:
-            continue
-        if source_to_item.get(client_source) != client_id:
-            raise SystemExit("方块 %d 的物品 id 未对齐: 期望 %d, 实际 %s"
-                             % (client_id, client_id, source_to_item.get(client_source)))
-    block_items = [source_to_item.get(source, 0) for _, source in CLIENT_BLOCKS]
+    # 物品 id 与方块 id 对齐检查: 方块 1 起的物品 id 必须与方块 id 同值
+    for item_id, row in enumerate(item_rows):
+        if row["block"] > 0 and row["block"] != item_id:
+            raise SystemExit("方块 %d 的物品 id 未对齐: 期望 %d, 实际 %d"
+                             % (row["block"], row["block"], item_id))
+    block_items = [0] * len(source_pairs)
+    for client_id, item_id in block_item_map(source_pairs):
+        if client_id < len(block_items):
+            block_items[client_id] = item_id
 
     # 配方: 产物与全部材料都在物品表内的才纳入, 其余留在原版表中待后续扩展
+    source_to_item = {row["source"]: row["id"] for row in item_rows}
     kept = []
     skipped_missing = 0
     skipped_empty = 0
@@ -365,8 +364,8 @@ def render_items(rows, block_items):
         "/*",
         " * " + NOTICE_ITEM + ".",
         " * 数据源: single-branch/assets/project/csvdef/autogen/itemdef.csv",
-        " * 条目顺序即客户端物品 id: 0 为空气, 1 到 14 与客户端方块 id 同值,",
-        " * 之后是可合成闭包与常见材料; sourceId 保留原版物品 ID 便于回溯.",
+        " * 条目顺序即客户端物品 id: 0 为空气, 方块 1 起的物品 id 与客户端方块 id 同值,",
+        " * 每个客户端方块都有可放置物品, 之后是可合成闭包; sourceId 保留原版物品 ID.",
         " * block 为物品放置出的客户端方块 id, -1 表示该物品不可放置.",
         " */",
         "namespace immirror::game::gen {",

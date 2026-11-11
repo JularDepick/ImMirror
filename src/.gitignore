@@ -30,6 +30,9 @@ android/app/src/main/assets/ui/
 android/app/src/main/java/com/julardepick/immirror/generated/
 native/ui/generated/
 
+# 由 scripts/gen_atlas_ui.py 生成的界面图集: 裸 RGBA 数据与格位表
+assets/ui/generated/
+
 # 由 scripts/gen_block_data.py 生成的方块数据表: 中文名与掉落物
 native/game/generated/
 

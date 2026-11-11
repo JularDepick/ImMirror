@@ -1,13 +1,17 @@
 #include "ui/hud_renderer.h"
 
+#include <EGL/egl.h>
 #include <GLES3/gl3.h>
+#include <android/asset_manager.h>
 
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <vector>
 
 #include "core/log.h"
+#include "ui/generated/ui_atlas_gen.h"
 #include "ui/generated/ui_resources_gen.h"
 #include "ui/hud_font.h"
 #include "ui/hud_slots.h"
@@ -17,7 +21,10 @@ namespace {
 
 constexpr const char* kTag = "ImMirrorHud";
 
-/* 顶点: 屏幕归一化坐标 (2) + 纹理坐标 (2) + 颜色 (4), uv 为负表示纯色矩形. */
+/*
+ * 顶点: 屏幕归一化坐标 (2) + 纹理坐标 (2) + 颜色 (4).
+ * uv 的取值范围区分三路来源, 见 kUiChannel 的说明.
+ */
 constexpr int32_t kFloatsPerVertex = 8;
 
 /*
@@ -27,8 +34,18 @@ constexpr int32_t kFloatsPerVertex = 8;
  */
 constexpr int32_t kVertexCapacity = 32768;
 
-/* 图集为 16x16 格, 每格 64 像素. */
+/* 方块图集为 16x16 格. */
 constexpr float kAtlasGrid = 16.0f;
+
+/*
+ * 纹理通道编码: 顶点 uv 复用一对 float, 按 uv.x 的取值范围区分三路来源.
+ * uv.x < 0                纯色矩形, 不采样
+ * 0 <= uv.x < kUiChannel  方块图集, 采样 uAtlas
+ * uv.x >= kUiChannel      界面图集, 采样 uSprite, 采样前减回偏移
+ * 偏移取 2 而不是 1, 留出余量避免界面 uv 恰好压在 1 上时判错通道;
+ * float 在 2 到 3 区间的分辨率约 2.4e-7, 对 1/2048 的图集步长没有精度损失.
+ */
+constexpr float kUiChannel = 2.0f;
 
 /* 摇杆环粗细, 以屏宽为 1. */
 constexpr float kStickRingThickness = 0.004f;
@@ -48,6 +65,10 @@ constexpr float kHudBoardColor[4] = {0x46 / 255.0f, 0x56 / 255.0f, 0x77 / 255.0f
 constexpr float kHudTipsColor[4] = {0x20 / 255.0f, 0x18 / 255.0f, 0x0F / 255.0f, 1.0f};
 /* #D61919: 血条实心段, 原版 img_blood_strip_red */
 constexpr float kHudBloodColor[4] = {0xD6 / 255.0f, 0x19 / 255.0f, 0x19 / 255.0f, 1.0f};
+/* 界面精灵的默认色调: 全白不透明, 保证精灵以原色显示. */
+constexpr float kSpriteTint[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+/* 界面精灵的不可用色调: 压到半透明灰, 用于不可按的按钮底板. */
+constexpr float kRecipeIdleTint[4] = {0.62f, 0.65f, 0.72f, 1.0f};
 
 /*
  * 一个素材像素对应的归一化屏宽, 与 Java 侧一个素材像素等于一个 dp 的标尺呼应;
@@ -191,6 +212,7 @@ void main() {
 const char* const kFragmentShader = R"(#version 300 es
 precision mediump float;
 uniform sampler2D uAtlas;
+uniform sampler2D uSprite;
 in vec2 vTexCoord;
 in vec4 vColor;
 out vec4 fragColor;
@@ -199,9 +221,33 @@ void main() {
         fragColor = vColor;
         return;
     }
+    /* uv.x 带通道偏移的走界面图集, 其余走方块图集, 判定见 kUiChannel 的说明. */
+    if (vTexCoord.x >= 2.0) {
+        fragColor = texture(uSprite, vec2(vTexCoord.x - 2.0, vTexCoord.y)) * vColor;
+        return;
+    }
     fragColor = texture(uAtlas, vTexCoord) * vColor;
 }
 )";
+
+/* 读出并清空 GL 错误队列, 返回 true 表示记录了至少一个错误. */
+bool DrainGlError(const char* stage) {
+    bool failed = false;
+    for (int32_t guard = 0; guard < 8; ++guard) {
+        const GLenum error = glGetError();
+        if (error == GL_NO_ERROR) {
+            break;
+        }
+        IM_LOGE(kTag, "gl error 0x%x at %s", static_cast<unsigned int>(error), stage);
+        failed = true;
+    }
+    return failed;
+}
+
+/* 当前线程是否有可用的图形上下文, 上下文销毁后任何 GL 调用都是未定义行为. */
+bool HasCurrentContext() {
+    return eglGetCurrentContext() != EGL_NO_CONTEXT;
+}
 
 uint32_t CompileShader(GLenum type, const char* source) {
     const uint32_t shader = glCreateShader(type);
@@ -338,6 +384,120 @@ void PushQuad(float* out, int32_t& offset, float x0, float y0, float x1, float y
         target[6] = color[2];
         target[7] = color[3];
         offset += 1;
+    }
+}
+
+/*
+ * 界面图集的运行期状态: 句柄是否有效由 Initialize 维护, 一个素材像素对应的
+ * 设计长度由 Render 按当前布局刷新, 绘制函数只读这两个值.
+ * 匿名命名空间的文件级状态对 HUD 单例足够, 渲染全部发生在主线程.
+ */
+bool uiAtlasAvailable = false;
+float artPixelUnit = 0.0f;
+
+/* 生成的格位表条目恒定有效, 这里只挡枚举越界回落项的负尺寸. */
+bool spriteAvailable(const gen::UiSpriteInfo& sprite) {
+    return sprite.width > 0.0f && sprite.height > 0.0f;
+}
+
+/*
+ * 界面图集矩形: 坐标与 uv 直接来自生成的格位表 ui_atlas_gen.h.
+ * 内部给 uv.x 加上通道偏移, 采样时由片元着色器切到界面图集;
+ * uiAtlas 纹理无效时按纯色绘制, 调用方不用关心图集是否在线.
+ */
+void PushUiQuad(float* out, int32_t& offset, float x0, float y0, float x1, float y1, float u0,
+                float v0, float u1, float v1, float scale, const float color[4]) {
+    if (uiAtlasAvailable) {
+        u0 += kUiChannel;
+        u1 += kUiChannel;
+        PushQuad(out, offset, x0, y0, x1, y1, u0, v0, u1, v1, scale, color);
+        return;
+    }
+    PushRect(out, offset, (x0 + x1) * 0.5f, (y0 + y1) * 0.5f, (x1 - x0) * 0.5f, (y1 - y0) * 0.5f,
+             scale, color);
+}
+
+/*
+ * 界面精灵: 整体拉伸素材, 以中心与半宽半高摆放, 保持素材宽高比.
+ * sprite 取自生成的格位表, uv 与尺寸都从表内取, 不手写坐标.
+ */
+void PushUiSprite(float* out, int32_t& offset, float centerX, float centerY, float halfWidth,
+                  float halfHeight, float scale, const gen::UiSpriteInfo& sprite,
+                  const float color[4]) {
+    if (!spriteAvailable(sprite)) {
+        return;
+    }
+    PushUiQuad(out, offset, centerX - halfWidth, centerY - halfHeight, centerX + halfWidth,
+               centerY + halfHeight, sprite.u0, sprite.v0, sprite.u1, sprite.v1, scale, color);
+}
+
+/*
+ * 界面九宫: 与 PushNineSlice 同一套分块逻辑, 数据源换成界面图集格位.
+ * 边界之和超过目标尺寸时同样按比例压缩, 保证描边不被画花.
+ */
+void PushUiNineSlice(float* out, int32_t& offset, float centerX, float centerY, float halfWidth,
+                     float halfHeight, float scale, const gen::UiSpriteInfo& sprite,
+                     const float color[4]) {
+    if (!spriteAvailable(sprite)) {
+        return;
+    }
+    if (!uiAtlasAvailable) {
+        /* 图集不在线时退化为纯色底板, 与 PushNineSlice 的纯色分支一致. */
+        PushRect(out, offset, centerX, centerY, halfWidth, halfHeight, scale, color);
+        return;
+    }
+    if (!HasRoom(offset, 54)) {
+        return;
+    }
+    const float left = centerX - halfWidth;
+    const float right = centerX + halfWidth;
+    const float bottom = centerY - halfHeight;
+    const float top = centerY + halfHeight;
+    const float width = halfWidth * 2.0f;
+    const float height = halfHeight * 2.0f;
+
+    float insetLeft = sprite.left * artPixelUnit;
+    float insetRight = sprite.right * artPixelUnit;
+    float insetTop = sprite.top * artPixelUnit;
+    float insetBottom = sprite.bottom * artPixelUnit;
+    const float horizontal = insetLeft + insetRight;
+    if (horizontal >= width && horizontal > 0.0f) {
+        const float factor = width * 0.98f / horizontal;
+        insetLeft *= factor;
+        insetRight *= factor;
+    }
+    const float vertical = insetTop + insetBottom;
+    if (vertical >= height && vertical > 0.0f) {
+        const float factor = height * 0.98f / vertical;
+        insetTop *= factor;
+        insetBottom *= factor;
+    }
+
+    const float xs[4] = {left, left + insetLeft, right - insetRight, right};
+    const float ys[4] = {bottom, bottom + insetBottom, top - insetTop, top};
+    /* 上下边界按素材像素占精灵高度的比例切分 uv, 与 PushNineSlice 的换算一致. */
+    const float sourceU[4] = {
+        sprite.u0,
+        sprite.u0 + (sprite.u1 - sprite.u0) * sprite.left / sprite.width,
+        sprite.u1 - (sprite.u1 - sprite.u0) * sprite.right / sprite.width,
+        sprite.u1,
+    };
+    const float sourceV[4] = {
+        sprite.v0,
+        sprite.v0 + (sprite.v1 - sprite.v0) * sprite.bottom / sprite.height,
+        sprite.v1 - (sprite.v1 - sprite.v0) * sprite.top / sprite.height,
+        sprite.v1,
+    };
+    for (int32_t row = 0; row < 3; ++row) {
+        for (int32_t column = 0; column < 3; ++column) {
+            if (xs[column + 1] <= xs[column] || ys[row + 1] <= ys[row]) {
+                continue;
+            }
+            const float u0 = sourceU[column] + kUiChannel;
+            const float u1 = sourceU[column + 1] + kUiChannel;
+            PushQuad(out, offset, xs[column], ys[row], xs[column + 1], ys[row + 1], u0, sourceV[row],
+                     u1, sourceV[row + 1], scale, color);
+        }
     }
 }
 
@@ -685,10 +845,21 @@ void PushCenteredText(float* out, int32_t& offset, float centerX, float centerY,
  */
 void PushInventorySlot(float* out, int32_t& offset, float centerX, float centerY, float half,
                        float scale, const InventorySlotView& view, float artUnit) {
-    PushNineSlice(out, offset, centerX, centerY, half * 1.05f, half * 1.05f, scale,
-                  gen::UiAssetOf(view.highlight ? gen::UiWidget::SlotItemFrameOn
-                                                : gen::UiWidget::SlotItemFrame),
-                  artUnit, kSolidUv, kHudBoardColor);
+    /*
+     * 底板取原版 img_item_box 九宫, 高亮格换成 img_item_box_selected;
+     * 界面图集不在线时回落到纯色九宫, 与快捷栏共用同一套回落逻辑.
+     */
+    if (uiAtlasAvailable) {
+        PushUiNineSlice(out, offset, centerX, centerY, half * 1.05f, half * 1.05f, scale,
+                        gen::UiSpriteOf(view.highlight ? gen::UiSprite::SlotSelected
+                                                       : gen::UiSprite::SlotNormal),
+                        kSpriteTint);
+    } else {
+        PushNineSlice(out, offset, centerX, centerY, half * 1.05f, half * 1.05f, scale,
+                      gen::UiAssetOf(view.highlight ? gen::UiWidget::SlotItemFrameOn
+                                                    : gen::UiWidget::SlotItemFrame),
+                      artUnit, kSolidUv, kHudBoardColor);
+    }
     if (view.hasItem) {
         if (view.atlasCell >= 0) {
             PushSprite(out, offset, centerX, centerY, half, scale, view.atlasCell,
@@ -736,19 +907,38 @@ void DrawInventoryPanel(float* out, int32_t& offset, const HudLayout& layout,
     /* 遮罩铺满整屏, 让面板之外的场景退到后面. */
     PushRect(out, offset, 0.0f, 0.0f, layout.DesignLength(0.5f), 1.0f, scale, kPanelScrim);
 
-    PushNineSlice(out, offset, geometry.centerX, geometry.centerY, geometry.halfWidth,
-                  geometry.halfHeight, scale, gen::UiAssetOf(gen::UiWidget::PanelSurfaceBlueLarge),
-                  artUnit, kSolidUv, kPanelBoard);
+    /*
+     * 面板底板取原版 board_bottom_blue_big 九宫 (texture2/common 的 60x60 大板),
+     * 界面图集不在线时回落到深色纯色底板.
+     */
+    if (uiAtlasAvailable) {
+        PushUiNineSlice(out, offset, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                        geometry.halfHeight, scale, gen::UiSpriteOf(gen::UiSprite::PanelBlue),
+                        kSpriteTint);
+    } else {
+        PushNineSlice(out, offset, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                      geometry.halfHeight, scale, gen::UiAssetOf(gen::UiWidget::PanelSurfaceBlueLarge),
+                      artUnit, kSolidUv, kPanelBoard);
+    }
 
     const float titlePixel = layout.DesignLength(kPanelTitlePixel);
     PushText(out, offset, geometry.titleX,
              geometry.titleY + static_cast<float>(kGlyphHeight) * titlePixel * 0.5f, titlePixel,
              "BAG", scale, kPanelTextColor);
 
-    /* 关闭按钮: 圆形底板加 X 字, 面板内唯一必然可用的出口. */
-    PushNineSlice(out, offset, geometry.closeX, geometry.closeY, geometry.closeHalf,
-                  geometry.closeHalf, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactOrange),
-                  artUnit, kSolidUv, kPanelButtonColor);
+    /*
+     * 关闭按钮: 取原版 btn_mini_orange 三片底板加 X 字, 面板内唯一必然可用的出口;
+     * 界面图集不在线时回落到纯色底板.
+     */
+    if (uiAtlasAvailable) {
+        PushUiNineSlice(out, offset, geometry.closeX, geometry.closeY, geometry.closeHalf,
+                        geometry.closeHalf, scale, gen::UiSpriteOf(gen::UiSprite::BtnCompactOrange),
+                        kSpriteTint);
+    } else {
+        PushNineSlice(out, offset, geometry.closeX, geometry.closeY, geometry.closeHalf,
+                      geometry.closeHalf, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactOrange),
+                      artUnit, kSolidUv, kPanelButtonColor);
+    }
     PushCenteredText(out, offset, geometry.closeX, geometry.closeY,
                      layout.DesignLength(0.0075f), "X", scale, kPanelTextColor);
 
@@ -771,14 +961,28 @@ void DrawInventoryPanel(float* out, int32_t& offset, const HudLayout& layout,
         std::snprintf(nextText, sizeof(nextText), "NEXT");
     }
     const float buttonPixel = layout.DesignLength(kRecipeButtonPixel);
-    PushNineSlice(out, offset, geometry.nextX, geometry.nextY, geometry.buttonHalfW,
-                  geometry.buttonHalfH, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactBlue),
-                  artUnit, kSolidUv, kPanelButtonColor);
+    /*
+     * 两个配方按钮取原版 btn_mini_blue 三片底板: NEXT 轮换候选常亮,
+     * AUTO 自动摆出可合成配方, 不可用时压暗底板; 图集不在线时回落纯色.
+     */
+    if (uiAtlasAvailable) {
+        PushUiNineSlice(out, offset, geometry.nextX, geometry.nextY, geometry.buttonHalfW,
+                        geometry.buttonHalfH, scale, gen::UiSpriteOf(gen::UiSprite::BtnCompactBlue),
+                        kSpriteTint);
+        PushUiNineSlice(out, offset, geometry.bookX, geometry.bookY, geometry.buttonHalfW,
+                        geometry.buttonHalfH, scale, gen::UiSpriteOf(gen::UiSprite::BtnCompactBlue),
+                        frame.bookAvailable ? kSpriteTint : kRecipeIdleTint);
+    } else {
+        PushNineSlice(out, offset, geometry.nextX, geometry.nextY, geometry.buttonHalfW,
+                      geometry.buttonHalfH, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactBlue),
+                      artUnit, kSolidUv, kPanelButtonColor);
+        PushNineSlice(out, offset, geometry.bookX, geometry.bookY, geometry.buttonHalfW,
+                      geometry.buttonHalfH, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactBlue),
+                      artUnit, kSolidUv,
+                      frame.bookAvailable ? kPanelButtonColor : kPanelButtonIdleColor);
+    }
     PushCenteredText(out, offset, geometry.nextX, geometry.nextY, buttonPixel, nextText, scale,
                      kPanelTextColor);
-    PushNineSlice(out, offset, geometry.bookX, geometry.bookY, geometry.buttonHalfW,
-                  geometry.buttonHalfH, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactBlue),
-                  artUnit, kSolidUv, frame.bookAvailable ? kPanelButtonColor : kPanelButtonIdleColor);
     PushCenteredText(out, offset, geometry.bookX, geometry.bookY, buttonPixel, "AUTO", scale,
                      kPanelTextColor);
 
@@ -817,11 +1021,13 @@ HudRenderer::HudRenderer() = default;
 
 HudRenderer::~HudRenderer() = default;
 
-bool HudRenderer::Initialize(uint32_t atlasTexture) {
+bool HudRenderer::Initialize(uint32_t atlasTexture, uint32_t uiAtlasTexture) {
     if (ready_) {
         return true;
     }
     atlasTexture_ = atlasTexture;
+    uiAtlasTexture_ = uiAtlasTexture;
+    uiAtlasAvailable = uiAtlasTexture != 0;
     const uint32_t vertexShader = CompileShader(GL_VERTEX_SHADER, kVertexShader);
     if (vertexShader == 0) {
         return false;
@@ -848,6 +1054,7 @@ bool HudRenderer::Initialize(uint32_t atlasTexture) {
         return false;
     }
     uniformAtlasLocation_ = glGetUniformLocation(program_, "uAtlas");
+    uniformSpriteLocation_ = glGetUniformLocation(program_, "uSprite");
     /* 远端标记绘制复用同一份程序与图集, 生命周期跟随 HudRenderer. */
     program_shared = program_;
     atlasTexture_shared = atlasTexture_;
@@ -904,12 +1111,22 @@ void HudRenderer::Render(const HudFrame& frame) {
     static float vertices[kVertexCapacity * kFloatsPerVertex];
     int32_t offset = 0;
 
-    /* 准星: 两条细矩形组成十字, 固定在屏幕中心. */
+    /*
+     * 准星: 原版 operate 页的 sight 精灵, 以屏幕中心等比摆放;
+     * 界面图集不在线时回落到两条细矩形组成的十字.
+     */
     const float white[4] = {1.0f, 1.0f, 1.0f, 0.75f};
-    const float armHalf = layout_.DesignLength(0.006f);
-    const float armThickness = layout_.DesignLength(0.0012f);
-    PushRect(vertices, offset, 0.0f, 0.0f, armHalf, armThickness, scale, white);
-    PushRect(vertices, offset, 0.0f, 0.0f, armThickness, armHalf, scale, white);
+    if (uiAtlasAvailable) {
+        const gen::UiSpriteInfo& sight = gen::UiSpriteOf(gen::UiSprite::Crosshair);
+        const float half = layout_.DesignLength(0.0135f);
+        PushUiSprite(vertices, offset, 0.0f, 0.0f, half, half * sight.height / sight.width, scale,
+                     sight, white);
+    } else {
+        const float armHalf = layout_.DesignLength(0.006f);
+        const float armThickness = layout_.DesignLength(0.0012f);
+        PushRect(vertices, offset, 0.0f, 0.0f, armHalf, armThickness, scale, white);
+        PushRect(vertices, offset, 0.0f, 0.0f, armThickness, armHalf, scale, white);
+    }
 
     /*
      * 破坏进度: 准星外围的方框, 按周长填充, 进度归零时整圈不绘制,
@@ -926,24 +1143,44 @@ void HudRenderer::Render(const HudFrame& frame) {
 
     /* 一个素材像素的设计长度, 九宫边界与内缩量都按它换算. */
     const float artUnit = layout_.DesignLength(kHudArtPixel);
+    /* 界面九宫的边界换算同一标尺, 刷新后界面精灵绘制函数直接读取. */
+    artPixelUnit = artUnit;
 
     /*
-     * 血条: 左上角横条. 底槽走九宫底板并取规范底板色, 实心段取规范血条色,
-     * 长度按血量比例截取, 左端固定, 右端随血量收缩.
+     * 血条: 左上角横条. 底槽取原版 img_blood_strip_board 九宫, 实心段取
+     * img_blood_strip_red 按血量比例截取, 左端固定, 右端随血量收缩;
+     * 界面图集不在线时回落到规范底板色与规范血条色的纯色绘制.
      */
     const float healthHalfWidth = layout_.DesignLength(kHealthHalfWidth);
     const float healthHalfHeight = layout_.DesignLength(kHealthHalfHeight);
     const float healthCenterX = layout_.DesignX(kHealthCenterX);
     const float healthCenterY = layout_.DesignY(kHealthCenterY);
-    PushNineSlice(vertices, offset, healthCenterX, healthCenterY, healthHalfWidth,
-                  healthHalfHeight, scale, gen::UiAssetOf(gen::UiWidget::MiscBarHpTrack),
-                  artUnit, kSolidUv, kHudBoardColor);
+    if (uiAtlasAvailable) {
+        PushUiNineSlice(vertices, offset, healthCenterX, healthCenterY, healthHalfWidth,
+                        healthHalfHeight, scale, gen::UiSpriteOf(gen::UiSprite::HpTrack),
+                        kHudBoardColor);
+    } else {
+        PushNineSlice(vertices, offset, healthCenterX, healthCenterY, healthHalfWidth,
+                      healthHalfHeight, scale, gen::UiAssetOf(gen::UiWidget::MiscBarHpTrack),
+                      artUnit, kSolidUv, kHudBoardColor);
+    }
     const float health = frame.health < 0.0f ? 0.0f : (frame.health > 1.0f ? 1.0f : frame.health);
     if (health > 0.0f) {
         const float fillHalfWidth = healthHalfWidth * health;
         const float fillHalfHeight = std::fmax(healthHalfHeight - artUnit * kHealthFillInset, 0.0f);
-        PushRect(vertices, offset, healthCenterX - healthHalfWidth + fillHalfWidth, healthCenterY,
-                 fillHalfWidth, fillHalfHeight, scale, kHudBloodColor);
+        if (uiAtlasAvailable) {
+            const gen::UiSpriteInfo& fill = gen::UiSpriteOf(gen::UiSprite::HpFillRed);
+            /* 精灵宽度按血量比例截取, uv 同步截取左段, 左端固定右端收缩. */
+            const float fillLeft = healthCenterX - healthHalfWidth;
+            const float u0 = fill.u0;
+            const float u1 = fill.u0 + (fill.u1 - fill.u0) * health;
+            PushUiQuad(vertices, offset, fillLeft, healthCenterY - fillHalfHeight,
+                       fillLeft + fillHalfWidth * 2.0f, healthCenterY + fillHalfHeight, u0, fill.v0,
+                       u1, fill.v1, scale, kSpriteTint);
+        } else {
+            PushRect(vertices, offset, healthCenterX - healthHalfWidth + fillHalfWidth,
+                     healthCenterY, fillHalfWidth, fillHalfHeight, scale, kHudBloodColor);
+        }
     }
 
     /*
@@ -964,20 +1201,30 @@ void HudRenderer::Render(const HudFrame& frame) {
                  ringRadius * kKnobRadiusRatio, scale, knobColor, 24);
     }
 
-    /* 跳跃按钮: 右下角方块加向上箭头, 按下时收缩并加亮作为反馈. */
+    /*
+     * 跳跃按钮: 右下角取原版 icon_jump 精灵, 等比放入布局的按钮框;
+     * 按下时收缩并压暗作为反馈, 界面图集不在线时回落到方块加箭头的纯色画法.
+     */
     const float jumpHalf = layout_.DesignLength(layout_.JumpHalfSize());
     const float jumpCenterX = layout_.DesignX(layout_.JumpCenterX());
     const float jumpCenterY = layout_.DesignY(layout_.JumpCenterY());
     const float jumpDrawHalf = frame.jumpPressed ? jumpHalf * kJumpPressedScale : jumpHalf;
-    const float jumpBackdrop[4] = {0.0f, 0.0f, 0.0f, 0.32f};
-    const float jumpBody[4] = {1.0f, 1.0f, 1.0f, frame.jumpPressed ? 0.52f : 0.22f};
-    const float jumpArrow[4] = {1.0f, 1.0f, 1.0f, frame.jumpPressed ? 0.95f : 0.62f};
-    PushRect(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf, jumpDrawHalf, scale,
-             jumpBackdrop);
-    PushRect(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf * 0.86f,
-             jumpDrawHalf * 0.86f, scale, jumpBody);
-    PushTriangle(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf * 0.42f,
-                 jumpDrawHalf * 0.62f, scale, jumpArrow);
+    if (uiAtlasAvailable) {
+        const gen::UiSpriteInfo& jump = gen::UiSpriteOf(gen::UiSprite::Jump);
+        const float tint[4] = {1.0f, 1.0f, 1.0f, frame.jumpPressed ? 0.55f : 1.0f};
+        PushUiSprite(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf,
+                     jumpDrawHalf * jump.height / jump.width, scale, jump, tint);
+    } else {
+        const float jumpBackdrop[4] = {0.0f, 0.0f, 0.0f, 0.32f};
+        const float jumpBody[4] = {1.0f, 1.0f, 1.0f, frame.jumpPressed ? 0.52f : 0.22f};
+        const float jumpArrow[4] = {1.0f, 1.0f, 1.0f, frame.jumpPressed ? 0.95f : 0.62f};
+        PushRect(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf, jumpDrawHalf, scale,
+                 jumpBackdrop);
+        PushRect(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf * 0.86f,
+                 jumpDrawHalf * 0.86f, scale, jumpBody);
+        PushTriangle(vertices, offset, jumpCenterX, jumpCenterY, jumpDrawHalf * 0.42f,
+                     jumpDrawHalf * 0.62f, scale, jumpArrow);
+    }
 
     /* 方块栏: 每格图集图标取自共享槽位表, 选中格加亮并描边. */
     const float slotHalf = layout_.DesignLength(layout_.SlotHalfSize());
@@ -991,9 +1238,21 @@ void HudRenderer::Render(const HudFrame& frame) {
         const int32_t count = frame.slotCounts[slot] > 0 ? frame.slotCounts[slot] : 0;
         /* 数量为 0 的格整体压暗, 提示这一格已经耗尽, 不能再用作放置材料. */
         const bool spent = count == 0;
-        PushNineSlice(vertices, offset, centerX, slotCenterY, slotHalf * 1.05f, slotHalf * 1.05f,
-                      scale, gen::UiAssetOf(gen::UiWidget::SlotItemFrame), artUnit, kSolidUv,
-                      spent ? kSlotEmptyBoard : kHudBoardColor);
+        /*
+         * 底板取原版 img_item_box 九宫, 选中格换成 img_item_box_selected;
+         * 界面图集不在线时回落到纯色九宫, 保持与背包面板同一套底板来源.
+         */
+        if (uiAtlasAvailable) {
+            PushUiNineSlice(vertices, offset, centerX, slotCenterY, slotHalf * 1.05f,
+                            slotHalf * 1.05f, scale,
+                            gen::UiSpriteOf(selected ? gen::UiSprite::SlotSelected
+                                                     : gen::UiSprite::SlotNormal),
+                            spent ? kSlotEmptyBoard : kSpriteTint);
+        } else {
+            PushNineSlice(vertices, offset, centerX, slotCenterY, slotHalf * 1.05f,
+                          slotHalf * 1.05f, scale, gen::UiAssetOf(gen::UiWidget::SlotItemFrame),
+                          artUnit, kSolidUv, spent ? kSlotEmptyBoard : kHudBoardColor);
+        }
         const bool hasItem = frame.slotHasItem[slot];
         const int32_t iconCell = hasItem ? frame.slotAtlasCell[slot] : -1;
         const char initial = hasItem ? frame.slotInitial[slot] : '\0';
@@ -1057,21 +1316,46 @@ void HudRenderer::Render(const HudFrame& frame) {
         const float plateCenterX = layout_.DesignX(layout_.SlotCenterX(frame.nameSlot));
         const float plateCenterY = slotCenterY + layout_.DesignLength(layout_.SlotHalfSize()) +
                                    layout_.DesignLength(kNamePlateGap) + plateHalfHeight;
-        PushNineSlice(vertices, offset, plateCenterX, plateCenterY, plateHalfWidth,
-                      plateHalfHeight, scale, gen::UiAssetOf(gen::UiWidget::DialogTipsBody),
-                      artUnit, kSolidUv, kHudTipsColor);
+        /*
+         * 方块名标签底板取原版 board_tips_icon 九宫, 图集不在线时回落到
+         * 深棕黑纯色底板, 两种画法的文字排版一致.
+         */
+        if (uiAtlasAvailable) {
+            PushUiNineSlice(vertices, offset, plateCenterX, plateCenterY, plateHalfWidth,
+                            plateHalfHeight, scale, gen::UiSpriteOf(gen::UiSprite::TipsBoard),
+                            kSpriteTint);
+        } else {
+            PushNineSlice(vertices, offset, plateCenterX, plateCenterY, plateHalfWidth,
+                          plateHalfHeight, scale, gen::UiAssetOf(gen::UiWidget::DialogTipsBody),
+                          artUnit, kSolidUv, kHudTipsColor);
+        }
         PushText(vertices, offset, plateCenterX - textWidth * 0.5f,
                  plateCenterY + static_cast<float>(kGlyphHeight) * pixel * 0.5f, pixel, text,
                  scale, white);
     }
 
-    /* 背包按钮: 右上角常驻, 按下时换成深色底板作为反馈. */
+    /*
+     * 背包按钮: 右上角常驻, 取原版 icon_backpack 精灵居中等比摆放,
+     * 底板沿用原版 img_item_box 九宫, 按下时压暗底板作为反馈;
+     * 界面图集不在线时回落到九宫底板加 BAG 点阵字的旧画法.
+     */
     const InventoryPanelGeometry bagGeometry = MakeInventoryPanelGeometry(layout_);
-    PushNineSlice(vertices, offset, bagGeometry.bagX, bagGeometry.bagY, bagGeometry.bagHalf,
-                  bagGeometry.bagHalf, scale, gen::UiAssetOf(gen::UiWidget::SlotItemFrame), artUnit,
-                  kSolidUv, frame.bagPressed ? kHudTipsColor : kHudBoardColor);
-    PushCenteredText(vertices, offset, bagGeometry.bagX, bagGeometry.bagY,
-                     bagGeometry.bagHalf * 0.58f, "BAG", scale, kPanelTextColor);
+    if (uiAtlasAvailable) {
+        const float tint[4] = {1.0f, 1.0f, 1.0f, frame.bagPressed ? 0.60f : 1.0f};
+        PushUiNineSlice(vertices, offset, bagGeometry.bagX, bagGeometry.bagY, bagGeometry.bagHalf,
+                        bagGeometry.bagHalf, scale, gen::UiSpriteOf(gen::UiSprite::SlotNormal),
+                        tint);
+        const gen::UiSpriteInfo& bag = gen::UiSpriteOf(gen::UiSprite::Backpack);
+        const float iconHalf = bagGeometry.bagHalf * 0.72f;
+        PushUiSprite(vertices, offset, bagGeometry.bagX, bagGeometry.bagY, iconHalf,
+                     iconHalf * bag.height / bag.width, scale, bag, kSpriteTint);
+    } else {
+        PushNineSlice(vertices, offset, bagGeometry.bagX, bagGeometry.bagY, bagGeometry.bagHalf,
+                      bagGeometry.bagHalf, scale, gen::UiAssetOf(gen::UiWidget::SlotItemFrame),
+                      artUnit, kSolidUv, frame.bagPressed ? kHudTipsColor : kHudBoardColor);
+        PushCenteredText(vertices, offset, bagGeometry.bagX, bagGeometry.bagY,
+                         bagGeometry.bagHalf * 0.58f, "BAG", scale, kPanelTextColor);
+    }
 
     /*
      * 操作提示: 数量耗尽这类反馈画在方块栏正上方, 高度比方块名标签再抬一层,
@@ -1088,9 +1372,15 @@ void HudRenderer::Render(const HudFrame& frame) {
             static_cast<float>(kGlyphHeight) * pixel * 0.5f + padding * 0.5f;
         const float plateCenterY = slotCenterY + layout_.DesignLength(layout_.SlotHalfSize()) +
                                    layout_.DesignLength(kTipGap) + plateHalfHeight;
-        PushNineSlice(vertices, offset, 0.0f, plateCenterY, plateHalfWidth, plateHalfHeight,
-                      scale, gen::UiAssetOf(gen::UiWidget::DialogTipsBody), artUnit, kSolidUv,
-                      kHudTipsColor);
+        /* 操作提示条与方块名标签共用同一张原版 board_tips_icon 九宫. */
+        if (uiAtlasAvailable) {
+            PushUiNineSlice(vertices, offset, 0.0f, plateCenterY, plateHalfWidth, plateHalfHeight,
+                            scale, gen::UiSpriteOf(gen::UiSprite::TipsBoard), kSpriteTint);
+        } else {
+            PushNineSlice(vertices, offset, 0.0f, plateCenterY, plateHalfWidth, plateHalfHeight,
+                          scale, gen::UiAssetOf(gen::UiWidget::DialogTipsBody), artUnit, kSolidUv,
+                          kHudTipsColor);
+        }
         PushText(vertices, offset, -textWidth * 0.5f,
                  plateCenterY + static_cast<float>(kGlyphHeight) * pixel * 0.5f, pixel, text,
                  scale, white);
@@ -1112,10 +1402,16 @@ void HudRenderer::Render(const HudFrame& frame) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glUseProgram(program_);
+    /* 0 号单元挂方块图集, 1 号单元挂界面图集, 两个采样器各占一路. */
     if (uniformAtlasLocation_ >= 0 && atlasTexture_ != 0) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, atlasTexture_);
         glUniform1i(uniformAtlasLocation_, 0);
+    }
+    if (uniformSpriteLocation_ >= 0 && uiAtlasTexture_ != 0) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, uiAtlasTexture_);
+        glUniform1i(uniformSpriteLocation_, 1);
     }
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
@@ -1123,6 +1419,9 @@ void HudRenderer::Render(const HudFrame& frame) {
                     static_cast<GLsizeiptr>(offset) * kFloatsPerVertex * sizeof(float), vertices);
     glDrawArrays(GL_TRIANGLES, 0, offset);
     glBindVertexArray(0);
+    /* 把激活单元还原到 0 号, 后续渲染代码默认在 0 号单元上取纹理. */
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
@@ -1334,6 +1633,84 @@ InventoryHit HudRenderer::HitTestInventory(float normalizedX, float normalizedY)
         hit.region = InventoryRegion::kPanel;
     }
     return hit;
+}
+
+/*
+ * 界面图集随包路径, 由 gen_atlas_ui.py 生成, pack_assets.py 复制进 APK.
+ * 裸 RGBA8 数据, 无文件头, 行序与生成器画布一致.
+ */
+constexpr const char* kUiAtlasAssetPath = "ui/generated/atlas_ui.rgba";
+constexpr int32_t kUiAtlasPixels = 2048;
+constexpr size_t kUiAtlasBytes =
+    static_cast<size_t>(kUiAtlasPixels) * static_cast<size_t>(kUiAtlasPixels) * 4u;
+
+uint32_t LoadUiAtlasFromAssets(AAssetManager* assets) {
+    if (assets == nullptr || !HasCurrentContext()) {
+        IM_LOGW(kTag, "ui atlas skipped, no asset manager or no graphics context");
+        return 0;
+    }
+    AAsset* asset = AAssetManager_open(assets, kUiAtlasAssetPath, AASSET_MODE_STREAMING);
+    if (asset == nullptr) {
+        IM_LOGW(kTag, "ui atlas '%s' missing, hud sprites fall back to solid color",
+                kUiAtlasAssetPath);
+        return 0;
+    }
+    const off64_t length = AAsset_getLength64(asset);
+    if (length != static_cast<off64_t>(kUiAtlasBytes)) {
+        IM_LOGW(kTag, "ui atlas '%s' size mismatch, got %lld expected %zu", kUiAtlasAssetPath,
+                static_cast<long long>(length), kUiAtlasBytes);
+        AAsset_close(asset);
+        return 0;
+    }
+    std::vector<uint8_t> pixels(kUiAtlasBytes);
+    size_t total = 0;
+    while (total < kUiAtlasBytes) {
+        const size_t request = kUiAtlasBytes - total > 1u << 20 ? 1u << 20 : kUiAtlasBytes - total;
+        const int32_t read = AAsset_read(asset, pixels.data() + total, request);
+        if (read <= 0) {
+            break;
+        }
+        total += static_cast<size_t>(read);
+    }
+    AAsset_close(asset);
+    if (total != kUiAtlasBytes) {
+        IM_LOGW(kTag, "ui atlas '%s' read %zu of %zu bytes", kUiAtlasAssetPath, total,
+                kUiAtlasBytes);
+        return 0;
+    }
+    /*
+     * 生成器画布的首行是精灵图案的上边缘, 而 glTexImage2D 把数据首行放到 v=0,
+     * 采样约定 v 向上为正; 这里按整行顺序反转, 让图案在界面上正立,
+     * 生成的 uv 已经按翻转后的坐标给出, 无需在顶点侧换算.
+     */
+    std::vector<uint8_t> flipped(kUiAtlasBytes);
+    constexpr size_t kRowBytes = static_cast<size_t>(kUiAtlasPixels) * 4u;
+    for (int32_t row = 0; row < kUiAtlasPixels; ++row) {
+        std::memcpy(flipped.data() + static_cast<size_t>(row) * kRowBytes,
+                    pixels.data() + static_cast<size_t>(kUiAtlasPixels - 1 - row) * kRowBytes,
+                    kRowBytes);
+    }
+    GLuint texture = 0;
+    glGenTextures(1, &texture);
+    if (texture == 0) {
+        return 0;
+    }
+    glBindTexture(GL_TEXTURE_2D, texture);
+    /* 线性采样让精灵在缩放时平滑, 边缘夹紧避免 uv 越界取到邻格. */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kUiAtlasPixels, kUiAtlasPixels, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, flipped.data());
+    glBindTexture(GL_TEXTURE_2D, 0);
+    if (DrainGlError("ui atlas")) {
+        glDeleteTextures(1, &texture);
+        return 0;
+    }
+    IM_LOGI(kTag, "ui atlas ready, %dx%d", kUiAtlasPixels, kUiAtlasPixels);
+    return texture;
 }
 
 }  /* namespace immirror::ui */

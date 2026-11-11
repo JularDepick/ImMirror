@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "game/generated/block_data_gen.h"
+
 namespace immirror::voxel {
 namespace {
 
@@ -9,19 +11,19 @@ namespace {
 constexpr uint8_t kAtlasFallback = 0xFF;
 
 /*
- * 条目顺序即方块 id. 图集格编号与渲染侧从原版资源合成的图集一致:
- * 0 草顶, 1 草侧, 2 土, 3 石, 4 沙, 5 水, 6 木侧, 7 木顶,
+ * 兼容段条目, 条目顺序即方块 id 0 到 14. 图集格编号与渲染侧从原版资源合成的
+ * 图集一致: 0 草顶, 1 草侧, 2 土, 3 石, 4 沙, 5 水, 6 木侧, 7 木顶,
  * 8 叶, 9 基岩, 10 砖, 11 圆石, 12 雪, 13 冰, 14 砂砾, 15 木板.
  * 除草与木需要区分顶侧底之外, 其余方块三个面共用 atlasIndex.
  *
  * 硬度, 采集工具与采集材质族取自原版 blockdef.csv 的实测值:
  * 草 3.5 铲, 石 8 镐, 沙 3 铲, 雪 1.5 铲, 冰 5 镐, 木板 6 斧, 树叶 0.4 徒手.
  * 表里没有单列的方块按原版归族: 土同草, 圆石与砖同石, 原木同木板,
- * 砂砾的硬度与工具同沙 (硬度和工具回落), 音效仍取砂砾族, 因为音效枚举里
- * 已按材质分出了砾石一族, 用它与沙区分开才是原版的材质反馈.
+ * 砂砾的音效取砂砾族, 用它与沙区分开才是原版的材质反馈.
  * 水与基岩硬度取 -1, 即不可破坏.
+ * 本段字段是存档兼容面, 只能保持, 不得随原版表更新而改动.
  */
-constexpr BlockInfo kBlockTable[] = {
+constexpr BlockInfo kLegacyBlockTable[block::LegacyCount] = {
     /* name          solid  opaque  index  top    side   bottom   hardness  tool   material */
     {"air", false, false, 0, kAtlasFallback, kAtlasFallback, kAtlasFallback, -1.0f,
      HarvestTool::kHand, HarvestMaterial::kNone},
@@ -53,22 +55,19 @@ constexpr BlockInfo kBlockTable[] = {
      HarvestTool::kAxe, HarvestMaterial::kWood},
 };
 
-constexpr size_t kBlockTableSize = sizeof(kBlockTable) / sizeof(kBlockTable[0]);
-
-static_assert(kBlockTableSize == static_cast<size_t>(block::Count),
-              "方块表条目数与 block 命名空间的 id 常量不一致");
+constexpr size_t kLegacyBlockCount = sizeof(kLegacyBlockTable) / sizeof(kLegacyBlockTable[0]);
 
 /*
  * 原版 hardness 的合法范围是 -1 到 200, 绝大多数条目落在 0.5 的网格上,
  * 树叶实测为 0.4, 因此这里只校验范围, 不对步长做强制约束.
- * 整张表在编译期校验, 填入越界硬度会直接编译失败.
+ * 兼容段在编译期校验, 填入越界硬度会直接编译失败.
  */
 constexpr float kHardnessMin = -1.0f;
 constexpr float kHardnessMax = 200.0f;
 
-constexpr bool HardnessTableValid() {
-    for (size_t i = 0; i < kBlockTableSize; ++i) {
-        const float value = kBlockTable[i].hardness;
+constexpr bool LegacyHardnessValid() {
+    for (size_t i = 0; i < kLegacyBlockCount; ++i) {
+        const float value = kLegacyBlockTable[i].hardness;
         if (value < kHardnessMin || value > kHardnessMax) {
             return false;
         }
@@ -76,12 +75,128 @@ constexpr bool HardnessTableValid() {
     return true;
 }
 
-static_assert(HardnessTableValid(), "方块硬度超出原版的 -1 到 200 范围");
+static_assert(LegacyHardnessValid(), "兼容段方块硬度超出原版的 -1 到 200 范围");
+
+/*
+ * 兼容段英文键逐项校验: 与 block::kLegacyNames 一致, 键序即 id 序,
+ * 改名或换序都会破坏存档引用.
+ */
+constexpr bool LegacyNamesValid() {
+    for (size_t i = 0; i < kLegacyBlockCount; ++i) {
+        const char* expected = block::kLegacyNames[i];
+        const char* actual = kLegacyBlockTable[i].name;
+        while (*expected != '\0' || *actual != '\0') {
+            if (*expected != *actual) {
+                return false;
+            }
+            ++expected;
+            ++actual;
+        }
+    }
+    return true;
+}
+
+static_assert(LegacyNamesValid(), "兼容段方块英文键与 block::kLegacyNames 不一致");
+
+/*
+ * 扩展段编译期对齐校验: 生成表扩展段条目数, 起始 id 与全量方块数必须一致,
+ * 不一致说明方块数据表过期, 重新运行 scripts/gen_block_data.py 即可修复.
+ */
+static_assert(gen::kRegistryEntryCount ==
+                  static_cast<int32_t>(block::Count) - static_cast<int32_t>(block::LegacyCount),
+              "扩展段条目数与全量方块数不一致, 请重新运行 scripts/gen_block_data.py");
+static_assert(gen::kBlockEntryCount == static_cast<int32_t>(block::Count),
+              "生成表条目数与全量方块数不一致, 请重新运行 scripts/gen_block_data.py");
+
+/*
+ * 兼容段掉落视图沿用旧版生成表, 与旧 BlockData 的前 15 条逐字段一致:
+ * 掉落取值是物品 id, 能折回兼容段的按映射取, 折不回则原地回收自身.
+ */
+struct LegacyDropView {
+    uint32_t sourceId;
+    uint32_t dropSourceId;
+    uint32_t dropBlock;
+};
+
+constexpr LegacyDropView kLegacyDrops[block::LegacyCount] = {
+    {0u, 0u, 0u},      {100u, 101u, 2u},   {101u, 101u, 2u},   {104u, 505u, 10u},
+    {106u, 106u, 4u},  {4u, 0u, 0u},       {200u, 200u, 6u},   {218u, 12500u, 7u},
+    {1u, 1u, 8u},      {547u, 547u, 9u},   {505u, 505u, 10u},  {115u, 12054u, 11u},
+    {123u, 123u, 12u}, {107u, 107u, 13u},  {206u, 206u, 14u},
+};
+
+/*
+ * 扩展段材质族的编译期值域校验: 生成表 material 取值与 HarvestMaterial 一致,
+ * 超出族数说明生成器与 voxel 侧的枚举约定漂移.
+ */
+constexpr int32_t kHarvestMaterialCount = 11; /* none 与十个音族 */
+
+constexpr bool RegistryMaterialsValid() {
+    for (int32_t i = 0; i < gen::kRegistryEntryCount; ++i) {
+        if (gen::kRegistryEntries[i].material >= kHarvestMaterialCount) {
+            return false;
+        }
+        if (gen::kRegistryEntries[i].tool > 5) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static_assert(RegistryMaterialsValid(),
+              "扩展段材质族或工具值越界, 请重新运行 scripts/gen_block_data.py");
 
 /* 越界 id 的回落条目, 与空气保持完全一致, 也就是不可破坏. */
 constexpr BlockInfo kFallbackBlock = {"air", false, false, 0, kAtlasFallback, kAtlasFallback,
                                      kAtlasFallback, -1.0f, HarvestTool::kHand,
                                      HarvestMaterial::kNone};
+
+/*
+ * 采集工具折算: 生成表的工具值与 HarvestTool 的前四档一致, 5 剪刀当前没有
+ * 对应档位, 统一按徒手处理, 数据在 toolLevel 里保留原值供后续接入工具.
+ */
+constexpr HarvestTool ToolOf(uint8_t tool) {
+    switch (tool) {
+        case 1:
+            return HarvestTool::kAxe;
+        case 2:
+            return HarvestTool::kPickaxe;
+        case 3:
+            return HarvestTool::kShovel;
+        case 0:
+        case 5:
+        default:
+            return HarvestTool::kHand;
+    }
+}
+
+/*
+ * 材质族折算: 生成表的 material 值即 HarvestMaterial 的取值顺序,
+ * 7 到 10 (cloth, glass, jar, ladder) 是新增族, 当前音频层还没有对应音效,
+ * 先统一回落到 stone 档保证有声音, 音效接入后改为直接映射.
+ */
+constexpr HarvestMaterial MaterialOf(uint8_t material) {
+    switch (material) {
+        case 1:
+            return HarvestMaterial::kGrass;
+        case 2:
+            return HarvestMaterial::kStone;
+        case 3:
+            return HarvestMaterial::kSand;
+        case 4:
+            return HarvestMaterial::kWood;
+        case 5:
+            return HarvestMaterial::kSnow;
+        case 6:
+            return HarvestMaterial::kGravel;
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        default:
+            return HarvestMaterial::kStone;
+    }
+}
 
 }  /* namespace */
 
@@ -93,27 +208,55 @@ const BlockRegistry& BlockRegistry::Instance() {
 }
 
 const BlockInfo& BlockRegistry::Info(BlockId id) const {
-    const size_t index = static_cast<size_t>(id);
-    if (index >= kBlockTableSize) {
+    if (id < block::LegacyCount) {
+        return kLegacyBlockTable[id];
+    }
+    const int32_t index = static_cast<int32_t>(id) - static_cast<int32_t>(block::LegacyCount);
+    if (index >= gen::kRegistryEntryCount) {
         return kFallbackBlock;
     }
-    return kBlockTable[index];
+    const gen::RegistryEntry& entry = gen::kRegistryEntries[index];
+    /*
+     * 扩展段条目折算成 BlockInfo 返回: 折算是一次性的整数比较与查表,
+     * 调用方拿到的仍是引用语义的只读视图; 折算规则集中在这一处,
+     * 音效与图集接入后只改这里的映射, 不动数据.
+     */
+    static BlockInfo cache[gen::kRegistryEntryCount == 0 ? 1 : gen::kRegistryEntryCount];
+    BlockInfo& info = cache[index];
+    if (info.name == nullptr) {
+        info.name = entry.name;
+        info.solid = entry.solid;
+        info.opaque = entry.opaque;
+        info.atlasIndex = 0;
+        info.atlasTop = kAtlasFallback;
+        info.atlasSide = kAtlasFallback;
+        info.atlasBottom = kAtlasFallback;
+        info.hardness = entry.hardness;
+        info.tool = ToolOf(entry.tool);
+        info.material = MaterialOf(entry.material);
+    }
+    return info;
 }
 
 BlockId BlockRegistry::FindByName(const char* name) const {
     if (name == nullptr) {
         return block::Air;
     }
-    for (size_t i = 0; i < kBlockTableSize; ++i) {
-        if (std::strcmp(kBlockTable[i].name, name) == 0) {
+    for (size_t i = 0; i < kLegacyBlockCount; ++i) {
+        if (std::strcmp(kLegacyBlockTable[i].name, name) == 0) {
             return static_cast<BlockId>(i);
+        }
+    }
+    for (int32_t i = 0; i < gen::kRegistryEntryCount; ++i) {
+        if (std::strcmp(gen::kRegistryEntries[i].name, name) == 0) {
+            return static_cast<BlockId>(block::LegacyCount + i);
         }
     }
     return block::Air;
 }
 
 size_t BlockRegistry::Count() const {
-    return kBlockTableSize;
+    return static_cast<size_t>(block::Count);
 }
 
 }  /* namespace immirror::voxel */

@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include <android/asset_manager.h>
+
 #include "platform/input_state.h"
 #include "ui/hud_layout.h"
 
@@ -104,8 +106,9 @@ struct HudFrame {
 
 /*
  * 游戏内 HUD 覆盖层: 准星, 血条, 浮动摇杆, 跳跃按钮, 方块栏与背包面板.
- * 底板按界面视觉规范的角色色绘制, 九宫边界取自生成参数表, 后续接入界面图集时
- * 只需给 PushNineSlice 传入纹理坐标; 文字用内置点阵字.
+ * 底板优先取界面图集 (generated/atlas_ui.rgba) 的原版精灵, 图集缺失或
+ * 精灵未接入时回落到界面视觉规范的角色色; 方块图标仍走方块图集.
+ * 文字用内置点阵字.
  * 必须在区块绘制之后调用, 内部会临时关闭深度测试与背面剔除并开启混合.
  */
 class HudRenderer {
@@ -116,8 +119,12 @@ public:
     HudRenderer(const HudRenderer&) = delete;
     HudRenderer& operator=(const HudRenderer&) = delete;
 
-    /* atlasTexture 为方块图集句柄, 用于绘制底部方块选择栏. */
-    bool Initialize(uint32_t atlasTexture);
+    /*
+     * atlasTexture 为方块图集句柄, 用于绘制底部方块选择栏的方块图标;
+     * uiAtlasTexture 为界面图集句柄, 用于血条, 快捷栏, 跳跃按钮等原版精灵,
+     * 传 0 时界面精灵回落到纯色绘制, 界面不因图集缺失而残缺.
+     */
+    bool Initialize(uint32_t atlasTexture, uint32_t uiAtlasTexture);
     void Shutdown();
     bool Ready() const { return ready_; }
 
@@ -155,8 +162,10 @@ private:
     uint32_t vao_ = 0;
     uint32_t vbo_ = 0;
     int32_t uniformAtlasLocation_ = -1;
+    int32_t uniformSpriteLocation_ = -1;
     HudLayout layout_;
     uint32_t atlasTexture_ = 0;
+    uint32_t uiAtlasTexture_ = 0;
 };
 
 /*
@@ -176,5 +185,13 @@ struct RemoteMarkerView {
 
 void RenderRemoteMarkers(const RemoteMarkerView& markers, const float* viewProjection,
                          int32_t width, int32_t height);
+
+/*
+ * 从安装包资产加载界面图集 (ui/generated/atlas_ui.rgba) 并上传为纹理.
+ * 资产缺失或损坏时返回 0, 调用方把 0 传给 Initialize 即回落纯色绘制;
+ * 返回的句柄由调用方持有, 在 HUD 生命周期内有效, 释放走调用方的纹理清理.
+ * assets 为空指针时同样返回 0, 便于桌面预览等无资产环境的调用方.
+ */
+uint32_t LoadUiAtlasFromAssets(AAssetManager* assets);
 
 }  /* namespace immirror::ui */

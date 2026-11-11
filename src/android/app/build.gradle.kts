@@ -102,6 +102,22 @@ val genUiResources = tasks.register<Exec>("genUiResources") {
     outputs.dir(layout.projectDirectory.dir("src/main/assets/ui"))
 }
 
+/*
+ * 界面图集: 构建期从素材管线解码页合第二张图集, 产出格位表与两侧常量.
+ * 输入在素材管线仓库, 由生成器内部校验; 产物目录与 genUiResources 一致.
+ */
+val genUiAtlas = tasks.register<Exec>("genUiAtlas") {
+    val script = layout.projectDirectory.file("../../scripts/gen_atlas_ui.py").asFile
+    val python = (findProperty("immirrorPython") as String?) ?: "python"
+    workingDir = script.parentFile.parentFile
+    commandLine(python, script.absolutePath)
+    inputs.file(script)
+    outputs.file(layout.projectDirectory.file("../../assets/ui/generated/atlas_ui.rgba"))
+    outputs.file(layout.projectDirectory.file("../../assets/ui/generated/atlas_ui.json"))
+    outputs.file(layout.projectDirectory.file("../../native/ui/generated/ui_atlas_gen.h"))
+    outputs.file(layout.projectDirectory.file("src/main/java/com/julardepick/immirror/generated/UiAtlas.java"))
+}
+
 tasks.named("preBuild") {
-    dependsOn(genUiResources)
+    dependsOn(genUiResources, genUiAtlas)
 }

@@ -312,6 +312,12 @@ public final class LoginActivity extends Activity {
         settingsInput.setText(AccountSettings.baseUrl(this));
         panel.addView(settingsInput, AccountTheme.block(this, 6f));
 
+        /* 自动发现: 紧跟输入框, 保证在屏幕可视区内. */
+        TextView presetDiscover = AccountTheme.link(this, getString(R.string.account_settings_preset_discover),
+                AccountTheme.COLOR_ACCENT);
+        presetDiscover.setOnClickListener(view -> runDiscovery(settingsInput, presetDiscover));
+        panel.addView(presetDiscover, AccountTheme.block(this, 4f));
+
         TextView hint = AccountTheme.body(this, getString(R.string.account_settings_hint),
                 AccountTheme.COLOR_TEXT_FAINT, 11f);
         hint.setLineSpacing(AccountTheme.dp(this, 3f), 1f);
@@ -326,12 +332,6 @@ public final class LoginActivity extends Activity {
         TextView presetLoopback = AccountTheme.link(this, getString(R.string.account_settings_preset_loopback),
                 AccountTheme.COLOR_ACCENT);
         presetLoopback.setOnClickListener(view -> settingsInput.setText(AccountSettings.LOOPBACK_BASE_URL));
-        presetRow.addView(presetEmulator);
-        presetRow.addView(presetLoopback);
-        TextView presetDiscover = AccountTheme.link(this, getString(R.string.account_settings_preset_discover),
-                AccountTheme.COLOR_ACCENT);
-        presetDiscover.setOnClickListener(view -> runDiscovery(settingsInput, presetDiscover));
-        presetRow.addView(presetDiscover);
         panel.addView(presetRow, AccountTheme.block(this, 4f));
 
         LinearLayout actionRow = new LinearLayout(this);

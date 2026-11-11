@@ -21,6 +21,7 @@
 #include "render/chunk_renderer.h"
 #include "settings/settings.h"
 #include "settings/settings_tuning.h"
+#include "ui/hud_renderer.h"
 #include "ui/hud_slots.h"
 #include "voxel/block_registry.h"
 #include "world/world.h"
@@ -274,7 +275,12 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     entities_.Reset(kWorldSeed);
     SyncEntitySpawnExtent();
     hud_.SetViewport(width_, height_);
-    hud_.Initialize(renderer_->AtlasTexture());
+    /*
+     * 界面图集独立于方块图集上传, 缺失时返回 0,
+     * HUD 内部对 0 有回落处理, 界面不会因为图集缺失而残缺.
+     */
+    const uint32_t uiAtlasTexture = ui::LoadUiAtlasFromAssets(assets);
+    hud_.Initialize(renderer_->AtlasTexture(), uiAtlasTexture);
     IM_LOGI(kTag, "game shell ready, chunks=%d fov=%.0f", world_->LoadedChunkCount(),
             static_cast<double>(kFovYDegrees));
 }

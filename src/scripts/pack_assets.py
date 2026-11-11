@@ -47,6 +47,19 @@ def collect_ui_entries():
     return entries
 
 
+def collect_ui_atlas_entries():
+    """界面图集: 生成器产出的裸 RGBA 与格位表, 复制到 assets/ui/generated."""
+    entries = []
+    generated = os.path.join(ASSETS_ROOT, "ui", "generated")
+    if not os.path.isdir(generated):
+        return entries
+    for name in ("atlas_ui.rgba", "atlas_ui.json"):
+        source = os.path.join(generated, name)
+        if os.path.exists(source):
+            entries.append((source, "ui/generated/" + name))
+    return entries
+
+
 def collect_item_entries():
     """物品图标: 源在素材管线仓库, 保持文件名与物品表 icon 字段一致."""
     entries = []
@@ -63,7 +76,8 @@ def collect_item_entries():
 def main() -> int:
     copied = 0
     missing = []
-    entries = collect_sound_entries() + collect_ui_entries() + collect_item_entries()
+    entries = (collect_sound_entries() + collect_ui_entries()
+               + collect_ui_atlas_entries() + collect_item_entries())
     for source, target_rel in entries:
         target = os.path.join(TARGET_ROOT, target_rel)
         if not os.path.exists(source):

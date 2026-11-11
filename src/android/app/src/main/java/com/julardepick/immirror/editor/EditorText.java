@@ -13,7 +13,7 @@ public final class EditorText {
     /* 页面骨架. */
     public static final String PAGE_TITLE = "地图编辑器";
     public static final String PAGE_SUBTITLE = "工程为明文目录, 可直接用文本编辑器修改";
-    public static final String AUTHOR_FORMAT = "作者: %s";
+    public static final String AUTHOR_FORMAT = "Copyright © 2026 %s";
     public static final String SUMMARY_FORMAT = "工程 %d 个, 已打开: %s";
 
     /* 原生接口状态. */
