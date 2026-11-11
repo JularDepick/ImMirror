@@ -281,8 +281,8 @@ TEST_CASE(SelectionAndFill) {
     const std::string status = HandleEditorCommand("status");
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(status, "selectionSet")), 1);
     CHECK(immirror::editor::test::ReplyFirst(status, "selectionSize") == "3,3,3");
-    CHECK(immirror::editor::test::ReplyFirst(status, "selectionA") == "0,60,0");
-    CHECK(immirror::editor::test::ReplyFirst(status, "selectionB") == "2,62,2");
+    CHECK(immirror::editor::test::ReplyFirst(status, "selectionA") == "0,200,0");
+    CHECK(immirror::editor::test::ReplyFirst(status, "selectionB") == "2,202,2");
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(HandleEditorCommand("sel clear"),
                                                            "code")), 0);
     CHECK_INT(std::stoi(immirror::editor::test::ReplyFirst(
