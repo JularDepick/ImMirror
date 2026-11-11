@@ -88,6 +88,33 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeSelectWorld(JNIEnv* env,
     }
 }
 
+/* Java 侧低频入口: 取玩家姿态 JSON, 供联机 presence 轮询. */
+JNIEXPORT jstring JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakePlayerPose(JNIEnv* env, jclass clazz) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return env->NewStringUTF("{}");
+    }
+    return env->NewStringUTF(shell->FormatPlayerPose().c_str());
+}
+
+/* Java 侧低频入口: 接收其他玩家快照 JSON. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeApplyRemotePlayers(JNIEnv* env, jclass clazz,
+                                                                          jstring json) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr || json == nullptr) {
+        return;
+    }
+    const char* chars = env->GetStringUTFChars(json, nullptr);
+    if (chars != nullptr) {
+        shell->ApplyRemotePlayers(chars);
+        env->ReleaseStringUTFChars(json, chars);
+    }
+}
+
 /* Java 侧低频入口: 取走成就统计增量并清零. */
 JNIEXPORT jstring JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeProgressCounters(JNIEnv* env, jclass clazz) {

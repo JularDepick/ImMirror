@@ -469,6 +469,67 @@ void GameShell::LoadNamedWorld(const std::string& projectName) {
     }
 }
 
+std::string GameShell::FormatPlayerPose() const {
+    const core::Vec3 position = player_->Position();
+    char buffer[256];
+    std::snprintf(buffer, sizeof(buffer),
+                  R"({"x":%.2f,"y":%.2f,"z":%.2f,"yaw":%.4f,"pitch":%.4f})",
+                  static_cast<double>(position.x), static_cast<double>(position.y),
+                  static_cast<double>(position.z),
+                  static_cast<double>(player_->Yaw()), static_cast<double>(player_->Pitch()));
+    return buffer;
+}
+
+void GameShell::ApplyRemotePlayers(const std::string& json) {
+    /* 简化解析: 手写扫描 JSON 数组, 最多 256 个快照. */
+    std::string uids[net::RemotePlayerManager::kMaxPlayers];
+    float xs[net::RemotePlayerManager::kMaxPlayers];
+    float ys[net::RemotePlayerManager::kMaxPlayers];
+    float zs[net::RemotePlayerManager::kMaxPlayers];
+    float yaws[net::RemotePlayerManager::kMaxPlayers];
+    float pitches[net::RemotePlayerManager::kMaxPlayers];
+    int32_t count = 0;
+    size_t cursor = json.find("\"others\":[");
+    if (cursor == std::string::npos) {
+        remotePlayers_.ReplaceAll(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0);
+        return;
+    }
+    cursor += 9;
+    while (count < net::RemotePlayerManager::kMaxPlayers) {
+        const size_t open = json.find('{', cursor);
+        if (open == std::string::npos) {
+            break;
+        }
+        const size_t close = json.find('}', open);
+        if (close == std::string::npos) {
+            break;
+        }
+        const std::string obj = json.substr(open, close - open + 1);
+        cursor = close + 1;
+        /* 提取字段 */
+        const size_t uidPos = obj.find("\"uid\":");
+        if (uidPos == std::string::npos) {
+            continue;
+        }
+        uids[count] = obj.substr(uidPos + 6, obj.find(',', uidPos) - uidPos - 6);
+        const auto readFloat = [&](const char* key) -> float {
+            const size_t pos = obj.find(key);
+            if (pos == std::string::npos) {
+                return 0.0f;
+            }
+            const size_t valStart = pos + std::strlen(key) + 2;
+            return std::strtof(obj.c_str() + valStart, nullptr);
+        };
+        xs[count] = readFloat("\"x\":");
+        ys[count] = readFloat("\"y\":");
+        zs[count] = readFloat("\"z\":");
+        yaws[count] = readFloat("\"yaw\":");
+        pitches[count] = readFloat("\"pitch\":");
+        count += 1;
+    }
+    remotePlayers_.ReplaceAll(uids, xs, ys, zs, yaws, pitches, count);
+}
+
 void GameShell::CountProgressEvent(int32_t kind) {
     switch (kind) {
         case 1:

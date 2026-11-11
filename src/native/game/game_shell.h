@@ -12,6 +12,7 @@
 #include "platform/input_state.h"
 #include "ui/hud_renderer.h"
 #include "voxel/block_registry.h"
+#include "game/remote_player.h"
 #include "voxel/voxel_types.h"
 
 struct AAssetManager;
@@ -83,6 +84,10 @@ public:
 
     /* 试玩模式: 读取编辑器导出的世界存档; 装配后调用, 在下次 Update 前生效. */
     void LoadNamedWorld(const std::string& projectName);
+
+    /* 联机: 输出玩家姿态 JSON, 接收远程玩家快照 JSON. */
+    std::string FormatPlayerPose() const;
+    void ApplyRemotePlayers(const std::string& json);
     int32_t SelectedSlot() const { return selectedSlot_; }
     void SelectSlotPublic(int32_t index) { SelectSlot(index); }
 
@@ -263,6 +268,7 @@ private:
     std::string savePath_;
     int32_t viewDistanceChunks_ = 4;
     ProgressCounters progressCounters_;
+    net::RemotePlayerManager remotePlayers_;
     int32_t selectedSlot_ = 0;
     voxel::BlockId selectedBlock_ = voxel::block::Grass;
     const char* qualityGrade_ = "high";

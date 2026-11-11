@@ -154,6 +154,26 @@ public final class NativeBridge {
         nativeSelectWorld(projectName == null ? "" : projectName);
     }
 
+    /* 取玩家姿态 JSON; 供联机 presence 轮询使用. */
+    public static String takePlayerPose() {
+        if (!ensureLoaded()) {
+            return "{}";
+        }
+        return nativeTakePlayerPose();
+    }
+
+    /* 接收其他玩家快照 JSON, 原生侧更新远程玩家列表. */
+    public static void applyRemotePlayers(String json) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeApplyRemotePlayers(json);
+    }
+
+    private static native String nativeTakePlayerPose();
+
+    private static native void nativeApplyRemotePlayers(String json);
+
     private static native String nativeTakeProgressCounters();
 
     private static native void nativeSelectWorld(String projectName);
