@@ -78,6 +78,11 @@ public:
     /* 在图形上下文中绘制一帧场景; 由渲染设备在清屏后回调. */
     void RenderScene();
 
+    /* 供 JNI 桥读取背包与选中格; 装配前调用无副作用. */
+    Inventory& InventoryRef() { return inventory_; }
+    int32_t SelectedSlot() const { return selectedSlot_; }
+    void SelectSlotPublic(int32_t index) { SelectSlot(index); }
+
 private:
     /*
      * 把设置项折算成控制器参数: 灵敏度与反转 Y 进 LookTuning,

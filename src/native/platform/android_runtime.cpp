@@ -17,7 +17,14 @@
 #include "platform/app_bridge.h"
 #include "render/render_device.h"
 
+namespace immirror::game {
+class GameShell;
+}
+
 namespace immirror::platform {
+
+/* 当前运行时持有的装配层实例, 供 JNI 桥读取; 无运行时或未装配时为空. */
+game::GameShell* RuntimeHostShell();
 namespace {
 
 constexpr const char* kTag = "ImMirrorCore";
@@ -62,12 +69,23 @@ std::string Lookup(const ProfileEntries& entries, const char* key) {
  * 引擎运行时. 同时实现主循环宿主与平台生命周期监听,
  * 是窗口事件, 逻辑推进与渲染提交三者唯一的交汇点.
  */
+/* 当前运行时的装配层实例, 供 JNI 桥读取; 无运行时或已析构时为空. */
+game::GameShell* gRuntimeShell = nullptr;
+
 class Runtime final : public core::LoopHost, public AppLifecycleListener {
 public:
     explicit Runtime(android_app* app)
         : bridge_(app, this),
           device_(render::CreateDefaultDevice()),
-          shell_(std::make_unique<game::GameShell>()) {}
+          shell_(std::make_unique<game::GameShell>()) {
+        gRuntimeShell = shell_.get();
+    }
+
+    ~Runtime() override {
+        if (gRuntimeShell == shell_.get()) {
+            gRuntimeShell = nullptr;
+        }
+    }
 
     void Run();
     void Shutdown();
@@ -290,6 +308,10 @@ void RunApplication(android_app* app) {
     runtime.Run();
     runtime.Shutdown();
     IM_LOGI(kTag, "engine runtime disposed");
+}
+
+game::GameShell* RuntimeHostShell() {
+    return gRuntimeShell;
 }
 
 }  /* namespace immirror::platform */

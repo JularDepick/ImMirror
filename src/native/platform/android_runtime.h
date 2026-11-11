@@ -2,7 +2,14 @@
 
 struct android_app;
 
+namespace immirror::game {
+class GameShell;
+}
+
 namespace immirror::platform {
+
+/* 当前运行时持有的装配层实例; 无运行时或已析构时返回空. */
+game::GameShell* RuntimeHostShell();
 
 /*
  * 应用装配根. 在胶水层的原生线程上运行:
