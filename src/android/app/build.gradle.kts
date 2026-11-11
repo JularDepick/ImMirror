@@ -38,12 +38,34 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    /*
+     * 发布签名: 密钥库与口令放在仓库外的临时目录, 由构建脚本注入.
+     * V1 兼容 Android 7, V2 与 V3 覆盖新版系统, 三项全开.
+     */
+    signingConfigs {
+        create("release") {
+            val keystoreDir = rootProject.file("../../temp/keystore")
+            val keystoreFile = File(keystoreDir, "immirror-release.jks")
+            val passwordFile = File(keystoreDir, "keystore.password")
+            if (keystoreFile.exists() && passwordFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = passwordFile.readText().trim()
+                keyAlias = "immirror"
+                keyPassword = storePassword
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
         }
         getByName("release") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
