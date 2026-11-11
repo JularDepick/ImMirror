@@ -138,6 +138,16 @@ public final class NativeBridge {
         return nativeSettingsReset(key == null ? "" : key);
     }
 
+    /* 取走原生侧聚合的成就统计增量, 返回 {"break_block":..,"place_block":..,"pick_item":..}; 拉取即清零. */
+    public static String takeProgressCounters() {
+        if (!ensureLoaded()) {
+            return "{}";
+        }
+        return nativeTakeProgressCounters();
+    }
+
+    private static native String nativeTakeProgressCounters();
+
     private static native void nativeOnDeviceProfile(String payload);
 
     private static native void nativeStart();

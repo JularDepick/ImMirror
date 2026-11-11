@@ -6,7 +6,15 @@ import android.content.res.AssetManager;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+
+import com.julardepick.immirror.account.ApiClient;
+import com.julardepick.immirror.account.Session;
+import com.julardepick.immirror.account.SessionStore;
+import com.julardepick.immirror.progress.ProgressApi;
+import com.julardepick.immirror.progress.ProgressBoard;
 import android.view.WindowManager;
 
 import com.julardepick.immirror.bridge.NativeBridge;
@@ -43,7 +51,14 @@ public final class PlayActivity extends NativeActivity {
 
     private static final String TAG = "ImMirrorPlay";
 
+    /* 成就统计的上报周期. */
+    private static final long PROGRESS_REPORT_INTERVAL_MS = 30000L;
+
     private SoundPool soundPool;
+    private Handler progressHandler;
+    private Runnable progressRunnable;
+    private ProgressApi progressApi;
+    private Session progressSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +69,7 @@ public final class PlayActivity extends NativeActivity {
         NativeBridge.onDeviceProfile(DeviceProfile.obtain(this).toNativePayload());
         setupAudio();
         NativeBridge.start();
+        startProgressReporting();
     }
 
     @Override
@@ -74,6 +90,61 @@ public final class PlayActivity extends NativeActivity {
         super.onPause();
     }
 
+    /* 成就统计上报: 原生聚合增量, 周期取走上报服务端, 服务端按事件累计不重复发币. */
+    private void startProgressReporting() {
+        progressSession = SessionStore.load(this);
+        if (progressSession == null || !progressSession.isUsable()) {
+            return;
+        }
+        if (progressApi == null) {
+            progressApi = new ProgressApi(this);
+        }
+        if (progressHandler == null) {
+            progressHandler = new Handler(Looper.getMainLooper());
+        }
+        progressRunnable = new Runnable() {
+            @Override
+            public void run() {
+                reportProgressOnce();
+                progressHandler.postDelayed(this, PROGRESS_REPORT_INTERVAL_MS);
+            }
+        };
+        progressHandler.postDelayed(progressRunnable, PROGRESS_REPORT_INTERVAL_MS);
+    }
+
+    private void stopProgressReporting() {
+        if (progressHandler != null && progressRunnable != null) {
+            progressHandler.removeCallbacks(progressRunnable);
+        }
+        progressRunnable = null;
+    }
+
+    private void reportProgressOnce() {
+        final String payload = NativeBridge.takeProgressCounters();
+        if (payload == null || payload.length() <= 2) {
+            return;
+        }
+        try {
+            final org.json.JSONObject stats = new org.json.JSONObject(payload);
+            if (stats.length() == 0) {
+                return;
+            }
+            progressApi.reportStats(progressSession, stats, new ProgressApi.Callback() {
+                @Override
+                public void onSuccess(ProgressBoard board) {
+                    Log.i(TAG, "progress reported");
+                }
+
+                @Override
+                public void onFailure(com.julardepick.immirror.account.ApiException error) {
+                    Log.w(TAG, "progress report failed: " + error);
+                }
+            });
+        } catch (org.json.JSONException | RuntimeException error) {
+            Log.w(TAG, "progress parse failed: " + error);
+        }
+    }
+
     @Override
     protected void onDestroy() {
         /*
@@ -81,6 +152,7 @@ public final class PlayActivity extends NativeActivity {
          * 父类会等待原生线程返回, 而原生主循环要一直跑事件泵才能让这次等待结束,
          * 因此这里只表达“离开游戏”, 不表达“关闭进程内的原生线程”.
          */
+        stopProgressReporting();
         NativeBridge.stop();
         NativeBridge.flushSettings();
         NativeBridge.detachAudio();
