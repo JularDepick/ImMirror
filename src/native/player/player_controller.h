@@ -3,6 +3,7 @@
 #include "core/vec3.h"
 #include "player/input_tuning.h"
 #include "platform/input_state.h"
+#include "voxel/block_registry.h"
 #include "voxel/voxel_types.h"
 
 namespace immirror::world {
@@ -76,6 +77,10 @@ public:
     /* 当前朝向, 读档与存档时需要. */
     float Yaw() const { return yaw_; }
     float Pitch() const { return pitch_; }
+    /* 脚下方块 id, 供脚步声按材质选择; 站在空气或液体时返回 Air. */
+    voxel::BlockId GroundBlockId() const { return groundBlockId_; }
+    /* 本帧是否在地面上移动 (触发脚步声的条件). */
+    bool WalkingOnGround() const { return onGround_ && (velocity_.x != 0.0f || velocity_.z != 0.0f); }
 
     /*
      * 生命值. 血条按 HealthRatio 取长度, 上限见 kMaxHealth.
@@ -230,6 +235,7 @@ private:
     float yaw_ = 0.0f;    /* 偏航角, 弧度, 0 表示朝向 -Z */
     float pitch_ = 0.0f;  /* 俯仰角, 弧度, 正值抬头 */
     bool onGround_ = false;
+    voxel::BlockId groundBlockId_ = voxel::block::Air;
     bool spawned_ = false;
 
     /* 生命值状态: 当前血量, 受击反馈计时, 免伤窗口与死亡等待计时. */

@@ -103,6 +103,7 @@ public:
     };
     ProgressCounters TakeProgressCounters();
     void CountProgressEvent(int32_t kind);
+    audio::SoundId WalkSoundForBlock(voxel::BlockId block);
 
 private:
     /*
@@ -269,6 +270,8 @@ private:
     int32_t viewDistanceChunks_ = 4;
     ProgressCounters progressCounters_;
     net::RemotePlayerManager remotePlayers_;
+    double walkSoundTimer_ = 0.0;
+    voxel::BlockId lastWalkBlock_ = voxel::block::Air;
     int32_t selectedSlot_ = 0;
     voxel::BlockId selectedBlock_ = voxel::block::Grass;
     const char* qualityGrade_ = "high";

@@ -198,6 +198,19 @@ void PlayerController::Update(double dt, platform::InputSnapshot& input, const w
     ProcessInput(static_cast<float>(clamped), input);
     StepMotion(clamped, world);
 
+    /* 脚下方块 id: 脚底位置向下 0.1 格查到的非空气方块, 供脚步声按材质选择. */
+    const int32_t groundX = FloorToInt(position_.x);
+    const int32_t groundZ = FloorToInt(position_.z);
+    const int32_t footY = FloorToInt(position_.y - 0.1f);
+    groundBlockId_ = voxel::block::Air;
+    for (int32_t dy = 0; dy < 3; ++dy) {
+        const voxel::BlockId below = world.GetBlock(groundX, footY - dy, groundZ);
+        if (below != voxel::block::Air && below != voxel::block::Water) {
+            groundBlockId_ = below;
+            break;
+        }
+    }
+
     /* 区块晚于出生生成或外部写入方块时, 玩家可能被包在实心方块里, 逐格上抬脱困. */
     if (CollidesAt(world, position_) && !LiftOutOfSolid(world)) {
         Respawn();

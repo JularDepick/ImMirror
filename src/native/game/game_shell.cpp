@@ -423,6 +423,17 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
         saveAccumulator_ = 0.0;
         SaveWorld();
     }
+
+    /* 脚步声: 在地面移动时按脚下方块材质周期播放行走音. */
+    if (player_->WalkingOnGround()) {
+        walkSoundTimer_ += deltaSeconds;
+        if (walkSoundTimer_ >= 0.35) {
+            walkSoundTimer_ = 0.0;
+            audio::AudioEngine::Instance().Play(WalkSoundForBlock(player_->GroundBlockId()));
+        }
+    } else {
+        walkSoundTimer_ = 0.0;
+    }
 }
 
 void GameShell::ApplyControlSettings() {
@@ -528,6 +539,20 @@ void GameShell::ApplyRemotePlayers(const std::string& json) {
         count += 1;
     }
     remotePlayers_.ReplaceAll(uids, xs, ys, zs, yaws, pitches, count);
+}
+
+/* 按脚下方块 id 返回对应行走音效; 未知方块回落石音. */
+audio::SoundId GameShell::WalkSoundForBlock(voxel::BlockId block) {
+    switch (block) {
+        case voxel::block::Grass: return audio::SoundId::kWalkGrass;
+        case voxel::block::Stone: return audio::SoundId::kWalkStone;
+        case voxel::block::Sand: return audio::SoundId::kWalkSand;
+        case voxel::block::Wood: return audio::SoundId::kWalkWood;
+        case voxel::block::Snow: return audio::SoundId::kWalkSnow;
+        case voxel::block::Gravel: return audio::SoundId::kWalkGravel;
+        case voxel::block::Planks: return audio::SoundId::kWalkWood;
+        default: return audio::SoundId::kWalkStone;
+    }
 }
 
 void GameShell::CountProgressEvent(int32_t kind) {
