@@ -40,6 +40,7 @@ add_library(immirror_core SHARED
     core/frame_stats.cpp
     core/log.cpp
     jni/engine_host.cpp
+    jni/inventory_jni.cpp
     jni/native_entry.cpp
     platform/android_runtime.cpp
     platform/app_bridge.cpp

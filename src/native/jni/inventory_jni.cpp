@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "game/game_shell.h"
 #include "game/inventory.h"
 #include "platform/android_runtime.h"
 #include "game/item/item_def.h"
@@ -118,7 +119,7 @@ Java_com_julardepick_immirror_inventory_InventoryBridge_nativeInventoryMove(JNIE
     if (inventory == nullptr || from < 0 || to < 0) {
         return JNI_FALSE;
     }
-    return inventory->Move(from, to) ? JNI_TRUE : JNI_FALSE;
+    return inventory->MoveSlot(from, to) ? JNI_TRUE : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
