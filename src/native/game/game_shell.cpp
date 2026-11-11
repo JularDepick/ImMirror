@@ -1116,6 +1116,38 @@ void GameShell::RenderScene() {
     renderer_->Sync(*world_);
     renderer_->Draw();
 
+    /*
+     * 世界坐标标记: 生物与远程玩家的占位渲染.
+     * 都在区块绘制之后, HUD 之前, 共享投影矩阵; 屏外自动剔除.
+     */
+    const auto& creatures = entities_.Creatures();
+    const int32_t creatureCount = static_cast<int32_t>(creatures.size());
+    if (creatureCount > 0) {
+        std::vector<float> cxs(creatureCount), cys(creatureCount), czs(creatureCount);
+        for (int32_t i = 0; i < creatureCount; ++i) {
+            const auto& creature = creatures[i];
+            if (creature == nullptr || creature->Removed()) {
+                cxs[i] = 0.0f; cys[i] = -1000.0f; czs[i] = 0.0f;
+                continue;
+            }
+            const core::Vec3 pos = creature->Position();
+            cxs[i] = pos.x; cys[i] = pos.y; czs[i] = pos.z;
+        }
+        ui::RenderCreatureMarkers(cxs.data(), cys.data(), czs.data(), creatureCount,
+                                  viewProjection, width_, height_);
+    }
+
+    if (remotePlayers_.Count() > 0) {
+        const auto& players = remotePlayers_.Players();
+        const int32_t rpCount = static_cast<int32_t>(players.size());
+        std::vector<float> rxs(rpCount), rys(rpCount), rzs(rpCount);
+        for (int32_t i = 0; i < rpCount; ++i) {
+            rxs[i] = players[i].x; rys[i] = players[i].y; rzs[i] = players[i].z;
+        }
+        ui::RenderRemoteMarkers(rxs.data(), rys.data(), rzs.data(), rpCount,
+                                viewProjection, width_, height_);
+    }
+
     if (settings_->HideUi()) {
         return;
     }

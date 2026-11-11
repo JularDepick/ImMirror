@@ -1433,18 +1433,18 @@ void HudRenderer::Render(const HudFrame& frame) {
  * 复用 HUD 的共享着色程序与顶点格式, 独立顶点缓冲, 不触碰 HudRenderer 的实例状态;
  * 投影换算与编辑器覆盖层同一套约定: 列主序矩阵, 设计坐标长度取屏高的一半.
  */
-void RenderRemoteMarkers(const RemoteMarkerView& markers, const float* viewProjection,
-                         int32_t width, int32_t height) {
+void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, int32_t count,
+                         const float* viewProjection, int32_t width, int32_t height) {
     if (viewProjection == nullptr || width <= 0 || height <= 0) {
         return;
     }
     const HudLayout layout(width, height);
     const float scale = layout.Scale();
-    const int32_t count = markers.count > 0 ? markers.count : 0;
+    const int32_t total = count > 0 ? count : 0;
     if (count == 0) {
         return;
     }
-    if (markers.xs == nullptr || markers.ys == nullptr || markers.zs == nullptr) {
+    if (xs == nullptr || ys == nullptr || zs == nullptr) {
         return;
     }
 
@@ -1457,9 +1457,9 @@ void RenderRemoteMarkers(const RemoteMarkerView& markers, const float* viewProje
     int32_t offset = 0;
 
     for (int32_t index = 0; index < count && offset + 6 <= kVertexCapacity; ++index) {
-        const float wx = markers.xs[index];
-        const float wy = markers.ys[index];
-        const float wz = markers.zs[index];
+        const float wx = xs[index];
+        const float wy = ys[index];
+        const float wz = zs[index];
         const float bx = wx;
         const float by = wy + bottomLift;
         const float bz = wz;
@@ -1711,6 +1711,97 @@ uint32_t LoadUiAtlasFromAssets(AAssetManager* assets) {
     }
     IM_LOGI(kTag, "ui atlas ready, %dx%d", kUiAtlasPixels, kUiAtlasPixels);
     return texture;
+}
+
+
+/* 生物标记: 与远程玩家标记同模式, 绿色区分, 高度略低. */
+void RenderCreatureMarkers(const float* xs, const float* ys, const float* zs, int32_t count,
+                           const float* viewProjection, int32_t width, int32_t height) {
+    if (viewProjection == nullptr || width <= 0 || height <= 0 || count <= 0) {
+        return;
+    }
+    const HudLayout layout(width, height);
+    const float halfWidth = layout.DesignLength(0.003f);
+    const float bottomLift = 0.05f;
+    const float topHeight = 1.4f;
+    static float vertices[kVertexCapacity * kFloatsPerVertex];
+    int32_t offset = 0;
+    for (int32_t i = 0; i < count; ++i) {
+        const float wx = xs[i];
+        const float wy = ys[i];
+        const float wz = zs[i];
+        if (wy < -500.0f) {
+            continue;
+        }
+        const float clipW = viewProjection[3] * wx + viewProjection[7] * wy +
+                            viewProjection[11] * wz + viewProjection[15];
+        if (clipW <= 0.1f) {
+            continue;
+        }
+        const float ndcX = (viewProjection[0] * wx + viewProjection[4] * wy +
+                            viewProjection[8] * wz + viewProjection[12]) / clipW;
+        const float ndcYB = (viewProjection[1] * wx + viewProjection[5] * (wy + bottomLift) +
+                             viewProjection[9] * wz + viewProjection[13]) / clipW;
+        const float ndcYT = (viewProjection[1] * wx + viewProjection[5] * (wy + topHeight) +
+                             viewProjection[9] * wz + viewProjection[13]) / clipW;
+        if (ndcX < -1.2f || ndcX > 1.2f || ndcYB < -1.2f || ndcYT > 1.2f) {
+            continue;
+        }
+        const float sx = (ndcX + 1.0f) * 0.5f * static_cast<float>(width);
+        const float sb = (ndcYB + 1.0f) * 0.5f * static_cast<float>(height);
+        const float st = (ndcYT + 1.0f) * 0.5f * static_cast<float>(height);
+        const float green[4] = {0.3f, 0.85f, 0.3f, 0.6f};
+        const float lw = 4.0f;
+        const float lft = sx - lw * 0.5f;
+        const float rgt = sx + lw * 0.5f;
+        const float quads[4][2] = {
+            {lft, sb}, {rgt, sb}, {rgt, st}, {lft, st},
+        };
+        const int32_t order[6] = {0, 1, 2, 0, 2, 3};
+        for (int32_t v = 0; v < 6 && offset < kVertexCapacity; ++v) {
+            float* target = vertices + static_cast<size_t>(offset) * kFloatsPerVertex;
+            target[0] = quads[order[v]][0] / static_cast<float>(width) * 2.0f - 1.0f;
+            target[1] = quads[order[v]][1] / static_cast<float>(height) * 2.0f - 1.0f;
+            target[2] = -1.0f;
+            target[3] = -1.0f;
+            target[4] = green[0];
+            target[5] = green[1];
+            target[6] = green[2];
+            target[7] = green[3];
+            offset += 1;
+        }
+    }
+    if (offset == 0) {
+        return;
+    }
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glUseProgram(program_shared);
+    GLuint tempVao = 0, tempVbo = 0;
+    glGenVertexArrays(1, &tempVao);
+    glGenBuffers(1, &tempVbo);
+    glBindVertexArray(tempVao);
+    glBindBuffer(GL_ARRAY_BUFFER, tempVbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(offset) * kFloatsPerVertex * sizeof(float), vertices,
+                 GL_STREAM_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float), nullptr);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float),
+                          reinterpret_cast<const void*>(2 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float),
+                          reinterpret_cast<const void*>(4 * sizeof(float)));
+    glDrawArrays(GL_TRIANGLES, 0, offset);
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &tempVbo);
+    glDeleteVertexArrays(1, &tempVao);
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 }
 
 }  /* namespace immirror::ui */
