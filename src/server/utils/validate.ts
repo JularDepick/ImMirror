@@ -59,6 +59,16 @@ export function isUidLike(value: string): boolean {
 }
 
 /**
+ * 校验数值字段; 缺失或非数值时返回 NaN, 由调用方决定报错口径
+ */
+export function requireNumber(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return Number.NaN;
+  }
+  return value;
+}
+
+/**
  * 取 JSON 请求体对象, 非对象一律视为参数非法
  */
 export function requireObjectBody(body: unknown): JsonObject {

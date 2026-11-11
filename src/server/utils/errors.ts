@@ -21,6 +21,7 @@ export const ERROR_DEFINITIONS = {
   AUTH_UNAUTHORIZED: { code: "AUTH_UNAUTHORIZED", status: 401, message: "缺少有效的会话凭证" },
   AUTH_SESSION_EXPIRED: { code: "AUTH_SESSION_EXPIRED", status: 401, message: "会话已过期" },
   RATE_LIMITED: { code: "RATE_LIMITED", status: 429, message: "请求过于频繁" },
+  PRESENCE_FULL: { code: "PRESENCE_FULL", status: 429, message: "在线人数已达上限" },
   WALLET_ALREADY_CHECKED_IN: { code: "WALLET_ALREADY_CHECKED_IN", status: 409, message: "今日已签到" },
   NOT_FOUND: { code: "NOT_FOUND", status: 404, message: "接口不存在" },
   INTERNAL: { code: "INTERNAL", status: 500, message: "服务内部错误" },
