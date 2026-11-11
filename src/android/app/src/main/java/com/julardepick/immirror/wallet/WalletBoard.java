@@ -1,5 +1,7 @@
 package com.julardepick.immirror.wallet;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,6 +34,28 @@ public final class WalletBoard {
     public static WalletBoard empty() {
         return new WalletBoard(0L, 0L, CheckinStatus.parse(null),
                 new ArrayList<LedgerEntry>());
+    }
+
+    /*
+     * 签到成功后的即时快照: 余额与月内次数取签到响应, 签到状态翻转为已签,
+     * 今日奖励记录本次数值; 流水与逐日高亮等待随后的整页刷新补齐.
+     */
+    public static WalletBoard withCheckinResult(WalletBoard source, CheckinResult result) {
+        if (source == null) {
+            source = empty();
+        }
+        CheckinStatus previous = source.checkin;
+        JSONObject raw = new JSONObject();
+        try {
+            raw.put("signedToday", true);
+            raw.put("monthCount", result.monthCount());
+            raw.put("month", previous.month());
+            raw.put("todayReward", result.reward());
+        } catch (org.json.JSONException ignored) {
+            return source;
+        }
+        CheckinStatus updated = CheckinStatus.parse(raw);
+        return new WalletBoard(result.balance(), source.updatedAt, updated, source.ledger);
     }
 
     public long balance() {

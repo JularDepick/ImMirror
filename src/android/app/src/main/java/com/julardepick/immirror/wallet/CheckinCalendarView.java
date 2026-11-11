@@ -66,25 +66,24 @@ public final class CheckinCalendarView extends LinearLayout {
         int leading = (first.get(Calendar.DAY_OF_WEEK) + 5) % 7;
         int daysInMonth = first.getActualMaximum(Calendar.DAY_OF_MONTH);
 
-        LinearLayout row = null;
-        for (int day = 1; day <= daysInMonth + leading; day++) {
-            if (day <= leading || row == null || (day - leading - 1) % 7 == 0) {
-                if (day > leading && row != null && row.getChildCount() > 0) {
-                    gridHost.addView(row);
+        /* 逐行铺格: 首行先补前置空位, 末行日期不足七天也补空位对齐. */
+        int cells = leading + daysInMonth;
+        int rows = (cells + 6) / 7;
+        for (int row = 0; row < rows; row++) {
+            LinearLayout line = new LinearLayout(getContext());
+            line.setOrientation(HORIZONTAL);
+            for (int column = 0; column < 7; column++) {
+                int cell = row * 7 + column;
+                if (cell < leading || cell >= cells) {
+                    line.addView(placeholder(getContext()), cellParams());
+                    continue;
                 }
-                row = new LinearLayout(getContext());
-                row.setOrientation(HORIZONTAL);
+                int dayOfMonth = cell - leading + 1;
+                String dateKey = month + "-" + String.format(Locale.US, "%02d", dayOfMonth);
+                line.addView(buildCell(dayOfMonth, dateKey, signed.contains(dateKey),
+                        dateKey.equals(todayKey)), cellParams());
             }
-            if (day <= leading) {
-                row.addView(placeholder(getContext()));
-                continue;
-            }
-            int dayOfMonth = day - leading;
-            String dateKey = month + "-" + String.format(Locale.US, "%02d", dayOfMonth);
-            row.addView(buildCell(dayOfMonth, dateKey, signed.contains(dateKey), dateKey.equals(todayKey)));
-            if (day == daysInMonth + leading && row.getChildCount() > 0) {
-                gridHost.addView(row);
-            }
+            gridHost.addView(line);
         }
     }
 
@@ -125,10 +124,12 @@ public final class CheckinCalendarView extends LinearLayout {
         return cell;
     }
 
-    /* 空位: 补齐首周前置空列, 不可点击也不显示内容. */
+    /* 空位: 补齐首末行空列, 不显示内容也不响应触摸. */
     private View placeholder(Context context) {
         View view = new View(context);
         view.setVisibility(INVISIBLE);
+        view.setClickable(true);
+        view.setFocusable(false);
         return view;
     }
 

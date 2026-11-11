@@ -122,6 +122,26 @@ public final class ApiClient {
         return session == null ? null : session.token();
     }
 
+    /*
+     * 换绑邮箱接口.
+     * 两步流程: 先向新邮箱发送验证码, 再凭验证码与当前密码提交换绑;
+     * 成功后服务端作废旧会话, 调用方需清理本地会话并回登录页.
+     */
+    public void requestRebindCode(Session session, String newEmail, Callback<CodeDelivery> callback) {
+        submit(callback, () -> parseDelivery(send("POST", "/auth/email/rebind/code",
+                makeBody("newEmail", newEmail), tokenOf(session))));
+    }
+
+    /* 换绑成功时服务端返回 { uid, email }, 这里把新邮箱回传给界面展示. */
+    public void rebindEmail(Session session, String newEmail, String code, String password,
+                            Callback<String> callback) {
+        submit(callback, () -> {
+            JSONObject data = send("POST", "/auth/email/rebind",
+                    makeBody("newEmail", newEmail, "code", code, "password", password), tokenOf(session));
+            return data.optString("email", newEmail);
+        });
+    }
+
     public void logout(Session session, Callback<Void> callback) {
         submit(callback, () -> {
             if (session != null) {

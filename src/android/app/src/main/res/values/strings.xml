@@ -99,4 +99,41 @@
     <string name="inventory_title">背包</string>
     <string name="editor_title">工程编辑器</string>
     <string name="progress_title">成就与任务</string>
+
+    <string name="wallet_title">钱包</string>
+    <string name="wallet_subtitle">镜币余额, 签到与流水</string>
+    <string name="wallet_balance_header">镜币余额</string>
+    <string name="wallet_balance_loading">读取中...</string>
+    <string name="wallet_balance_format">%1$d</string>
+    <string name="wallet_balance_updated_format">更新于 %1$s</string>
+    <string name="wallet_calendar_month_format">%1$d 年 %2$d 月签到记录</string>
+    <string name="wallet_checkin_header">本月签到</string>
+    <string name="wallet_checkin_action">立即签到</string>
+    <string name="wallet_checkin_todo">本月已签 %1$d 天, 今天还没签到</string>
+    <string name="wallet_checkin_todo_reward">本月已签 %1$d 天, 今天签到可领 %2$d 镜币</string>
+    <string name="wallet_checkin_done">今天已签到, 明天再来</string>
+    <string name="wallet_checkin_done_reward">今天已签到, 领取 %1$d 镜币</string>
+    <string name="wallet_checkin_done_button">已签到</string>
+    <string name="wallet_milestone_item_done">第 %1$d 次 + %2$d (已达成)</string>
+    <string name="wallet_milestone_item_todo">第 %1$d 次 + %2$d (未达成)</string>
+    <string name="wallet_checkin_rules">签到规则: 每自然月每日一次, 单次奖励 100 镜币起, 本月每多签一天加 10, 单次最多 200; 当月累计第 15 次额外奖励 500 镜币, 第 25 次额外奖励 1000 镜币. 逐日记录以服务端数据为准, 服务端未下发时日历由流水反推, 可能不完整。</string>
+    <string name="wallet_ledger_header">镜币流水 (最近 %1$d 条)</string>
+    <string name="wallet_ledger_empty">最近没有镜币变动</string>
+    <string name="wallet_action_back">返回</string>
+    <string name="wallet_action_refresh">刷新</string>
+    <string name="wallet_notice_login_required">登录状态已失效, 请重新登录</string>
+    <string name="wallet_notice_already_checked">今天已经签到过啦, 明天再来</string>
+    <string name="wallet_notice_checkin_ok">签到成功, 镜币 +%1$d</string>
+    <string name="wallet_notice_checkin_milestone">签到成功, 镜币 +%1$d, 里程碑奖励 +%2$d</string>
+
+    <string name="rebind_title">换绑邮箱</string>
+    <string name="rebind_subtitle">向新邮箱验证后更换登录邮箱</string>
+    <string name="rebind_email_summary_format">当前邮箱: %1$s</string>
+    <string name="rebind_email_unknown">当前邮箱未同步, 请重新登录后再试</string>
+    <string name="rebind_label_password">当前密码</string>
+    <string name="rebind_hint_password">换绑需要验证当前账号密码</string>
+    <string name="rebind_action_submit">确认换绑</string>
+    <string name="rebind_notice_login_required">登录状态已失效, 请重新登录后再换绑</string>
+    <string name="rebind_notice_same_email">新邮箱与当前邮箱相同</string>
+    <string name="rebind_notice_ok">邮箱换绑成功, 请用新邮箱重新登录</string>
 </resources>

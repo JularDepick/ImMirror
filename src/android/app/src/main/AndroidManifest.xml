@@ -70,6 +70,23 @@
             android:label="@string/progress_title"
             android:screenOrientation="sensorLandscape" />
 
+        <!-- 钱包界面: 余额, 本月签到与流水, 数据来自服务端钱包接口 -->
+        <activity
+            android:name=".wallet.WalletActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/wallet_title"
+            android:screenOrientation="sensorLandscape" />
+
+        <!-- 换绑邮箱界面: 向新邮箱验证后更换登录邮箱, 成功后回登录页 -->
+        <activity
+            android:name=".account.RebindActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/rebind_title"
+            android:screenOrientation="sensorLandscape"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- 游戏界面: NativeActivity, 主循环与输入全部在原生线程内完成 -->
         <activity
             android:name=".PlayActivity"

@@ -21,6 +21,7 @@ import com.julardepick.immirror.account.ApiException;
 import com.julardepick.immirror.account.ErrorMessages;
 import com.julardepick.immirror.account.LoginActivity;
 import com.julardepick.immirror.account.NoticeBar;
+import com.julardepick.immirror.account.RebindActivity;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
 import com.julardepick.immirror.device.DeviceProfile;
@@ -28,6 +29,7 @@ import com.julardepick.immirror.editor.MapEditorActivity;
 import com.julardepick.immirror.inventory.InventoryActivity;
 import com.julardepick.immirror.progress.ProgressActivity;
 import com.julardepick.immirror.settings.SettingsActivity;
+import com.julardepick.immirror.wallet.WalletActivity;
 
 import java.util.List;
 
@@ -306,8 +308,9 @@ public final class LauncherActivity extends Activity {
         card.addView(settings, AccountTheme.block(this, 10f));
 
         /*
-         * 功能入口行: 背包与成就属于账号侧页面, 编辑器面向地图工程,
-         * 三个入口都从这里进入, 游戏内 HUD 不承载 Java 界面.
+         * 功能入口两行: 背包与成就属于账号侧页面, 编辑器面向地图工程,
+         * 钱包与换绑邮箱属于货币与账号管理页面, 全部从这里进入,
+         * 游戏内 HUD 不承载 Java 界面.
          */
         LinearLayout tools = new LinearLayout(this);
         tools.setOrientation(LinearLayout.HORIZONTAL);
@@ -334,6 +337,24 @@ public final class LauncherActivity extends Activity {
         editorParams.leftMargin = AccountTheme.dp(this, 10f);
         tools.addView(editorEntry, editorParams);
         card.addView(tools, AccountTheme.block(this, 10f));
+
+        LinearLayout toolsExtra = new LinearLayout(this);
+        toolsExtra.setOrientation(LinearLayout.HORIZONTAL);
+        Button walletEntry = AccountTheme.outlineButton(this, getString(R.string.wallet_title),
+                AccountTheme.COLOR_ACCENT);
+        walletEntry.setOnClickListener(view ->
+                startActivity(new Intent(this, WalletActivity.class)));
+        Button rebindEntry = AccountTheme.outlineButton(this, getString(R.string.rebind_title),
+                AccountTheme.COLOR_ACCENT);
+        rebindEntry.setOnClickListener(view ->
+                startActivity(new Intent(this, RebindActivity.class)));
+        toolsExtra.addView(walletEntry, new LinearLayout.LayoutParams(0,
+                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f));
+        LinearLayout.LayoutParams rebindParams = new LinearLayout.LayoutParams(0,
+                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f);
+        rebindParams.leftMargin = AccountTheme.dp(this, 10f);
+        toolsExtra.addView(rebindEntry, rebindParams);
+        card.addView(toolsExtra, AccountTheme.block(this, 10f));
         return card;
     }
 

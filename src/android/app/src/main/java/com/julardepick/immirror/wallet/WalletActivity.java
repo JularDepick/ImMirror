@@ -169,6 +169,7 @@ public final class WalletActivity extends Activity {
     /* 余额更新时间: 服务端未回传时不展示该行. */
     private String updatedText() {
         if (board.updatedAt() <= 0L) {
+            balanceUpdatedView.setVisibility(View.GONE);
             return "";
         }
         balanceUpdatedView.setVisibility(View.VISIBLE);
@@ -319,7 +320,8 @@ public final class WalletActivity extends Activity {
         LinearLayout section = new LinearLayout(this);
         section.setOrientation(LinearLayout.VERTICAL);
 
-        TextView header = AccountTheme.body(this, getString(R.string.wallet_ledger_header),
+        TextView header = AccountTheme.body(this,
+                getString(R.string.wallet_ledger_header, board.ledger().size()),
                 AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 13f);
         header.setTypeface(header.getTypeface(), Typeface.BOLD);
         header.setGravity(Gravity.CENTER);

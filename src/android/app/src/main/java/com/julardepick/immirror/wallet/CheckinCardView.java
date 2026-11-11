@@ -2,7 +2,6 @@ package com.julardepick.immirror.wallet;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -106,9 +105,10 @@ public final class CheckinCardView extends LinearLayout {
             if (builder.length() > 0) {
                 builder.append("  ");
             }
-            builder.append(getContext().getString(
-                    com.julardepick.immirror.R.string.wallet_milestone_item,
-                    milestone.count(), milestone.reward(), milestone.achieved() ? 1 : 0));
+            builder.append(getContext().getString(milestone.achieved()
+                    ? com.julardepick.immirror.R.string.wallet_milestone_item_done
+                    : com.julardepick.immirror.R.string.wallet_milestone_item_todo,
+                    milestone.count(), milestone.reward()));
         }
         if (builder.length() > 0) {
             milestoneView.setText(builder.toString());
