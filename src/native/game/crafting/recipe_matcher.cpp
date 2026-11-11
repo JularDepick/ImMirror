@@ -191,26 +191,72 @@ MatchResult RecipeMatcher::MatchAll(const CraftingGrid& grid) {
         return result;
     }
     const RecipeTable& table = RecipeTable::Instance();
-    /* 有序配方更具体, 先收集, 界面默认展示第一项. */
-    for (int32_t pass = 0; pass < 2; ++pass) {
-        for (int32_t index = 0; index < table.Count(); ++index) {
-            const RecipeInfo& recipe = table.At(index);
-            const bool shaped = recipe.kind == RecipeKind::kShaped;
-            if ((pass == 0) != shaped) {
-                continue;
-            }
-            if (!Matches(recipe, grid)) {
-                continue;
-            }
-            if (result.count < kMaxCandidates) {
-                result.recipes[result.count] = &recipe;
-            }
-            ++result.count;
-        }
+    const int32_t tableCount = table.Count();
+    if (tableCount <= 0) {
+        return result;
     }
-    if (result.count > kMaxCandidates) {
-        IM_LOGW(kTag, "candidate overflow, kept=%d total=%d", kMaxCandidates, result.count);
-        result.count = kMaxCandidates;
+
+    /*
+     * 先收集全部匹配项并算出排序权重, 再挑出前 kMaxCandidates 条.
+     * 权重是配方消耗的材料总量: 一叠木板既能做工具箱也能做梯子,
+     * 材料用得多的排在前面, 默认候选更符合玩家的意图.
+     * 收集缓冲按配方表规模给出上界, 超出时只保留前面的条目.
+     */
+    constexpr int32_t kScanCapacity = 128;
+    const RecipeInfo* matches[kScanCapacity] = {};
+    int32_t weights[kScanCapacity] = {};
+    int32_t matchCount = 0;
+    int32_t overflow = 0;
+    for (int32_t index = 0; index < tableCount; ++index) {
+        const RecipeInfo& recipe = table.At(index);
+        if (!Matches(recipe, grid)) {
+            continue;
+        }
+        if (matchCount >= kScanCapacity) {
+            ++overflow;
+            continue;
+        }
+        int32_t weight = 0;
+        for (int32_t material = 0; material < recipe.materialCount && material < 9; ++material) {
+            weight += recipe.materials[material].count;
+        }
+        matches[matchCount] = &recipe;
+        weights[matchCount] = weight;
+        ++matchCount;
+    }
+
+    /* 选择排序: 有序配方优先, 其次材料总量降序, 再按表内顺序保持稳定. */
+    const int32_t keep = matchCount < kMaxCandidates ? matchCount : kMaxCandidates;
+    bool used[kScanCapacity] = {};
+    for (int32_t rank = 0; rank < keep; ++rank) {
+        int32_t best = -1;
+        for (int32_t index = 0; index < matchCount; ++index) {
+            if (used[index]) {
+                continue;
+            }
+            if (best < 0) {
+                best = index;
+                continue;
+            }
+            const bool shaped = matches[index]->kind == RecipeKind::kShaped;
+            const bool bestShaped = matches[best]->kind == RecipeKind::kShaped;
+            if (shaped != bestShaped) {
+                best = shaped ? index : best;
+                continue;
+            }
+            if (weights[index] > weights[best]) {
+                best = index;
+            }
+        }
+        if (best < 0) {
+            break;
+        }
+        used[best] = true;
+        result.recipes[result.count] = matches[best];
+        ++result.count;
+    }
+    if (overflow > 0) {
+        IM_LOGD(kTag, "candidate scan overflow, match=%d overflow=%d", matchCount, overflow);
     }
     return result;
 }

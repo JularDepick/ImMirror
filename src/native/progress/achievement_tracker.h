@@ -20,7 +20,7 @@ namespace immirror::progress {
 class AchievementTracker {
 public:
     struct Item {
-        const gen::AchievementDef* def = nullptr;
+        const gen::AchievementData* def = nullptr;
         int32_t progress = 0;
         bool done = false;
     };
@@ -52,7 +52,7 @@ public:
 
 private:
     /* 定义与事件是否匹配: 动作类别一致, 且方块约束满足. */
-    bool Matches(const gen::AchievementDef& def, GoalAction action, int32_t clientBlockId) const;
+    bool Matches(const gen::AchievementData& def, GoalAction action, int32_t clientBlockId) const;
 
     void ApplyProgress(Item& item, int32_t value);
 

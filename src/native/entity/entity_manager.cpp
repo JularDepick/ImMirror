@@ -42,6 +42,18 @@ void EntityManager::Reset(uint32_t seed) {
             table.Count(), table.SpawnableCount(), table.HostileCount());
 }
 
+void EntityManager::SetSpawnExtent(float maxRadius) {
+    /* 下限保证生成点不会贴到玩家身上, 上限沿用调参常量. */
+    const float minimum = tuning::kSpawnMinRadius + 2.0f;
+    if (maxRadius < minimum) {
+        maxRadius = minimum;
+    }
+    if (maxRadius > tuning::kSpawnMaxRadius) {
+        maxRadius = tuning::kSpawnMaxRadius;
+    }
+    spawnMaxRadius_ = maxRadius;
+}
+
 EntityFrameStats EntityManager::Update(double dt, const world::World& world,
                                        const PlayerProbe& player) {
     EntityFrameStats stats;
@@ -131,8 +143,8 @@ bool EntityManager::Damage(EntityId id, float amount) {
     }
     QueueLoot(*creature);
     ++deathsPending_;
-    IM_LOGI(kTag, "creature died id=%u name=%s life=%.0f", id, creature->Definition().name,
-            static_cast<double>(creature->Definition().life));
+    IM_LOGI(kTag, "creature died id=%u name=%s life=%.0f", static_cast<uint32_t>(id),
+            creature->Definition().name, static_cast<double>(creature->Definition().life));
     return true;
 }
 
@@ -172,8 +184,7 @@ void EntityManager::TrySpawn(const world::World& world, const PlayerProbe& playe
 
     /* 生成点取玩家周围的一个环带, 太近会突然出现在视野里, 太远则超出视距. */
     const float angle = NextUnit() * kTwoPi;
-    const float radius = tuning::kSpawnMinRadius +
-                         NextUnit() * (tuning::kSpawnMaxRadius - tuning::kSpawnMinRadius);
+    const float radius = tuning::kSpawnMinRadius + NextUnit() * (spawnMaxRadius_ - tuning::kSpawnMinRadius);
     const int32_t x = FloorToInt(player.feet.x + std::cos(angle) * radius);
     const int32_t z = FloorToInt(player.feet.z + std::sin(angle) * radius);
 
@@ -208,8 +219,8 @@ void EntityManager::TrySpawn(const world::World& world, const PlayerProbe& playe
     const uint32_t seed = (id * 2654435761u) ^ rng_;
     creatures_.push_back(std::make_unique<CreatureEntity>(id, def, spawn, seed));
     ++stats.spawned;
-    IM_LOGD(kTag, "spawn id=%u name=%s kind=%d at %.1f,%.1f,%.1f", id, def.name,
-            static_cast<int32_t>(def.type), static_cast<double>(spawn.x),
+    IM_LOGD(kTag, "spawn id=%u name=%s kind=%d at %.1f,%.1f,%.1f", static_cast<uint32_t>(id),
+            def.name, static_cast<int32_t>(def.type), static_cast<double>(spawn.x),
             static_cast<double>(spawn.y), static_cast<double>(spawn.z));
 }
 

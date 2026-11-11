@@ -25,10 +25,10 @@ constexpr float kMoveSpeed = 4.5f;            /* 水平移动速度 */
 constexpr float kJumpSpeed = 8.0f;            /* 起跳初速度 */
 constexpr float kFallSpeedLimit = -58.0f;     /* 下落速度上限, 控制单帧位移量 */
 
-/* 玩家碰撞盒尺寸, 全部相对脚底中心. */
-constexpr float kPlayerHalfWidth = 0.3f;
-constexpr float kPlayerHeight = 1.8f;
-constexpr float kEyeHeight = 1.62f;
+/*
+ * 碰撞盒与视点高度统一取 PlayerController 的类内常量,
+ * 生物接触判定与总装的相机都复用同一份尺寸, 这里不再另写一套.
+ */
 
 /* 相机与拾取参数. */
 constexpr float kMaxPitch = 89.0f * kDegreesToRadians;  /* 俯仰限制 */
@@ -70,13 +70,13 @@ float ClampFloat(float value, float low, float high) {
     return value > high ? high : value;
 }
 
-/* 沿单轴判定所需的 AABB 半宽与半高. */
-float AxisHalfExtentPos(int32_t axis) {
-    return axis == 1 ? kPlayerHeight : kPlayerHalfWidth;
+/* 沿单轴判定所需的 AABB 半长: 竖直轴向上取整高, 向下取 0, 水平轴取半宽. */
+float AxisHalfExtentPos(int32_t axis, float halfWidth, float height) {
+    return axis == 1 ? height : halfWidth;
 }
 
-float AxisHalfExtentNeg(int32_t axis) {
-    return axis == 1 ? 0.0f : kPlayerHalfWidth;
+float AxisHalfExtentNeg(int32_t axis, float halfWidth) {
+    return axis == 1 ? 0.0f : halfWidth;
 }
 
 /*
@@ -160,6 +160,23 @@ void PlayerController::Update(double dt, platform::InputSnapshot& input, const w
     if (clamped > kMaxFrameSeconds) {
         clamped = kMaxFrameSeconds;
     }
+
+    /*
+     * 死亡等待: 期间不处理输入也不推进物理, 计时结束后回到出生点并回满血.
+     * 重生放在这里而不是伤害发生的当场, 让受击与死亡有一个可感知的停顿.
+     */
+    if (deathSeconds_ > 0.0f) {
+        deathSeconds_ -= static_cast<float>(clamped);
+        if (deathSeconds_ > 0.0f) {
+            return;
+        }
+        deathSeconds_ = 0.0f;
+        Respawn();
+        IM_LOGI(kTag, "player respawn at spawn point, health=%.0f",
+                static_cast<double>(health_));
+        return;
+    }
+    TickHurt(static_cast<float>(clamped));
 
     /* 出生列还没有区块数据时保持静止, 等地形生成后再落位, 期间不推进物理. */
     if (spawnPending_) {
@@ -614,12 +631,12 @@ bool PlayerController::MoveAxis(int32_t axis, float amount, const world::World& 
     }
 
     /* 推进后的 AABB, 每侧内缩一点, 使恰好贴面的方块不计为重叠. */
-    const float minX = probe.x - kPlayerHalfWidth + kSurfaceEpsilon;
-    const float maxX = probe.x + kPlayerHalfWidth - kSurfaceEpsilon;
+    const float minX = probe.x - kHalfWidth + kSurfaceEpsilon;
+    const float maxX = probe.x + kHalfWidth - kSurfaceEpsilon;
     const float minY = probe.y + kSurfaceEpsilon;
-    const float maxY = probe.y + kPlayerHeight - kSurfaceEpsilon;
-    const float minZ = probe.z - kPlayerHalfWidth + kSurfaceEpsilon;
-    const float maxZ = probe.z + kPlayerHalfWidth - kSurfaceEpsilon;
+    const float maxY = probe.y + kHeight - kSurfaceEpsilon;
+    const float minZ = probe.z - kHalfWidth + kSurfaceEpsilon;
+    const float maxZ = probe.z + kHalfWidth - kSurfaceEpsilon;
 
     const int32_t x0 = FloorToInt(minX);
     const int32_t x1 = FloorToInt(maxX);
@@ -628,7 +645,8 @@ bool PlayerController::MoveAxis(int32_t axis, float amount, const world::World& 
     const int32_t z0 = FloorToInt(minZ);
     const int32_t z1 = FloorToInt(maxZ);
 
-    const float leading = amount > 0.0f ? AxisHalfExtentPos(axis) : AxisHalfExtentNeg(axis);
+    const float leading =
+        amount > 0.0f ? AxisHalfExtentPos(axis, kHalfWidth, kHeight) : AxisHalfExtentNeg(axis, kHalfWidth);
     bool blocked = false;
     float limit = target;
     for (int32_t y = y0; y <= y1; ++y) {
@@ -682,12 +700,12 @@ bool PlayerController::MoveAxis(int32_t axis, float amount, const world::World& 
 }
 
 bool PlayerController::CollidesAt(const world::World& world, const core::Vec3& feet) const {
-    const float minX = feet.x - kPlayerHalfWidth + kSurfaceEpsilon;
-    const float maxX = feet.x + kPlayerHalfWidth - kSurfaceEpsilon;
+    const float minX = feet.x - kHalfWidth + kSurfaceEpsilon;
+    const float maxX = feet.x + kHalfWidth - kSurfaceEpsilon;
     const float minY = feet.y + kSurfaceEpsilon;
-    const float maxY = feet.y + kPlayerHeight - kSurfaceEpsilon;
-    const float minZ = feet.z - kPlayerHalfWidth + kSurfaceEpsilon;
-    const float maxZ = feet.z + kPlayerHalfWidth - kSurfaceEpsilon;
+    const float maxY = feet.y + kHeight - kSurfaceEpsilon;
+    const float minZ = feet.z - kHalfWidth + kSurfaceEpsilon;
+    const float maxZ = feet.z + kHalfWidth - kSurfaceEpsilon;
 
     for (int32_t y = FloorToInt(minY); y <= FloorToInt(maxY); ++y) {
         for (int32_t z = FloorToInt(minZ); z <= FloorToInt(maxZ); ++z) {
@@ -702,12 +720,12 @@ bool PlayerController::CollidesAt(const world::World& world, const core::Vec3& f
 }
 
 bool PlayerController::AabbHitsBlock(const core::Vec3& feet, const voxel::BlockPos& block) const {
-    const float maxX = feet.x + kPlayerHalfWidth;
-    const float minX = feet.x - kPlayerHalfWidth;
-    const float maxY = feet.y + kPlayerHeight;
+    const float maxX = feet.x + kHalfWidth;
+    const float minX = feet.x - kHalfWidth;
+    const float maxY = feet.y + kHeight;
     const float minY = feet.y;
-    const float maxZ = feet.z + kPlayerHalfWidth;
-    const float minZ = feet.z - kPlayerHalfWidth;
+    const float maxZ = feet.z + kHalfWidth;
+    const float minZ = feet.z - kHalfWidth;
 
     return maxX > static_cast<float>(block.x) && minX < static_cast<float>(block.x + 1) &&
            maxY > static_cast<float>(block.y) && minY < static_cast<float>(block.y + 1) &&
@@ -777,11 +795,55 @@ bool PlayerController::CastRay(const world::World& world, RayHit& hit) const {
     return false;
 }
 
+float PlayerController::HealthRatio() const {
+    const float ratio = health_ / kMaxHealth;
+    return ratio > 1.0f ? 1.0f : ratio;
+}
+
+void PlayerController::ApplyDamage(float amount) {
+    if (!(amount > 0.0f) || health_ <= 0.0f || hurtCooldown_ > 0.0f) {
+        return;
+    }
+    health_ -= amount;
+    hurtSeconds_ = kHurtSeconds;
+    hurtCooldown_ = kHurtCooldown;
+    if (health_ > 0.0f) {
+        IM_LOGI(kTag, "player hurt amount=%.1f health=%.1f", static_cast<double>(amount),
+                static_cast<double>(health_));
+        return;
+    }
+    /* 血量归零: 清空挖掘进度并进入死亡等待, 由 Update 送回出生点. */
+    health_ = 0.0f;
+    deathSeconds_ = kDeathSeconds;
+    CancelMining();
+    IM_LOGW(kTag, "player died amount=%.1f", static_cast<double>(amount));
+}
+
+void PlayerController::TickHurt(float seconds) {
+    if (hurtSeconds_ > 0.0f) {
+        hurtSeconds_ -= seconds;
+        if (hurtSeconds_ < 0.0f) {
+            hurtSeconds_ = 0.0f;
+        }
+    }
+    if (hurtCooldown_ > 0.0f) {
+        hurtCooldown_ -= seconds;
+        if (hurtCooldown_ < 0.0f) {
+            hurtCooldown_ = 0.0f;
+        }
+    }
+}
+
 void PlayerController::Respawn() {
     position_ = spawnPosition_;
     velocity_ = core::Vec3{};
     onGround_ = false;
     jumpRequested_ = false;
+    /* 回到出生点即视为脱离险境, 血量与受击状态一并复位. */
+    health_ = kMaxHealth;
+    hurtSeconds_ = 0.0f;
+    hurtCooldown_ = 0.0f;
+    deathSeconds_ = 0.0f;
     /* 回到出生点后旧目标格已经无意义, 顺带清掉挖掘进度. */
     CancelMining();
     stickPointerId_ = -1;
@@ -808,6 +870,11 @@ void PlayerController::SetPose(const core::Vec3& position, float yaw, float pitc
     onGround_ = false;
     spawned_ = true;
     spawnPending_ = false;
+    /* 读档落位视为满状态复活, 不把上一份存档的受伤状态带进来. */
+    health_ = kMaxHealth;
+    hurtSeconds_ = 0.0f;
+    hurtCooldown_ = 0.0f;
+    deathSeconds_ = 0.0f;
 }
 
 }  /* namespace immirror::player */

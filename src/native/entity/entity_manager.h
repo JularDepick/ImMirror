@@ -6,6 +6,7 @@
 
 #include "core/vec3.h"
 #include "entity/creature_entity.h"
+#include "entity/entity_tuning.h"
 #include "voxel/voxel_types.h"
 
 namespace immirror::world {
@@ -46,6 +47,12 @@ public:
     /* 清空全部生物并重新播种; 进入新世界或重新载入存档时调用. */
     void Reset(uint32_t seed);
 
+    /*
+     * 生成环带的外半径, 由总装按视距下发: 视距外的列没有区块数据,
+     * 按地表生成会全部落空, 因此半径不能超过已加载范围.
+     */
+    void SetSpawnExtent(float maxRadius);
+
     /* 推进全部生物并补充生成, 返回本帧统计. */
     EntityFrameStats Update(double dt, const world::World& world, const PlayerProbe& player);
 
@@ -84,6 +91,7 @@ private:
     double spawnAccumulator_ = 0.0;
     int32_t awake_ = 0;
     int32_t deathsPending_ = 0;
+    float spawnMaxRadius_ = tuning::kSpawnMaxRadius;
 };
 
 }  /* namespace immirror::entity */

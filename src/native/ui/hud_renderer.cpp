@@ -20,8 +20,12 @@ constexpr const char* kTag = "ImMirrorHud";
 /* 顶点: 屏幕归一化坐标 (2) + 纹理坐标 (2) + 颜色 (4), uv 为负表示纯色矩形. */
 constexpr int32_t kFloatsPerVertex = 8;
 
-/* 顶点缓冲容量, 按顶点数计. HUD 常态用量不足一千, 预留到八千以容纳方块名文字. */
-constexpr int32_t kVertexCapacity = 8192;
+/*
+ * 顶点缓冲容量, 按顶点数计. HUD 常态用量不足一千;
+ * 背包面板一屏要画 55 个格子, 每格含九宫底板, 图标与数量点阵,
+ * 因此预留到三万两千, 保证整包都摆满时也不会截断.
+ */
+constexpr int32_t kVertexCapacity = 32768;
 
 /* 图集为 16x16 格, 每格 64 像素. */
 constexpr float kAtlasGrid = 16.0f;
@@ -93,6 +97,83 @@ constexpr float kCountColor[4] = {1.0f, 1.0f, 1.0f, 0.95f};
 constexpr float kCountEmptyColor[4] = {1.0f, 1.0f, 1.0f, 0.55f};
 /* 数量底板: 深色半透明, 白色数字压在雪块这类亮色图标上也能看清. */
 constexpr float kCountBackdrop[4] = {0.0f, 0.0f, 0.0f, 0.45f};
+
+/*
+ * 背包按钮: 固定在右上角, 面板打开与关闭共用同一个按钮.
+ * 与血条, 跳跃按钮一样只在展示层绘制, 命中判定从同一份几何取值.
+ */
+constexpr float kBagCenterX = 0.93f;
+constexpr float kBagCenterY = 0.064f;
+constexpr float kBagHalfSize = 0.042f;
+
+/*
+ * 背包面板几何, 归一化屏幕坐标, 长度以屏宽为 1.
+ * 自上而下的分区: 标题行, 合成区 (3x3 网格, 产物格与两个按钮), 背包四行,
+ * 提示条与快捷栏. 面板底板覆盖大部分屏幕, 下层 HUD 仍按原样绘制.
+ */
+constexpr float kPanelLeft = 0.035f;
+constexpr float kPanelRight = 0.965f;
+constexpr float kPanelTop = 0.05f;
+constexpr float kPanelBottom = 0.95f;
+
+constexpr float kPanelTitleX = 0.12f;
+constexpr float kPanelTitleY = 0.095f;
+constexpr float kPanelTitlePixel = 0.009f;
+
+constexpr float kPanelCloseX = 0.915f;
+constexpr float kPanelCloseY = 0.095f;
+constexpr float kPanelCloseHalf = 0.034f;
+
+constexpr float kCraftOriginX = 0.13f;
+constexpr float kCraftOriginY = 0.19f;
+constexpr float kCraftPitchX = 0.082f;
+constexpr float kCraftPitchY = 0.082f;
+
+constexpr float kResultX = 0.47f;
+constexpr float kResultY = 0.272f;
+constexpr float kResultHalf = 0.046f;
+
+constexpr float kRecipeButtonX = 0.67f;
+constexpr float kNextButtonY = 0.19f;
+constexpr float kBookButtonY = 0.272f;
+constexpr float kRecipeButtonHalfW = 0.12f;
+constexpr float kRecipeButtonHalfH = 0.030f;
+/* 按钮文字的像素边长, 按住 "NEXT 1/16" 这类最长文案也能放进按钮宽度. */
+constexpr float kRecipeButtonPixel = 0.0042f;
+
+constexpr float kBackpackOriginX = 0.10f;
+constexpr float kBackpackOriginY = 0.47f;
+constexpr float kBackpackPitchX = 0.095f;
+constexpr float kBackpackPitchY = 0.088f;
+constexpr float kHotbarY = 0.865f;
+constexpr float kHintY = 0.79f;
+constexpr float kHintPixel = 0.0050f;
+
+constexpr float kPanelSlotHalf = 0.038f;
+
+/* 面板底板与遮罩配色: 遮罩压暗场景, 底板沿用 HUD 底板色的深色版本. */
+constexpr float kPanelScrim[4] = {0.0f, 0.0f, 0.0f, 0.55f};
+constexpr float kPanelBoard[4] = {0x24 / 255.0f, 0x2C / 255.0f, 0x3C / 255.0f, 1.0f};
+
+/* 首字母占位块配色, 下标与物品类别一一对应, 0 为未分类. */
+constexpr float kToneColors[6][4] = {
+    {0.42f, 0.55f, 0.72f, 1.0f},
+    {0.72f, 0.48f, 0.42f, 1.0f},
+    {0.52f, 0.66f, 0.42f, 1.0f},
+    {0.45f, 0.52f, 0.62f, 1.0f},
+    {0.62f, 0.58f, 0.40f, 1.0f},
+    {0.55f, 0.45f, 0.62f, 1.0f},
+};
+
+/* 有货格子的图标亮度与高亮描边色, 与下方快捷栏的取值保持一致. */
+constexpr float kSlotTintColor[4] = {1.0f, 1.0f, 1.0f, 0.92f};
+constexpr float kSlotBorderColor[4] = {1.0f, 0.92f, 0.55f, 1.0f};
+
+/* 文案配色: 标题与按钮文字用亮白, 提示条用略暗的白. */
+constexpr float kPanelTextColor[4] = {1.0f, 1.0f, 1.0f, 0.96f};
+constexpr float kPanelHintColor[4] = {1.0f, 1.0f, 1.0f, 0.72f};
+constexpr float kPanelButtonColor[4] = {0x3A / 255.0f, 0x62 / 255.0f, 0x9E / 255.0f, 1.0f};
+constexpr float kPanelButtonIdleColor[4] = {0x2E / 255.0f, 0x3A / 255.0f, 0x50 / 255.0f, 1.0f};
 
 const char* const kVertexShader = R"(#version 300 es
 layout(location = 0) in vec2 aPosition;
@@ -462,6 +543,233 @@ void ToUpper(const char* source, char* target, size_t capacity) {
     target[index] = '\0';
 }
 
+/* 设计坐标下的矩形命中判定, 横纵半边长分别给出. */
+bool InsideBox(float x, float y, float centerX, float centerY, float halfWidth, float halfHeight) {
+    return x >= centerX - halfWidth && x <= centerX + halfWidth && y >= centerY - halfHeight &&
+           y <= centerY + halfHeight;
+}
+
+/* 背包面板的几何结果, 绘制与命中判定都从这里取坐标, 两处不再各写一套数字. */
+struct InventoryPanelGeometry {
+    float centerX = 0.0f;
+    float centerY = 0.0f;
+    float halfWidth = 0.0f;
+    float halfHeight = 0.0f;
+    float slotHalf = 0.0f;
+    float craftX[3] = {};
+    float craftY[3] = {};
+    float resultX = 0.0f;
+    float resultY = 0.0f;
+    float resultHalf = 0.0f;
+    float backpackX[9] = {};
+    float backpackY[4] = {};
+    float hotbarX[9] = {};
+    float hotbarY = 0.0f;
+    float closeX = 0.0f;
+    float closeY = 0.0f;
+    float closeHalf = 0.0f;
+    float titleX = 0.0f;
+    float titleY = 0.0f;
+    float nextX = 0.0f;
+    float nextY = 0.0f;
+    float bookX = 0.0f;
+    float bookY = 0.0f;
+    float buttonHalfW = 0.0f;
+    float buttonHalfH = 0.0f;
+    float hintX = 0.0f;
+    float hintY = 0.0f;
+    float bagX = 0.0f;
+    float bagY = 0.0f;
+    float bagHalf = 0.0f;
+};
+
+InventoryPanelGeometry MakeInventoryPanelGeometry(const HudLayout& layout) {
+    InventoryPanelGeometry geometry;
+    geometry.centerX = layout.DesignX((kPanelLeft + kPanelRight) * 0.5f);
+    geometry.centerY = layout.DesignY((kPanelTop + kPanelBottom) * 0.5f);
+    geometry.halfWidth = layout.DesignLength((kPanelRight - kPanelLeft) * 0.5f);
+    geometry.halfHeight = layout.DesignLength((kPanelBottom - kPanelTop) * 0.5f);
+    geometry.slotHalf = layout.DesignLength(kPanelSlotHalf);
+    for (int32_t index = 0; index < 3; ++index) {
+        geometry.craftX[index] = layout.DesignX(kCraftOriginX + static_cast<float>(index) * kCraftPitchX);
+        geometry.craftY[index] = layout.DesignY(kCraftOriginY + static_cast<float>(index) * kCraftPitchY);
+    }
+    geometry.resultX = layout.DesignX(kResultX);
+    geometry.resultY = layout.DesignY(kResultY);
+    geometry.resultHalf = layout.DesignLength(kResultHalf);
+    for (int32_t index = 0; index < 9; ++index) {
+        geometry.backpackX[index] =
+            layout.DesignX(kBackpackOriginX + static_cast<float>(index) * kBackpackPitchX);
+        geometry.hotbarX[index] = geometry.backpackX[index];
+    }
+    for (int32_t row = 0; row < 4; ++row) {
+        geometry.backpackY[row] = layout.DesignY(kBackpackOriginY + static_cast<float>(row) * kBackpackPitchY);
+    }
+    geometry.hotbarY = layout.DesignY(kHotbarY);
+    geometry.closeX = layout.DesignX(kPanelCloseX);
+    geometry.closeY = layout.DesignY(kPanelCloseY);
+    geometry.closeHalf = layout.DesignLength(kPanelCloseHalf);
+    geometry.titleX = layout.DesignX(kPanelTitleX);
+    geometry.titleY = layout.DesignY(kPanelTitleY);
+    geometry.nextX = layout.DesignX(kRecipeButtonX);
+    geometry.nextY = layout.DesignY(kNextButtonY);
+    geometry.bookX = layout.DesignX(kRecipeButtonX);
+    geometry.bookY = layout.DesignY(kBookButtonY);
+    geometry.buttonHalfW = layout.DesignLength(kRecipeButtonHalfW);
+    geometry.buttonHalfH = layout.DesignLength(kRecipeButtonHalfH);
+    geometry.hintX = layout.DesignX(0.5f);
+    geometry.hintY = layout.DesignY(kHintY);
+    geometry.bagX = layout.DesignX(kBagCenterX);
+    geometry.bagY = layout.DesignY(kBagCenterY);
+    geometry.bagHalf = layout.DesignLength(kBagHalfSize);
+    return geometry;
+}
+
+/* 居中对齐的点阵文字, 用于按钮与提示条. */
+void PushCenteredText(float* out, int32_t& offset, float centerX, float centerY, float pixelSize,
+                      const char* text, float scale, const float color[4]) {
+    if (text == nullptr || text[0] == '\0') {
+        return;
+    }
+    const float width = MeasureText(text, pixelSize);
+    const float height = static_cast<float>(kGlyphHeight) * pixelSize;
+    PushText(out, offset, centerX - width * 0.5f, centerY + height * 0.5f, pixelSize, text, scale,
+             color);
+}
+
+/*
+ * 面板单格: 九宫底板, 图标或首字母占位, 右下角数量与高亮描边.
+ * 有图标格子的物品按图集格绘制, 其余物品用类别配色块加首字母占位,
+ * 没有独立图标资源时也能一眼区分物品.
+ */
+void PushInventorySlot(float* out, int32_t& offset, float centerX, float centerY, float half,
+                       float scale, const InventorySlotView& view, float artUnit) {
+    PushNineSlice(out, offset, centerX, centerY, half * 1.05f, half * 1.05f, scale,
+                  gen::UiAssetOf(view.highlight ? gen::UiWidget::SlotItemFrameOn
+                                                : gen::UiWidget::SlotItemFrame),
+                  artUnit, kSolidUv, kHudBoardColor);
+    if (view.hasItem) {
+        if (view.atlasCell >= 0) {
+            PushSprite(out, offset, centerX, centerY, half, scale, view.atlasCell,
+                       view.highlight ? kPanelTextColor : kSlotTintColor);
+        } else {
+            const float tileHalf = half * 0.72f;
+            PushRect(out, offset, centerX, centerY, tileHalf, tileHalf, scale,
+                     kToneColors[view.tone < 6 ? view.tone : 0]);
+            /* 首字母字号按格子高度折算, 五乘七点阵最多占到格高的六成. */
+            const float pixel = half * 0.18f;
+            char label[2] = {view.initial == '\0' ? '?' : view.initial, '\0'};
+            PushCenteredText(out, offset, centerX, centerY, pixel, label, scale, kPanelTextColor);
+        }
+    }
+    if (view.hasItem && view.count > 1) {
+        char countText[8];
+        std::snprintf(countText, sizeof(countText), "%d", view.count);
+        const float countPixel = half * 0.10f;
+        const float countWidth = MeasureText(countText, countPixel);
+        const float countRight = centerX + half * kCountInsetRatio;
+        const float countBottom = centerY - half * kCountInsetRatio;
+        const float countTop = countBottom + static_cast<float>(kGlyphHeight) * countPixel;
+        const float backdropPad = countPixel * 0.5f;
+        PushRect(out, offset, countRight - countWidth * 0.5f, (countBottom + countTop) * 0.5f,
+                 countWidth * 0.5f + backdropPad, (countTop - countBottom) * 0.5f + backdropPad,
+                 scale, kCountBackdrop);
+        PushText(out, offset, countRight - countWidth, countTop, countPixel, countText, scale,
+                 kCountColor);
+    }
+    if (view.highlight) {
+        const float edge = half * 0.07f;
+        PushRect(out, offset, centerX, centerY + half, half, edge, scale, kSlotBorderColor);
+        PushRect(out, offset, centerX, centerY - half, half, edge, scale, kSlotBorderColor);
+        PushRect(out, offset, centerX - half, centerY, edge, half, scale, kSlotBorderColor);
+        PushRect(out, offset, centerX + half, centerY, edge, half, scale, kSlotBorderColor);
+    }
+}
+
+/* 背包面板: 遮罩, 底板, 标题与关闭按钮, 合成区, 背包四行, 快捷栏与提示条. */
+void DrawInventoryPanel(float* out, int32_t& offset, const HudLayout& layout,
+                        const InventoryPanelFrame& frame, float scale) {
+    const InventoryPanelGeometry geometry = MakeInventoryPanelGeometry(layout);
+    const float artUnit = layout.DesignLength(kHudArtPixel);
+
+    /* 遮罩铺满整屏, 让面板之外的场景退到后面. */
+    PushRect(out, offset, 0.0f, 0.0f, layout.DesignLength(0.5f), 1.0f, scale, kPanelScrim);
+
+    PushNineSlice(out, offset, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                  geometry.halfHeight, scale, gen::UiAssetOf(gen::UiWidget::PanelSurfaceBlueLarge),
+                  artUnit, kSolidUv, kPanelBoard);
+
+    const float titlePixel = layout.DesignLength(kPanelTitlePixel);
+    PushText(out, offset, geometry.titleX,
+             geometry.titleY + static_cast<float>(kGlyphHeight) * titlePixel * 0.5f, titlePixel,
+             "BAG", scale, kPanelTextColor);
+
+    /* 关闭按钮: 圆形底板加 X 字, 面板内唯一必然可用的出口. */
+    PushNineSlice(out, offset, geometry.closeX, geometry.closeY, geometry.closeHalf,
+                  geometry.closeHalf, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactOrange),
+                  artUnit, kSolidUv, kPanelButtonColor);
+    PushCenteredText(out, offset, geometry.closeX, geometry.closeY,
+                     layout.DesignLength(0.0075f), "X", scale, kPanelTextColor);
+
+    /* 合成网格 3x3 与产物格. */
+    for (int32_t row = 0; row < 3; ++row) {
+        for (int32_t column = 0; column < 3; ++column) {
+            PushInventorySlot(out, offset, geometry.craftX[column], geometry.craftY[row],
+                              geometry.slotHalf, scale, frame.crafting[row * 3 + column], artUnit);
+        }
+    }
+    PushInventorySlot(out, offset, geometry.resultX, geometry.resultY, geometry.resultHalf, scale,
+                      frame.result, artUnit);
+
+    /* 两个配方按钮: NEXT 轮换候选, AUTO 自动摆出一张可合成配方. */
+    char nextText[16];
+    if (frame.candidateCount > 1) {
+        std::snprintf(nextText, sizeof(nextText), "NEXT %d/%d", frame.candidateIndex,
+                      frame.candidateCount);
+    } else {
+        std::snprintf(nextText, sizeof(nextText), "NEXT");
+    }
+    const float buttonPixel = layout.DesignLength(kRecipeButtonPixel);
+    PushNineSlice(out, offset, geometry.nextX, geometry.nextY, geometry.buttonHalfW,
+                  geometry.buttonHalfH, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactBlue),
+                  artUnit, kSolidUv, kPanelButtonColor);
+    PushCenteredText(out, offset, geometry.nextX, geometry.nextY, buttonPixel, nextText, scale,
+                     kPanelTextColor);
+    PushNineSlice(out, offset, geometry.bookX, geometry.bookY, geometry.buttonHalfW,
+                  geometry.buttonHalfH, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactBlue),
+                  artUnit, kSolidUv, frame.bookAvailable ? kPanelButtonColor : kPanelButtonIdleColor);
+    PushCenteredText(out, offset, geometry.bookX, geometry.bookY, buttonPixel, "AUTO", scale,
+                     kPanelTextColor);
+
+    /* 背包 9 列 4 行, 顺序与物品栏 9 到 44 号槽一致. */
+    for (int32_t row = 0; row < 4; ++row) {
+        for (int32_t column = 0; column < 9; ++column) {
+            PushInventorySlot(out, offset, geometry.backpackX[column], geometry.backpackY[row],
+                              geometry.slotHalf, scale, frame.backpack[row * 9 + column], artUnit);
+        }
+    }
+
+    /* 快捷栏一行, 与屏幕上方的快捷栏内容同源. */
+    for (int32_t column = 0; column < 9; ++column) {
+        PushInventorySlot(out, offset, geometry.hotbarX[column], geometry.hotbarY,
+                          geometry.slotHalf, scale, frame.hotbar[column], artUnit);
+    }
+
+    if (frame.hint != nullptr && frame.hint[0] != '\0') {
+        char hint[48];
+        ToUpper(frame.hint, hint, sizeof(hint));
+        PushCenteredText(out, offset, geometry.hintX, geometry.hintY,
+                         layout.DesignLength(kHintPixel), hint, scale, kPanelHintColor);
+    }
+
+    /* 手指携带中的堆叠画在最后, 保证压在其它格子之上. */
+    if (frame.carriedVisible && frame.carried.hasItem) {
+        const float carryHalf = geometry.slotHalf * 1.15f;
+        PushInventorySlot(out, offset, layout.DesignX(frame.carriedX),
+                          layout.DesignY(frame.carriedY), carryHalf, scale, frame.carried, artUnit);
+    }
+}
+
 }  /* namespace */
 
 HudRenderer::HudRenderer() = default;
@@ -640,9 +948,27 @@ void HudRenderer::Render(const HudFrame& frame) {
         PushNineSlice(vertices, offset, centerX, slotCenterY, slotHalf * 1.05f, slotHalf * 1.05f,
                       scale, gen::UiAssetOf(gen::UiWidget::SlotItemFrame), artUnit, kSolidUv,
                       spent ? kSlotEmptyBoard : kHudBoardColor);
-        PushSprite(vertices, offset, centerX, slotCenterY, slotHalf, scale,
-                   BlockSlotAtlasCell(slot),
-                   spent ? kSlotEmptyTint : (selected ? selectedTint : slotTint));
+        const bool hasItem = frame.slotHasItem[slot];
+        const int32_t iconCell = hasItem ? frame.slotAtlasCell[slot] : -1;
+        const char initial = hasItem ? frame.slotInitial[slot] : '\0';
+        if (!hasItem) {
+            /* 空格只保留底板: 具体是哪种物品已经不在格子里, 不再画图标. */
+        } else if (iconCell >= 0) {
+            PushSprite(vertices, offset, centerX, slotCenterY, slotHalf, scale, iconCell,
+                       spent ? kSlotEmptyTint : (selected ? selectedTint : slotTint));
+        } else if (initial != '\0') {
+            /* 工具与材料没有方块图集格, 用类别色块加首字母占位. */
+            const uint8_t tone = frame.slotTone[slot];
+            PushRect(vertices, offset, centerX, slotCenterY, slotHalf * 0.72f, slotHalf * 0.72f,
+                     scale, kToneColors[tone < 6 ? tone : 0]);
+            const char label[2] = {initial, '\0'};
+            PushCenteredText(vertices, offset, centerX, slotCenterY, slotHalf * 0.18f, label, scale,
+                             spent ? kCountEmptyColor : kPanelTextColor);
+        } else {
+            PushSprite(vertices, offset, centerX, slotCenterY, slotHalf, scale,
+                       BlockSlotAtlasCell(slot),
+                       spent ? kSlotEmptyTint : (selected ? selectedTint : slotTint));
+        }
         if (selected) {
             const float edge = slotHalf * 0.07f;
             PushRect(vertices, offset, centerX, slotCenterY + slotHalf, slotHalf, edge, scale,
@@ -675,7 +1001,8 @@ void HudRenderer::Render(const HudFrame& frame) {
     /* 长按方块栏时在栏位上方显示方块名, 选中状态不因此改变. */
     if (frame.nameSlot >= 0 && frame.nameSlot < kSlotCount) {
         char text[32];
-        ToUpper(BlockSlotName(frame.nameSlot), text, sizeof(text));
+        const char* source = frame.nameText != nullptr ? frame.nameText : BlockSlotName(frame.nameSlot);
+        ToUpper(source, text, sizeof(text));
         const float pixel = layout_.DesignLength(kNamePixelSize);
         const float textWidth = MeasureText(text, pixel);
         const float padding = layout_.DesignLength(kNamePadding);
@@ -691,6 +1018,14 @@ void HudRenderer::Render(const HudFrame& frame) {
                  plateCenterY + static_cast<float>(kGlyphHeight) * pixel * 0.5f, pixel, text,
                  scale, white);
     }
+
+    /* 背包按钮: 右上角常驻, 按下时换成深色底板作为反馈. */
+    const InventoryPanelGeometry bagGeometry = MakeInventoryPanelGeometry(layout_);
+    PushNineSlice(vertices, offset, bagGeometry.bagX, bagGeometry.bagY, bagGeometry.bagHalf,
+                  bagGeometry.bagHalf, scale, gen::UiAssetOf(gen::UiWidget::SlotItemFrame), artUnit,
+                  kSolidUv, frame.bagPressed ? kHudTipsColor : kHudBoardColor);
+    PushCenteredText(vertices, offset, bagGeometry.bagX, bagGeometry.bagY,
+                     bagGeometry.bagHalf * 0.58f, "BAG", scale, kPanelTextColor);
 
     /*
      * 操作提示: 数量耗尽这类反馈画在方块栏正上方, 高度比方块名标签再抬一层,
@@ -713,6 +1048,11 @@ void HudRenderer::Render(const HudFrame& frame) {
         PushText(vertices, offset, -textWidth * 0.5f,
                  plateCenterY + static_cast<float>(kGlyphHeight) * pixel * 0.5f, pixel, text,
                  scale, white);
+    }
+
+    /* 背包面板画在最后, 面板打开时覆盖其它 HUD 元素. */
+    if (frame.inventory != nullptr) {
+        DrawInventoryPanel(vertices, offset, layout_, *frame.inventory, scale);
     }
 
     if (offset == 0) {
@@ -741,6 +1081,93 @@ void HudRenderer::Render(const HudFrame& frame) {
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
+}
+
+bool HudRenderer::HitTestBag(float normalizedX, float normalizedY) const {
+    if (!layout_.Valid()) {
+        return false;
+    }
+    const InventoryPanelGeometry geometry = MakeInventoryPanelGeometry(layout_);
+    const float x = layout_.DesignX(normalizedX);
+    const float y = layout_.DesignY(normalizedY);
+    return InsideBox(x, y, geometry.bagX, geometry.bagY, geometry.bagHalf, geometry.bagHalf);
+}
+
+bool HudRenderer::HitTestInventoryPanel(float normalizedX, float normalizedY) const {
+    if (!layout_.Valid()) {
+        return false;
+    }
+    const InventoryPanelGeometry geometry = MakeInventoryPanelGeometry(layout_);
+    const float x = layout_.DesignX(normalizedX);
+    const float y = layout_.DesignY(normalizedY);
+    return InsideBox(x, y, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                     geometry.halfHeight);
+}
+
+InventoryHit HudRenderer::HitTestInventory(float normalizedX, float normalizedY) const {
+    InventoryHit hit;
+    if (!layout_.Valid()) {
+        return hit;
+    }
+    const InventoryPanelGeometry geometry = MakeInventoryPanelGeometry(layout_);
+    const float x = layout_.DesignX(normalizedX);
+    const float y = layout_.DesignY(normalizedY);
+
+    /* 关闭按钮与两个配方按钮先判, 它们压在底板之上, 与绘制顺序一致. */
+    if (InsideBox(x, y, geometry.closeX, geometry.closeY, geometry.closeHalf,
+                  geometry.closeHalf)) {
+        hit.region = InventoryRegion::kClose;
+        return hit;
+    }
+    if (InsideBox(x, y, geometry.nextX, geometry.nextY, geometry.buttonHalfW,
+                  geometry.buttonHalfH)) {
+        hit.region = InventoryRegion::kNextRecipe;
+        return hit;
+    }
+    if (InsideBox(x, y, geometry.bookX, geometry.bookY, geometry.buttonHalfW,
+                  geometry.buttonHalfH)) {
+        hit.region = InventoryRegion::kBookRecipe;
+        return hit;
+    }
+    for (int32_t row = 0; row < 3; ++row) {
+        for (int32_t column = 0; column < 3; ++column) {
+            if (InsideBox(x, y, geometry.craftX[column], geometry.craftY[row], geometry.slotHalf,
+                          geometry.slotHalf)) {
+                hit.region = InventoryRegion::kCrafting;
+                hit.index = row * 3 + column;
+                return hit;
+            }
+        }
+    }
+    if (InsideBox(x, y, geometry.resultX, geometry.resultY, geometry.resultHalf,
+                  geometry.resultHalf)) {
+        hit.region = InventoryRegion::kResult;
+        hit.index = 0;
+        return hit;
+    }
+    for (int32_t row = 0; row < 4; ++row) {
+        for (int32_t column = 0; column < 9; ++column) {
+            if (InsideBox(x, y, geometry.backpackX[column], geometry.backpackY[row],
+                          geometry.slotHalf, geometry.slotHalf)) {
+                hit.region = InventoryRegion::kBackpack;
+                hit.index = row * 9 + column;
+                return hit;
+            }
+        }
+    }
+    for (int32_t column = 0; column < 9; ++column) {
+        if (InsideBox(x, y, geometry.hotbarX[column], geometry.hotbarY, geometry.slotHalf,
+                      geometry.slotHalf)) {
+            hit.region = InventoryRegion::kHotbar;
+            hit.index = column;
+            return hit;
+        }
+    }
+    if (InsideBox(x, y, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                  geometry.halfHeight)) {
+        hit.region = InventoryRegion::kPanel;
+    }
+    return hit;
 }
 
 }  /* namespace immirror::ui */

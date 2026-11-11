@@ -85,6 +85,15 @@ fi
 # 方块中文名与掉落物只在素材仓库的 blockdef.csv 维护, 构建前生成原生头文件
 "$PYTHON_BIN" "$SCRIPT_DIR/gen_block_data.py"
 
+# ---------------------------------------------------------------- 物品与配方数据表
+# 物品名称, 堆叠上限, 关联方块与合成配方只在素材仓库的 itemdef 与 crafting 表维护,
+# 构建前生成原生头文件; 表内只收录与客户端方块相关的物品与可完整映射的配方
+"$PYTHON_BIN" "$SCRIPT_DIR/gen_item_data.py"
+
+# ---------------------------------------------------------------- 生物数据表
+# 生物名称, 生命, 攻击, 尺寸与感知距离只在素材仓库的 monster 表维护, 构建前生成原生头文件
+"$PYTHON_BIN" "$SCRIPT_DIR/gen_monster_data.py"
+
 printf '原生构建配置\n'
 printf '  源码目录     : %s\n' "$NATIVE_DIR"
 printf '  构建根目录   : %s\n' "$BUILD_ROOT"

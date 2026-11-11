@@ -5,7 +5,10 @@
 #include <string>
 
 #include "audio/audio_engine.h"
+#include "core/vec3.h"
+#include "entity/entity_manager.h"
 #include "game/inventory.h"
+#include "game/item/inventory_screen.h"
 #include "platform/input_state.h"
 #include "ui/hud_renderer.h"
 #include "voxel/block_registry.h"
@@ -34,6 +37,13 @@ class World;
 namespace player {
 class PlayerController;
 }
+
+namespace editor {
+
+/* 编辑器外壳, 由总装在表面就绪时按 Java 侧的请求接管世界与渲染. */
+class EditorShell;
+
+}  /* namespace editor */
 
 namespace game {
 
@@ -79,6 +89,18 @@ private:
     void UpdateHudButtons(platform::InputSnapshot& input, double deltaSeconds);
 
     /*
+     * 背包面板的指针认领与结算. 面板打开时独占全部指针:
+     * 命中面板交给背包界面处理, 点在面板以外则关闭面板并归还合成材料.
+     */
+    void UpdateInventoryPanel(platform::InputSnapshot& input);
+
+    /* 开局物品: 快捷栏每种方块一叠, 背包里放几样常用材料, 方便直接试合成. */
+    void SeedStartingItems();
+
+    /* 选中槽位的物品变化后同步编辑用方块, 物品不可放置时回落到空气. */
+    void RefreshSelectedItem();
+
+    /*
      * 编辑手势: 右半屏按住不松手按硬度累积破坏进度, 轻点放置当前材料,
      * 与摇杆和视角各自独立.
      */
@@ -92,6 +114,21 @@ private:
 
     /* 把这次破坏的掉落物放进物品栏, 堆满或没有对应槽位时只累计丢弃数. */
     void CollectDrop(voxel::BlockId brokenBlock);
+
+    /*
+     * 生物与战斗: 每帧推进生物管理器, 把生物对玩家的伤害转交玩家控制器,
+     * 并把死亡掉落收进物品栏. 实体层不反向依赖玩家层, 两者在这里对接.
+     */
+    void UpdateEntities(double deltaSeconds);
+
+    /* 视线拾取生物并造成一次伤害; 命中返回 true, 未命中时本次手势仍按挖掘与放置走. */
+    bool TryAttackCreature();
+
+    /* 按住攻击时的连续出手结算; 目标消失后回落到挖掘. */
+    void AdvanceHeldAttack(double deltaSeconds);
+
+    /* 把生物死亡掉落的物品放进物品栏. */
+    void CollectCreatureDrops();
 
     /* 用当前选中槽位的方块放置一次; 数量为 0 时拒绝放置并给出提示. */
     bool TryPlaceSelectedBlock();
@@ -111,6 +148,9 @@ private:
 
     /* 设置改动后的视距与音量同步. */
     void SyncViewDistance();
+
+    /* 把视距折算成生物生成半径下发, 视距外没有区块数据, 生成会落空. */
+    void SyncEntitySpawnExtent();
     void SyncAudioSettings();
 
     void LogStatus(double deltaSeconds);
@@ -157,8 +197,24 @@ private:
     int32_t nameSlot_ = -1;
     double nameRemainSeconds_ = 0.0;
 
-    /* 物品栏: 九格数量与方块栏一一对应, 放置时扣减, 破坏掉落入栏. */
+    /* 物品栏: 前九格与快捷栏一一对应, 放置时扣减, 破坏与生物掉落入栏. */
     Inventory inventory_;
+
+    /* 背包界面状态与它的一帧绘制数据, 面板打开时才填充. */
+    InventoryScreen inventoryScreen_;
+    ui::InventoryPanelFrame inventoryFrame_;
+
+    /* 背包按钮持有的指针, 按下期间保持按压反馈. */
+    int32_t bagPointerId_ = -1;
+    bool bagHeld_ = false;
+
+    /* 生物实体管理器, 持有全部生物并负责生成, 休眠, 回收与伤害结算. */
+    entity::EntityManager entities_;
+
+    /* 攻击手势状态: 本次手势是否已转为攻击, 以及是否出手过 (抬手不再放置方块). */
+    bool attackHeld_ = false;
+    bool editAttacked_ = false;
+    double attackAccumulator_ = 0.0;
 
     /* 方块栏提示文本与剩余显示秒数, 空指针表示不显示. */
     const char* tipText_ = nullptr;

@@ -57,6 +57,11 @@ constexpr float kFistDamage = 5.0f;          /* 空手单次伤害 */
 constexpr float kHeldBlockBaseDamage = 3.0f; /* 手持方块的基础伤害 */
 constexpr float kHeldBlockHardnessScale = 1.5f;
 constexpr float kHeldDamageMax = 14.0f;
+/*
+ * 攻击距离超过该值的生物才做视线遮挡判定. 近身生物的贴脸攻击常发生在一格高差上,
+ * 直线采样容易误判成隔墙, 因此近程出手不看遮挡.
+ */
+constexpr float kSightCheckDistance = 3.0f;
 constexpr float kDeathSeconds = 0.6f;   /* 死亡后保留实体的秒数, 留给渲染播死亡 */
 constexpr float kHurtFlashSeconds = 0.25f; /* 生物受击闪白残留秒数 */
 

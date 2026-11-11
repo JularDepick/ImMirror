@@ -5,15 +5,30 @@
 
 namespace immirror::progress {
 
+namespace {
+
+/* 表按原版 ID 升序排列, 这里的查找与表顺序无关, 直接线性扫描. */
+const gen::AchievementData* FindAchievementById(int32_t id) {
+    for (int32_t index = 0; index < gen::kAchievementDataCount; ++index) {
+        if (static_cast<int32_t>(gen::kAchievementData[index].id) == id) {
+            return &gen::kAchievementData[index];
+        }
+    }
+    return nullptr;
+}
+
+}  /* namespace */
+
+
 AchievementTracker::AchievementTracker() {
-    items_.reserve(static_cast<size_t>(gen::kAchievementCount));
-    for (int32_t index = 0; index < gen::kAchievementCount; ++index) {
+    items_.reserve(static_cast<size_t>(gen::kAchievementDataCount));
+    for (int32_t index = 0; index < gen::kAchievementDataCount; ++index) {
         Item item;
-        item.def = &gen::kAchievements[index];
+        item.def = &gen::kAchievementData[index];
         item.progress = 0;
         item.done = false;
         items_.push_back(item);
-        if (item.def->action != static_cast<int32_t>(GoalAction::kNone)) {
+        if (item.def->eventKind != static_cast<int32_t>(GoalAction::kNone)) {
             trackable_.push_back(index);
         }
     }
@@ -35,11 +50,11 @@ void AchievementTracker::Load(const std::vector<ProgressStore::Entry>& entries) 
             continue;
         }
         const int32_t id = static_cast<int32_t>(std::strtol(entry.name.c_str() + 4, nullptr, 10));
-        const gen::AchievementDef* def = gen::FindAchievement(id);
+        const gen::AchievementData* def = FindAchievementById(id);
         if (def == nullptr) {
             continue;
         }
-        const int32_t index = static_cast<int32_t>(def - gen::kAchievements);
+        const int32_t index = static_cast<int32_t>(def - gen::kAchievementData);
         if (index < 0 || index >= static_cast<int32_t>(items_.size())) {
             continue;
         }
@@ -82,7 +97,7 @@ int32_t AchievementTracker::Advance(StatKind stat, int32_t clientBlockId, int64_
             continue;
         }
         const int64_t raw = static_cast<int64_t>(item.progress) + amount;
-        const int64_t capped = std::min<int64_t>(raw, item.def->goalTarget);
+        const int64_t capped = std::min<int64_t>(raw, item.def->target);
         ApplyProgress(item, static_cast<int32_t>(capped));
         if (item.done) {
             ++finished;
@@ -98,10 +113,10 @@ int32_t AchievementTracker::AdvanceOnlineDays(int32_t onlineDays) {
     int32_t finished = 0;
     for (const int32_t index : trackable_) {
         Item& item = items_[static_cast<size_t>(index)];
-        if (item.def->action != static_cast<int32_t>(GoalAction::kOnlineDay) || item.done) {
+        if (item.def->eventKind != static_cast<int32_t>(GoalAction::kOnlineDay) || item.done) {
             continue;
         }
-        const int32_t capped = std::min<int32_t>(onlineDays, item.def->goalTarget);
+        const int32_t capped = std::min<int32_t>(onlineDays, item.def->target);
         ApplyProgress(item, capped);
         if (item.done) {
             ++finished;
@@ -110,31 +125,30 @@ int32_t AchievementTracker::AdvanceOnlineDays(int32_t onlineDays) {
     return finished;
 }
 
-bool AchievementTracker::Matches(const gen::AchievementDef& def, GoalAction action,
+bool AchievementTracker::Matches(const gen::AchievementData& def, GoalAction action,
                                  int32_t clientBlockId) const {
-    if (def.action != static_cast<int32_t>(action)) {
+    if (def.eventKind != static_cast<int32_t>(action)) {
         return false;
     }
     /*
-     * matchBlock 为负表示原版对象 ID 折算不到客户端方块, 此时按同类动作任意方块计数;
-     * 非负时必须命中同一种方块, 与原版"指定对象"的语义一致.
+     * 当前成就表只保存原版对象 ID, 尚未折算到客户端方块 ID, 因此按同类动作
+     * 任意方块计数. 折算表落地后在这里加一层对象到方块 id 的映射即可.
      */
-    if (def.matchBlock < 0) {
-        return true;
-    }
-    return def.matchBlock == clientBlockId;
+    (void)def;
+    (void)clientBlockId;
+    return true;
 }
 
 void AchievementTracker::ApplyProgress(Item& item, int32_t value) {
     if (item.def == nullptr) {
         return;
     }
-    const int32_t clamped = value < 0 ? 0 : std::min(value, item.def->goalTarget);
+    const int32_t clamped = value < 0 ? 0 : std::min(value, item.def->target);
     if (clamped <= item.progress) {
         return;
     }
     item.progress = clamped;
-    if (!item.done && item.progress >= item.def->goalTarget) {
+    if (!item.done && item.progress >= item.def->target) {
         item.done = true;
         ++completed_;
     }

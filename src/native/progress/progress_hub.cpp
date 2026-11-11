@@ -349,13 +349,13 @@ std::string ProgressHub::BuildSnapshotLocked() const {
             continue;
         }
         std::snprintf(buffer, sizeof(buffer), "achievement\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t",
-                      item.def->id, item.progress, item.def->goalTarget, item.done ? 1 : 0,
-                      item.def->action != static_cast<int32_t>(GoalAction::kNone) ? 1 : 0,
-                      item.def->points, item.def->points * kCoinsPerAchievementPoint, item.def->group);
+                      item.def->id, item.progress, item.def->target, item.done ? 1 : 0,
+                      item.def->eventKind != static_cast<int32_t>(GoalAction::kNone) ? 1 : 0,
+                      item.def->point, item.def->point * kCoinsPerAchievementPoint, item.def->category);
         out += buffer;
         out += Sanitize(item.def->name);
         out += '\t';
-        out += Sanitize(item.def->desc);
+        out += Sanitize(item.def->description);
         out += '\n';
     }
 

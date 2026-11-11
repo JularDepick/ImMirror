@@ -39,6 +39,23 @@ enum class PointerRole {
  */
 class PlayerController {
 public:
+    /*
+     * 碰撞盒与视点高度. 生物接触判定, 攻击射线起点与总装的相机都取这一份,
+     * 三处不再各写一套数字.
+     */
+    static constexpr float kHalfWidth = 0.3f;
+    static constexpr float kHeight = 1.8f;
+    static constexpr float kEyeHeight = 1.62f;
+
+    /* 生命值上限, 只用于把当前血量折算成血条比例. */
+    static constexpr float kMaxHealth = 100.0f;
+    /* 受击反馈持续秒数, 总装据此叠加镜头摇晃. */
+    static constexpr float kHurtSeconds = 0.35f;
+    /* 受击后的短暂免伤窗口, 避免多只生物同帧叠加伤害直接击倒玩家. */
+    static constexpr float kHurtCooldown = 0.35f;
+    /* 死亡到回出生点的等待秒数. */
+    static constexpr float kDeathSeconds = 1.5f;
+
     void Spawn(const world::World& world, float x, float z);
 
     /*
@@ -59,6 +76,24 @@ public:
     /* 当前朝向, 读档与存档时需要. */
     float Yaw() const { return yaw_; }
     float Pitch() const { return pitch_; }
+
+    /*
+     * 生命值. 血条按 HealthRatio 取长度, 上限见 kMaxHealth.
+     * 受到伤害后进入受击反馈, 血量归零后等待 kDeathSeconds 再回出生点并回满血.
+     */
+    float Health() const { return health_; }
+    float HealthRatio() const;
+    bool Alive() const { return health_ > 0.0f; }
+    /* 受击反馈剩余秒数, 0 表示没有受击; 供总装叠加镜头摇晃. */
+    float HurtSeconds() const { return hurtSeconds_; }
+    /* 是否处于死亡等待中. */
+    bool Dying() const { return deathSeconds_ > 0.0f; }
+
+    /*
+     * 受到伤害. 伤害非正, 已死亡或仍在免伤窗口内时直接忽略;
+     * 血量归零时清空挖掘进度并进入死亡等待, 由 Update 送回出生点.
+     */
+    void ApplyDamage(float amount);
 
     /* 读档后恢复位置与朝向, 跳过延迟落位. */
     void SetPose(const core::Vec3& position, float yaw, float pitch);
@@ -167,6 +202,9 @@ private:
     /* 逐格上抬直到碰撞盒不再与实心方块重叠, 用于离开被包住的处境. */
     bool LiftOutOfSolid(const world::World& world);
 
+    /* 推进受击反馈与免伤窗口的计时. */
+    void TickHurt(float seconds);
+
     /* 回到出生点并清空运动状态. */
     void Respawn();
 
@@ -193,6 +231,12 @@ private:
     float pitch_ = 0.0f;  /* 俯仰角, 弧度, 正值抬头 */
     bool onGround_ = false;
     bool spawned_ = false;
+
+    /* 生命值状态: 当前血量, 受击反馈计时, 免伤窗口与死亡等待计时. */
+    float health_ = kMaxHealth;
+    float hurtSeconds_ = 0.0f;
+    float hurtCooldown_ = 0.0f;
+    float deathSeconds_ = 0.0f;
     bool spawnPending_ = false;   /* 出生列尚无区块数据, 等待地形生成后落位 */
     float pendingSeconds_ = 0.0f; /* 已等待落位的秒数, 用于超时保护 */
 

@@ -8,8 +8,12 @@
 
 #include "core/log.h"
 #include "core/vec3.h"
+#include "entity/entity_tuning.h"
+#include "game/crafting/recipe_matcher.h"
 #include "game/generated/block_data_gen.h"
 #include "game/inventory.h"
+#include "game/item/inventory_screen.h"
+#include "game/item/item_table.h"
 #include "player/input_tuning.h"
 #include "player/mining_tuning.h"
 #include "player/player_controller.h"
@@ -52,10 +56,10 @@ constexpr double kTipSeconds = 1.6;
 constexpr const char* kTipEmptySlot = "EMPTY SLOT";
 
 /*
- * 物品栏槽位与方块栏共享同一张槽位表, 生成表与方块注册表条目等长;
+ * 物品栏的快捷栏与底部方块栏共享同一张槽位表, 生成表与方块注册表条目等长;
  * 两处不一致时在编译期报错, 避免界面图标、物品栏与数据表三处错位.
  */
-static_assert(Inventory::kSlotCount == ui::kHudSlotCount, "物品栏槽位数与方块栏槽位数不一致");
+static_assert(Inventory::kHotbarSlots == ui::kHudSlotCount, "物品栏快捷栏格数与方块栏格数不一致");
 static_assert(gen::kBlockDataCount == static_cast<int32_t>(voxel::block::Count),
               "方块数据表条目数与方块注册表不一致, 请重新运行 scripts/gen_block_data.py");
 
@@ -193,12 +197,40 @@ GameShell::GameShell()
     viewDistanceChunks_ = settings_->ViewDistanceChunks();
     selectedBlock_ = ui::BlockSlotId(selectedSlot_);
 
-    /* 物品栏按方块栏共享表播种, 开局每种方块 kInitialStack 个. */
-    voxel::BlockId slotBlocks[Inventory::kSlotCount];
-    for (int32_t slot = 0; slot < Inventory::kSlotCount; ++slot) {
-        slotBlocks[slot] = ui::BlockSlotId(slot);
+    /*
+     * 开局物品: 快捷栏按方块栏共享表每种方块一叠, 背包里再放几样常用材料,
+     * 打开背包就能直接试一次合成. 物品表与配方表在首次访问时构造,
+     * 这里顺带跑一遍匹配自检, 无序与有序两条路径都在启动时验证一次.
+     */
+    SeedStartingItems();
+    if (!crafting::RecipeMatcher::RunSelfCheck()) {
+        IM_LOGE(kTag, "crafting self check failed");
     }
-    inventory_.Reset(slotBlocks, Inventory::kSlotCount, 2);  /* TEMP-VERIFY */
+}
+
+void GameShell::SeedStartingItems() {
+    inventory_.Reset();
+    const item::ItemTable& items = item::ItemTable::Instance();
+    for (int32_t slot = 0; slot < Inventory::kHotbarSlots; ++slot) {
+        const item::ItemId id = items.OfBlock(ui::BlockSlotId(slot));
+        if (id != item::kNone) {
+            inventory_.Add(id, Inventory::kMaxStack);
+        }
+    }
+    /* 背包起步材料: 果木与木板可以直接做工具, 木棍是多数工具的第二材料. */
+    inventory_.Add(items.OfBlock(voxel::block::Planks), 32);
+    inventory_.Add(items.OfBlock(voxel::block::Wood), 16);
+    const item::ItemId stick = items.FindByKey("WoodBar");
+    if (stick != item::kNone) {
+        inventory_.Add(stick, 16);
+    }
+    IM_LOGI(kTag, "starting items seeded, used=%d slots discarded=%d", inventory_.UsedSlots(),
+            inventory_.Discarded());
+}
+
+void GameShell::RefreshSelectedItem() {
+    const item::ItemId id = inventory_.ItemAt(selectedSlot_);
+    selectedBlock_ = item::ItemTable::Instance().BlockOf(id);
 }
 
 GameShell::~GameShell() = default;
@@ -235,6 +267,12 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         player_->Spawn(*world_, 8.0f, 8.0f);
     }
     world_->Update(player_->Position(), viewDistanceChunks_);
+    /*
+     * 生物不进存档: 每次进入世界都从生物表重新播种生成,
+     * 因此读档与新建世界走同一条复位路径.
+     */
+    entities_.Reset(kWorldSeed);
+    SyncEntitySpawnExtent();
     hud_.SetViewport(width_, height_);
     hud_.Initialize(renderer_->AtlasTexture());
     IM_LOGI(kTag, "game shell ready, chunks=%d fov=%.0f", world_->LoadedChunkCount(),
@@ -259,8 +297,13 @@ void GameShell::ResetInputState() {
     editDownSeconds_ = 0.0;
     tipText_ = nullptr;
     tipRemainSeconds_ = 0.0;
-    /* 表面重建会丢弃旧指针, 挖掘进度一并作废, 不带进新画面. */
+    bagPointerId_ = -1;
+    bagHeld_ = false;
+    /* 表面重建会丢弃旧指针, 挖掘进度与攻击手势一并作废, 不带进新画面. */
     player_->CancelMining();
+    attackHeld_ = false;
+    editAttacked_ = false;
+    attackAccumulator_ = 0.0;
 }
 
 void GameShell::PrepareSavePath(const char* dataPath) {
@@ -293,6 +336,9 @@ void GameShell::OnSurfaceLost() {
         return;
     }
     SaveWorld();
+    /* 面板关闭并把合成网格与携带中的堆叠退回物品栏, 避免退出时丢材料. */
+    inventoryScreen_.ReturnAllToInventory(inventory_);
+    inventoryScreen_.Reset();
     hud_.Shutdown();
     renderer_->Shutdown();
     surfaceReady_ = false;
@@ -342,13 +388,24 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     world_->Update(position, viewDistanceChunks_);
 
     /*
-     * 顺序固定: 先让界面按钮认领指针, 认领过的指针不再参与摇杆与视角分配;
-     * 再推进玩家, 最后结算编辑手势. 指针位图在帧末更新, 供下一帧识别新按下.
+     * 顺序固定: 先让界面认领指针, 认领过的指针不再参与摇杆与视角分配.
+     * 背包面板打开时独占全部指针, 移动, 挖掘与放置整体暂停;
+     * 面板关闭时按原顺序推进玩家与编辑手势. 指针位图在帧末更新.
      */
-    UpdateHudButtons(lastInput_, deltaSeconds);
-    MaybeRequestAutoJump();
-    player_->Update(deltaSeconds, lastInput_, *world_);
-    UpdateEditGesture(lastInput_, deltaSeconds);
+    if (inventoryScreen_.Open()) {
+        if (player_->Mining()) {
+            player_->CancelMining();
+        }
+        UpdateInventoryPanel(lastInput_);
+    } else {
+        UpdateHudButtons(lastInput_, deltaSeconds);
+        MaybeRequestAutoJump();
+        player_->Update(deltaSeconds, lastInput_, *world_);
+        UpdateEditGesture(lastInput_, deltaSeconds);
+    }
+    RefreshSelectedItem();
+    /* 生物在玩家之后推进: 位置与朝向都取本帧最新的玩家状态. */
+    UpdateEntities(deltaSeconds);
     UpdateNamePlate(deltaSeconds);
     UpdateTip(deltaSeconds);
     LogStatus(deltaSeconds);
@@ -399,6 +456,9 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
     if (platform::PointerState* held = input.FindMutable(slotPointerId_)) {
         held->uiClaimed = true;
     }
+    if (platform::PointerState* held = input.FindMutable(bagPointerId_)) {
+        held->uiClaimed = true;
+    }
 
     /* 新按下的指针先经过界面命中判定, 命中即由界面认领并当场触发动作. */
     if (pressed != 0ull) {
@@ -414,6 +474,14 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
                 player_->RequestJump();
                 IM_LOGI(kTag, "hud jump pressed pointer=%d at %.3f,%.3f", pointer.id,
                         static_cast<double>(pointer.x), static_cast<double>(pointer.y));
+                continue;
+            }
+            /* 背包按钮: 点一下打开面板, 关闭由面板内的关闭按钮或点面板以外完成. */
+            if (hud_.HitTestBag(pointer.x, pointer.y)) {
+                pointer.uiClaimed = true;
+                bagPointerId_ = pointer.id;
+                bagHeld_ = true;
+                inventoryScreen_.SetOpen(true, inventory_);
                 continue;
             }
             const int32_t slot = hud_.HitTestSlot(pointer.x, pointer.y);
@@ -457,6 +525,54 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
         jumpPointerId_ = -1;
         jumpHeld_ = false;
     }
+
+    if (bagPointerId_ >= 0 && (released & BitOf(bagPointerId_)) != 0ull) {
+        bagPointerId_ = -1;
+        bagHeld_ = false;
+    }
+}
+
+/*
+ * 背包面板的指针结算. 面板打开期间所有手指都归面板:
+ * 命中面板交给背包界面处理, 点在面板以外则关闭面板并把合成材料退回物品栏;
+ * 无论哪种情况都标记认领, 避免同一次点击又落到挖掘或放置上.
+ */
+void GameShell::UpdateInventoryPanel(platform::InputSnapshot& input) {
+    const uint64_t pressed = input.downMask & ~previousDownMask_;
+
+    for (int32_t index = 0; index < platform::kMaxPointers; ++index) {
+        platform::PointerState& pointer = input.pointers[index];
+        if (pointer.down) {
+            pointer.uiClaimed = true;
+        }
+    }
+
+    if (pressed != 0ull) {
+        for (int32_t index = 0; index < platform::kMaxPointers; ++index) {
+            platform::PointerState& pointer = input.pointers[index];
+            if (!pointer.down || (pressed & BitOf(pointer.id)) == 0ull) {
+                continue;
+            }
+            const ui::InventoryHit hit = hud_.HitTestInventory(pointer.x, pointer.y);
+            if (hit.region == ui::InventoryRegion::kNone) {
+                inventoryScreen_.SetOpen(false, inventory_);
+                continue;
+            }
+            inventoryScreen_.SetCarryPosition(pointer.x, pointer.y);
+            inventoryScreen_.HandlePress(hit, inventory_);
+        }
+    }
+
+    /* 携带中的堆叠跟随当前按住的手指, 一眼看出手上拿的是哪一格的东西. */
+    if (inventoryScreen_.Carrying()) {
+        for (int32_t index = 0; index < platform::kMaxPointers; ++index) {
+            const platform::PointerState& pointer = input.pointers[index];
+            if (pointer.down) {
+                inventoryScreen_.SetCarryPosition(pointer.x, pointer.y);
+                break;
+            }
+        }
+    }
 }
 
 /*
@@ -465,6 +581,17 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
  * 进度从按下那一刻开始累计, 抬手即清零, 与原版"按住挖掘, 松手作废"的语义一致.
  */
 void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSeconds) {
+    /* 死亡等待期间不响应挖掘与攻击, 避免倒下的瞬间还在改动世界. */
+    if (player_->Dying()) {
+        if (editPointerId_ >= 0) {
+            player_->CancelMining();
+            editPointerId_ = -1;
+        }
+        attackHeld_ = false;
+        editAttacked_ = false;
+        return;
+    }
+
     const uint64_t pressed = input.downMask & ~previousDownMask_;
     const uint64_t released = previousDownMask_ & ~input.downMask;
 
@@ -484,7 +611,18 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
             editLastX_ = pointer.x;
             editLastY_ = pointer.y;
             editDownSeconds_ = elapsedSeconds_;
-            BeginEditMining();
+            attackAccumulator_ = 0.0;
+            editAttacked_ = false;
+            /*
+             * 视线先判定生物: 命中即转为攻击, 本次手势不再进入挖掘与放置;
+             * 未命中时保持原来的按住挖掘与抬手放置语义.
+             */
+            attackHeld_ = TryAttackCreature();
+            if (attackHeld_) {
+                editAttacked_ = true;
+            } else {
+                BeginEditMining();
+            }
             break;
         }
     }
@@ -497,6 +635,11 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
     if (pointer != nullptr) {
         editLastX_ = pointer->x;
         editLastY_ = pointer->y;
+        if (attackHeld_) {
+            /* 按住攻击: 按固定间隔连续出手, 目标消失后回落到挖掘. */
+            AdvanceHeldAttack(deltaSeconds);
+            return;
+        }
         /* 按住期间逐帧推进进度, 挖满当场破坏. */
         AdvanceEditMining(deltaSeconds);
         return;
@@ -504,6 +647,8 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
     if ((released & BitOf(editPointerId_)) == 0ull) {
         /* 指针既不在按下集合也不在释放集合: 帧内被取消, 结束这次手势. */
         player_->CancelMining();
+        attackHeld_ = false;
+        editAttacked_ = false;
         editPointerId_ = -1;
         return;
     }
@@ -514,7 +659,11 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
     const float movedY = editLastY_ - editDownY_;
     const float moved = std::sqrt(movedX * movedX + movedY * movedY);
     player_->CancelMining();
-    if (held < player::mining::kTapSeconds && moved < kTapMoveLimit) {
+    const bool attacked = editAttacked_;
+    attackHeld_ = false;
+    editAttacked_ = false;
+    /* 本次手势出手过就不再放置方块: 攻击与放置互斥, 避免同一次点击两件事都做. */
+    if (!attacked && held < player::mining::kTapSeconds && moved < kTapMoveLimit) {
         /* 轻点放置: 使用方块栏当前选中的材料, 成功放置才扣减数量. */
         if (TryPlaceSelectedBlock()) {
             PlayHarvestSound(selectedBlock_, true);
@@ -564,39 +713,143 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
     BeginEditMining();
 }
 
+/*
+ * 生物与战斗. 玩家攻击走视线拾取: 视点沿视线方向的 kPlayerReach 内最近的生物
+ * 受一次伤害. 伤害按手持物换算: 空手取拳击伤害, 手持方块按方块硬度加成并封顶,
+ * 换算关系集中在 entity_tuning.h, 后续接入武器物品只改那一处.
+ */
+bool GameShell::TryAttackCreature() {
+    const core::Vec3 feet = player_->Position();
+    const core::Vec3 eye{feet.x, feet.y + kEyeHeight, feet.z};
+    float distance = 0.0f;
+    const entity::Entity* target =
+        entities_.PickRay(eye, player_->LookDirection(), entity::tuning::kPlayerReach, distance);
+    if (target == nullptr) {
+        return false;
+    }
+    /* 手持物取快捷栏当前格: 空手按拳击, 手持方块按该方块的硬度加成. */
+    const ItemId heldItem = inventory_.ItemAt(selectedSlot_);
+    const bool holding = heldItem != item::kNone;
+    const voxel::BlockId heldBlock = item::ItemTable::Instance().BlockOf(heldItem);
+    const float hardness = voxel::BlockRegistry::Instance().Info(heldBlock).hardness;
+    const float damage = entity::tuning::HeldAttackDamage(holding, hardness);
+    const bool killed = entities_.Damage(target->Id(), damage);
+    IM_LOGI(kTag, "attack creature id=%u damage=%.1f distance=%.2f killed=%d held=%d",
+            static_cast<uint32_t>(target->Id()), static_cast<double>(damage),
+            static_cast<double>(distance), killed ? 1 : 0, holding ? 1 : 0);
+    return true;
+}
+
+void GameShell::AdvanceHeldAttack(double deltaSeconds) {
+    attackAccumulator_ += deltaSeconds;
+    if (attackAccumulator_ < entity::tuning::kAttackHoldInterval) {
+        return;
+    }
+    attackAccumulator_ = 0.0;
+    if (TryAttackCreature()) {
+        editAttacked_ = true;
+        return;
+    }
+    /* 目标死亡或走出视线: 本次手势回落到挖掘, 按住继续挖的原有手感不变. */
+    attackHeld_ = false;
+    BeginEditMining();
+}
+
+void GameShell::UpdateEntities(double deltaSeconds) {
+    entity::PlayerProbe probe;
+    probe.feet = player_->Position();
+    probe.halfWidth = player::PlayerController::kHalfWidth;
+    probe.height = player::PlayerController::kHeight;
+    probe.alive = player_->Alive();
+
+    const entity::EntityFrameStats stats = entities_.Update(deltaSeconds, *world_, probe);
+
+    /* 生物伤害汇总后一次性施加, 玩家控制器内部完成免伤窗口与死亡判定. */
+    if (stats.playerDamage > 0.0f) {
+        player_->ApplyDamage(stats.playerDamage);
+        IM_LOGI(kTag, "player damaged by creature amount=%.1f health=%.1f",
+                static_cast<double>(stats.playerDamage),
+                static_cast<double>(player_->Health()));
+    }
+    CollectCreatureDrops();
+    if (stats.spawned > 0 || stats.deaths > 0 || stats.despawned > 0) {
+        IM_LOGD(kTag, "entities spawned=%d deaths=%d despawned=%d alive=%d awake=%d",
+                stats.spawned, stats.deaths, stats.despawned, entities_.Count(),
+                entities_.AwakeCount());
+    }
+}
+
+void GameShell::CollectCreatureDrops() {
+    const item::ItemTable& items = item::ItemTable::Instance();
+    for (const entity::EntityDrop& drop : entities_.TakeDrops()) {
+        /* 生物掉落按方块折算, 再走物品表折算成物品 id, 物品栏只认物品 id. */
+        const ItemId itemId = items.OfBlock(drop.block);
+        const char* name = voxel::BlockRegistry::Instance().Info(drop.block).name;
+        if (itemId == item::kNone) {
+            IM_LOGW(kTag, "creature drop has no item, block=%s", name);
+            continue;
+        }
+        const int32_t added = inventory_.Add(itemId, drop.count);
+        if (added > 0) {
+            IM_LOGI(kTag, "creature drop collected block=%s item=%u count=%d", name,
+                    static_cast<uint32_t>(itemId), added);
+        }
+        if (added < drop.count) {
+            IM_LOGW(kTag, "inventory full, creature drop discarded block=%s want=%d added=%d",
+                    name, drop.count, added);
+        }
+    }
+}
+
 void GameShell::CollectDrop(voxel::BlockId brokenBlock) {
-    const voxel::BlockId drop = static_cast<voxel::BlockId>(gen::DropBlockOf(brokenBlock));
-    if (drop == voxel::block::Air) {
+    /* 方块掉落规则在物品表里统一折算: 方块 -> 掉落方块 -> 掉落物品, 只此一份. */
+    const item::ItemTable& items = item::ItemTable::Instance();
+    const item::ItemId dropItem = items.DropOfBlock(brokenBlock);
+    if (dropItem == item::kNone) {
         IM_LOGI(kTag, "block has no drop, block=%u", static_cast<uint32_t>(brokenBlock));
         return;
     }
-    const int32_t slot = inventory_.SlotOf(drop);
-    const char* name = voxel::BlockRegistry::Instance().Info(drop).name;
     const char* sourceName = voxel::BlockRegistry::Instance().Info(brokenBlock).name;
-    if (inventory_.Add(drop, 1)) {
-        IM_LOGI(kTag, "drop collected from=%s drop=%s slot=%d count=%d", sourceName, name, slot,
+    const char* name = items.Info(dropItem).key;
+    const int32_t slot = inventory_.SlotOf(dropItem);
+    const int32_t added = inventory_.Add(dropItem, 1);
+    if (added == 1) {
+        IM_LOGI(kTag, "drop collected from=%s item=%s slot=%d count=%d", sourceName, name, slot,
                 inventory_.Count(slot));
         return;
     }
-    /* 槽位堆满或没有对应槽位时丢弃, 只累计数量并写警告, 不影响破坏本身. */
-    IM_LOGW(kTag, "inventory full, drop discarded drop=%s slot=%d discarded=%d", name, slot,
+    /* 槽位堆满时丢弃, 只累计数量并写警告, 不影响破坏本身. */
+    IM_LOGW(kTag, "inventory full, drop discarded item=%s slot=%d discarded=%d", name, slot,
             inventory_.Discarded());
+    ShowTip("BAG FULL");
 }
 
 bool GameShell::TryPlaceSelectedBlock() {
-    if (inventory_.Empty(selectedSlot_)) {
+    const item::ItemTable& items = item::ItemTable::Instance();
+    const item::ItemStack stack = inventory_.Slot(selectedSlot_);
+    if (stack.Empty()) {
         /* 数量为 0 时拒绝放置, 只给提示, 不改动世界与数量. */
         ShowTip(kTipEmptySlot);
-        IM_LOGW(kTag, "place rejected, slot=%d block=%s count=0", selectedSlot_,
-                ui::BlockSlotName(selectedSlot_));
+        IM_LOGW(kTag, "place rejected, slot=%d count=0", selectedSlot_);
         return false;
     }
-    if (!player_->PlaceBlock(*world_, selectedBlock_)) {
+    /*
+     * 只有关联方块的物品才能放置: 工具与材料在快捷栏里同样可以选中,
+     * 这时不消耗物品, 只给出提示.
+     */
+    const voxel::BlockId block = items.BlockOf(stack.item);
+    if (block == voxel::block::Air) {
+        ShowTip("NOT A BLOCK");
+        IM_LOGD(kTag, "place rejected, item=%s has no block", items.Info(stack.item).key);
+        return false;
+    }
+    if (!player_->PlaceBlock(*world_, block)) {
         return false;
     }
     inventory_.Consume(selectedSlot_, 1);
-    IM_LOGI(kTag, "block placed slot=%d block=%s remain=%d", selectedSlot_,
-            ui::BlockSlotName(selectedSlot_), inventory_.Count(selectedSlot_));
+    IM_LOGI(kTag, "block placed slot=%d item=%s block=%s remain=%d", selectedSlot_,
+            items.Info(stack.item).key, voxel::BlockRegistry::Instance().Info(block).name,
+            inventory_.Count(selectedSlot_));
     return true;
 }
 
@@ -660,9 +913,10 @@ void GameShell::SelectSlot(int32_t slot) {
         return;
     }
     selectedSlot_ = slot;
-    selectedBlock_ = ui::BlockSlotId(slot);
-    IM_LOGI(kTag, "block slot %d selected, name=%s id=%u", slot, ui::BlockSlotName(slot),
-            static_cast<uint32_t>(selectedBlock_));
+    RefreshSelectedItem();
+    const item::ItemTable& items = item::ItemTable::Instance();
+    IM_LOGI(kTag, "hotbar slot %d selected, item=%s block=%u", slot,
+            items.Info(inventory_.ItemAt(slot)).key, static_cast<uint32_t>(selectedBlock_));
 }
 
 void GameShell::SyncViewDistance() {
@@ -671,7 +925,18 @@ void GameShell::SyncViewDistance() {
         return;
     }
     viewDistanceChunks_ = wanted;
+    SyncEntitySpawnExtent();
     IM_LOGI(kTag, "view distance changed to %d chunk columns", wanted);
+}
+
+void GameShell::SyncEntitySpawnExtent() {
+    /*
+     * 生成半径取视距覆盖的米数并留出一列的余量, 保证采样列已经有区块数据;
+     * 具体上下限由实体管理器再裁剪一次.
+     */
+    const float meters = static_cast<float>(viewDistanceChunks_) *
+                         static_cast<float>(voxel::kChunkSizeX);
+    entities_.SetSpawnExtent(meters - 6.0f);
 }
 
 void GameShell::SyncAudioSettings() {
@@ -711,8 +976,8 @@ void GameShell::RenderScene() {
     float camera[3] = {position.x, position.y + kEyeHeight, position.z};
 
     /*
-     * 镜头摇晃. 原版由受击等事件触发, 现阶段没有伤害事件,
-     * 先按移动强度做轻微摆动占位, 关闭设置时相机完全静止.
+     * 镜头摇晃. 移动强度给一层轻微摆动, 受击时再叠一层快速衰减的抖动,
+     * 与血条下降一起构成受伤反馈; 关闭设置时相机完全静止.
      */
     if (settings_->CameraShake()) {
         const platform::StickVisual motionSource = player_->GetStickVisual();
@@ -724,6 +989,14 @@ void GameShell::RenderScene() {
             const float amplitude = settings::tuning::kCameraShakeAmplitude * motion;
             camera[0] += std::sin(phase) * amplitude;
             camera[1] += std::sin(phase * 2.0f) * amplitude * 0.5f;
+        }
+        const float hurt = player_->HurtSeconds();
+        if (hurt > 0.0f) {
+            const float strength = hurt / player::PlayerController::kHurtSeconds;
+            const float phase = static_cast<float>(elapsedSeconds_) * 57.0f;
+            const float amplitude = settings::tuning::kCameraShakeAmplitude * 2.5f * strength;
+            camera[0] += std::sin(phase) * amplitude;
+            camera[1] += std::cos(phase * 1.7f) * amplitude * 0.7f;
         }
     }
 
@@ -745,11 +1018,38 @@ void GameShell::RenderScene() {
     frame.stick = player_->GetStickVisual();
     frame.jumpPressed = jumpHeld_;
     frame.nameSlot = nameSlot_;
-    /* 数量取自物品栏, 与方块栏共享槽位顺序; 提示只在有效期内显示. */
+    /* 血条取真实血量比例; 死亡等待期间为 0, 重生后回满. */
+    frame.health = player_->HealthRatio();
+    /*
+     * 快捷栏每格的数量, 图标与首字母都取自物品栏, 与背包面板同源:
+     * 关联方块的物品用图集格, 工具与材料用类别色块加首字母占位.
+     */
+    const item::ItemTable& items = item::ItemTable::Instance();
     for (int32_t slot = 0; slot < ui::kHudSlotCount; ++slot) {
-        frame.slotCounts[slot] = inventory_.Count(slot);
+        const item::ItemStack stack = inventory_.Slot(slot);
+        frame.slotCounts[slot] = stack.count;
+        frame.slotHasItem[slot] = !stack.Empty();
+        frame.slotAtlasCell[slot] = stack.Empty() ? -1 : items.AtlasCellOf(stack.item);
+        frame.slotInitial[slot] = 0;
+        frame.slotTone[slot] = 0;
+        if (!stack.Empty() && frame.slotAtlasCell[slot] < 0) {
+            frame.slotInitial[slot] = items.Initial(stack.item);
+            frame.slotTone[slot] = static_cast<uint8_t>(items.Info(stack.item).category);
+        }
     }
+    /* 长按显示的标签用物品英文键, 空格槽位回落到方块栏共享表. */
+    if (nameSlot_ >= 0 && nameSlot_ < ui::kHudSlotCount) {
+        const item::ItemStack named = inventory_.Slot(nameSlot_);
+        frame.nameText = named.Empty() ? nullptr : items.Info(named.item).key;
+    }
+    frame.bagPressed = bagHeld_;
     frame.tipText = tipText_;
+
+    /* 背包面板打开时才组装它的绘制数据, 关闭时界面层拿不到面板指针. */
+    if (inventoryScreen_.Open()) {
+        inventoryScreen_.BuildFrame(inventory_, inventoryFrame_);
+        frame.inventory = &inventoryFrame_;
+    }
     /*
      * 破坏进度只在按住超过轻点窗口后显示: 轻点放置时进度虽然累计了几帧,
      * 但不会闪出一个进度环; 进度归零时界面层不绘制.
@@ -783,7 +1083,8 @@ void GameShell::LogStatus(double deltaSeconds) {
      */
     IM_LOGI(kTag,
             "world chunks=%d visible=%d drawn=%d triangles=%d pos=%.2f,%.2f,%.2f yaw=%.1f pitch=%.1f "
-            "view_distance=%d look=%.1f vol=%d autojump=%d mode=%s pointers=%d stick=%.2f,%.2f",
+            "view_distance=%d look=%.1f vol=%d autojump=%d mode=%s pointers=%d stick=%.2f,%.2f "
+            "mobs=%d awake=%d hp=%.0f bag=%d/%d bag_open=%d discard=%d",
             world_->LoadedChunkCount(), static_cast<int>(world_->VisibleChunks().size()),
             renderer_->DrawnChunks(), renderer_->DrawnTriangles(), position.x, position.y, position.z,
             player_->Yaw() * 57.29578f, player_->Pitch() * 57.29578f, viewDistanceChunks_,
@@ -791,7 +1092,9 @@ void GameShell::LogStatus(double deltaSeconds) {
             settings_->AutoJump() ? 1 : 0,
             settings_->ClassicalMoveMode() ? "classical" : "rocker",
             lastInput_.pointerCount, static_cast<double>(stick.valueX),
-            static_cast<double>(stick.valueY));
+            static_cast<double>(stick.valueY), entities_.Count(), entities_.AwakeCount(),
+            static_cast<double>(player_->Health()), inventory_.UsedSlots(),
+            Inventory::kSlotCount, inventoryScreen_.Open() ? 1 : 0, inventory_.Discarded());
 }
 
 }  /* namespace immirror::game */

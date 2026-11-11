@@ -9,6 +9,8 @@
 
 namespace immirror::game {
 
+using item::ItemStack;
+
 class Inventory;
 
 /*

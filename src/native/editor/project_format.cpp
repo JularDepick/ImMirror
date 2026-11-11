@@ -31,7 +31,6 @@ constexpr const char* kChunkHeader = "# immirror.chunk 1";
 constexpr const char* kProjectFileName = "project.json";
 constexpr const char* kChunksDirName = "chunks";
 constexpr const char* kTriggersDirName = "triggers";
-constexpr const char* kExportDirName = "export";
 
 /* 游程文本每行写入的游程个数, 控制单行长度便于阅读与比对. */
 constexpr int32_t kRunsPerLine = 12;

@@ -1,6 +1,7 @@
 #include "editor/editor_types.h"
 
 #include "editor/generated/editor_data_gen.h"
+#include "voxel/block_registry.h"
 
 namespace immirror::editor {
 

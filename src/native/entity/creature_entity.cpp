@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "entity/entity_tuning.h"
+#include "voxel/block_registry.h"
 #include "world/world.h"
 
 namespace immirror::entity {
@@ -10,6 +11,36 @@ namespace {
 
 constexpr float kPi = 3.14159265358979f;
 constexpr float kTwoPi = 2.0f * kPi;
+
+/* 视线采样的步长, 米. 只判定实心方块, 水与空气不影响视线. */
+constexpr float kSightStep = 0.5f;
+
+int32_t FloorToInt(float value) {
+    return static_cast<int32_t>(std::floor(value));
+}
+
+/*
+ * 两点之间是否没有实心方块遮挡. 远程生物的接触距离可以到十余米,
+ * 不做遮挡判定就会隔墙命中, 因此出手前按半米步长采样一次.
+ */
+bool HasLineOfSight(const world::World& world, const core::Vec3& from, const core::Vec3& to) {
+    const core::Vec3 delta = to - from;
+    const float length = delta.Length();
+    if (length < 1.0e-4f) {
+        return true;
+    }
+    const int32_t steps = static_cast<int32_t>(length / kSightStep) + 1;
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    for (int32_t step = 1; step < steps; ++step) {
+        const float ratio = static_cast<float>(step) / static_cast<float>(steps);
+        const core::Vec3 point = from + delta * ratio;
+        if (registry.Info(world.GetBlock(FloorToInt(point.x), FloorToInt(point.y),
+                                         FloorToInt(point.z))).solid) {
+            return false;
+        }
+    }
+    return true;
+}
 
 /* 角度回绕到正负 pi, 长时间转动不会累积浮点误差. */
 float WrapAngle(float angle) {
@@ -154,9 +185,18 @@ CreatureTick CreatureEntity::Update(double dt, const world::World& world,
 
     /* 攻击: 命中距离内按生物表的间隔出手, 伤害交给总装施加到玩家身上. */
     if (state_ == CreatureState::kAttack && inContact && attackCooldown_ <= 0.0f) {
-        attackCooldown_ = def_->attackInterval;
-        tick.playerDamage = def_->attack;
-        FaceDirection(toPlayer, 1.0f);
+        const core::Vec3 monsterEye{body_.position.x, body_.position.y + body_.height * 0.9f,
+                                    body_.position.z};
+        const core::Vec3 playerEye{player.feet.x, player.feet.y + player.height * 0.9f,
+                                   player.feet.z};
+        /* 远程生物隔墙不得命中; 近身攻击不做遮挡判定, 避免一格高差下打空. */
+        const bool sightOk = def_->attackDistance <= tuning::kSightCheckDistance ||
+                             HasLineOfSight(world, monsterEye, playerEye);
+        if (sightOk) {
+            attackCooldown_ = def_->attackInterval;
+            tick.playerDamage = def_->attack;
+            FaceDirection(toPlayer, 1.0f);
+        }
     }
     return tick;
 }
