@@ -87,7 +87,7 @@ public final class ProgressRowView extends LinearLayout {
         progressParams.leftMargin = AccountTheme.dp(context, 8f);
         footerRow.addView(progressView, progressParams);
 
-        actionButton = AccountTheme.outlineButton(context, ProgressText.ACTION_CLAIM,
+        actionButton = AccountTheme.outlineButton(context, ProgressText.REFRESH,
                 AccountTheme.COLOR_ACCENT);
         actionButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, AccountTheme.TEXT_SIZE_SUB);
         actionButton.setSingleLine(true);
@@ -122,7 +122,7 @@ public final class ProgressRowView extends LinearLayout {
         int safeTarget = Math.max(target, 1);
         int safeProgress = Math.max(0, Math.min(progress, safeTarget));
         barView.setFinished(completed);
-        barView.setRatio((float) safeProgress / (float) safeTarget);
+        barView.setProgress((float) safeProgress / (float) safeTarget, completed);
         progressView.setText(ProgressText.progressOf(safeProgress, safeTarget, ""));
 
         if (actionText == null || actionText.isEmpty()) {

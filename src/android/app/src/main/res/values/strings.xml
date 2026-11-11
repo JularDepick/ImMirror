@@ -96,4 +96,7 @@
     <string name="account_error_network">网络连接失败, 请检查服务端地址与网络</string>
     <string name="account_error_protocol">服务端返回异常响应, 请检查服务端地址</string>
     <string name="account_error_unknown">请求失败, 请稍后再试</string>
+    <string name="inventory_title">背包</string>
+    <string name="editor_title">工程编辑器</string>
+    <string name="progress_title">成就与任务</string>
 </resources>

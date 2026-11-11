@@ -40,6 +40,31 @@ public final class ProgressText {
     public static final String NOTICE_SESSION = "登录已失效, 请重新登录";
     public static final String NOTICE_REFRESHED = "成就与任务已刷新";
 
+    public static final String ACTION_REFRESH = REFRESH;
+    public static final String NOTICE_LOADING = LOADING;
+
+    public static String progressOf(int value, int target, String unit) {
+        return String.format(PROGRESS_FORMAT, value, target, unit);
+    }
+
+    private static final String[] CATEGORY_NAMES = {"", "新手", "主线", "生产", "战斗", "其他", "极限"};
+
+    public static String categoryName(int category) {
+        if (category < 1 || category >= CATEGORY_NAMES.length) {
+            return "其他";
+        }
+        return CATEGORY_NAMES[category];
+    }
+
+    private static final String[] KIND_TITLES = {"破坏方块", "放置方块", "采集物品", "行走距离", "在线时长", "签到", "在线天数"};
+
+    public static String kindTitle(int kind) {
+        if (kind < 1 || kind > KIND_TITLES.length) {
+            return "其他";
+        }
+        return KIND_TITLES[kind - 1];
+    }
+
     private ProgressText() {
     }
 }

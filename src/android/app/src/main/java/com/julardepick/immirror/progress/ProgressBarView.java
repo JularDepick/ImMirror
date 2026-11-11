@@ -42,6 +42,14 @@ public final class ProgressBarView extends View {
     }
 
     /* 设置进度; ratio 裁剪到 0 到 1, completed 决定填充色. */
+    public void setFinished(boolean finished) {
+        this.completed = finished;
+        if (finished) {
+            ratio = 1.0f;
+        }
+        invalidate();
+    }
+
     public void setProgress(float ratio, boolean completed) {
         this.ratio = Math.max(0f, Math.min(1f, ratio));
         this.completed = completed;

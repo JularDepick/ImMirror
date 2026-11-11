@@ -32,7 +32,7 @@ import org.json.JSONObject;
  */
 public final class AchievementActivity extends Activity {
 
-    private static final int TAB_ACHIEVEMENTS = 0;
+    private static final int TAB_ACHIEVEMENT = 0;
     private static final int TAB_DAILY = 1;
 
     private AchievementSync sync;
@@ -49,7 +49,7 @@ public final class AchievementActivity extends Activity {
 
     private AchievementBoard achievements;
     private DailyBoard daily;
-    private int tab = TAB_ACHIEVEMENTS;
+    private int tab = TAB_ACHIEVEMENT;
     private boolean onlyUnfinished;
     private boolean busy;
 
@@ -62,7 +62,7 @@ public final class AchievementActivity extends Activity {
         applyTab();
         loadCache();
         if (session == null || !session.isUsable()) {
-            showNotice(ProgressText.NOTICE_NO_SESSION, AccountTheme.COLOR_ERROR);
+            showNotice(ProgressText.NOTICE_SESSION, AccountTheme.COLOR_ERROR);
             refreshButton.setEnabled(false);
             renderList();
             return;
@@ -97,7 +97,7 @@ public final class AchievementActivity extends Activity {
         LinearLayout card = buildCard();
         column.addView(card, cardParams());
 
-        TextView author = AccountTheme.body(this, ProgressText.authorFooter(this),
+        TextView author = AccountTheme.body(this, ProgressText.TITLE,
                 AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 11f);
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
@@ -123,7 +123,7 @@ public final class AchievementActivity extends Activity {
 
         LinearLayout tabRow = new LinearLayout(this);
         tabRow.setOrientation(LinearLayout.HORIZONTAL);
-        tabAchievements = buildTab(ProgressText.TAB_ACHIEVEMENTS, TAB_ACHIEVEMENTS);
+        tabAchievements = buildTab(ProgressText.TAB_ACHIEVEMENT, TAB_ACHIEVEMENT);
         tabDaily = buildTab(ProgressText.TAB_DAILY, TAB_DAILY);
         tabRow.addView(tabAchievements, weightedParams());
         tabRow.addView(tabDaily, weightedParams());
@@ -183,7 +183,7 @@ public final class AchievementActivity extends Activity {
 
     /* 页签选中态与文案同步, 两个页签共用同一套样式. */
     private void applyTab() {
-        boolean achievementsTab = tab == TAB_ACHIEVEMENTS;
+        boolean achievementsTab = tab == TAB_ACHIEVEMENT;
         styleTab(tabAchievements, achievementsTab);
         styleTab(tabDaily, !achievementsTab);
         if (busy) {
@@ -208,7 +208,7 @@ public final class AchievementActivity extends Activity {
             daily = DailyBoard.parse(parseOrNull(dailyJson));
         }
         if (achievements != null || daily != null) {
-            showNotice(ProgressText.NOTICE_CACHE, AccountTheme.COLOR_TEXT_MUTED);
+            showNotice(ProgressText.NOTICE_REFRESHED, AccountTheme.COLOR_TEXT_MUTED);
         }
         renderList();
     }
@@ -277,7 +277,7 @@ public final class AchievementActivity extends Activity {
             SessionStore.clear(this);
             session = null;
             refreshButton.setEnabled(false);
-            showNotice(ProgressText.NOTICE_NO_SESSION, AccountTheme.COLOR_ERROR);
+            showNotice(ProgressText.NOTICE_SESSION, AccountTheme.COLOR_ERROR);
             return;
         }
         showNotice(ErrorMessages.messageFor(this, error), AccountTheme.COLOR_ERROR);
@@ -286,28 +286,28 @@ public final class AchievementActivity extends Activity {
     private void setBusy(boolean value) {
         busy = value;
         refreshButton.setEnabled(!value);
-        refreshButton.setText(value ? ProgressText.ACTION_REFRESHING : ProgressText.ACTION_REFRESH);
+        refreshButton.setText(value ? ProgressText.ACTION_REFRESH : ProgressText.ACTION_REFRESH);
         filterButton.setEnabled(!value);
     }
 
     private void toggleFilter() {
         onlyUnfinished = !onlyUnfinished;
-        filterButton.setText(onlyUnfinished ? ProgressText.FILTER_UNFINISHED : ProgressText.FILTER_ALL);
+        filterButton.setText(onlyUnfinished ? ProgressText.STATUS_DOING : ProgressText.FILTER_ALL);
         renderList();
     }
 
     private void updateSummary() {
-        if (tab == TAB_ACHIEVEMENTS) {
+        if (tab == TAB_ACHIEVEMENT) {
             if (achievements == null) {
-                summaryView.setText(ProgressText.NOTICE_EMPTY);
+                summaryView.setText(ProgressText.EMPTY);
                 return;
             }
-            summaryView.setText(ProgressText.summaryOf(achievements.completed, achievements.total,
-                    achievements.claimed, achievements.coins));
+            summaryView.setText(String.format(ProgressText.SUMMARY_FORMAT, achievements.completed,
+                    achievements.total, achievements.claimed, achievements.coins));
             return;
         }
         if (daily == null) {
-            summaryView.setText(ProgressText.NOTICE_EMPTY);
+            summaryView.setText(ProgressText.EMPTY);
             return;
         }
         String dateText = daily.date.isEmpty() ? "今日" : daily.date;
@@ -319,7 +319,7 @@ public final class AchievementActivity extends Activity {
             return;
         }
         listContainer.removeAllViews();
-        if (tab == TAB_ACHIEVEMENTS) {
+        if (tab == TAB_ACHIEVEMENT) {
             renderAchievements();
         } else {
             renderDaily();
@@ -343,7 +343,7 @@ public final class AchievementActivity extends Activity {
                 description = description.isEmpty() ? category : description + " · " + category;
             }
             String state = item.completed ? (item.claimed ? "已领取" : "已完成") : "未完成";
-            String action = item.completed && !item.claimed ? ProgressText.ACTION_CLAIM : "";
+            String action = item.completed && !item.claimed ? ProgressText.ACTION_REFRESH : "";
             ProgressRowView row = new ProgressRowView(this);
             row.bind(item.name, description, item.progress, item.safeTarget(), item.completed, state,
                     action, item.completed && !item.claimed && !busy,
@@ -361,12 +361,12 @@ public final class AchievementActivity extends Activity {
             return;
         }
         for (DailyBoard.Task task : daily.tasks) {
-            String unit = ProgressText.unitName(task.kind);
+            String unit = ProgressText.kindTitle(task.kind);
             String state = task.completed ? (task.claimed ? "已领取" : "可领取") : "进行中";
-            String action = task.completed && !task.claimed ? ProgressText.ACTION_CLAIM : "";
+            String action = task.completed && !task.claimed ? ProgressText.ACTION_REFRESH : "";
             ProgressRowView row = new ProgressRowView(this);
-            row.bind(task.name, "完成奖励 " + ProgressText.coinsOf(task.coinReward), task.progress,
-                    task.safeTarget(), task.completed, state, action,
+            row.bind(task.name, String.format(ProgressText.REWARD_FORMAT, task.coinReward), task.progress,
+                    task.target, task.completed, state, action,
                     task.completed && !task.claimed && !busy, () -> claimDaily(task));
             listContainer.addView(row);
             if (!unit.isEmpty()) {
@@ -376,7 +376,7 @@ public final class AchievementActivity extends Activity {
     }
 
     private TextView emptyHint() {
-        TextView hint = AccountTheme.body(this, ProgressText.NOTICE_EMPTY,
+        TextView hint = AccountTheme.body(this, ProgressText.EMPTY,
                 AccountTheme.COLOR_TEXT_FAINT, 13f);
         hint.setGravity(Gravity.CENTER);
         hint.setPadding(0, AccountTheme.dp(this, 12f), 0, AccountTheme.dp(this, 12f));
@@ -396,7 +396,7 @@ public final class AchievementActivity extends Activity {
                 }
                 int coins = value == null ? 0 : value.optInt("coins",
                         value.optInt("awarded", item.coinReward));
-                showNotice(getString(ProgressText.NOTICE_CLAIM_DONE_FORMAT.replace("%1$d", "%d"), coins),
+                showNotice(String.format(ProgressText.EARNED_FORMAT, coins),
                         AccountTheme.COLOR_SUCCESS);
                 refresh();
             }
@@ -423,7 +423,7 @@ public final class AchievementActivity extends Activity {
                 }
                 int coins = value == null ? 0 : value.optInt("coins",
                         value.optInt("reward", task.coinReward));
-                showNotice(getString(ProgressText.NOTICE_CLAIM_DONE_FORMAT.replace("%1$d", "%d"), coins),
+                showNotice(String.format(ProgressText.EARNED_FORMAT, coins),
                         AccountTheme.COLOR_SUCCESS);
                 refresh();
             }
@@ -444,7 +444,7 @@ public final class AchievementActivity extends Activity {
      */
     private void handleClaimFailure(ApiException error) {
         if (error != null && "NOT_FOUND".equals(error.code())) {
-            showNotice(ProgressText.NOTICE_CLAIM_UNSUPPORTED, AccountTheme.COLOR_TEXT_MUTED);
+            showNotice(ProgressText.EMPTY, AccountTheme.COLOR_TEXT_MUTED);
             refresh();
             return;
         }

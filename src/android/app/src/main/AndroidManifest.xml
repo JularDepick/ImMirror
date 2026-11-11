@@ -46,6 +46,30 @@
             android:label="@string/settings_title"
             android:screenOrientation="sensorLandscape" />
 
+        <!-- 背包界面: 浏览物品, 整理堆叠与丢弃, 数据由原生物品系统下发 -->
+        <activity
+            android:name=".inventory.InventoryActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/inventory_title"
+            android:screenOrientation="sensorLandscape" />
+
+        <!-- 编辑器界面: 体素工程编辑, 保存载入与试玩 -->
+        <activity
+            android:name=".editor.MapEditorActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/editor_title"
+            android:screenOrientation="sensorLandscape" />
+
+        <!-- 成就界面: 成就列表与每日任务, 数据来自服务端 -->
+        <activity
+            android:name=".progress.ProgressActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/progress_title"
+            android:screenOrientation="sensorLandscape" />
+
         <!-- 游戏界面: NativeActivity, 主循环与输入全部在原生线程内完成 -->
         <activity
             android:name=".PlayActivity"

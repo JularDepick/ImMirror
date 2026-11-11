@@ -24,6 +24,9 @@ import com.julardepick.immirror.account.NoticeBar;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
 import com.julardepick.immirror.device.DeviceProfile;
+import com.julardepick.immirror.editor.MapEditorActivity;
+import com.julardepick.immirror.inventory.InventoryActivity;
+import com.julardepick.immirror.progress.ProgressActivity;
 import com.julardepick.immirror.settings.SettingsActivity;
 
 import java.util.List;
@@ -301,6 +304,36 @@ public final class LauncherActivity extends Activity {
                 AccountTheme.COLOR_ACCENT);
         settings.setOnClickListener(view -> startActivity(new Intent(this, SettingsActivity.class)));
         card.addView(settings, AccountTheme.block(this, 10f));
+
+        /*
+         * 功能入口行: 背包与成就属于账号侧页面, 编辑器面向地图工程,
+         * 三个入口都从这里进入, 游戏内 HUD 不承载 Java 界面.
+         */
+        LinearLayout tools = new LinearLayout(this);
+        tools.setOrientation(LinearLayout.HORIZONTAL);
+        Button inventoryEntry = AccountTheme.outlineButton(this, getString(R.string.inventory_title),
+                AccountTheme.COLOR_ACCENT);
+        inventoryEntry.setOnClickListener(view ->
+                startActivity(new Intent(this, InventoryActivity.class)));
+        Button progressEntry = AccountTheme.outlineButton(this, getString(R.string.progress_title),
+                AccountTheme.COLOR_ACCENT);
+        progressEntry.setOnClickListener(view ->
+                startActivity(new Intent(this, ProgressActivity.class)));
+        Button editorEntry = AccountTheme.outlineButton(this, getString(R.string.editor_title),
+                AccountTheme.COLOR_ACCENT);
+        editorEntry.setOnClickListener(view ->
+                startActivity(new Intent(this, MapEditorActivity.class)));
+        tools.addView(inventoryEntry, new LinearLayout.LayoutParams(0,
+                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f));
+        LinearLayout.LayoutParams progressParams = new LinearLayout.LayoutParams(0,
+                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f);
+        progressParams.leftMargin = AccountTheme.dp(this, 10f);
+        tools.addView(progressEntry, progressParams);
+        LinearLayout.LayoutParams editorParams = new LinearLayout.LayoutParams(0,
+                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f);
+        editorParams.leftMargin = AccountTheme.dp(this, 10f);
+        tools.addView(editorEntry, editorParams);
+        card.addView(tools, AccountTheme.block(this, 10f));
         return card;
     }
 

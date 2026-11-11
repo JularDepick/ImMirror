@@ -368,7 +368,7 @@ public final class ProgressActivity extends Activity {
 
         column.addView(buildActionRow(), cardParams(16f));
 
-        TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
+        TextView author = AccountTheme.body(this, ProgressText.TITLE,
                 AccountTheme.COLOR_TEXT_FAINT, 11f);
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
