@@ -6,6 +6,7 @@
 
 #include "core/log.h"
 #include "audio/audio_engine.h"
+#include "game/game_shell.h"
 #include "jni/engine_host.h"
 #include "platform/android_runtime.h"
 #include "settings/settings.h"
@@ -66,6 +67,21 @@ JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeS
     (void)env;
     (void)clazz;
     immirror::jni::EngineHost::Instance().RequestStop();
+}
+
+/* Java 侧低频入口: 取走成就统计增量并清零. */
+JNIEXPORT jstring JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeProgressCounters(JNIEnv* env, jclass clazz) {
+    (void)clazz;
+    std::string json = "{}";
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell != nullptr) {
+        const auto counters = shell->TakeProgressCounters();
+        json = "{\"break_block\":" + std::to_string(counters.breakBlocks)
+             + ",\"place_block\":" + std::to_string(counters.placeBlocks)
+             + ",\"pick_item\":" + std::to_string(counters.pickedItems) + "}";
+    }
+    return env->NewStringUTF(json.c_str());
 }
 
 /* Java 侧低频入口: 把音效池与音效句柄推给原生侧. */

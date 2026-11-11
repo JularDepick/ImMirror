@@ -99,19 +99,6 @@ std::string BuildSnapshotJson() {
 }  /* namespace */
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeProgressCounters(JNIEnv* env, jclass clazz) {
-    (void)clazz;
-    std::string json = "{}";
-    if (immirror::platform::RuntimeHostShell() != nullptr) {
-        const auto counters = immirror::platform::RuntimeHostShell()->TakeProgressCounters();
-        json = "{\"break_block\":" + std::to_string(counters.breakBlocks)
-             + ",\"place_block\":" + std::to_string(counters.placeBlocks)
-             + ",\"pick_item\":" + std::to_string(counters.pickedItems) + "}";
-    }
-    return env->NewStringUTF(json.c_str());
-}
-
-extern "C" JNIEXPORT jstring JNICALL
 Java_com_julardepick_immirror_inventory_InventoryBridge_nativeInventoryCatalog(JNIEnv* env, jclass clazz) {
     (void)clazz;
     return env->NewStringUTF(BuildCatalogJson().c_str());
