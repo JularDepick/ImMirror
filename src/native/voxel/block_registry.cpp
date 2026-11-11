@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "game/generated/block_data_gen.h"
+#include "voxel/generated/atlas_index_gen.h"
 
 namespace immirror::voxel {
 namespace {
@@ -208,6 +209,23 @@ constexpr HarvestMaterial MaterialOf(uint8_t material) {
 
 BlockRegistry::BlockRegistry() = default;
 
+/*
+ * 按贴图名查图集格序号, 线性扫描 atlas_index_gen.h 的查找表.
+ * 生成表按格序号排序, 名字查找是 O(n), 只在 Info() 首次构造时调用,
+ * 构造结果缓存在静态数组里, 运行时零开销.
+ */
+int32_t AtlasSlotOf(const char* textureName) {
+    if (textureName == nullptr || textureName[0] == '\0') {
+        return kAtlasFallback;
+    }
+    for (int32_t i = 0; i < ::immirror::voxel::atlas::kAtlasSlotCount; ++i) {
+        if (std::strcmp(::immirror::voxel::atlas::kAtlasSlots[i].name, textureName) == 0) {
+            return ::immirror::voxel::atlas::kAtlasSlots[i].slot;
+        }
+    }
+    return kAtlasFallback;
+}
+
 const BlockRegistry& BlockRegistry::Instance() {
     static const BlockRegistry instance;
     return instance;
@@ -233,7 +251,7 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.name = entry.name;
         info.solid = entry.solid;
         info.opaque = entry.opaque;
-        info.atlasIndex = 0;
+        info.atlasIndex = AtlasSlotOf(entry.texture);
         info.atlasTop = kAtlasFallback;
         info.atlasSide = kAtlasFallback;
         info.atlasBottom = kAtlasFallback;

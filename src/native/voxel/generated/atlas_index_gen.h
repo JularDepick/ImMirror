@@ -5,7 +5,7 @@
 
 #include <cstdint>
 
-namespace immirror::voxel::gen {
+namespace immirror::voxel::atlas {
 
 constexpr int32_t kAtlasGrid = 64;
 constexpr int32_t kAtlasCell = 64;
@@ -777,4 +777,4 @@ constexpr AtlasSlot kAtlasSlots[] = {
 
 constexpr int32_t kAtlasSlotCount = 756;
 
-}  /* namespace immirror::voxel::gen */
+}  /* namespace immirror::voxel::atlas */
