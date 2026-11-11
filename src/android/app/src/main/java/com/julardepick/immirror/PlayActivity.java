@@ -13,6 +13,7 @@ import android.util.Log;
 import com.julardepick.immirror.account.ApiClient;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
+import com.julardepick.immirror.audio.AmbientAudioManager;
 import com.julardepick.immirror.editor.EditorBridge;
 import com.julardepick.immirror.net.PresenceApi;
 import com.julardepick.immirror.progress.ProgressApi;
@@ -68,6 +69,7 @@ public final class PlayActivity extends NativeActivity {
     private static final long PROGRESS_REPORT_INTERVAL_MS = 30000L;
     private static final long PRESENCE_INTERVAL_MS = 10000L;
     private PresenceApi presenceApi;
+    private AmbientAudioManager ambientManager;
     private Handler presenceHandler;
     private Runnable presenceRunnable;
     private Session presenceSession;
@@ -95,6 +97,11 @@ public final class PlayActivity extends NativeActivity {
         NativeBridge.start();
         startProgressReporting();
         startPresenceReporting();
+        /* 环境音与背景音乐: 进游戏自动播放, 退出时释放. */
+        ambientManager = new AmbientAudioManager(this);
+        ambientManager.setMasterVolume(0.3f);
+        ambientManager.playAmbient();
+        ambientManager.playMusic();
     }
 
     @Override
@@ -238,6 +245,9 @@ public final class PlayActivity extends NativeActivity {
          */
         stopProgressReporting();
         stopPresenceReporting();
+        if (ambientManager != null) {
+            ambientManager.releaseAll();
+        }
         NativeBridge.stop();
         NativeBridge.flushSettings();
         NativeBridge.detachAudio();

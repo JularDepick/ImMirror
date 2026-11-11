@@ -170,6 +170,15 @@ public final class NativeBridge {
         nativeApplyRemotePlayers(json);
     }
 
+    /* 环境音与音乐开关 (由设置层联动). */
+    public static void setAmbientEnabled(boolean enabled) {
+        // Java 侧 AmbientAudioManager 直接管理, 此处为原生侧联动接口预留
+    }
+
+    public static void setMusicEnabled(boolean enabled) {
+        // 同上
+    }
+
     private static native String nativeTakePlayerPose();
 
     private static native void nativeApplyRemotePlayers(String json);
