@@ -23,6 +23,22 @@ MANIFEST += [(f"sounds/place_{name}.ogg", f"sounds/place_{name}.ogg") for name i
 # 界面素材按用途分目录, 全部随包下发
 UI_DIRS = ("button", "panel", "dialog", "tab", "slot", "icon", "misc")
 
+# 物品图标源目录: 素材管线的明文工程树 (PNG), 未打包时物品图标回落占位色块
+ITEM_ICON_SOURCE = "../../../assets/project/items"
+
+
+def collect_item_entries():
+    """把物品图标全部纳入清单, 源与目标都带 items/ 前缀; 源目录是素材管线仓库."""
+    entries = []
+    source_dir = os.path.normpath(os.path.join(SCRIPT_DIR, ITEM_ICON_SOURCE))
+    if not os.path.isdir(source_dir):
+        return entries
+    for entry in sorted(os.listdir(source_dir)):
+        if entry.lower().endswith(".png"):
+            source = os.path.join(source_dir, entry)
+            entries.append((source, "items/" + entry))
+    return entries
+
 
 def collect_ui_entries():
     """把界面素材目录下的 PNG 全部纳入清单."""
@@ -40,7 +56,7 @@ def collect_ui_entries():
 def main() -> int:
     copied = 0
     missing = []
-    for source_rel, target_rel in MANIFEST + collect_ui_entries():
+    for source_rel, target_rel in MANIFEST + collect_ui_entries() + collect_item_entries():
         source = os.path.join(ASSETS_ROOT, source_rel)
         target = os.path.join(TARGET_ROOT, target_rel)
         if not os.path.exists(source):
