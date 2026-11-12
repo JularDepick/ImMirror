@@ -15,6 +15,7 @@ import com.julardepick.immirror.lobby.MainLobbyActivity;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
 import com.julardepick.immirror.audio.AmbientAudioManager;
+import com.julardepick.immirror.audio.CreatureSoundBank;
 import com.julardepick.immirror.editor.EditorBridge;
 import com.julardepick.immirror.net.PresenceApi;
 import com.julardepick.immirror.progress.ProgressApi;
@@ -402,6 +403,9 @@ public final class PlayActivity extends NativeActivity {
             cursor += ids.length;
         }
         NativeBridge.attachAudio(soundPool, soundIds, familyCounts);
+        /* 生物音效: 独立句柄银行按资源路径懒加载, 与方块音效共用音频池. */
+        CreatureSoundBank.initialize(this);
+        NativeBridge.attachCreatureSound(CreatureSoundBank.class, CreatureSoundBank.pool());
     }
 
     private void releaseAudio() {

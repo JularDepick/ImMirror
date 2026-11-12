@@ -89,6 +89,41 @@ EntityFrameStats EntityManager::Update(double dt, const world::World& world,
 
     RemoveGone();
 
+    /*
+     * 环境叫声: 每隔数秒随机挑一只清醒生物发一次待机音, 让生物在场时有听觉存在感.
+     * 只挑清醒个体, 远处休眠的生物不发声, 避免声音从看不见的地方飘来.
+     */
+    idleAccumulator_ += seconds;
+    if (idleAccumulator_ >= tuning::kIdleSoundIntervalSeconds) {
+        idleAccumulator_ = 0.0;
+        /*
+         * 只从玩家的感知半径内挑: 半径外的生物处于休眠, 发声会让人以为身边有东西.
+         * 先收集候选再随机取一只, 避免抽到休眠个体后整轮静默.
+         */
+        const CreatureEntity* candidates[tuning::kMaxCreatures];
+        int32_t candidateCount = 0;
+        for (const auto& creature : creatures_) {
+            if (creature == nullptr || creature->Removed() || creature->Dying()) {
+                continue;
+            }
+            const core::Vec3 position = creature->Position();
+            const float deltaX = position.x - player.feet.x;
+            const float deltaZ = position.z - player.feet.z;
+            if (std::sqrt(deltaX * deltaX + deltaZ * deltaZ) > tuning::kSleepRadius) {
+                continue;
+            }
+            if (candidateCount < tuning::kMaxCreatures) {
+                candidates[candidateCount] = creature.get();
+                ++candidateCount;
+            }
+        }
+        if (candidateCount > 0) {
+            const int32_t pick = static_cast<int32_t>(NextUnit() * static_cast<float>(candidateCount));
+            const int32_t index = pick < candidateCount ? pick : candidateCount - 1;
+            soundEvents_.push_back(SoundEvent{candidates[index]->Definition().sourceId, 2});
+        }
+    }
+
     /* 生成按固定间隔结算, 落后多个间隔时只补一轮, 避免卡顿后突然刷出大量生物. */
     spawnAccumulator_ += seconds;
     if (spawnAccumulator_ >= tuning::kSpawnIntervalSeconds) {
@@ -138,9 +173,14 @@ bool EntityManager::Damage(EntityId id, float amount) {
     if (creature == nullptr) {
         return false;
     }
+    const uint32_t sourceId = creature->Definition().sourceId;
     if (!creature->Damage(amount)) {
         return false;
     }
+    /* 未致死记一条受击音, 致死记一条死亡音, 两种动作不同时出现. */
+    soundEvents_.push_back(SoundEvent{sourceId, 0});
+    /* 致死一击额外记一条死亡音, 受击音已在上方记录. */
+    soundEvents_.push_back(SoundEvent{sourceId, 1});
     QueueLoot(*creature);
     ++deathsPending_;
     IM_LOGI(kTag, "creature died id=%u name=%s life=%.0f", static_cast<uint32_t>(id),
@@ -151,6 +191,12 @@ bool EntityManager::Damage(EntityId id, float amount) {
 std::vector<EntityDrop> EntityManager::TakeDrops() {
     std::vector<EntityDrop> taken;
     taken.swap(drops_);
+    return taken;
+}
+
+std::vector<EntityManager::SoundEvent> EntityManager::TakeSoundEvents() {
+    std::vector<SoundEvent> taken;
+    taken.swap(soundEvents_);
     return taken;
 }
 

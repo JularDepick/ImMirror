@@ -243,7 +243,20 @@ public final class NativeBridge {
 
     private static native void nativeStop();
 
+    /*
+     * 生物音效句柄银行: 原生侧按资源路径懒加载句柄后播放.
+     * 与方块音效共用同一个音频池, 因此两个挂接顺序不限.
+     */
+    public static void attachCreatureSound(Object bank, SoundPool pool) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeAttachCreatureSound(bank, pool);
+    }
+
     private static native void nativeAttachAudioEx(SoundPool pool, int[] soundIds, int[] familyCounts);
+
+    private static native void nativeAttachCreatureSound(Object bank, SoundPool pool);
 
     private static native void nativeDetachAudio();
 

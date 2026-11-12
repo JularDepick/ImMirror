@@ -87,6 +87,17 @@ public:
 
     void Play(SoundId id);
 
+    /*
+     * 生物音效: 句柄由 Java 侧的句柄银行按资源路径懒加载, 这里只保存银行的
+     * 全局引用与取句柄的方法, 播放走与方块音效相同的 SoundPool 通道.
+     * 生物音效种类多 (每种生物四类动作), 因此不预加载, 逐次按路径取句柄.
+     */
+    void AttachCreatureBank(JNIEnv* env, jobject bank, jobject soundPool);
+    void DetachCreatureBank(JNIEnv* env);
+
+    /* 按资源路径播放一次生物音效; 句柄为 0 或路径为空时静默跳过. */
+    void PlayCreatureAsset(const char* assetPath);
+
 private:
     /* 播放需要 JNIEnv, 原生线程首次使用时附加到虚拟机. */
     JNIEnv* CurrentEnv();
@@ -103,6 +114,10 @@ private:
     jint soundIds_[static_cast<int>(SoundId::kCount)][kSoundVariants] = {{0}};
     int32_t variantCounts_[static_cast<int>(SoundId::kCount)] = {0};
     jmethodID playMethod_ = nullptr;
+    /* 生物音效句柄银行: Java 侧按资源路径懒加载, 原生只调它的取句柄方法. */
+    /* 静态方法 handleFor 的宿主是类本身, 因此保存的是 jclass 而不是实例. */
+    jclass creatureBankClass_ = nullptr;
+    jmethodID creatureHandleMethod_ = nullptr;
     int32_t attachedCount_ = 0;
     /* 播放选变体用, 只在持锁的播放与挂接路径触碰. */
     uint32_t randomState_ = 0x20261101u;

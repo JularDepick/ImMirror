@@ -215,10 +215,18 @@ JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeA
     immirror::audio::AudioEngine::Instance().Attach(env, soundPool, soundIds, familyCounts);
 }
 
+/* Java 侧低频入口: 把生物音效句柄银行推给原生侧. */
+JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeAttachCreatureSound(
+    JNIEnv* env, jclass clazz, jobject bank, jobject soundPool) {
+    (void)clazz;
+    immirror::audio::AudioEngine::Instance().AttachCreatureBank(env, bank, soundPool);
+}
+
 /* Java 侧低频入口: Activity 销毁前解除音效引用. */
 JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeDetachAudio(
     JNIEnv* env, jclass clazz) {
     (void)clazz;
+    immirror::audio::AudioEngine::Instance().DetachCreatureBank(env);
     immirror::audio::AudioEngine::Instance().Detach(env);
 }
 

@@ -41,6 +41,8 @@ constexpr int32_t kSpawnAttemptsPerTick = 4;
 constexpr float kSpawnMinRadius = 12.0f;
 constexpr float kSpawnMaxRadius = 34.0f;
 constexpr float kSpawnChancePerAttempt = 0.35f;
+/* 环境叫声间隔: 每只生物数秒一次, 实际由全场随机挑选一只, 密度随生物数上升. */
+constexpr double kIdleSoundIntervalSeconds = 5.0;
 constexpr float kSleepRadius = 40.0f;
 constexpr float kDespawnRadius = 80.0f;
 

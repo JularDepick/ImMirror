@@ -30,6 +30,8 @@
 #include "settings/settings_tuning.h"
 #include "ui/hud_renderer.h"
 #include "ui/hud_slots.h"
+#include "audio/audio_engine.h"
+#include "entity/generated/entity_sound_gen.h"
 #include "voxel/block_registry.h"
 #include "voxel/generated/biome_data_gen.h"
 #include "voxel/terrain_generator.h"
@@ -1381,6 +1383,14 @@ void GameShell::UpdateEntities(double deltaSeconds) {
     entities_.SetHostileSpawnAllowed(!worldTime_->IsDay());
 
     const entity::EntityFrameStats stats = entities_.Update(deltaSeconds, *world_, probe);
+
+    /* 生物音效: 受击与死亡事件按生物种类查表, 路径直接交给音频引擎播放. */
+    for (const entity::EntityManager::SoundEvent& event : entities_.TakeSoundEvents()) {
+        const char* path = entity::gen::EntitySoundPath(event.sourceId, event.action);
+        if (path != nullptr && path[0] != '\0') {
+            audio::AudioEngine::Instance().PlayCreatureAsset(path);
+        }
+    }
 
     /* 生物伤害汇总后一次性施加, 玩家控制器内部完成免伤窗口与死亡判定.
      * 伤害数值显示 (kDamageSwitch) 暂无消费点: 伤害数字系统尚未实现,

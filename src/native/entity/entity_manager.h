@@ -72,6 +72,16 @@ public:
     /* 取走累计的掉落, 取走后列表清空. */
     std::vector<EntityDrop> TakeDrops();
 
+    /*
+     * 生物音效事件: 受击与死亡各记一条, 由装配层取出后交给音频引擎播放.
+     * 实体层不直接依赖音频层, 事件只带生物种类与动作编号.
+     */
+    struct SoundEvent {
+        uint32_t sourceId = 0;
+        uint8_t action = 0; /* 0 受击, 1 死亡 */
+    };
+    std::vector<SoundEvent> TakeSoundEvents();
+
     int32_t Count() const { return static_cast<int32_t>(creatures_.size()); }
     int32_t AwakeCount() const { return awake_; }
     /* 同时存在的生物上限. */
@@ -92,6 +102,9 @@ private:
 
     std::vector<std::unique_ptr<CreatureEntity>> creatures_;
     std::vector<EntityDrop> drops_;
+    std::vector<SoundEvent> soundEvents_;
+    /* 环境叫声计时器, 到点随机挑一只清醒生物发声. */
+    double idleAccumulator_ = 0.0;
     uint32_t rng_ = 1u;
     EntityId nextId_ = 1u;
     double spawnAccumulator_ = 0.0;

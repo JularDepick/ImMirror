@@ -173,6 +173,89 @@ void AudioEngine::SetVoiceEnabled(bool enabled) {
     voiceEnabled_ = enabled;
 }
 
+void AudioEngine::AttachCreatureBank(JNIEnv* env, jobject bank, jobject soundPool) {
+    if (env == nullptr || bank == nullptr) {
+        return;
+    }
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (creatureBankClass_ != nullptr) {
+        env->DeleteGlobalRef(creatureBankClass_);
+        creatureBankClass_ = nullptr;
+    }
+    /* 入参是 Class 对象: 静态方法必须挂在类引用上, 实例引用调不到. */
+    jclass localClass = static_cast<jclass>(bank);
+    creatureBankClass_ = static_cast<jclass>(env->NewGlobalRef(localClass));
+    /* CreatureSoundBank.handleFor(String) 返回句柄, 0 表示不可用. */
+    creatureHandleMethod_ = env->GetStaticMethodID(creatureBankClass_, "handleFor", "(Ljava/lang/String;)I");
+    if (creatureHandleMethod_ == nullptr) {
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "CreatureSoundBank.handleFor not found");
+        env->DeleteGlobalRef(creatureBankClass_);
+        creatureBankClass_ = nullptr;
+        return;
+    }
+    /*
+     * 生物音效与方块音效共用一个 SoundPool 时, 播放方法已经从方块音效挂接里拿到;
+     * 若尚未挂接, 这里用同一套签名补取一次, 保证两条通道都能播放.
+     */
+    if (playMethod_ == nullptr && soundPool != nullptr) {
+        if (soundPool_ == nullptr) {
+            soundPool_ = env->NewGlobalRef(soundPool);
+        }
+        jclass poolClass = env->GetObjectClass(soundPool);
+        playMethod_ = env->GetMethodID(poolClass, "play", "(IFFIIF)I");
+        env->DeleteLocalRef(poolClass);
+    }
+    __android_log_print(ANDROID_LOG_INFO, kTag, "creature sound bank attached");
+}
+
+void AudioEngine::DetachCreatureBank(JNIEnv* env) {
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (env != nullptr && creatureBankClass_ != nullptr) {
+        env->DeleteGlobalRef(creatureBankClass_);
+    }
+    creatureBankClass_ = nullptr;
+    creatureHandleMethod_ = nullptr;
+}
+
+void AudioEngine::PlayCreatureAsset(const char* assetPath) {
+    if (assetPath == nullptr || assetPath[0] == '\0') {
+        return;
+    }
+    if (!soundEnabled_ || volume_ <= 0.0f) {
+        return;
+    }
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (creatureBankClass_ == nullptr || creatureHandleMethod_ == nullptr || soundPool_ == nullptr ||
+        playMethod_ == nullptr) {
+        return;
+    }
+    JNIEnv* env = CurrentEnv();
+    if (env == nullptr) {
+        return;
+    }
+    jstring path = env->NewStringUTF(assetPath);
+    if (path == nullptr) {
+        return;
+    }
+    const jint handle = env->CallStaticIntMethod(creatureBankClass_, creatureHandleMethod_, path);
+    env->DeleteLocalRef(path);
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return;
+    }
+    if (handle <= 0) {
+        return;
+    }
+    const jint stream = env->CallIntMethod(soundPool_, playMethod_, handle, volume_, volume_, 1, 0, 1.0f);
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return;
+    }
+    /* 播放成功记一行: 生物音效按需加载, 出问题时需要区分"没触发"与"没加载". */
+    __android_log_print(ANDROID_LOG_DEBUG, kTag, "creature sound path=%s handle=%d stream=%d", assetPath,
+                        static_cast<int>(handle), static_cast<int>(stream));
+}
+
 void AudioEngine::Play(SoundId id) {
     if (!soundEnabled_) {
         return;

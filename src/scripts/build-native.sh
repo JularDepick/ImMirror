@@ -112,6 +112,10 @@ fi
 # 客户端方块 id 复用 gen_block_data.py 的分配结果, 因此必须在它之后执行
 "$PYTHON_BIN" "$SCRIPT_DIR/gen_ore_data.py"
 
+# ---------------------------------------------------------------- 生物音效表
+# 生物音效按生物 ID 分目录, 构建前折算成 路径对照表
+"$PYTHON_BIN" "$SCRIPT_DIR/gen_entity_sound.py"
+
 printf '原生构建配置\n'
 printf '  源码目录     : %s\n' "$NATIVE_DIR"
 printf '  构建根目录   : %s\n' "$BUILD_ROOT"
