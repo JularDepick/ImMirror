@@ -120,6 +120,11 @@ fi
 # 工具表与物品表靠中文名对应, 因此必须在 gen_item_data.py 之后执行
 "$PYTHON_BIN" "$SCRIPT_DIR/gen_tool_data.py"
 
+# ---------------------------------------------------------------- 状态效果与食物
+# 两张表都按原版物品 ID 挂到客户端物品, 因此必须在 gen_item_data.py 之后执行
+"$PYTHON_BIN" "$SCRIPT_DIR/gen_buff_data.py"
+"$PYTHON_BIN" "$SCRIPT_DIR/gen_food_data.py"
+
 printf '原生构建配置\n'
 printf '  源码目录     : %s\n' "$NATIVE_DIR"
 printf '  构建根目录   : %s\n' "$BUILD_ROOT"
