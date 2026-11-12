@@ -1911,6 +1911,2605 @@
    "template": "TemplateBkg56"
   },
   {
+   "path": "common/common_ani_bg.png",
+   "width": 51,
+   "height": 100,
+   "category": "common",
+   "purpose": "界面精灵 ani_bg",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "ani_bg",
+   "source_rect": [
+    84,
+    833,
+    51,
+    100
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_ani_keyframe.png",
+   "width": 14,
+   "height": 48,
+   "category": "common",
+   "purpose": "界面精灵 ani_keyframe",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "ani_keyframe",
+   "source_rect": [
+    84,
+    935,
+    14,
+    48
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_blue_r.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_blue_r",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_blue_r",
+   "source_rect": [
+    739,
+    835,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_bottom_blue.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_bottom_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_blue",
+   "source_rect": [
+    737,
+    771,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_bottom_blue1.png",
+   "width": 60,
+   "height": 60,
+   "category": "common",
+   "purpose": "界面精灵 board_bottom_blue1",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_blue1",
+   "source_rect": [
+    355,
+    832,
+    60,
+    60
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_bottom_blue_big.png",
+   "width": 60,
+   "height": 60,
+   "category": "common",
+   "purpose": "界面精灵 board_bottom_blue_big",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_blue_big",
+   "source_rect": [
+    355,
+    832,
+    60,
+    60
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_bottom_blue_r.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_bottom_blue_r",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_blue_r",
+   "source_rect": [
+    736,
+    803,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_bottom_friend.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_bottom_friend",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_friend",
+   "source_rect": [
+    707,
+    851,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_check.png",
+   "width": 24,
+   "height": 24,
+   "category": "common",
+   "purpose": "界面精灵 board_check",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_check",
+   "source_rect": [
+    313,
+    637,
+    24,
+    24
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_check_circle.png",
+   "width": 24,
+   "height": 24,
+   "category": "common",
+   "purpose": "界面精灵 board_check_circle",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_check_circle",
+   "source_rect": [
+    287,
+    637,
+    24,
+    24
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_check_select.png",
+   "width": 24,
+   "height": 24,
+   "category": "common",
+   "purpose": "界面精灵 board_check_select_",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_check_select_",
+   "source_rect": [
+    261,
+    637,
+    24,
+    24
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_map_info_d.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_map_info_d",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_map_info_d",
+   "source_rect": [
+    705,
+    771,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_map_pic.png",
+   "width": 15,
+   "height": 15,
+   "category": "common",
+   "purpose": "界面精灵 board_map_pic",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_map_pic",
+   "source_rect": [
+    102,
+    816,
+    15,
+    15
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_placeholder_ad.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_placeholder_ad",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_placeholder_ad",
+   "source_rect": [
+    704,
+    819,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_placeholder_map.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_placeholder_map",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_placeholder_map",
+   "source_rect": [
+    675,
+    868,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_recharge_num.png",
+   "width": 15,
+   "height": 15,
+   "category": "common",
+   "purpose": "界面精灵 board_recharge_num",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_recharge_num",
+   "source_rect": [
+    85,
+    816,
+    15,
+    15
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_sink.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_sink",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_sink",
+   "source_rect": [
+    643,
+    870,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_sink_d.png",
+   "width": 36,
+   "height": 36,
+   "category": "common",
+   "purpose": "界面精灵 board_sink_d",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_sink_d",
+   "source_rect": [
+    30,
+    985,
+    36,
+    36
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_sink_d2.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_sink_d2",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_sink_d2",
+   "source_rect": [
+    736,
+    803,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_tab_blue.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_tab_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_tab_blue",
+   "source_rect": [
+    611,
+    870,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_tips_icon_brown.png",
+   "width": 30,
+   "height": 163,
+   "category": "common",
+   "purpose": "界面精灵 board_tips_icon_brown",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_tips_icon_brown",
+   "source_rect": [
+    2,
+    668,
+    30,
+    163
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_uistyle_b.png",
+   "width": 24,
+   "height": 24,
+   "category": "common",
+   "purpose": "界面精灵 board_uistyle_b",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_uistyle_b",
+   "source_rect": [
+    235,
+    637,
+    24,
+    24
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_uistyle_g.png",
+   "width": 24,
+   "height": 24,
+   "category": "common",
+   "purpose": "界面精灵 board_uistyle_g",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_uistyle_g",
+   "source_rect": [
+    209,
+    637,
+    24,
+    24
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_uistyle_y.png",
+   "width": 24,
+   "height": 24,
+   "category": "common",
+   "purpose": "界面精灵 board_uistyle_y",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_uistyle_y",
+   "source_rect": [
+    183,
+    637,
+    24,
+    24
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_board_white.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 board_white",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_white",
+   "source_rect": [
+    579,
+    875,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_big_blue.png",
+   "width": 96,
+   "height": 61,
+   "category": "common",
+   "purpose": "界面精灵 btn_big_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_blue",
+   "source_rect": [
+    66,
+    65,
+    96,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_big_circle_blue.png",
+   "width": 76,
+   "height": 79,
+   "category": "common",
+   "purpose": "界面精灵 btn_big_circle_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_circle_blue",
+   "source_rect": [
+    176,
+    664,
+    76,
+    79
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_big_circle_gray.png",
+   "width": 76,
+   "height": 79,
+   "category": "common",
+   "purpose": "界面精灵 btn_big_circle_gray",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_circle_gray",
+   "source_rect": [
+    66,
+    512,
+    76,
+    79
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_big_empty.png",
+   "width": 96,
+   "height": 61,
+   "category": "common",
+   "purpose": "界面精灵 btn_big_empty",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_empty",
+   "source_rect": [
+    66,
+    2,
+    96,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_big_orange.png",
+   "width": 158,
+   "height": 61,
+   "category": "common",
+   "purpose": "界面精灵 btn_big_orange",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_orange",
+   "source_rect": [
+    183,
+    574,
+    158,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_big_red.png",
+   "width": 182,
+   "height": 61,
+   "category": "common",
+   "purpose": "界面精灵 btn_big_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_red",
+   "source_rect": [
+    195,
+    392,
+    182,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_big_yellow.png",
+   "width": 182,
+   "height": 61,
+   "category": "common",
+   "purpose": "界面精灵 btn_big_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_yellow",
+   "source_rect": [
+    144,
+    511,
+    182,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_circle_blue.png",
+   "width": 50,
+   "height": 53,
+   "category": "common",
+   "purpose": "界面精灵 btn_circle_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_circle_blue",
+   "source_rect": [
+    242,
+    455,
+    50,
+    53
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_circle_gray.png",
+   "width": 41,
+   "height": 44,
+   "category": "common",
+   "purpose": "界面精灵 btn_circle_gray",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_circle_gray",
+   "source_rect": [
+    424,
+    978,
+    41,
+    44
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_circle_red.png",
+   "width": 50,
+   "height": 53,
+   "category": "common",
+   "purpose": "界面精灵 btn_circle_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_circle_red",
+   "source_rect": [
+    190,
+    456,
+    50,
+    53
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_circle_yellow.png",
+   "width": 50,
+   "height": 53,
+   "category": "common",
+   "purpose": "界面精灵 btn_circle_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_circle_yellow",
+   "source_rect": [
+    138,
+    456,
+    50,
+    53
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_close.png",
+   "width": 36,
+   "height": 46,
+   "category": "common",
+   "purpose": "界面精灵 btn_close",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_close",
+   "source_rect": [
+    667,
+    771,
+    36,
+    46
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_help.png",
+   "width": 26,
+   "height": 37,
+   "category": "common",
+   "purpose": "界面精灵 btn_help",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_help",
+   "source_rect": [
+    2,
+    985,
+    26,
+    37
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_huge_circle_yellow.png",
+   "width": 140,
+   "height": 146,
+   "category": "common",
+   "purpose": "界面精灵 btn_huge_circle_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_huge_circle_yellow",
+   "source_rect": [
+    34,
+    668,
+    140,
+    146
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_long_red.png",
+   "width": 30,
+   "height": 41,
+   "category": "common",
+   "purpose": "界面精灵 btn_long_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_long_red",
+   "source_rect": [
+    160,
+    137,
+    30,
+    41
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_middle_blue.png",
+   "width": 130,
+   "height": 50,
+   "category": "common",
+   "purpose": "界面精灵 btn_middle_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_blue",
+   "source_rect": [
+    506,
+    915,
+    130,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_middle_blue_right.png",
+   "width": 67,
+   "height": 50,
+   "category": "common",
+   "purpose": "界面精灵 btn_middle_blue_right",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_blue_right",
+   "source_rect": [
+    578,
+    967,
+    67,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_middle_empty.png",
+   "width": 130,
+   "height": 50,
+   "category": "common",
+   "purpose": "界面精灵 btn_middle_empty",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_empty",
+   "source_rect": [
+    417,
+    831,
+    130,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_middle_red.png",
+   "width": 130,
+   "height": 50,
+   "category": "common",
+   "purpose": "界面精灵 btn_middle_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_red",
+   "source_rect": [
+    374,
+    926,
+    130,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_middle_yellow.png",
+   "width": 130,
+   "height": 50,
+   "category": "common",
+   "purpose": "界面精灵 btn_middle_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_yellow",
+   "source_rect": [
+    335,
+    455,
+    130,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_middle_yellow_left.png",
+   "width": 67,
+   "height": 50,
+   "category": "common",
+   "purpose": "界面精灵 btn_middle_yellow_left",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_yellow_left",
+   "source_rect": [
+    509,
+    967,
+    67,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_blue.png",
+   "width": 40,
+   "height": 43,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_blue",
+   "source_rect": [
+    466,
+    785,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_empty.png",
+   "width": 40,
+   "height": 43,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_empty",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_empty",
+   "source_rect": [
+    467,
+    978,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_gray.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_gray",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray",
+   "source_rect": [
+    508,
+    785,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_gray_b.png",
+   "width": 40,
+   "height": 43,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_gray_b",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_b",
+   "source_rect": [
+    374,
+    787,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_gray_d.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_gray_d",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_d",
+   "source_rect": [
+    547,
+    883,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_gray_n.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_gray_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_n",
+   "source_rect": [
+    515,
+    883,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_gray_n_flat.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_gray_n_flat",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_n_flat",
+   "source_rect": [
+    483,
+    883,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_gray_p.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_gray_p",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_p",
+   "source_rect": [
+    451,
+    883,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_gray_r.png",
+   "width": 72,
+   "height": 47,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_gray_r",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_r",
+   "source_rect": [
+    590,
+    821,
+    72,
+    47
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_green.png",
+   "width": 40,
+   "height": 43,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_green",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_green",
+   "source_rect": [
+    332,
+    787,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_green_n.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_green_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_green_n",
+   "source_rect": [
+    419,
+    883,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_lightblue.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_lightblue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_lightblue",
+   "source_rect": [
+    387,
+    894,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_orange.png",
+   "width": 40,
+   "height": 43,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_orange",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_orange",
+   "source_rect": [
+    176,
+    92,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_red.png",
+   "width": 40,
+   "height": 43,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_red",
+   "source_rect": [
+    176,
+    47,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_red_n.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_red_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_red_n",
+   "source_rect": [
+    355,
+    894,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_mini_yellow.png",
+   "width": 40,
+   "height": 43,
+   "category": "common",
+   "purpose": "界面精灵 btn_mini_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_yellow",
+   "source_rect": [
+    176,
+    2,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_oversized_blue.png",
+   "width": 70,
+   "height": 81,
+   "category": "common",
+   "purpose": "界面精灵 btn_oversized_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_oversized_blue",
+   "source_rect": [
+    66,
+    429,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_price.png",
+   "width": 128,
+   "height": 58,
+   "category": "common",
+   "purpose": "界面精灵 btn_price",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_price",
+   "source_rect": [
+    401,
+    725,
+    128,
+    58
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_return.png",
+   "width": 48,
+   "height": 44,
+   "category": "common",
+   "purpose": "界面精灵 btn_return",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_return",
+   "source_rect": [
+    374,
+    978,
+    48,
+    44
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_return_white.png",
+   "width": 48,
+   "height": 44,
+   "category": "common",
+   "purpose": "界面精灵 btn_return_white",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_return_white",
+   "source_rect": [
+    416,
+    785,
+    48,
+    44
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_square_blue1.png",
+   "width": 47,
+   "height": 50,
+   "category": "common",
+   "purpose": "界面精灵 btn_square_blue1",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_square_blue1",
+   "source_rect": [
+    540,
+    772,
+    47,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_square_yellow.png",
+   "width": 47,
+   "height": 50,
+   "category": "common",
+   "purpose": "界面精灵 btn_square_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_square_yellow",
+   "source_rect": [
+    531,
+    720,
+    47,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_superbig_blue.png",
+   "width": 70,
+   "height": 81,
+   "category": "common",
+   "purpose": "界面精灵 btn_superbig_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_blue",
+   "source_rect": [
+    66,
+    429,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_superbig_blue1.png",
+   "width": 70,
+   "height": 81,
+   "category": "common",
+   "purpose": "界面精灵 btn_superbig_blue1",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_blue1",
+   "source_rect": [
+    66,
+    429,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_superbig_empty.png",
+   "width": 70,
+   "height": 81,
+   "category": "common",
+   "purpose": "界面精灵 btn_superbig_empty",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_empty",
+   "source_rect": [
+    66,
+    346,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_superbig_orange.png",
+   "width": 70,
+   "height": 81,
+   "category": "common",
+   "purpose": "界面精灵 btn_superbig_orange",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_orange",
+   "source_rect": [
+    66,
+    263,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_superbig_red.png",
+   "width": 70,
+   "height": 81,
+   "category": "common",
+   "purpose": "界面精灵 btn_superbig_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_red",
+   "source_rect": [
+    66,
+    180,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_superbig_yellow.png",
+   "width": 70,
+   "height": 81,
+   "category": "common",
+   "purpose": "界面精灵 btn_superbig_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_yellow",
+   "source_rect": [
+    302,
+    929,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_btn_trapezoid_gray.png",
+   "width": 39,
+   "height": 51,
+   "category": "common",
+   "purpose": "界面精灵 btn_trapezoid_gray",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_trapezoid_gray",
+   "source_rect": [
+    294,
+    455,
+    39,
+    51
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_frame_commend.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 frame_commend",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "frame_commend",
+   "source_rect": [
+    218,
+    99,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_frame_title_board.png",
+   "width": 30,
+   "height": 36,
+   "category": "common",
+   "purpose": "界面精灵 frame_title_board",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "frame_title_board",
+   "source_rect": [
+    68,
+    985,
+    30,
+    36
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_icon_add_green.png",
+   "width": 48,
+   "height": 48,
+   "category": "common",
+   "purpose": "界面精灵 icon_add_green",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_add_green",
+   "source_rect": [
+    589,
+    771,
+    48,
+    48
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_icon_add_light.png",
+   "width": 64,
+   "height": 64,
+   "category": "common",
+   "purpose": "界面精灵 icon_add_light",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_add_light",
+   "source_rect": [
+    138,
+    326,
+    64,
+    64
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_icon_add_sink.png",
+   "width": 64,
+   "height": 64,
+   "category": "common",
+   "purpose": "界面精灵 icon_add_sink",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_add_sink",
+   "source_rect": [
+    138,
+    260,
+    64,
+    64
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_icon_lock_green.png",
+   "width": 39,
+   "height": 49,
+   "category": "common",
+   "purpose": "界面精灵 icon_lock_green",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_lock_green",
+   "source_rect": [
+    549,
+    824,
+    39,
+    49
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_icon_maximum_orange.png",
+   "width": 38,
+   "height": 46,
+   "category": "common",
+   "purpose": "界面精灵 icon_maximum_orange",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_maximum_orange",
+   "source_rect": [
+    664,
+    820,
+    38,
+    46
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_icon_pull.png",
+   "width": 26,
+   "height": 47,
+   "category": "common",
+   "purpose": "界面精灵 icon_pull",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_pull",
+   "source_rect": [
+    639,
+    771,
+    26,
+    47
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_icon_pull_80.png",
+   "width": 38,
+   "height": 71,
+   "category": "common",
+   "purpose": "界面精灵 icon_pull_80",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_pull_80",
+   "source_rect": [
+    984,
+    2,
+    38,
+    71
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_icon_tick_multi.png",
+   "width": 20,
+   "height": 20,
+   "category": "common",
+   "purpose": "界面精灵 icon_tick_multi",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_tick_multi",
+   "source_rect": [
+    339,
+    637,
+    20,
+    20
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_bar_photo.png",
+   "width": 15,
+   "height": 15,
+   "category": "common",
+   "purpose": "界面精灵 img_bar_photo",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_bar_photo",
+   "source_rect": [
+    68,
+    816,
+    15,
+    15
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_board_load.png",
+   "width": 15,
+   "height": 15,
+   "category": "common",
+   "purpose": "界面精灵 img_board_load_",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_board_load_",
+   "source_rect": [
+    51,
+    816,
+    15,
+    15
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_board_mount.png",
+   "width": 80,
+   "height": 150,
+   "category": "common",
+   "purpose": "界面精灵 img_board_mount",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_board_mount",
+   "source_rect": [
+    2,
+    833,
+    80,
+    150
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_board_select.png",
+   "width": 15,
+   "height": 15,
+   "category": "common",
+   "purpose": "界面精灵 img_board_select",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_board_select",
+   "source_rect": [
+    34,
+    816,
+    15,
+    15
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_board_select_tab.png",
+   "width": 30,
+   "height": 30,
+   "category": "common",
+   "purpose": "界面精灵 img_board_select_tab",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_board_select_tab",
+   "source_rect": [
+    192,
+    137,
+    30,
+    30
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_book_l.png",
+   "width": 216,
+   "height": 95,
+   "category": "common",
+   "purpose": "界面精灵 img_book_l",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_book_l",
+   "source_rect": [
+    137,
+    832,
+    216,
+    95
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_book_mark.png",
+   "width": 55,
+   "height": 62,
+   "category": "common",
+   "purpose": "界面精灵 img_book_mark",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_book_mark",
+   "source_rect": [
+    138,
+    392,
+    55,
+    62
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_book_r.png",
+   "width": 154,
+   "height": 95,
+   "category": "common",
+   "purpose": "界面精灵 img_book_r",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_book_r",
+   "source_rect": [
+    218,
+    2,
+    154,
+    95
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_close_bd.png",
+   "width": 84,
+   "height": 56,
+   "category": "common",
+   "purpose": "界面精灵 img_close_bd",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_close_bd",
+   "source_rect": [
+    439,
+    662,
+    84,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_doubt.png",
+   "width": 70,
+   "height": 56,
+   "category": "common",
+   "purpose": "界面精灵 img_doubt",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_doubt",
+   "source_rect": [
+    525,
+    662,
+    70,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_icon_lignt.png",
+   "width": 78,
+   "height": 78,
+   "category": "common",
+   "purpose": "界面精灵 img_icon_lignt",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_icon_lignt",
+   "source_rect": [
+    138,
+    180,
+    78,
+    78
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_icon_shortcut.png",
+   "width": 92,
+   "height": 92,
+   "category": "common",
+   "purpose": "界面精灵 img_icon_shortcut",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_icon_shortcut",
+   "source_rect": [
+    208,
+    929,
+    92,
+    92
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_shade_tab.png",
+   "width": 175,
+   "height": 27,
+   "category": "common",
+   "purpose": "界面精灵 img_shade_tab",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_shade_tab",
+   "source_rect": [
+    380,
+    633,
+    175,
+    27
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_tab_right_arrow.png",
+   "width": 17,
+   "height": 28,
+   "category": "common",
+   "purpose": "界面精灵 img_tab_right_arrow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_tab_right_arrow",
+   "source_rect": [
+    361,
+    633,
+    17,
+    28
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_title.png",
+   "width": 303,
+   "height": 56,
+   "category": "common",
+   "purpose": "界面精灵 img_title",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_title",
+   "source_rect": [
+    679,
+    2,
+    303,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_title_bd.png",
+   "width": 30,
+   "height": 61,
+   "category": "common",
+   "purpose": "界面精灵 img_title_bd",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_title_bd",
+   "source_rect": [
+    328,
+    508,
+    30,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_img_title_gather.png",
+   "width": 303,
+   "height": 56,
+   "category": "common",
+   "purpose": "界面精灵 img_title_gather",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_title_gather",
+   "source_rect": [
+    374,
+    2,
+    303,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_book_left_h.png",
+   "width": 106,
+   "height": 87,
+   "category": "common",
+   "purpose": "界面精灵 tab_book_left_h",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_book_left_h",
+   "source_rect": [
+    100,
+    935,
+    106,
+    87
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_book_left_n.png",
+   "width": 67,
+   "height": 60,
+   "category": "common",
+   "purpose": "界面精灵 tab_book_left_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_book_left_n",
+   "source_rect": [
+    332,
+    725,
+    67,
+    60
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_bookc_line_h.png",
+   "width": 97,
+   "height": 9,
+   "category": "common",
+   "purpose": "界面精灵 tab_bookc_line_h",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_bookc_line_h",
+   "source_rect": [
+    119,
+    816,
+    97,
+    9
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_clip_left_h.png",
+   "width": 154,
+   "height": 67,
+   "category": "common",
+   "purpose": "界面精灵 tab_clip_left_h",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_clip_left_h",
+   "source_rect": [
+    176,
+    745,
+    154,
+    67
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_clip_left_n.png",
+   "width": 113,
+   "height": 60,
+   "category": "common",
+   "purpose": "界面精灵 tab_clip_left_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_clip_left_n",
+   "source_rect": [
+    360,
+    507,
+    113,
+    60
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_fullpage_left_h.png",
+   "width": 183,
+   "height": 60,
+   "category": "common",
+   "purpose": "界面精灵 tab_fullpage_left_h",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_fullpage_left_h",
+   "source_rect": [
+    254,
+    663,
+    183,
+    60
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_fullpage_left_n.png",
+   "width": 175,
+   "height": 60,
+   "category": "common",
+   "purpose": "界面精灵 tab_fullpage_left_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_fullpage_left_n",
+   "source_rect": [
+    343,
+    571,
+    175,
+    60
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_right_h.png",
+   "width": 115,
+   "height": 69,
+   "category": "common",
+   "purpose": "界面精灵 tab_right_h",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_right_h",
+   "source_rect": [
+    66,
+    593,
+    115,
+    69
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_right_n.png",
+   "width": 92,
+   "height": 50,
+   "category": "common",
+   "purpose": "界面精灵 tab_right_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_right_n",
+   "source_rect": [
+    66,
+    128,
+    92,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_up_h.png",
+   "width": 160,
+   "height": 49,
+   "category": "common",
+   "purpose": "界面精灵 tab_up_h",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_up_h",
+   "source_rect": [
+    580,
+    720,
+    160,
+    49
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "common/common_tab_up_n.png",
+   "width": 160,
+   "height": 46,
+   "category": "common",
+   "purpose": "界面精灵 tab_up_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_up_n",
+   "source_rect": [
+    638,
+    902,
+    160,
+    46
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
    "path": "dialog/body_white.png",
    "width": 300,
    "height": 90,
@@ -2024,6 +4623,719 @@
     "bottom": 0
    },
    "template": "TemplateBigBkg31"
+  },
+  {
+   "path": "icon/achievement_cj_avtnum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_avtnum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_avtnum",
+   "source_rect": [
+    472,
+    392,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_baozangnum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_baozangnum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_baozangnum",
+   "source_rect": [
+    472,
+    262,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_bosskiller.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_bosskiller",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_bosskiller",
+   "source_rect": [
+    406,
+    862,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_chixudenglu.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_chixudenglu",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_chixudenglu",
+   "source_rect": [
+    406,
+    732,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_chuchong.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_chuchong",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_chuchong",
+   "source_rect": [
+    342,
+    602,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_diamond.png",
+   "width": 208,
+   "height": 208,
+   "category": "icon",
+   "purpose": "界面精灵 cj_diamond",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_diamond",
+   "source_rect": [
+    276,
+    2,
+    208,
+    208
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_dianzan.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_dianzan",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_dianzan",
+   "source_rect": [
+    342,
+    472,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_fensinum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_fensinum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_fensinum",
+   "source_rect": [
+    342,
+    342,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_gold.png",
+   "width": 208,
+   "height": 208,
+   "category": "icon",
+   "purpose": "界面精灵 cj_gold",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_gold",
+   "source_rect": [
+    2,
+    632,
+    208,
+    208
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_guoshilv.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_guoshilv",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_guoshilv",
+   "source_rect": [
+    276,
+    862,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_haoyounum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_haoyounum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_haoyounum",
+   "source_rect": [
+    276,
+    732,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_hotmapnum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_hotmapnum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_hotmapnum",
+   "source_rect": [
+    212,
+    602,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_iron.png",
+   "width": 208,
+   "height": 208,
+   "category": "icon",
+   "purpose": "界面精灵 cj_iron",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_iron",
+   "source_rect": [
+    2,
+    422,
+    208,
+    208
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_jianshangjia.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_jianshangjia",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_jianshangjia",
+   "source_rect": [
+    212,
+    472,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_jiantou01.png",
+   "width": 8,
+   "height": 15,
+   "category": "icon",
+   "purpose": "界面精灵 cj_jiantou01",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_jiantou01",
+   "source_rect": [
+    12,
+    986,
+    8,
+    15
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_jiaohua.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_jiaohua",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_jiaohua",
+   "source_rect": [
+    212,
+    342,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_jixianbosskiller.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_jixianbosskiller",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_jixianbosskiller",
+   "source_rect": [
+    876,
+    132,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_jueselv.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_jueselv",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_jueselv",
+   "source_rect": [
+    746,
+    132,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_juesenum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_juesenum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_juesenum",
+   "source_rect": [
+    616,
+    132,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_locked.png",
+   "width": 142,
+   "height": 142,
+   "category": "icon",
+   "purpose": "界面精灵 cj_locked",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_locked",
+   "source_rect": [
+    2,
+    842,
+    142,
+    142
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_pifunum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_pifunum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_pifunum",
+   "source_rect": [
+    276,
+    212,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_shengcuntianshu.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_shengcuntianshu",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_shengcuntianshu",
+   "source_rect": [
+    486,
+    132,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_shenmiliwu.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_shenmiliwu",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_shenmiliwu",
+   "source_rect": [
+    876,
+    2,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_shimingzhi.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_shimingzhi",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_shimingzhi",
+   "source_rect": [
+    746,
+    2,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_shouhuonum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_shouhuonum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_shouhuonum",
+   "source_rect": [
+    616,
+    2,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_stone.png",
+   "width": 208,
+   "height": 208,
+   "category": "icon",
+   "purpose": "界面精灵 cj_stone",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_stone",
+   "source_rect": [
+    2,
+    212,
+    208,
+    208
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_tujiannum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_tujiannum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_tujiannum",
+   "source_rect": [
+    486,
+    2,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_wood.png",
+   "width": 208,
+   "height": 208,
+   "category": "icon",
+   "purpose": "界面精灵 cj_wood",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_wood",
+   "source_rect": [
+    2,
+    2,
+    208,
+    208
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cj_zuojinum.png",
+   "width": 128,
+   "height": 128,
+   "category": "icon",
+   "purpose": "界面精灵 cj_zuojinum",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cj_zuojinum",
+   "source_rect": [
+    146,
+    842,
+    128,
+    128
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cjjm_jiantou02.png",
+   "width": 8,
+   "height": 15,
+   "category": "icon",
+   "purpose": "界面精灵 cjjm_jiantou02",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cjjm_jiantou02",
+   "source_rect": [
+    2,
+    1003,
+    8,
+    15
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "icon/achievement_cjjm_jiantou03.png",
+   "width": 8,
+   "height": 15,
+   "category": "icon",
+   "purpose": "界面精灵 cjjm_jiantou03",
+   "source_page": "texture0/achievement.ktx",
+   "source_sprite": "cjjm_jiantou03",
+   "source_rect": [
+    2,
+    986,
+    8,
+    15
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
   },
   {
    "path": "icon/arrow_down.png",
@@ -3473,6 +6785,420 @@
     "bottom": 10
    },
    "template": "TemplateBkg11"
+  },
+  {
+   "path": "slot/backpack_icon_atk.png",
+   "width": 17,
+   "height": 17,
+   "category": "slot",
+   "purpose": "界面精灵 icon_atk",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_atk",
+   "source_rect": [
+    96,
+    92,
+    17,
+    17
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_cloak.png",
+   "width": 56,
+   "height": 57,
+   "category": "slot",
+   "purpose": "界面精灵 icon_cloak",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_cloak",
+   "source_rect": [
+    63,
+    143,
+    56,
+    57
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_cloth.png",
+   "width": 59,
+   "height": 58,
+   "category": "slot",
+   "purpose": "界面精灵 icon_cloth",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_cloth",
+   "source_rect": [
+    2,
+    143,
+    59,
+    58
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_def.png",
+   "width": 15,
+   "height": 17,
+   "category": "slot",
+   "purpose": "界面精灵 icon_def",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_def",
+   "source_rect": [
+    113,
+    111,
+    15,
+    17
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_defense.png",
+   "width": 19,
+   "height": 21,
+   "category": "slot",
+   "purpose": "界面精灵 icon_defense",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_defense",
+   "source_rect": [
+    96,
+    69,
+    19,
+    21
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_dex.png",
+   "width": 14,
+   "height": 14,
+   "category": "slot",
+   "purpose": "界面精灵 icon_dex",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_dex",
+   "source_rect": [
+    117,
+    69,
+    14,
+    14
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_exper.png",
+   "width": 40,
+   "height": 42,
+   "category": "slot",
+   "purpose": "界面精灵 icon_exper",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_exper",
+   "source_rect": [
+    62,
+    203,
+    40,
+    42
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_hands.png",
+   "width": 66,
+   "height": 65,
+   "category": "slot",
+   "purpose": "界面精灵 icon_hands",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_hands",
+   "source_rect": [
+    62,
+    2,
+    66,
+    65
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_hat.png",
+   "width": 68,
+   "height": 66,
+   "category": "slot",
+   "purpose": "界面精灵 icon_hat",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_hat",
+   "source_rect": [
+    2,
+    75,
+    68,
+    66
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_matk.png",
+   "width": 12,
+   "height": 16,
+   "category": "slot",
+   "purpose": "界面精灵 icon_matk",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_matk",
+   "source_rect": [
+    115,
+    92,
+    12,
+    16
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_mdef.png",
+   "width": 15,
+   "height": 17,
+   "category": "slot",
+   "purpose": "界面精灵 icon_mdef",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_mdef",
+   "source_rect": [
+    96,
+    111,
+    15,
+    17
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_pets.png",
+   "width": 58,
+   "height": 71,
+   "category": "slot",
+   "purpose": "界面精灵 icon_pets",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_pets",
+   "source_rect": [
+    2,
+    2,
+    58,
+    71
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_shoes.png",
+   "width": 58,
+   "height": 50,
+   "category": "slot",
+   "purpose": "界面精灵 icon_shoes",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_shoes",
+   "source_rect": [
+    2,
+    203,
+    58,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_sort_all.png",
+   "width": 22,
+   "height": 22,
+   "category": "slot",
+   "purpose": "界面精灵 icon_sort_all",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_sort_all",
+   "source_rect": [
+    72,
+    117,
+    22,
+    22
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_sort_block.png",
+   "width": 22,
+   "height": 22,
+   "category": "slot",
+   "purpose": "界面精灵 icon_sort_block",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_sort_block",
+   "source_rect": [
+    72,
+    93,
+    22,
+    22
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_sort_equip.png",
+   "width": 22,
+   "height": 22,
+   "category": "slot",
+   "purpose": "界面精灵 icon_sort_equip",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_sort_equip",
+   "source_rect": [
+    72,
+    69,
+    22,
+    22
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_sort_material.png",
+   "width": 22,
+   "height": 22,
+   "category": "slot",
+   "purpose": "界面精灵 icon_sort_material",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_sort_material",
+   "source_rect": [
+    104,
+    226,
+    22,
+    22
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "slot/backpack_icon_sort_tool.png",
+   "width": 22,
+   "height": 22,
+   "category": "slot",
+   "purpose": "界面精灵 icon_sort_tool",
+   "source_page": "texture0/backpack.ktx",
+   "source_sprite": "icon_sort_tool",
+   "source_rect": [
+    104,
+    202,
+    22,
+    22
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
   },
   {
    "path": "slot/check_off.png",

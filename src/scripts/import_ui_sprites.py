@@ -52,6 +52,18 @@ NAMED_SPRITES = {
     ]),
 }
 
+# 整页导入: 页 -> 目标分类. 这些页的精灵逐个裁剪进素材树, 供界面按需取用.
+# 只收尺寸合理的精灵 (排除超长条与整页底图), 避免把整张背景当控件导入.
+WHOLE_PAGES = {
+    "texture2/common": "common",
+    "texture0/backpack": "slot",
+    "texture0/achievement": "icon",
+}
+
+# 整页导入时跳过的最小与最大边长: 过小的图标没有使用价值, 过大的多为整页底图.
+WHOLE_PAGE_MIN_SIDE = 8
+WHOLE_PAGE_MAX_SIDE = 512
+
 DRAW_MAP = {
     "ninesquare": "nine_slice",
     "ninesquare_center": "nine_slice",
@@ -185,6 +197,47 @@ def main():
                 "purpose": "大厅素材 %s" % sprite,
                 "source_page": page_key + ".ktx",
                 "source_sprite": sprite,
+                "source_rect": [left, top, width, height],
+                "draw": "stretch",
+                "insets": {"left": 0, "top": 0, "right": 0, "bottom": 0},
+                "template": "",
+            })
+            known.add(path)
+            added += 1
+
+    # 整页导入: 按 sprites.tsv 的页内矩形逐张裁剪, 名字带页前缀避免跨页重名
+    for page_key, category in WHOLE_PAGES.items():
+        page_png = os.path.join(PAGE_ROOT, page_key + ".png")
+        if not os.path.exists(page_png):
+            missing.append(page_key + ".png")
+            continue
+        image = Image.open(page_png).convert("RGBA")
+        page_tag = sanitize(page_key.split("/", 1)[1])
+        for info in sprites:
+            if info["page"] != page_key + ".xml":
+                continue
+            width, height = int(info["w"]), int(info["h"])
+            if width < WHOLE_PAGE_MIN_SIDE or height < WHOLE_PAGE_MIN_SIDE:
+                continue
+            if width > WHOLE_PAGE_MAX_SIDE or height > WHOLE_PAGE_MAX_SIDE:
+                continue
+            name = sanitize(page_tag + "_" + info["sprite"]) + ".png"
+            path = category + "/" + name
+            if path in known:
+                continue
+            left, top = int(info["x"]), int(info["y"])
+            crop = image.crop((left, top, left + width, top + height))
+            target = os.path.join(ASSET_ROOT, category, name)
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            crop.save(target)
+            manifest["assets"].append({
+                "path": path,
+                "width": width,
+                "height": height,
+                "category": category,
+                "purpose": "界面精灵 %s" % info["sprite"],
+                "source_page": page_key + ".ktx",
+                "source_sprite": info["sprite"],
                 "source_rect": [left, top, width, height],
                 "draw": "stretch",
                 "insets": {"left": 0, "top": 0, "right": 0, "bottom": 0},

@@ -185,6 +185,7 @@
     <string name="wallet_ledger_header">镜币流水 (最近 %1$d 条)</string>
     <string name="wallet_ledger_empty">最近没有镜币变动</string>
     <string name="wallet_action_back">返回</string>
+    <string name="action_back">关闭</string>
     <string name="wallet_action_refresh">刷新</string>
     <string name="wallet_notice_login_required">登录状态已失效, 请重新登录</string>
     <string name="wallet_notice_already_checked">今天已经签到过啦, 明天再来</string>

@@ -11,14 +11,15 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.julardepick.immirror.PlayActivity;
 import com.julardepick.immirror.R;
 import com.julardepick.immirror.account.AccountTheme;
 import com.julardepick.immirror.bridge.NativeBridge;
+import com.julardepick.immirror.ui.MobilePage;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,7 +34,8 @@ import java.util.Locale;
 /*
  * 世界列表页.
  *
- * 顶部返回与刷新, 中部每行一个世界, 点击进游戏, 长按删除, 底部新建.
+ * 面板内自上而下是操作行与世界列表: 每行一个世界, 点击进游戏, 行内按钮二次确认后删除,
+ * 刷新与新建世界留在面板内容里, 标题与关闭由面板标题行承担.
  */
 public final class WorldListActivity extends Activity {
 
@@ -41,7 +43,7 @@ public final class WorldListActivity extends Activity {
 
     /* 删除按钮的二次确认等待时长, 超时自动回到初始文案. */
     private static final long DELETE_CONFIRM_MS = 3000L;
-    /* 时间格式与旧对话框一致: yyyy-MM-dd HH:mm:ss+08:00. */
+    /* 世界列表显示的时间格式: yyyy-MM-dd HH:mm:ss+08:00. */
     private static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss+08:00";
 
     private LinearLayout listHost;
@@ -68,56 +70,56 @@ public final class WorldListActivity extends Activity {
     }
 
     private View buildContentView() {
-        final LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(AccountTheme.COLOR_PAGE);
+        /*
+         * 面板内纵向内容: 操作行, 世界列表与作者页脚.
+         * 刷新与新建世界留在面板内容里, 列表在面板内部滚动.
+         */
+        final LinearLayout column = new LinearLayout(this);
+        column.setOrientation(LinearLayout.VERTICAL);
 
-        /* 顶部: 返回 + 标题 + 刷新. */
-        final LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.HORIZONTAL);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-        final int pad = AccountTheme.dp(this, 14f);
-        header.setPadding(pad, pad, pad, pad);
-        final Button back = AccountTheme.outlineButton(this, getString(R.string.settings_back),
-                AccountTheme.COLOR_ACCENT);
-        back.setOnClickListener(view -> finish());
-        header.addView(back, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP)));
-        final TextView title = AccountTheme.title(this, getString(R.string.world_list_title),
-                AccountTheme.COLOR_TEXT_ON_DARK);
-        title.setGravity(Gravity.CENTER);
-        header.addView(title, new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        final Button refresh = AccountTheme.outlineButton(this, getString(R.string.world_list_refresh),
-                AccountTheme.COLOR_ACCENT);
-        refresh.setOnClickListener(view -> reload());
-        header.addView(refresh, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP)));
-        root.addView(header, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        column.addView(buildActionRow());
 
-        /* 中部: 可滚动的世界列表, 空态文案放在同一容器里切换. */
-        final ScrollView scroll = new ScrollView(this);
+        /* 世界列表: 空态文案与列表行放在同一容器里切换. */
         listHost = new LinearLayout(this);
         listHost.setOrientation(LinearLayout.VERTICAL);
-        final int listPad = AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP);
-        listHost.setPadding(listPad, listPad, listPad, listPad);
-        scroll.addView(listHost, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
-        root.addView(scroll, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        column.addView(listHost, AccountTheme.block(this, 12f));
 
-        /* 底部: 新建世界主按钮. */
-        final Button create = AccountTheme.primaryButton(this, getString(R.string.launcher_world_new));
-        create.setOnClickListener(view -> showCreateWorld());
-        final LinearLayout.LayoutParams createParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP + 8));
-        createParams.setMargins(pad, pad, pad, pad);
-        root.addView(create, createParams);
+        final TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
+                AccountTheme.COLOR_TEXT_FAINT, 11f);
+        author.setGravity(Gravity.CENTER);
+        column.addView(author, AccountTheme.block(this, 14f));
+
+        /*
+         * 外层: 场景底图 + 遮罩 + 居中面板, 标题与关闭按钮由面板标题行承担,
+         * 内容在面板内部滚动.
+         */
+        final FrameLayout root = new FrameLayout(this);
+        root.addView(MobilePage.create(this, getString(R.string.world_list_title),
+                MobilePage.scrollable(this, column)), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         return root;
+    }
+
+    /* 操作行: 刷新重新扫描存档目录, 新建世界带名字进游戏. */
+    private View buildActionRow() {
+        final LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+
+        final Button refresh = AccountTheme.outlineButton(this,
+                getString(R.string.world_list_refresh), AccountTheme.COLOR_ACCENT);
+        refresh.setOnClickListener(view -> reload());
+        row.addView(refresh, new LinearLayout.LayoutParams(0,
+                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f));
+
+        final Button create = AccountTheme.primaryButton(this,
+                getString(R.string.launcher_world_new));
+        create.setOnClickListener(view -> showCreateWorld());
+        final LinearLayout.LayoutParams createParams = new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 1.6f);
+        createParams.leftMargin = AccountTheme.dp(this, 10f);
+        row.addView(create, createParams);
+        return row;
     }
 
     /* 重新扫描世界存档目录并重建列表. */
@@ -146,10 +148,10 @@ public final class WorldListActivity extends Activity {
     private void rebuildList() {
         listHost.removeAllViews();
         if (worlds.isEmpty()) {
-            /* 空态: 提示文案压住中部, 新建按钮在底部已常驻. */
+            /* 空态: 提示文案占住列表位置, 新建世界按钮在内容顶部常驻. */
             if (emptyView == null) {
                 emptyView = AccountTheme.body(this, getString(R.string.world_list_empty),
-                        AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 15f);
+                        AccountTheme.COLOR_TEXT_MUTED, 15f);
                 emptyView.setGravity(Gravity.CENTER);
             }
             listHost.addView(emptyView, new LinearLayout.LayoutParams(

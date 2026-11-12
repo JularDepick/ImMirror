@@ -17,17 +17,18 @@ import com.julardepick.immirror.account.AccountTheme;
 
 import java.util.Locale;
 import com.julardepick.immirror.account.NoticeBar;
-import com.julardepick.immirror.ui.PageBackground;
+import com.julardepick.immirror.ui.MobilePage;
 
 /*
  * 背包界面.
  *
- * 一页同时显示 36 格背包与 9 格快捷栏: 左边是网格, 右边是选中格详情与操作按钮.
+ * 一页同时显示 36 格背包与 9 格快捷栏: 面板内自上而下是概览行, 格子网格,
+ * 选中格详情与操作按钮, 内容在面板内部滚动, 标题与关闭由面板标题行承担.
  * 物品数据每次打开页面时从原生侧取一次快照, 之后每次操作都重新取,
  * 因此界面永远是原生物品栏的镜像, 不存在需要对齐的两份状态.
  *
  * 原生桥接未接线时整页退回预览数据, 页面仍可点选, 丢弃与移动只改内存副本,
- * 便于脱离原生单独联调界面; 页头会出现"预览数据"角标区分这两种模式.
+ * 便于脱离原生单独联调界面; 概览行会出现"预览数据"角标区分这两种模式.
  *
  * 全程不使用 Toast 与系统弹窗: 提示走页面内提示条, 丢弃这类破坏性操作
  * 按项目规范改成按钮二次确认, 三秒内不再按就回到初始文案.
@@ -49,7 +50,6 @@ public final class InventoryActivity extends Activity implements InventoryGridVi
     private TextView badgeView;
     private TextView detailTitleView;
     private TextView detailBodyView;
-    private TextView noticeView;
     private Button dropButton;
     private Button moveButton;
     private NoticeBar noticeBar;
@@ -94,46 +94,56 @@ public final class InventoryActivity extends Activity implements InventoryGridVi
     /* ---------------- 页面搭建 ---------------- */
 
     private View buildPage() {
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        PageBackground.apply(root);
-        int paddingH = AccountTheme.dp(this, 18f);
-        root.setPadding(paddingH, AccountTheme.dp(this, 12f), paddingH, AccountTheme.dp(this, 10f));
+        /*
+         * 面板内纵向内容: 概览行, 格子网格, 选中格详情与作者页脚.
+         * 网格与快捷栏的绘制方式不变, 只是外层由整页换成面板.
+         */
+        LinearLayout column = new LinearLayout(this);
+        column.setOrientation(LinearLayout.VERTICAL);
 
-        root.addView(buildHeader());
+        column.addView(buildOverviewRow());
+        column.addView(buildGridArea(), AccountTheme.block(this, 10f));
+        column.addView(buildDetailPanel(), AccountTheme.block(this, 12f));
 
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout.LayoutParams contentParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f);
-        contentParams.topMargin = AccountTheme.dp(this, 10f);
-        content.setLayoutParams(contentParams);
+        TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
+                AccountTheme.COLOR_TEXT_FAINT, 11f);
+        author.setGravity(Gravity.CENTER);
+        column.addView(author, AccountTheme.block(this, 14f));
 
-        content.addView(buildGridArea(), new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.MATCH_PARENT, 1f));
-        content.addView(buildDetailPanel(), new LinearLayout.LayoutParams(
-                AccountTheme.dp(this, 232f), ViewGroup.LayoutParams.MATCH_PARENT));
+        /*
+         * 外层: 场景底图 + 遮罩 + 居中面板, 标题与关闭按钮由面板标题行承担,
+         * 内容在面板内部滚动.
+         */
+        FrameLayout root = new FrameLayout(this);
+        root.addView(MobilePage.create(this, InventoryText.PAGE_TITLE,
+                MobilePage.scrollable(this, column)), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
-        root.addView(content);
-        root.addView(buildFooter());
+        /* 提示条浮在面板底部, 不参与内容滚动, 内容再长也不会把它挤出屏幕. */
+        TextView noticeView = AccountTheme.notice(this);
+        noticeBar = new NoticeBar(noticeView);
+        FrameLayout.LayoutParams noticeParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM);
+        int margin = AccountTheme.dp(this, 16f);
+        noticeParams.setMargins(margin, 0, margin, margin);
+        root.addView(noticeView, noticeParams);
         return root;
     }
 
-    private View buildHeader() {
-        LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.HORIZONTAL);
-        header.setGravity(Gravity.CENTER_VERTICAL);
+    /* 概览行: 格位说明, 已用格数与预览角标, 标题本身由面板标题行承担. */
+    private View buildOverviewRow() {
+        LinearLayout overview = new LinearLayout(this);
+        overview.setOrientation(LinearLayout.VERTICAL);
+        overview.addView(AccountTheme.subtitle(this, InventoryText.PAGE_SUBTITLE));
 
-        LinearLayout titles = new LinearLayout(this);
-        titles.setOrientation(LinearLayout.VERTICAL);
-        titles.addView(AccountTheme.title(this, InventoryText.PAGE_TITLE));
-        titles.addView(AccountTheme.subtitle(this, InventoryText.PAGE_SUBTITLE));
-        header.addView(titles, new LinearLayout.LayoutParams(0,
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+
+        summaryView = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_MUTED, 12f);
+        row.addView(summaryView, new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-
-        summaryView = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_ON_DARK, 12f);
-        summaryView.setGravity(Gravity.END);
-        header.addView(summaryView);
 
         badgeView = AccountTheme.body(this, InventoryText.PREVIEW_BADGE,
                 AccountTheme.COLOR_WARNING, 12f);
@@ -141,11 +151,10 @@ public final class InventoryActivity extends Activity implements InventoryGridVi
                 AccountTheme.dp(this, 8f), AccountTheme.dp(this, 2f));
         badgeView.setBackground(AccountTheme.rounded(this, AccountTheme.COLOR_ACCENT_SOFT, 6f));
         badgeView.setVisibility(View.GONE);
-        LinearLayout.LayoutParams badgeParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        badgeParams.leftMargin = AccountTheme.dp(this, 10f);
-        header.addView(badgeView, badgeParams);
-        return header;
+        row.addView(badgeView);
+
+        overview.addView(row, AccountTheme.block(this, 4f));
+        return overview;
     }
 
     private View buildGridArea() {
@@ -162,16 +171,13 @@ public final class InventoryActivity extends Activity implements InventoryGridVi
         return host;
     }
 
+    /* 选中格详情与操作按钮, 排在网格下方, 高度随内容. */
     private View buildDetailPanel() {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setBackground(AccountTheme.panelBackground(this));
         int padding = AccountTheme.dp(this, 12f);
         panel.setPadding(padding, padding, padding, padding);
-        LinearLayout.LayoutParams panelParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        panelParams.leftMargin = AccountTheme.dp(this, 12f);
-        panel.setLayoutParams(panelParams);
 
         detailTitleView = AccountTheme.label(this, InventoryText.DETAIL_EMPTY);
         panel.addView(detailTitleView);
@@ -180,9 +186,7 @@ public final class InventoryActivity extends Activity implements InventoryGridVi
         detailBodyView = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_MUTED, 12f);
         panel.addView(detailBodyView);
 
-        View filler = new View(this);
-        panel.addView(filler, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        panel.addView(AccountTheme.spacer(this, 8f));
 
         dropButton = AccountTheme.outlineButton(this, InventoryText.ACTION_DROP,
                 AccountTheme.COLOR_DANGER);
@@ -219,26 +223,6 @@ public final class InventoryActivity extends Activity implements InventoryGridVi
         closeParams.topMargin = AccountTheme.dp(this, 8f);
         panel.addView(closeButton, closeParams);
         return panel;
-    }
-
-    private View buildFooter() {
-        LinearLayout footer = new LinearLayout(this);
-        footer.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.topMargin = AccountTheme.dp(this, 8f);
-        footer.setLayoutParams(params);
-
-        noticeView = AccountTheme.notice(this);
-        noticeView.setVisibility(View.GONE);
-        noticeBar = new NoticeBar(noticeView);
-        footer.addView(noticeView);
-
-        TextView author = AccountTheme.body(this,
-                AccountTheme.authorFooter(this), AccountTheme.COLOR_TEXT_FAINT, 11f);
-        author.setGravity(Gravity.CENTER);
-        footer.addView(author);
-        return footer;
     }
 
     /* ---------------- 数据同步 ---------------- */
@@ -467,10 +451,9 @@ public final class InventoryActivity extends Activity implements InventoryGridVi
     }
 
     private void showNotice(String text, int color) {
-        if (noticeView == null) {
+        if (noticeBar == null) {
             return;
         }
-        noticeView.setVisibility(View.VISIBLE);
         noticeBar.show(text, color);
     }
 }

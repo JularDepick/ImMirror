@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.julardepick.immirror.R;
@@ -19,7 +18,7 @@ import com.julardepick.immirror.account.ErrorMessages;
 import com.julardepick.immirror.account.NoticeBar;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
-import com.julardepick.immirror.ui.PageBackground;
+import com.julardepick.immirror.ui.MobilePage;
 
 import java.util.List;
 import java.util.Locale;
@@ -232,33 +231,22 @@ public final class WalletActivity extends Activity {
         }
     }
 
+    /*
+     * 组装页面: 面板内纵向内容依次为说明行, 余额卡片, 签到日历, 签到卡片,
+     * 流水列表与作者页脚; 根视图层只保留浮在面板之上的提示条.
+     */
     private View buildPage() {
-        FrameLayout root = new FrameLayout(this);
-        PageBackground.apply(root);
-
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setClipToPadding(false);
-        /* 底部留出提示条高度, 滚到末尾时最后一张卡片不被提示条盖住. */
-        scroll.setPadding(0, 0, 0, AccountTheme.dp(this, 84f));
-
+        /* 面板内纵向内容: 说明行, 余额, 签到日历, 签到卡片, 流水与页脚. */
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
         column.setGravity(Gravity.CENTER_HORIZONTAL);
-        int padding = AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP);
-        column.setPadding(padding, AccountTheme.dp(this, 20f), padding, AccountTheme.dp(this, 18f));
-        scroll.addView(column, new ScrollView.LayoutParams(ScrollView.LayoutParams.MATCH_PARENT,
-                ScrollView.LayoutParams.WRAP_CONTENT));
-        root.addView(scroll, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT));
 
-        column.addView(AccountTheme.title(this, getString(R.string.wallet_title)));
         column.addView(AccountTheme.subtitle(this, getString(R.string.wallet_subtitle)),
-                AccountTheme.block(this, 4f));
+                AccountTheme.block(this, 2f));
 
         column.addView(buildBalanceCard(), cardParams(14f));
 
-        calendarMonthView = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 13f);
+        calendarMonthView = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_MUTED, 13f);
         calendarMonthView.setTypeface(calendarMonthView.getTypeface(), Typeface.BOLD);
         calendarMonthView.setGravity(Gravity.CENTER);
         column.addView(calendarMonthView, cardParams(12f));
@@ -284,6 +272,13 @@ public final class WalletActivity extends Activity {
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
 
+        /* 外层: 场景底图 + 遮罩 + 居中面板, 长内容在面板内部滚动. */
+        FrameLayout root = new FrameLayout(this);
+        root.addView(MobilePage.create(this, getString(R.string.wallet_title),
+                MobilePage.scrollable(this, column)), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
+        /* 提示条留在根视图层, 浮在面板下沿, 不随面板内容滚动. */
         TextView noticeView = AccountTheme.notice(this);
         noticeBar = new NoticeBar(noticeView);
         FrameLayout.LayoutParams noticeParams = new FrameLayout.LayoutParams(
@@ -323,7 +318,7 @@ public final class WalletActivity extends Activity {
 
         TextView header = AccountTheme.body(this,
                 getString(R.string.wallet_ledger_header, board.ledger().size()),
-                AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 13f);
+                AccountTheme.COLOR_TEXT_MUTED, 13f);
         header.setTypeface(header.getTypeface(), Typeface.BOLD);
         header.setGravity(Gravity.CENTER);
         section.addView(header);
@@ -333,7 +328,7 @@ public final class WalletActivity extends Activity {
         section.addView(ledgerHost, AccountTheme.block(this, 8f));
 
         ledgerEmptyView = AccountTheme.body(this, getString(R.string.wallet_ledger_empty),
-                AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 12f);
+                AccountTheme.COLOR_TEXT_MUTED, 12f);
         ledgerEmptyView.setGravity(Gravity.CENTER);
         ledgerEmptyView.setPadding(0, AccountTheme.dp(this, 12f), 0, AccountTheme.dp(this, 12f));
         section.addView(ledgerEmptyView);
@@ -364,12 +359,10 @@ public final class WalletActivity extends Activity {
         return row;
     }
 
+    /* 卡片宽度由面板内容区决定, 这里只给与上一块之间的间距. */
     private LinearLayout.LayoutParams cardParams(float topMarginDp) {
-        int available = AccountTheme.screenWidth(this)
-                - AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP * 2);
-        int width = Math.min(available, AccountTheme.dp(this, AccountTheme.CARD_MAX_WIDTH_DP));
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         params.topMargin = AccountTheme.dp(this, topMarginDp);
         return params;
     }

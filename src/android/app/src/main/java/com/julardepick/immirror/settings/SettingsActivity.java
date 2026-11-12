@@ -18,6 +18,7 @@ import com.julardepick.immirror.R;
 import com.julardepick.immirror.account.AccountTheme;
 import com.julardepick.immirror.account.NoticeBar;
 import com.julardepick.immirror.bridge.NativeBridge;
+import com.julardepick.immirror.ui.MobilePage;
 import com.julardepick.immirror.ui.PageBackground;
 
 import java.util.ArrayList;
@@ -279,32 +280,17 @@ public final class SettingsActivity extends Activity implements SettingControl.L
     }
 
     private View buildPage() {
-        FrameLayout root = new FrameLayout(this);
-        PageBackground.apply(root);
-
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setClipToPadding(false);
-        /* 底部留出提示条的高度, 滚到末尾时最后一行不会被提示条盖住. */
-        scroll.setPadding(0, 0, 0, AccountTheme.dp(this, 84f));
-
+        /* 面板内纵向内容: 说明行, 分组设置, 底部操作行与作者页脚. */
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
         column.setGravity(Gravity.CENTER_HORIZONTAL);
-        int padding = AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP);
-        column.setPadding(padding, AccountTheme.dp(this, 20f), padding, AccountTheme.dp(this, 18f));
-        scroll.addView(column, new ScrollView.LayoutParams(ScrollView.LayoutParams.MATCH_PARENT,
-                ScrollView.LayoutParams.WRAP_CONTENT));
-        root.addView(scroll, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT));
 
-        column.addView(AccountTheme.title(this, getString(R.string.settings_title)));
         column.addView(AccountTheme.subtitle(this, getString(R.string.settings_subtitle)),
-                AccountTheme.block(this, 4f));
+                AccountTheme.block(this, 2f));
 
         summaryView = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_FAINT, 12f);
         summaryView.setGravity(Gravity.CENTER);
-        column.addView(summaryView, AccountTheme.block(this, 8f));
+        column.addView(summaryView, AccountTheme.block(this, 6f));
 
         TextView legend = AccountTheme.body(this, getString(R.string.settings_legend),
                 AccountTheme.COLOR_TEXT_FAINT, 11f);
@@ -324,6 +310,12 @@ public final class SettingsActivity extends Activity implements SettingControl.L
                 AccountTheme.COLOR_TEXT_FAINT, 11f);
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
+
+        /* 外层: 场景底图 + 遮罩 + 居中面板, 长内容在面板内部滚动. */
+        FrameLayout root = new FrameLayout(this);
+        root.addView(MobilePage.create(this, getString(R.string.settings_title),
+                MobilePage.scrollable(this, column)), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
         TextView noticeView = AccountTheme.notice(this);
         noticeBar = new NoticeBar(noticeView);

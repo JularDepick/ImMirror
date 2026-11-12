@@ -16,7 +16,7 @@ ASSETS_ROOT = os.path.join(SRC_ROOT, "assets")
 TARGET_ROOT = os.path.join(SRC_ROOT, "android", "app", "src", "main", "assets")
 
 # 界面素材按用途分目录, 全部随包下发
-UI_DIRS = ("button", "panel", "dialog", "tab", "slot", "icon", "misc")
+UI_DIRS = ("button", "panel", "dialog", "tab", "slot", "icon", "misc", "common")
 
 # 物品图标源目录: 素材管线的明文工程树 (PNG), 未打包时物品图标回落占位色块
 ITEM_ICON_SOURCE = "../../../assets/project/items"
@@ -28,15 +28,42 @@ LOBBY_DIR = os.path.join(ASSETS_ROOT, "ui", "lobby")
 HUD_DIR = os.path.join(ASSETS_ROOT, "ui", "hud")
 
 
+# 音效源目录: 素材管线的明文工程树, 按子目录分类保存
+SOUND_SOURCE = "../../../assets/project/sounds"
+
+# 子目录到扁平文件名的前缀: 挖掘 / 放置 / 脚步 / 环境音各占一个前缀,
+# 其余分类直接用子目录名做前缀, 保证扁平化后不重名.
+SOUND_PREFIX = {
+    "blockd": "dig",
+    "blocks": "place",
+    "phy": "walk",
+    "env": "env",
+}
+
+
 def collect_sound_entries():
-    """音效清单: 全部已打包的 ogg, 覆盖blockdef 里的挖掘/放置/行走音取值."""
+    """音效清单: 把工程树的分类子目录扁平化成 assets/sounds/<前缀>_<名称>.ogg.
+
+    播放侧按扁平文件名拼路径, 因此这里统一改名; 带二级子目录的分类
+    (例如界面音的 button 分组) 把子目录名并入文件名, 不丢分类信息.
+    """
     entries = []
-    directory = os.path.join(ASSETS_ROOT, "sounds")
-    if not os.path.isdir(directory):
+    source_root = os.path.normpath(os.path.join(SCRIPT_DIR, SOUND_SOURCE))
+    if not os.path.isdir(source_root):
         return entries
-    for name in sorted(os.listdir(directory)):
-        if name.lower().endswith(".ogg"):
-            entries.append((os.path.join(directory, name), "sounds/" + name))
+    for base, dirs, files in os.walk(source_root):
+        dirs.sort()
+        relative = os.path.relpath(base, source_root).replace("\\", "/")
+        category = relative.split("/")[0]
+        sub_dirs = relative.split("/")[1:] if "/" in relative else []
+        prefix = SOUND_PREFIX.get(category, category)
+        for name in sorted(files):
+            if not name.lower().endswith(".ogg"):
+                continue
+            stem = name[:-4]
+            parts = [prefix] + sub_dirs + [stem]
+            target = "sounds/" + "_".join(parts) + ".ogg"
+            entries.append((os.path.join(base, name), target))
     return entries
 
 

@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.julardepick.immirror.R;
@@ -19,7 +18,7 @@ import com.julardepick.immirror.account.ErrorMessages;
 import com.julardepick.immirror.account.NoticeBar;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
-import com.julardepick.immirror.ui.PageBackground;
+import com.julardepick.immirror.ui.MobilePage;
 
 import org.json.JSONObject;
 
@@ -71,45 +70,40 @@ public final class AchievementActivity extends Activity {
         refresh();
     }
 
+    /*
+     * 组装页面: 面板内纵向内容为说明行, 页签与列表卡片, 作者页脚;
+     * 提示条留在卡片内, 与其他页面共用 NoticeBar 的动效.
+     */
     private View buildContentView() {
-        FrameLayout root = new FrameLayout(this);
-        PageBackground.apply(root);
-
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setClipToPadding(false);
-        root.addView(scroll, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-
+        /* 面板内纵向内容: 说明行, 页签与列表卡片, 作者页脚. */
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
         column.setGravity(Gravity.CENTER_HORIZONTAL);
-        int padding = AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP);
-        column.setPadding(padding, AccountTheme.dp(this, 20f), padding, AccountTheme.dp(this, 22f));
-        scroll.addView(column, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
 
-        column.addView(AccountTheme.title(this, ProgressText.TITLE,
-                AccountTheme.COLOR_TEXT_ON_DARK));
         column.addView(AccountTheme.subtitle(this, ProgressText.SUBTITLE,
-                        AccountTheme.COLOR_TEXT_ON_DARK_MUTED),
-                AccountTheme.block(this, 4f));
+                        AccountTheme.COLOR_TEXT_MUTED),
+                AccountTheme.block(this, 2f));
 
         LinearLayout card = buildCard();
         column.addView(card, cardParams());
 
-        TextView author = AccountTheme.body(this, ProgressText.TITLE,
-                AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 11f);
+        TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
+                AccountTheme.COLOR_TEXT_FAINT, 11f);
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
+
+        /* 外层: 场景底图 + 遮罩 + 居中面板, 长列表在面板内部滚动. */
+        FrameLayout root = new FrameLayout(this);
+        root.addView(MobilePage.create(this, ProgressText.TITLE,
+                MobilePage.scrollable(this, column)), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         return root;
     }
 
+    /* 卡片宽度由面板内容区决定, 这里只给与说明行之间的间距. */
     private LinearLayout.LayoutParams cardParams() {
-        int available = AccountTheme.screenWidth(this) - AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP * 2);
-        int width = Math.min(available, AccountTheme.dp(this, AccountTheme.CARD_MAX_WIDTH_DP));
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         params.topMargin = AccountTheme.dp(this, 16f);
         return params;
     }
