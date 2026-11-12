@@ -84,6 +84,13 @@ public:
     /* 在图形上下文中绘制一帧场景; 由渲染设备在清屏后回调. */
     void RenderScene();
 
+    /*
+     * 联机方块同步: 取走本地改动并序列化成 JSON 数组, 同时应用远端改动.
+     * 远端改动直接写世界, 不进本地改动队列, 避免来回反弹.
+     */
+    std::string TakeBlockEditsJson();
+    void ApplyRemoteBlockEdits(const std::string& json);
+
     /* 手持工具对目标方块的挖掘速度系数, 1.0 为徒手基准. */
     float MiningSpeedAgainst(voxel::BlockId block) const;
 

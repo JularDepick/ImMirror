@@ -17,6 +17,7 @@ import com.julardepick.immirror.account.SessionStore;
 import com.julardepick.immirror.audio.AmbientAudioManager;
 import com.julardepick.immirror.audio.CreatureSoundBank;
 import com.julardepick.immirror.editor.EditorBridge;
+import com.julardepick.immirror.net.BlockSyncApi;
 import com.julardepick.immirror.net.PresenceApi;
 import com.julardepick.immirror.progress.ProgressApi;
 import com.julardepick.immirror.progress.ProgressBoard;
@@ -84,6 +85,9 @@ public final class PlayActivity extends NativeActivity {
     private static final long PROGRESS_REPORT_INTERVAL_MS = 30000L;
     private static final long PRESENCE_INTERVAL_MS = 10000L;
     private PresenceApi presenceApi;
+    /* 方块改动同步: 与位置轮询同一节拍, 一次调用完成上报与拉取. */
+    private BlockSyncApi blockSyncApi;
+    private long blockSeq;
     private AmbientAudioManager ambientManager;
     private Handler presenceHandler;
     private Runnable presenceRunnable;
@@ -184,6 +188,9 @@ public final class PlayActivity extends NativeActivity {
         if (presenceApi == null) {
             presenceApi = new PresenceApi(this);
         }
+        if (blockSyncApi == null) {
+            blockSyncApi = new BlockSyncApi(this);
+        }
         if (presenceHandler == null) {
             presenceHandler = new Handler(Looper.getMainLooper());
         }
@@ -222,12 +229,39 @@ public final class PlayActivity extends NativeActivity {
         }
     }
 
+    /*
+     * 方块同步节拍: 取走本地改动推给服务端, 同时拉取别人的改动并应用.
+     * 与位置轮询分开成独立方法, 便于单独调周期而不牵连位置上报.
+     */
+    private void blockSyncTick(final Session session) {
+        if (blockSyncApi == null || session == null) {
+            return;
+        }
+        final String localEdits = NativeBridge.takeBlockEdits();
+        blockSyncApi.sync(session, localEdits, blockSeq, new BlockSyncApi.Callback() {
+            @Override
+            public void onSuccess(String editsJson, long seq) {
+                if (editsJson != null && editsJson.length() > 2) {
+                    NativeBridge.applyBlockEdits(editsJson);
+                }
+                blockSeq = seq;
+            }
+
+            @Override
+            public void onFailure(com.julardepick.immirror.account.ApiException error) {
+                Log.w(TAG, "block sync failed: " + error.code() + " " + error.detail());
+            }
+        });
+    }
+
     private void presenceTick(final Session session) {
         /* 日相与环境音: 顺带查询游戏内昼夜, 切换昼/夜环境音轨. */
         if (ambientManager != null) {
             ambientManager.setDayPhase(NativeBridge.getDayPhase());
             ambientManager.setAmbientGroup(ambientGroupOf(NativeBridge.getAmbientContext()));
         }
+        /* 位置与方块同一节拍推进, 两条通道互不阻塞. */
+        blockSyncTick(session);
         final String pose = NativeBridge.takePlayerPose();
         if (pose == null || pose.length() <= 2) {
             return;

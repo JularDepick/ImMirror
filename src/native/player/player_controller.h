@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "core/vec3.h"
 #include "player/buff_state.h"
 #include "player/input_tuning.h"
@@ -130,6 +132,19 @@ public:
      * 因此对总装开放这一个窄接口; 体力到饥饿的折算在内部统一完成.
      */
     void ConsumeStaminaPublic(float amount) { ConsumeStamina(amount); }
+
+    /*
+     * 本地方块改动: 挖掘与放置成功后记一条, 由总装取走并上报给服务端.
+     * 联机同步只关心"哪一格变成了什么", 不关心是谁改的, 来源由服务端补.
+     */
+    struct BlockEdit {
+        int32_t x = 0;
+        int32_t y = 0;
+        int32_t z = 0;
+        voxel::BlockId block = 0;
+    };
+    /* 取走累计的改动, 取走后列表清空. */
+    std::vector<BlockEdit> TakeBlockEdits();
 
     /* 受击反馈剩余秒数, 0 表示没有受击; 供总装叠加镜头摇晃. */
     float HurtSeconds() const { return hurtSeconds_; }
@@ -369,6 +384,11 @@ private:
     MineSession mine_;
     /* 当前挂着的状态效果, 移动/挖掘/跳跃/回血四处消费. */
     BuffState buffs_;
+    /* 待上报的方块改动, 有上限防止长时间离线时无限增长. */
+    std::vector<BlockEdit> blockEdits_;
+
+    /* 记一条待上报的方块改动, 内部用. */
+    void QueueBlockEdit(int32_t x, int32_t y, int32_t z, voxel::BlockId block);
     /* 挖掘速度系数, 1.0 为徒手基准. */
     float miningSpeed_ = 1.0f;
     CameraMode cameraMode_ = CameraMode::kFirstPerson;

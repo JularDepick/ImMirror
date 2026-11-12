@@ -174,6 +174,33 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakePlayerPose(JNIEnv* e
     return env->NewStringUTF(shell->FormatPlayerPose().c_str());
 }
 
+/* Java 侧低频入口: 取走本地方块改动 JSON, 供联机同步上报. */
+JNIEXPORT jstring JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeBlockEdits(JNIEnv* env, jclass clazz) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return env->NewStringUTF("[]");
+    }
+    return env->NewStringUTF(shell->TakeBlockEditsJson().c_str());
+}
+
+/* Java 侧低频入口: 应用远端方块改动 JSON. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeApplyBlockEdits(JNIEnv* env, jclass clazz,
+                                                                       jstring json) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr || json == nullptr) {
+        return;
+    }
+    const char* chars = env->GetStringUTFChars(json, nullptr);
+    if (chars != nullptr) {
+        shell->ApplyRemoteBlockEdits(chars);
+        env->ReleaseStringUTFChars(json, chars);
+    }
+}
+
 /* Java 侧低频入口: 接收其他玩家快照 JSON. */
 JNIEXPORT void JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeApplyRemotePlayers(JNIEnv* env, jclass clazz,

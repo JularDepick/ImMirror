@@ -203,6 +203,22 @@ public final class NativeBridge {
         return nativeTakePlayerPose();
     }
 
+    /* 取走本地方块改动 JSON, 取走后原生侧清空队列. */
+    public static String takeBlockEdits() {
+        if (!ensureLoaded()) {
+            return "[]";
+        }
+        return nativeTakeBlockEdits();
+    }
+
+    /* 应用远端方块改动 JSON. */
+    public static void applyBlockEdits(String json) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeApplyBlockEdits(json == null ? "[]" : json);
+    }
+
     /* 接收其他玩家快照 JSON, 原生侧更新远程玩家列表. */
     public static void applyRemotePlayers(String json) {
         if (!ensureLoaded()) {
@@ -224,6 +240,10 @@ public final class NativeBridge {
     private static native String nativeTakePlayerPose();
 
     private static native void nativeApplyRemotePlayers(String json);
+
+    private static native String nativeTakeBlockEdits();
+
+    private static native void nativeApplyBlockEdits(String json);
 
     private static native int nativeGetAmbientContext();
 

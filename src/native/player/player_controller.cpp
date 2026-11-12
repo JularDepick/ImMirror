@@ -297,7 +297,11 @@ bool PlayerController::BreakBlock(world::World& world) {
     if (!CastRay(world, hit)) {
         return false;
     }
-    return world.SetBlock(hit.block.x, hit.block.y, hit.block.z, 0);
+    if (!world.SetBlock(hit.block.x, hit.block.y, hit.block.z, 0)) {
+        return false;
+    }
+    QueueBlockEdit(hit.block.x, hit.block.y, hit.block.z, 0);
+    return true;
 }
 
 bool PlayerController::ProbeBlock(const world::World& world, voxel::BlockId& outBlock) const {
@@ -329,7 +333,11 @@ bool PlayerController::PlaceBlock(world::World& world, voxel::BlockId id) {
     if (AabbHitsBlock(position_, target)) {
         return false;
     }
-    return world.SetBlock(target.x, target.y, target.z, id);
+    if (!world.SetBlock(target.x, target.y, target.z, id)) {
+        return false;
+    }
+    QueueBlockEdit(target.x, target.y, target.z, id);
+    return true;
 }
 
 bool PlayerController::BeginMining(world::World& world) {
@@ -395,6 +403,7 @@ PlayerController::MineTick PlayerController::AdvanceMining(double dt, world::Wor
     tick.progress = 1.0f;
     tick.destroyed = world.SetBlock(mine_.block.x, mine_.block.y, mine_.block.z, 0);
     if (tick.destroyed) {
+        QueueBlockEdit(mine_.block.x, mine_.block.y, mine_.block.z, 0);
         tick.digSound = true;
         /* 破坏按次扣体力 (tili_action_destroyblock). */
         ConsumeStamina(survival::kStaminaDestroyBlock);
@@ -1124,6 +1133,21 @@ core::Vec3 PlayerController::ThirdPersonEyePosition() const {
 core::Vec3 PlayerController::ForwardDirection() const {
     const float cosPitch = std::cos(pitch_);
     return core::Vec3{-std::sin(yaw_) * cosPitch, std::sin(pitch_), -std::cos(yaw_) * cosPitch};
+}
+
+void PlayerController::QueueBlockEdit(int32_t x, int32_t y, int32_t z, voxel::BlockId block) {
+    /* 队列上限: 离线期间攒下的改动最多保留这么多, 超出丢最老的. */
+    constexpr size_t kMaxQueuedEdits = 256;
+    if (blockEdits_.size() >= kMaxQueuedEdits) {
+        blockEdits_.erase(blockEdits_.begin());
+    }
+    blockEdits_.push_back(BlockEdit{x, y, z, block});
+}
+
+std::vector<PlayerController::BlockEdit> PlayerController::TakeBlockEdits() {
+    std::vector<BlockEdit> taken;
+    taken.swap(blockEdits_);
+    return taken;
 }
 
 void PlayerController::Eat(float food, float heal) {

@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
+#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -920,6 +921,66 @@ std::string GameShell::FormatPlayerPose() const {
                   static_cast<double>(position.z),
                   static_cast<double>(player_->Yaw()), static_cast<double>(player_->Pitch()));
     return buffer;
+}
+
+std::string GameShell::TakeBlockEditsJson() {
+    const auto edits = player_->TakeBlockEdits();
+    if (edits.empty()) {
+        return "[]";
+    }
+    std::string json = "[";
+    for (size_t index = 0; index < edits.size(); ++index) {
+        if (index > 0) {
+            json += ",";
+        }
+        char buffer[160];
+        std::snprintf(buffer, sizeof(buffer), R"({"x":%d,"y":%d,"z":%d,"block":%u})", edits[index].x,
+                      edits[index].y, edits[index].z, static_cast<unsigned>(edits[index].block));
+        json += buffer;
+    }
+    json += "]";
+    return json;
+}
+
+void GameShell::ApplyRemoteBlockEdits(const std::string& json) {
+    /*
+     * 简化解析: 手写扫描 JSON 数组, 每条形如 {"x":1,"y":2,"z":3,"block":4}.
+     * 远端改动只写世界, 不进本地改动队列, 否则会来回反弹.
+     */
+    size_t cursor = 0;
+    int32_t applied = 0;
+    while (true) {
+        const size_t open = json.find('{', cursor);
+        if (open == std::string::npos) {
+            break;
+        }
+        const size_t close = json.find('}', open);
+        if (close == std::string::npos) {
+            break;
+        }
+        const std::string obj = json.substr(open, close - open + 1);
+        cursor = close + 1;
+        const auto readInt = [&obj](const char* key, int32_t fallback) -> int32_t {
+            const size_t pos = obj.find(key);
+            if (pos == std::string::npos) {
+                return fallback;
+            }
+            return static_cast<int32_t>(std::strtol(obj.c_str() + pos + std::strlen(key), nullptr, 10));
+        };
+        const int32_t x = readInt(R"(x":)", INT32_MIN);
+        const int32_t y = readInt(R"(y":)", INT32_MIN);
+        const int32_t z = readInt(R"(z":)", INT32_MIN);
+        const int32_t block = readInt(R"(block":)", -1);
+        if (x == INT32_MIN || y == INT32_MIN || z == INT32_MIN || block < 0) {
+            continue;
+        }
+        if (world_->SetBlock(x, y, z, static_cast<voxel::BlockId>(block))) {
+            ++applied;
+        }
+    }
+    if (applied > 0) {
+        IM_LOGD(kTag, "remote block edits applied=%d", applied);
+    }
 }
 
 void GameShell::ApplyRemotePlayers(const std::string& json) {
