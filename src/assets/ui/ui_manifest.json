@@ -2808,6 +2808,29 @@
    "template": ""
   },
   {
+   "path": "lobby/main_lobby_btn_purple_hall.png",
+   "width": 160,
+   "height": 54,
+   "category": "lobby",
+   "purpose": "大厅素材 btn_purple_hall",
+   "source_page": "texture0/main_lobby.ktx",
+   "source_sprite": "btn_purple_hall",
+   "source_rect": [
+    302,
+    52,
+    160,
+    54
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
    "path": "lobby/main_lobby_icon_halltop_friend.png",
    "width": 56,
    "height": 56,

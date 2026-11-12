@@ -68,4 +68,23 @@
     <!-- 卡片底部强调色条: 卡片底边高光约 6 像素, 折算 3dp -->
     <dimen name="lobby_card_stripe_height">3dp</dimen>
 
+
+    <!-- 大厅入口按钮: minilobby.xml 的 btn_orange_hall 298x100 / btn_blue_hall 221x88 /
+ btn_purple_hall 160x54 / btn_lgreen_hall 221x88 像素, 按 1 设计像素 = 0.5dp 折算;
+ 紫色小按钮原高 27dp 低于触摸命中下限, 抬到 32dp -->
+    <dimen name="lobby_hall_orange_width">149dp</dimen>
+    <dimen name="lobby_hall_orange_height">50dp</dimen>
+    <dimen name="lobby_hall_wide_width">110dp</dimen>
+    <dimen name="lobby_hall_wide_height">44dp</dimen>
+    <dimen name="lobby_hall_small_width">80dp</dimen>
+    <dimen name="lobby_hall_small_height">32dp</dimen>
+
+    <!-- 角色展示区: $parentRoleView 300x350 像素折算 150dp x 175dp, 取整后作为最小高度 -->
+    <dimen name="lobby_role_view_height">175dp</dimen>
+
+    <!-- 角色展示区头像: 原版是 3D 角色模型, 本界面用头像大图替代, 取 96dp -->
+    <dimen name="lobby_role_portrait_size">96dp</dimen>
+
+    <!-- 入口按钮之间的横向间隔: $parentMiniWorks 与 $parentLocalMap 之间约 16 像素, 折算 8dp -->
+    <dimen name="lobby_hall_gap">8dp</dimen>
 </resources>

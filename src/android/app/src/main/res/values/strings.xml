@@ -31,6 +31,7 @@
     <string name="lobby_balance_failed">镜币 读取失败</string>
     <string name="lobby_settings">设置</string>
     <string name="lobby_single">单人游戏</string>
+    <string name="lobby_role_name">我的角色</string>
     <string name="lobby_multiplayer">联机大厅</string>
     <string name="lobby_mini_works">迷你工坊</string>
     <string name="lobby_buddy">我的背包</string>

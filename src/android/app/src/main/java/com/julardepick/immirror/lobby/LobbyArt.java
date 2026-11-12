@@ -56,8 +56,14 @@ public final class LobbyArt {
     public static final String TITLE_HALL = ROOT + "bigtex/img_title_hall.png";
     public static final String BOARD_BOTTOM = ROOT + "bigtex/img_board_bottom.png";
 
-    /* 大厅顶部图标 (56x56): 设置按钮使用齿轮图标, 与 main_lobby_ex.xml 同名. */
+    /* 大厅顶部图标 (56x56): 设置按钮使用齿轮图标. */
     public static final String ICON_HALLTOP_SET = ROOT + "main_lobby_icon_halltop_set.png";
+
+    /* 大厅入口按钮 (minilobby 页): 开始游戏, 工坊, 联机, 资源四个入口的原尺寸按钮. */
+    public static final String HALL_ORANGE = ROOT + "main_lobby_btn_orange_hall.png";
+    public static final String HALL_BLUE = ROOT + "main_lobby_btn_blue_hall.png";
+    public static final String HALL_GREEN = ROOT + "main_lobby_btn_lgreen_hall.png";
+    public static final String HALL_PURPLE = ROOT + "main_lobby_btn_purple_hall.png";
     /* 大厅全屏底图: texture0/bigtex/main_lobby, 640x360 设计分辨率, 铺满屏幕做最底层背景. */
     public static final String MAIN_LOBBY_BG = ROOT + "bigtex/main_lobby.png";
     public static final String AVATAR_ROLE = ROOT + "extra/1.png";

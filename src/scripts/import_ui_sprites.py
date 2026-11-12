@@ -44,7 +44,7 @@ TEMPLATE_PAGES = {
 # 名字与 main_lobby_ex.xml 的 uvname 一一对应; 拉伸方式按素材原尺寸 1:1 使用, 记 stretch.
 NAMED_SPRITES = {
     "texture0/main_lobby": ("lobby", [
-        "btn_orange_hall", "btn_blue_hall", "btn_lgreen_hall", "btn_dgreen_hall",
+        "btn_orange_hall", "btn_blue_hall", "btn_lgreen_hall", "btn_dgreen_hall", "btn_purple_hall",
         "board_enter_workshop", "board_workshop",
     ]),
     "texture2/main_lobby": ("lobby", [

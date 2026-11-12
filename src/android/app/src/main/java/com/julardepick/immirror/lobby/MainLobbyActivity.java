@@ -108,50 +108,8 @@ public final class MainLobbyActivity extends Activity {
     private static final int BUTTON_MIDDLE = 16;
     private static final int BUTTON_RIGHT = 57;
 
-    /*
-     * 中部三列宽度比与右列两卡高度比, 取自 .agent/LOBBY_VISUAL_SPEC.md 第 4.1 节:
-     * $parentLocalMap 465x517, $parentMultiplayer 356x517 (与左卡间距 21),
-     * $parentMiniWorks 363x267, $parentHomeChest 363x265 (与工坊间距 -17).
-     * 用 weight 而非固定 dp, 让三列在窄屏上等比收缩而不被裁剪.
-     */
-    private static final int WEIGHT_LOCAL_MAP = 465;
-    private static final int WEIGHT_MULTIPLAYER = 356;
-    private static final int WEIGHT_SMALL_COLUMN = 363;
-    private static final int WEIGHT_SMALL_TOP = 267;
-    private static final int WEIGHT_SMALL_BOTTOM = 265;
-
-    /*
-     * 图标统一染白: extra/ 下的功能图标本身是白色线描, 但各张灰度不一
-     * (实测不透明像素平均亮度 134 ~ 255), 用 SRC_IN 统一压成纯白, 四张卡观感一致.
-     */
-    private static final int ICON_TINT = 0xFFFFFFFF;
-
-    /*
-     * 卡面图标: 卡片静态图 (img_board_start / img_board_online / img_board_workshop)
-     * 在资源树中缺失, 改用 extra/ 下的白色功能图标压在深色卡上.
-     * 图标路径直接由 assets 根给出, 与 LobbyArt.ROOT 同一目录前缀, 不改动 LobbyArt 常量.
-     */
-    private static final String LOBBY_EXTRA = "ui/lobby/extra/";
-    private static final String ICON_LOCAL_MAP = LOBBY_EXTRA + "icon_return_home.png";
-    private static final String ICON_MULTIPLAYER = LOBBY_EXTRA + "icon_friend_hall.png";
-    private static final String ICON_WORKSHOP = LOBBY_EXTRA + "icon_workshop.png";
-    private static final String ICON_INVENTORY = LOBBY_EXTRA + "icon_box_hall.png";
-
-    /*
-     * 卡面色板: 每张卡一个强调色, 由它在深底上拉出纵向渐变,
-     * 四张卡因此在同一深色体系内互相区分; 文字统一反白, 副标题取浅灰.
-     */
-    private static final int CARD_DEEP = 0xFF101A22;
-    private static final int ACCENT_LOCAL_MAP = 0xFF4FC3B0;
-    private static final int ACCENT_MULTIPLAYER = 0xFF63B3F0;
-    private static final int ACCENT_WORKSHOP = 0xFFE0A346;
-    private static final int ACCENT_INVENTORY = 0xFF9C7BE0;
+    /* 角色展示区与入口按钮上的文字色, 压在按钮素材上统一取深色. */
     private static final int CARD_TEXT = 0xFFFFFFFF;
-    private static final int CARD_TEXT_MUTED = 0xFFC6D3DA;
-    /* 深色九宫底板压在渐变上的不透明度: 太高会盖掉强调色, 太低看不到描边纹理. */
-    private static final int CARD_PLATE_ALPHA = 0x78;
-    /* 卡片底部强调色条的不透明度. */
-    private static final int CARD_STRIPE_ALPHA = 0xE6;
 
     /* 设计像素高度: 顶部条 66, 标题大图 64, 底栏大图 58; 一条设计像素按 artScale 折算. */
     private static final float TOP_BAND_PX = 66f;
@@ -541,131 +499,126 @@ public final class MainLobbyActivity extends Activity {
     }
 
     /*
-     * 中部主入口: 复刻MiniLobbyFrameCenter 的一大两小结构.
+     * 中部主入口: 角色展示区在上, 四个入口按钮在下, 与 MiniLobbyFrameCenter 一致.
      *
-     * 三个子控件横排: 左 $parentLocalMap 465 宽, 中 $parentMultiplayer 356 宽 (与左卡间距 21),
-     * 右列 $parentMiniWorks 363 宽且其下叠 $parentHomeChest 363 宽, 右列两张卡在 517 像素高度内
-     * 按 267 / 265 分配. 折算到本界面即三列: 左列整列大卡 "单人游戏", 中列整列大卡 "联机大厅",
-     * 右列上下两小卡 "迷你工坊" 与 "我的背包" (对应家园宝箱位). 四列比例用 weight 保持,
-     * 与屏幕宽度无关; 容器不再铺底板, 卡与卡之间露出的 11dp 就是大厅底图本身.
+     * 原版把角色模型摆在中间 ($parentRoleView 300x350), 底边一行入口按钮:
+     * $parentMiniWorks (btn_blue_hall 221x88), $parentResourceShop (btn_purple_hall 160x54),
+     * $parentLocalMap (btn_orange_hall 298x100, 最大的"开始游戏"), $parentMultiplayer
+     * (btn_lgreen_hall 221x88). 本界面按同一顺序与同一素材摆放, 角色模型用头像大图替代.
      */
     private View buildCenterBand() {
-        final int gap = dimen(R.dimen.lobby_gap);
-        final int height = dimen(R.dimen.lobby_center_height);
-
-        final View single = centerCard(true, getString(R.string.lobby_single),
-                getString(R.string.lobby_single_subtitle), ICON_LOCAL_MAP, ACCENT_LOCAL_MAP);
-        single.setOnClickListener(view ->
-                startActivity(new Intent(this, WorldListActivity.class)));
-        final View multiplayer = centerCard(true, getString(R.string.lobby_multiplayer),
-                getString(R.string.lobby_multiplayer_subtitle), ICON_MULTIPLAYER, ACCENT_MULTIPLAYER);
-        multiplayer.setOnClickListener(view -> openMultiplayerLobby());
-        final View miniWorks = centerCard(false, getString(R.string.lobby_mini_works),
-                getString(R.string.lobby_mini_works_subtitle), ICON_WORKSHOP, ACCENT_WORKSHOP);
-        miniWorks.setOnClickListener(view ->
-                startActivity(new Intent(this, MapEditorActivity.class)));
-        final View buddy = centerCard(false, getString(R.string.lobby_buddy),
-                getString(R.string.lobby_buddy_subtitle), ICON_INVENTORY, ACCENT_INVENTORY);
-        buddy.setOnClickListener(view ->
-                startActivity(new Intent(this, InventoryActivity.class)));
-
         final LinearLayout band = new LinearLayout(this);
-        band.setOrientation(LinearLayout.HORIZONTAL);
-        band.addView(single, columnParams(WEIGHT_LOCAL_MAP, 0, height));
-        band.addView(multiplayer, columnParams(WEIGHT_MULTIPLAYER, gap, height));
-        band.addView(smallColumn(miniWorks, buddy), columnParams(WEIGHT_SMALL_COLUMN, gap, height));
+        band.setOrientation(LinearLayout.VERTICAL);
+        band.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        band.addView(buildRoleView(), new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        band.addView(buildHallRow(), new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
         return band;
     }
 
-    /* 右列: 上下两张小卡按267 / 265 的高度比分掉整列高度, 中间留 8dp 贴缝. */
-    private View smallColumn(View top, View bottom) {
-        final LinearLayout column = new LinearLayout(this);
-        column.setOrientation(LinearLayout.VERTICAL);
-        column.addView(top, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, WEIGHT_SMALL_TOP));
-        final LinearLayout.LayoutParams bottomParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, WEIGHT_SMALL_BOTTOM);
-        bottomParams.topMargin = dimen(R.dimen.lobby_center_small_gap);
-        column.addView(bottom, bottomParams);
-        return column;
+    /* 角色展示区: 头像大图加玩家名, 对应 $parentRoleView; 头像缺失时只留文案. */
+    private View buildRoleView() {
+        final LinearLayout view = new LinearLayout(this);
+        view.setOrientation(LinearLayout.VERTICAL);
+        view.setGravity(Gravity.CENTER);
+        view.setMinimumHeight(dimen(R.dimen.lobby_role_view_height));
+
+        final Drawable portrait = LobbyArt.image(this, LobbyArt.AVATAR_ROLE);
+        if (portrait != null) {
+            final ImageView image = new ImageView(this);
+            image.setImageDrawable(portrait);
+            image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            final int size = dimen(R.dimen.lobby_role_portrait_size);
+            final LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(size, size);
+            imageParams.gravity = Gravity.CENTER_HORIZONTAL;
+            view.addView(image, imageParams);
+        }
+
+        final TextView name = text(getString(R.string.lobby_role_name), CARD_TEXT, TEXT_CARD_TITLE);
+        name.setGravity(Gravity.CENTER);
+        name.setShadowLayer(AccountTheme.dp(this, 4f), 0f, AccountTheme.dp(this, 1f), 0x99000000);
+        view.addView(name, wrapParams(dimen(R.dimen.lobby_card_title_gap)));
+        return view;
     }
 
     /*
-     * 单张卡: 卡面自下而上为强调色渐变底, 深色九宫底板 (TemplateBkg8), 底部强调色条,
-     * 内容为 "图标在上, 标题在中, 副标题在下" 的居中竖列.
-     * 图标缺失时只少一张图, 标题与副标题照常居中显示, 卡面不会留白.
+     * 入口按钮行: 四个原尺寸大厅按钮横排, 顺序与素材一一对应.
+     * 每个按钮的尺寸取素材原设计像素, 文字叠在按钮中央, 按钮素材缺失时回落幽灵底.
      */
-    private View centerCard(boolean tall, CharSequence title, CharSequence subtitle,
-                            String iconPath, int accent) {
-        final FrameLayout card = new FrameLayout(this);
-        card.setBackground(AccountTheme.pressed(0x33FFFFFF, cardSurface(accent)));
+    private View buildHallRow() {
+        final LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER);
+        final int gap = dimen(R.dimen.lobby_hall_gap);
 
-        final int padding = dimen(R.dimen.lobby_card_padding);
-        final LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.setGravity(Gravity.CENTER);
-        content.setPadding(padding, padding, padding, padding);
+        final Button works = hallButton(LobbyArt.HALL_BLUE, getString(R.string.lobby_mini_works),
+                R.dimen.lobby_hall_wide_width, R.dimen.lobby_hall_wide_height);
+        works.setOnClickListener(view -> startActivity(new Intent(this, MapEditorActivity.class)));
 
-        final Drawable icon = LobbyArt.image(this, iconPath);
-        if (icon != null) {
-            final ImageView view = new ImageView(this);
-            view.setImageDrawable(icon);
-            view.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            view.setColorFilter(ICON_TINT, PorterDuff.Mode.SRC_IN);
-            view.setContentDescription(title);
-            final int size = tall ? dimen(R.dimen.lobby_card_icon_size)
-                    : dimen(R.dimen.lobby_card_icon_size_small);
-            final LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(size, size);
-            iconParams.gravity = Gravity.CENTER_HORIZONTAL;
-            content.addView(view, iconParams);
-        }
+        final Button bag = hallButton(LobbyArt.HALL_PURPLE, getString(R.string.lobby_buddy),
+                R.dimen.lobby_hall_small_width, R.dimen.lobby_hall_small_height);
+        bag.setOnClickListener(view -> startActivity(new Intent(this, InventoryActivity.class)));
 
-        final TextView titleView = text(title, CARD_TEXT, tall ? TEXT_TITLE : TEXT_CARD_TITLE);
-        titleView.setTypeface(titleView.getTypeface(), Typeface.BOLD);
-        titleView.setGravity(Gravity.CENTER);
-        /* 卡面为渐变底, 标题加一点投影, 亮部上也不糊. */
-        titleView.setShadowLayer(AccountTheme.dp(this, 4f), 0f, AccountTheme.dp(this, 1f),
-                0x99000000);
-        content.addView(titleView, centerParams(dimen(R.dimen.lobby_card_title_gap)));
+        final Button single = hallButton(LobbyArt.HALL_ORANGE, getString(R.string.lobby_single),
+                R.dimen.lobby_hall_orange_width, R.dimen.lobby_hall_orange_height);
+        single.setOnClickListener(view -> startActivity(new Intent(this, WorldListActivity.class)));
 
-        final TextView subtitleView = text(subtitle, CARD_TEXT_MUTED, TEXT_SECONDARY);
-        subtitleView.setGravity(Gravity.CENTER);
-        subtitleView.setMaxLines(2);
-        content.addView(subtitleView, centerParams(AccountTheme.dp(this, 4f)));
+        final Button multiplayer = hallButton(LobbyArt.HALL_GREEN,
+                getString(R.string.lobby_multiplayer), R.dimen.lobby_hall_wide_width,
+                R.dimen.lobby_hall_wide_height);
+        multiplayer.setOnClickListener(view -> openMultiplayerLobby());
 
-        card.addView(content, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT,
-                Gravity.CENTER));
-
-        final View stripe = new View(this);
-        stripe.setBackgroundColor(withAlpha(accent, CARD_STRIPE_ALPHA));
-        final FrameLayout.LayoutParams stripeParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                dimen(R.dimen.lobby_card_stripe_height));
-        stripeParams.gravity = Gravity.BOTTOM;
-        card.addView(stripe, stripeParams);
-        return card;
+        row.addView(works, hallParams(R.dimen.lobby_hall_wide_width,
+                R.dimen.lobby_hall_wide_height, 0));
+        row.addView(bag, hallParams(R.dimen.lobby_hall_small_width,
+                R.dimen.lobby_hall_small_height, gap));
+        row.addView(single, hallParams(R.dimen.lobby_hall_orange_width,
+                R.dimen.lobby_hall_orange_height, gap));
+        row.addView(multiplayer, hallParams(R.dimen.lobby_hall_wide_width,
+                R.dimen.lobby_hall_wide_height, gap));
+        return row;
     }
 
-    /*
-     * 卡面底: 强调色到深底的纵向渐变 (自上而下三档), 描一圈同色细边,
-     * 再压一层TemplateBkg8 深色九宫, 保留卡片的描边与像素纹理.
-     */
-    private Drawable cardSurface(int accent) {
-        final GradientDrawable base = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{mix(accent, CARD_DEEP, 0.25f), mix(accent, CARD_DEEP, 0.72f), CARD_DEEP});
-        base.setCornerRadius(AccountTheme.dp(this, AccountTheme.CARD_RADIUS_DP));
-        base.setStroke(AccountTheme.pixel(this, 1f), withAlpha(accent, 0x66));
-        final Drawable plate = LobbyArt.nineSlice(this, LobbyArt.BOARD_DARK,
-                NINE_TILE_SMALL, NINE_TILE_SMALL, NINE_TILE_SMALL, NINE_TILE_SMALL);
-        if (plate == null) {
-            return base;
-        }
-        plate.setAlpha(CARD_PLATE_ALPHA);
-        return new LayerDrawable(new Drawable[]{base, plate});
+    /* 单个入口按钮: 素材做底, 深色文字居中, 按压时整体缩放由 AccountTheme 统一处理. */
+    private Button hallButton(String assetPath, CharSequence label, int widthRes, int heightRes) {
+        final Button view = new Button(this);
+        view.setText(label);
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, TEXT_CARD_TITLE);
+        view.setTextColor(COLOR_ART_TEXT);
+        view.setTypeface(view.getTypeface(), Typeface.BOLD);
+        view.setGravity(Gravity.CENTER);
+        view.setPadding(0, 0, 0, 0);
+        view.setAllCaps(false);
+        view.setMinWidth(0);
+        view.setMinHeight(0);
+        view.setMinimumWidth(0);
+        view.setMinimumHeight(0);
+        view.setBackground(AccountTheme.pressed(0x33FFFFFF, hallSurface(assetPath)));
+        view.setContentDescription(label);
+        return view;
     }
 
-    /* 联机大厅入口: 跳转协作方实现的联机大厅页. */
+    /* 入口按钮底: 优先用原尺寸素材, 缺失时回落深色圆角底, 保证按钮仍然可点可读. */
+    private Drawable hallSurface(String assetPath) {
+        final Drawable art = LobbyArt.image(this, assetPath);
+        if (art != null) {
+            return art;
+        }
+        return AccountTheme.panelBackground(this);
+    }
+
+    private LinearLayout.LayoutParams hallParams(int widthRes, int heightRes, int leftMargin) {
+        final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                dimen(widthRes), dimen(heightRes));
+        params.leftMargin = leftMargin;
+        params.gravity = Gravity.CENTER_VERTICAL;
+        return params;
+    }
+
+    /* 联机大厅入口: 跳转联机大厅页. */
     private void openMultiplayerLobby() {
         startActivity(new Intent(this, MultiplayerLobbyActivity.class));
     }
@@ -838,13 +791,6 @@ public final class MainLobbyActivity extends Activity {
                 : AccountTheme.outlineButton(this, label, color);
         view.setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp);
         return view;
-    }
-
-    /* 中部三列参数: 宽度按像素比分配, 高度统一取整列高. */
-    private LinearLayout.LayoutParams columnParams(int weight, int leftMargin, int height) {
-        final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, height, weight);
-        params.leftMargin = leftMargin;
-        return params;
     }
 
     /* 中部区域参数: 宽度沿用 630dp 居中带, 高度取517 像素折算的 259dp. */
