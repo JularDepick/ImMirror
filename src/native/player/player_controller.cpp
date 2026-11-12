@@ -93,11 +93,19 @@ bool IsSolidBlock(voxel::BlockId id) {
  * 挖掘所需秒数: 硬度乘比例系数, 并抬到最短时长.
  * 硬度为 -1 表示不可破坏, 返回 0 作为拒绝累计进度的信号.
  */
-float MineDurationOf(float hardness) {
+float MineDurationOf(float hardness, float speedMultiplier) {
     if (hardness < 0.0f) {
         return 0.0f;
     }
-    const float seconds = hardness * mining::kSecondsPerHardness;
+    /* 速度系数在换算前先裁剪: 小于 0.05 会让任何方块都挖不动, 大于 10 失去手感. */
+    float speed = speedMultiplier;
+    if (!(speed > 0.05f)) {
+        speed = 0.05f;
+    }
+    if (speed > 10.0f) {
+        speed = 10.0f;
+    }
+    const float seconds = hardness * mining::kSecondsPerHardness / speed;
     return seconds < mining::kMinMineSeconds ? mining::kMinMineSeconds : seconds;
 }
 
@@ -321,7 +329,7 @@ bool PlayerController::BeginMining(world::World& world) {
     }
     const voxel::BlockId id = world.GetBlock(hit.block.x, hit.block.y, hit.block.z);
     const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(id);
-    const float duration = MineDurationOf(info.hardness);
+    const float duration = MineDurationOf(info.hardness, miningSpeed_);
     if (duration <= 0.0f) {
         /* 硬度 -1 的水与基岩: 不累计进度, 也不响应破坏. */
         return false;
@@ -1071,6 +1079,33 @@ core::Vec3 PlayerController::ThirdPersonEyePosition() const {
 core::Vec3 PlayerController::ForwardDirection() const {
     const float cosPitch = std::cos(pitch_);
     return core::Vec3{-std::sin(yaw_) * cosPitch, std::sin(pitch_), -std::cos(yaw_) * cosPitch};
+}
+
+void PlayerController::RecomputeMiningDuration() {
+    if (!mine_.active) {
+        return;
+    }
+    const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(mine_.id);
+    const float duration = MineDurationOf(info.hardness, miningSpeed_);
+    if (duration <= 0.0f || duration == mine_.duration) {
+        return;
+    }
+    /* 已挖的部分按旧时长折成进度, 再按新时长折算回去, 手感上不会跳变. */
+    const float progress = mine_.duration > 0.0f ? mine_.elapsed / mine_.duration : 0.0f;
+    mine_.duration = duration;
+    mine_.elapsed = progress * duration;
+    if (mine_.elapsed > duration) {
+        mine_.elapsed = duration;
+    }
+}
+
+void PlayerController::SetMiningSpeed(float multiplier) {
+    /* 越界值裁剪到可用区间, 其余交给 MineDurationOf 二次兜底. */
+    if (!(multiplier > 0.05f)) {
+        miningSpeed_ = 0.05f;
+        return;
+    }
+    miningSpeed_ = multiplier > 10.0f ? 10.0f : multiplier;
 }
 
 void PlayerController::SetPose(const core::Vec3& position, float yaw, float pitch) {

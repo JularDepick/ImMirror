@@ -4,6 +4,7 @@
 
 #include "game/generated/block_data_gen.h"
 #include "game/generated/item_data_gen.h"
+#include "game/generated/tool_data_gen.h"
 #include "voxel/block_registry.h"
 
 namespace immirror::game::item {
@@ -60,6 +61,18 @@ ItemId ItemTable::OfBlock(voxel::BlockId block) const {
 voxel::BlockId ItemTable::BlockOf(ItemId id) const {
     const int16_t block = Info(id).block;
     return block < 0 ? voxel::block::Air : static_cast<voxel::BlockId>(block);
+}
+
+bool ItemTable::ToolOf(ItemId id, ToolInfo& out) const {
+    const gen::ToolEntry* entry = gen::ToolOfItem(static_cast<uint16_t>(id));
+    if (entry == nullptr) {
+        return false;
+    }
+    out.harvest = entry->harvest;
+    out.level = entry->level;
+    out.efficiency = entry->efficiency;
+    out.durability = entry->durability;
+    return true;
 }
 
 ItemId ItemTable::DropOfBlock(voxel::BlockId block) const {

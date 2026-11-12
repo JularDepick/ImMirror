@@ -209,6 +209,18 @@ public:
     /* 当前挖掘所需的总秒数, 未挖掘时为 0. */
     float MiningDuration() const { return mine_.active ? mine_.duration : 0.0f; }
 
+    /*
+     * 挖掘速度系数: 1.0 表示徒手, 大于 1 更快, 小于 1 更慢.
+     * 由总装按手持工具与目标方块折算后下发, 控制器本身不查物品表.
+     */
+    void SetMiningSpeed(float multiplier);
+
+    /*
+     * 按当前速度系数重算本次挖掘的总时长, 进度按比例保留.
+     * 总装先起手拿到目标方块, 再按手持工具算速度, 然后调用本方法校正时长.
+     */
+    void RecomputeMiningDuration();
+
 private:
     /* 把多指针快照翻译成摇杆量, 视角增量与跳跃请求. */
     void ProcessInput(float dt, platform::InputSnapshot& input);
@@ -340,6 +352,8 @@ private:
     LookTuning look_;
     StickTuning stick_;
     MineSession mine_;
+    /* 挖掘速度系数, 1.0 为徒手基准. */
+    float miningSpeed_ = 1.0f;
     CameraMode cameraMode_ = CameraMode::kFirstPerson;
     /* 最近一次 Update 的世界, 相机后撤的碰撞回收在渲染期按同帧数据判定. */
     const world::World* worldRef_ = nullptr;

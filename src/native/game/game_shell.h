@@ -84,6 +84,9 @@ public:
     /* 在图形上下文中绘制一帧场景; 由渲染设备在清屏后回调. */
     void RenderScene();
 
+    /* 手持工具对目标方块的挖掘速度系数, 1.0 为徒手基准. */
+    float MiningSpeedAgainst(voxel::BlockId block) const;
+
     /*
      * 当前天空底色, 按昼夜混合后写入 out 的三个分量.
      * 供渲染后端清屏使用, 与雾色分开: 雾只影响远景方块, 天空不参与雾.

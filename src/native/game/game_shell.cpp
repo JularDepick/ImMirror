@@ -279,6 +279,17 @@ GameShell::GameShell()
 void GameShell::SeedStartingItems() {
     inventory_.Reset();
     const item::ItemTable& items = item::ItemTable::Instance();
+    /*
+     * 起步工具先进快捷栏: 第一格放石铲, 第二格放木铲.
+     * 铲子对应土与沙, 新建世界的第一件事就是挖土, 拿在手上能直接感受到效率差异.
+     */
+    const char* startingTools[] = {"StoneShovel", "WoodenShovel"};
+    for (const char* key : startingTools) {
+        const item::ItemId tool = items.FindByKey(key);
+        if (tool != item::kNone) {
+            inventory_.Add(tool, 1);
+        }
+    }
     for (int32_t slot = 0; slot < Inventory::kHotbarSlots; ++slot) {
         const item::ItemId id = items.OfBlock(ui::BlockSlotId(slot));
         if (id != item::kNone) {
@@ -1308,10 +1319,44 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
     editPointerId_ = -1;
 }
 
+/*
+ * 手持工具对目标方块的挖掘速度系数.
+ *
+ * 规则: 空手为 1.0; 工具族与方块要求的采集工具族一致时按工具效率折算
+ * (效率 50 表示比徒手快一倍); 族不一致按三分之一速度, 比徒手还慢,
+ * 让玩家有动力换对应工具. 工具等级当前不参与折算: 方块表未把等级带进运行时.
+ */
+float GameShell::MiningSpeedAgainst(voxel::BlockId block) const {
+    const item::ItemId held = inventory_.ItemAt(selectedSlot_);
+    if (held == item::kNone) {
+        return 1.0f;
+    }
+    item::ItemTable::ToolInfo tool;
+    if (!item::ItemTable::Instance().ToolOf(held, tool)) {
+        return 1.0f;
+    }
+    const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(block);
+    const auto required = static_cast<int32_t>(info.tool);
+    const auto harvest = static_cast<int32_t>(tool.harvest);
+    /* 徒手可采的方块 (要求 kHand) 任何工具都按效率全额算. */
+    const bool familyMatches = harvest == required || required == 0;
+    float speed = static_cast<float>(tool.efficiency) / 100.0f;
+    if (!familyMatches) {
+        speed *= 0.33f;
+    }
+    return speed > 0.05f ? speed : 0.05f;
+}
+
 bool GameShell::BeginEditMining() {
     if (!player_->BeginMining(*world_)) {
         return false;
     }
+    /*
+     * 起手后才能知道目标方块, 而工具是否对口取决于目标方块的采集工具族,
+     * 因此速度系数在这里算完再回填时长.
+     */
+    player_->SetMiningSpeed(MiningSpeedAgainst(player_->MiningBlock()));
+    player_->RecomputeMiningDuration();
     const voxel::BlockId block = player_->MiningBlock();
     const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(block);
     /*

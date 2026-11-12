@@ -116,6 +116,10 @@ fi
 # 生物音效按生物 ID 分目录, 构建前折算成 路径对照表
 "$PYTHON_BIN" "$SCRIPT_DIR/gen_entity_sound.py"
 
+# ---------------------------------------------------------------- 工具属性表
+# 工具表与物品表靠中文名对应, 因此必须在 gen_item_data.py 之后执行
+"$PYTHON_BIN" "$SCRIPT_DIR/gen_tool_data.py"
+
 printf '原生构建配置\n'
 printf '  源码目录     : %s\n' "$NATIVE_DIR"
 printf '  构建根目录   : %s\n' "$BUILD_ROOT"

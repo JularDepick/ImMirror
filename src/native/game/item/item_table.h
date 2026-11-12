@@ -32,6 +32,19 @@ public:
     voxel::BlockId BlockOf(ItemId id) const;
 
     /*
+     * 工具属性查询: 该物品是挖掘类工具时返回条目, 否则返回空指针.
+     * 工具表由 scripts/gen_tool_data.py 按名称把工具定义挂到物品上,
+     * 挂不上的工具不返回条目, 挖掘时按徒手处理.
+     */
+    struct ToolInfo {
+        uint8_t harvest = 0;     /* 采集工具档位, 与 voxel::HarvestTool 对齐 */
+        uint8_t level = 0;       /* 工具等级, 1 起 */
+        uint16_t efficiency = 0; /* 效率百分比, 徒手按 100 */
+        uint16_t durability = 0; /* 满耐久 */
+    };
+    bool ToolOf(ItemId id, ToolInfo& out) const;
+
+    /*
      * 破坏方块后掉落的物品 id. 掉落规则沿用方块数据表的 ToolMineDrop1 折算结果,
      * 方块本身没有掉落物时返回 kNone.
      */
