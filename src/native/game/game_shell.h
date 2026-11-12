@@ -87,6 +87,12 @@ public:
     /* 手持工具对目标方块的挖掘速度系数, 1.0 为徒手基准. */
     float MiningSpeedAgainst(voxel::BlockId block) const;
 
+    /* 饥饿低于阈值时自动吃一样可食用物品, 吃掉返回 true. */
+    bool TryAutoEat();
+
+    /* 进食判定的随机源, 只用于附加状态的万分比判定. */
+    uint32_t nextRandom();
+
     /*
      * 当前天空底色, 按昼夜混合后写入 out 的三个分量.
      * 供渲染后端清屏使用, 与雾色分开: 雾只影响远景方块, 天空不参与雾.
@@ -368,6 +374,10 @@ private:
     std::unordered_map<uint32_t, double> deathStartTimes_;
 
     double elapsedSeconds_ = 0.0;
+    /* 进食附加状态判定用的轻量随机源. */
+    uint32_t eatRandom_ = 0x9e3779b9u;
+    /* 自动进食冷却, 单位秒. */
+    float eatCooldown_ = 0.0f;
     double logAccumulator_ = 0.0;
     double saveAccumulator_ = 0.0;
     std::string savePath_;

@@ -13,6 +13,7 @@
 #include "entity/entity_tuning.h"
 #include "game/crafting/recipe_matcher.h"
 #include "game/generated/block_data_gen.h"
+#include "game/generated/food_data_gen.h"
 #include "game/containers.h"
 #include "game/furnace.h"
 #include "game/inventory.h"
@@ -110,6 +111,11 @@ static_assert(gen::kBlockDataCount == static_cast<int32_t>(voxel::block::Count),
 
 /* 世界种子, 固定值便于复现地形. */
 constexpr uint32_t kWorldSeed = 20260101u;
+
+/* 自动进食的饥饿阈值: 低于三成时吃, 留出反应余量. */
+constexpr float kAutoEatHungerThreshold = 0.3f;
+/* 两次自动进食的最小间隔, 避免一口接一口把背包吃空. */
+constexpr float kAutoEatCooldownSeconds = 1.5f;
 
 /* 自动存档间隔. */
 constexpr double kAutoSaveSeconds = 20.0;
@@ -276,6 +282,54 @@ GameShell::GameShell()
     }
 }
 
+/*
+ * 自动进食: 饥饿低于阈值时从快捷栏与背包里找一样可食用物品吃掉.
+ *
+ * 当前没有独立的"使用物品"交互, 这条路径让食物与附加状态先能跑通;
+ * 后续接入背包界面的使用按钮后, 这里可以退化为兜底.
+ */
+uint32_t GameShell::nextRandom() {
+    eatRandom_ ^= eatRandom_ << 13;
+    eatRandom_ ^= eatRandom_ >> 17;
+    eatRandom_ ^= eatRandom_ << 5;
+    return eatRandom_;
+}
+
+bool GameShell::TryAutoEat() {
+    if (player_->HungerRatio() > kAutoEatHungerThreshold || !player_->Alive()) {
+        return false;
+    }
+    for (int32_t slot = 0; slot < Inventory::kSlotCount; ++slot) {
+        const item::ItemStack stack = inventory_.Slot(slot);
+        if (stack.Empty()) {
+            continue;
+        }
+        const gen::FoodEntry* food = gen::FoodOfItem(static_cast<uint16_t>(stack.item));
+        if (food == nullptr) {
+            continue;
+        }
+        player_->Eat(static_cast<float>(food->food), static_cast<float>(food->heal));
+        /* 附加状态按万分比逐条判定. */
+        const uint32_t pairs[3][2] = {{food->buffId1, food->buffOdds1},
+                                      {food->buffId2, food->buffOdds2},
+                                      {food->buffId3, food->buffOdds3}};
+        for (const auto& pair : pairs) {
+            if (pair[0] == 0 || pair[1] == 0) {
+                continue;
+            }
+            const uint32_t roll = nextRandom() % 10000u;
+            if (roll < pair[1]) {
+                player_->ApplyBuff(pair[0]);
+                IM_LOGI(kTag, "food buff applied id=%u", pair[0]);
+            }
+        }
+        inventory_.Take(slot, 1);
+        IM_LOGI(kTag, "auto eat item=%d slot=%d", static_cast<int32_t>(stack.item), slot);
+        return true;
+    }
+    return false;
+}
+
 void GameShell::SeedStartingItems() {
     inventory_.Reset();
     const item::ItemTable& items = item::ItemTable::Instance();
@@ -308,6 +362,17 @@ void GameShell::SeedStartingItems() {
         const item::ItemId partItem = items.OfBlock(part);
         if (partItem != item::kNone) {
             inventory_.Add(partItem, 16);
+        }
+    }
+    /*
+     * 起步食物: 带一份土豆与一份方南瓜, 饥饿见底时自动进食这条路径才跑得起来.
+     * 编号取自食物表, 与物品表按原版物品 ID 对齐.
+     */
+    const item::ItemId startingFood[] = {static_cast<item::ItemId>(733),
+                                         static_cast<item::ItemId>(270)};
+    for (const item::ItemId food : startingFood) {
+        if (food != item::kNone && items.Info(food).key[0] != '\0') {
+            inventory_.Add(food, 3);
         }
     }
     const item::ItemId stick = items.FindByKey("WoodBar");
@@ -610,6 +675,13 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     } else {
         UpdateHudButtons(lastInput_, deltaSeconds);
         MaybeRequestAutoJump();
+        /* 饥饿过低时自动进食, 与移动判定同一分支: 面板打开期间不吃. */
+        if (eatCooldown_ <= 0.0f && TryAutoEat()) {
+            eatCooldown_ = kAutoEatCooldownSeconds;
+        }
+        if (eatCooldown_ > 0.0f) {
+            eatCooldown_ -= static_cast<float>(deltaSeconds);
+        }
         player_->Update(deltaSeconds, lastInput_, *world_);
         UpdateEditGesture(lastInput_, deltaSeconds);
     }

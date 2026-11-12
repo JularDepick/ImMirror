@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/vec3.h"
+#include "player/buff_state.h"
 #include "player/input_tuning.h"
 #include "player/survival_tuning.h"
 #include "platform/input_state.h"
@@ -216,6 +217,20 @@ public:
     void SetMiningSpeed(float multiplier);
 
     /*
+     * 状态效果: 由总装在玩家吃到带效果的食物或药水时挂上.
+     * 控制器在移动, 挖掘, 跳跃与回血四处消费, 自身不查效果表.
+     */
+    /*
+     * 进食: 恢复饥饿度与生命, 生命不超过上限, 饥饿不超过满值.
+     * 附加状态由调用方另行挂上, 控制器只负责数值.
+     */
+    void Eat(float food, float heal);
+
+    void ApplyBuff(uint32_t buffId) { buffs_.Apply(buffId); }
+    void ClearBuffs() { buffs_.Clear(); }
+    const BuffState& Buffs() const { return buffs_; }
+
+    /*
      * 按当前速度系数重算本次挖掘的总时长, 进度按比例保留.
      * 总装先起手拿到目标方块, 再按手持工具算速度, 然后调用本方法校正时长.
      */
@@ -352,6 +367,8 @@ private:
     LookTuning look_;
     StickTuning stick_;
     MineSession mine_;
+    /* 当前挂着的状态效果, 移动/挖掘/跳跃/回血四处消费. */
+    BuffState buffs_;
     /* 挖掘速度系数, 1.0 为徒手基准. */
     float miningSpeed_ = 1.0f;
     CameraMode cameraMode_ = CameraMode::kFirstPerson;

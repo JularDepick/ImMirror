@@ -174,6 +174,19 @@ void PlayerController::Update(double dt, platform::InputSnapshot& input, const w
     }
 
     /*
+     * 状态效果先推进: 到期的效果在这一帧就失效, 后续移动与挖掘按新的倍率算.
+     * 生命恢复按秒折算, 死亡等待期间不生效.
+     */
+    buffs_.Tick(static_cast<float>(clamped));
+    const float regen = buffs_.RegenPerSecond();
+    if (regen > 0.0f && deathSeconds_ <= 0.0f && health_ < kMaxHealth) {
+        health_ += regen * static_cast<float>(clamped);
+        if (health_ > kMaxHealth) {
+            health_ = kMaxHealth;
+        }
+    }
+
+    /*
      * 死亡等待: 期间不处理输入也不推进物理, 计时结束后回到出生点并回满血.
      * 重生放在这里而不是伤害发生的当场, 让受击与死亡有一个可感知的停顿.
      */
@@ -329,7 +342,7 @@ bool PlayerController::BeginMining(world::World& world) {
     }
     const voxel::BlockId id = world.GetBlock(hit.block.x, hit.block.y, hit.block.z);
     const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(id);
-    const float duration = MineDurationOf(info.hardness, miningSpeed_);
+    const float duration = MineDurationOf(info.hardness, miningSpeed_ * buffs_.DigMultiplier());
     if (duration <= 0.0f) {
         /* 硬度 -1 的水与基岩: 不累计进度, 也不响应破坏. */
         return false;
@@ -631,6 +644,8 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     if (sneaking_) {
         ratio *= survival::kMoveSneakRatio;
     }
+    /* 状态效果最后乘: 加速与减速都按百分比作用在最终移动倍率上. */
+    ratio *= buffs_.SpeedMultiplier();
     if (ratio < survival::kMoveRatioMin) {
         ratio = survival::kMoveRatioMin;
     }
@@ -644,7 +659,10 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
         /* 体力低于下限禁止起跳; 冲刺中起跳按快跑跳扣更多体力 (分组语义). */
         if (stamina_ >= survival::kStaminaActionFloor) {
             ConsumeStamina(sprinting_ ? survival::kStaminaSprintJump : survival::kStaminaJump);
-            velocity_.y = kJumpSpeed;
+            /* 跳跃高度增量按速度增量折算: 起跳速度乘 (1 + 增量 / 基准高度). */
+            const float jumpBonus = buffs_.JumpBonus();
+            const float jumpScale = jumpBonus > 0.0f ? 1.0f + jumpBonus * 0.15f : 1.0f;
+            velocity_.y = kJumpSpeed * jumpScale;
             onGround_ = false;
             /* 跳跃真正生效的时刻打一条日志, 便于区分按钮, 双击与键盘三条来源. */
             IM_LOGI(kTag, "jump applied vy=%.2f feet=%.2f", static_cast<double>(velocity_.y),
@@ -1108,12 +1126,31 @@ core::Vec3 PlayerController::ForwardDirection() const {
     return core::Vec3{-std::sin(yaw_) * cosPitch, std::sin(pitch_), -std::cos(yaw_) * cosPitch};
 }
 
+void PlayerController::Eat(float food, float heal) {
+    if (food > 0.0f) {
+        hunger_ += food;
+        if (hunger_ > survival::kHungerMax) {
+            hunger_ = survival::kHungerMax;
+        }
+    }
+    if (heal > 0.0f && health_ < kMaxHealth) {
+        health_ += heal;
+        if (health_ > kMaxHealth) {
+            health_ = kMaxHealth;
+        }
+    }
+    IM_LOGI(kTag, "eat food=%.0f heal=%.0f hunger=%.1f health=%.1f", static_cast<double>(food),
+            static_cast<double>(heal), static_cast<double>(hunger_),
+            static_cast<double>(health_));
+}
+
 void PlayerController::RecomputeMiningDuration() {
     if (!mine_.active) {
         return;
     }
     const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(mine_.id);
-    const float duration = MineDurationOf(info.hardness, miningSpeed_);
+    /* 挖掘速度叠加状态效果的倍率, 与手持工具的系数相乘. */
+    const float duration = MineDurationOf(info.hardness, miningSpeed_ * buffs_.DigMultiplier());
     if (duration <= 0.0f || duration == mine_.duration) {
         return;
     }
