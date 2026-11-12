@@ -342,6 +342,7 @@ PlayerController::MineTick PlayerController::AdvanceMining(double dt, world::Wor
         return tick;
     }
     tick.block = mine_.id;
+    tick.blockPos = mine_.block;
     tick.duration = mine_.duration;
 
     /* 目标格被其他途径改动时结束本次挖掘, 不把进度算到别的方块上. */

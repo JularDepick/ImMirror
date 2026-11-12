@@ -10,25 +10,28 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.julardepick.immirror.lobby.MainLobbyActivity;
 import com.julardepick.immirror.R;
 import com.julardepick.immirror.net.LanDiscovery;
+import com.julardepick.immirror.ui.MobilePage;
 
 /*
  * 登录界面.
  *
  * 登录, 注册与找回密码共用一页, 通过顶部标签切换; 登录支持邮箱或 UID 加密码,
- * 也可以切换为邮箱验证码登录. 背景沿用游戏登录底图, 控件全部用原生 View 以编程方式构建.
- * 所有提示都显示在页面内的提示条里, 不使用 Toast 与系统弹窗.
+ * 也可以切换为邮箱验证码登录. 背景沿用游戏登录底图, 页面走面板骨架, 内容在面板内部滚动,
+ * 控件全部用原生 View 以编程方式构建. 所有提示都显示在页面内的提示条里,
+ * 不使用 Toast 与系统弹窗.
  */
 public final class LoginActivity extends Activity {
 
@@ -90,6 +93,32 @@ public final class LoginActivity extends Activity {
     }
 
     private View buildContentView() {
+        /*
+         * 面板内纵向内容: 说明行, 登录卡片与作者页脚.
+         * 页面标题由面板标题行承担, 内容随面板一起滚动, 不再有整页大标题.
+         */
+        LinearLayout column = new LinearLayout(this);
+        column.setOrientation(LinearLayout.VERTICAL);
+        column.setGravity(Gravity.CENTER_HORIZONTAL);
+        column.setPadding(0, 0, 0, AccountTheme.dp(this, 10f));
+
+        column.addView(AccountTheme.subtitle(this, getString(R.string.launcher_subtitle)),
+                AccountTheme.block(this, 4f));
+
+        column.addView(buildCard(), cardParams());
+
+        TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
+                AccountTheme.COLOR_TEXT_FAINT, 11f);
+        author.setGravity(Gravity.CENTER);
+        column.addView(author, AccountTheme.block(this, 14f));
+
+        /*
+         * 外层容器: 自下而上是登录底图, 面板骨架的遮罩, 居中面板.
+         *
+         * 骨架会把它自己的根视图背景铺成大厅底图, 所以这里先清掉那张背景,
+         * 再把登录底图作为最底层的子视图垫进容器, 骨架整体压在它上面;
+         * 遮罩由骨架统一提供, 本页不再另叠一层, 最终只有一张底图.
+         */
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(AccountTheme.COLOR_PAGE);
 
@@ -99,48 +128,53 @@ public final class LoginActivity extends Activity {
         root.addView(background, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
-        View scrim = new View(this);
-        scrim.setBackgroundColor(AccountTheme.COLOR_SCRIM);
-        root.addView(scrim, new FrameLayout.LayoutParams(
+        View page = MobilePage.create(this, getString(R.string.account_tab_login),
+                MobilePage.scrollable(this, column));
+        page.setBackground(null);
+        root.addView(page, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setClipToPadding(false);
-
-        LinearLayout column = new LinearLayout(this);
-        column.setOrientation(LinearLayout.VERTICAL);
-        column.setGravity(Gravity.CENTER_HORIZONTAL);
-        int padding = AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP);
-        column.setPadding(padding, AccountTheme.dp(this, 20f), padding, AccountTheme.dp(this, 22f));
-        scroll.addView(column, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
-        root.addView(scroll, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-
-        column.addView(AccountTheme.title(this, getString(R.string.launcher_title),
-                AccountTheme.COLOR_TEXT_ON_DARK));
-        column.addView(AccountTheme.subtitle(this, getString(R.string.launcher_subtitle),
-                        AccountTheme.COLOR_TEXT_ON_DARK_MUTED),
-                AccountTheme.block(this, 4f));
-
-        LinearLayout card = buildCard();
-        column.addView(card, cardParams());
-
-        TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
-                AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 11f);
-        author.setGravity(Gravity.CENTER);
-        column.addView(author, AccountTheme.block(this, 14f));
+        hidePanelCloseButton(page);
         return root;
     }
 
+    /* 卡片宽度由面板内容区决定, 这里只给与说明行之间的间距. */
     private LinearLayout.LayoutParams cardParams() {
-        int available = AccountTheme.screenWidth(this) - AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP * 2);
-        int width = Math.min(available, AccountTheme.dp(this, AccountTheme.CARD_MAX_WIDTH_DP));
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.topMargin = AccountTheme.dp(this, 18f);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.topMargin = AccountTheme.dp(this, 16f);
         return params;
+    }
+
+    /*
+     * 隐藏面板标题行右侧的关闭按钮.
+     *
+     * 骨架给每个二级页都配了关闭按钮, 点击即结束当前页; 登录页是应用的入口页,
+     * 结束之后没有可以返回的界面, 因此这里只留标题, 把关闭按钮藏起来.
+     * 该按钮是标题行里唯一的图像按钮, 内容区里的按钮与输入框都不是图像按钮,
+     * 因此深度优先找到的第一个图像按钮就是它.
+     */
+    private void hidePanelCloseButton(View page) {
+        View close = findImageButton(page);
+        if (close != null) {
+            close.setVisibility(View.GONE);
+        }
+    }
+
+    private static View findImageButton(View view) {
+        if (view instanceof ImageButton) {
+            return view;
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int index = 0; index < group.getChildCount(); index++) {
+                View found = findImageButton(group.getChildAt(index));
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     private LinearLayout buildCard() {

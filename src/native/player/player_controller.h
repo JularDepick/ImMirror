@@ -179,6 +179,7 @@ public:
         bool digSound = false;    /* 本帧应播放一次挖掘音, 起手与完成各算一次 */
         bool destroyed = false;   /* 本帧完成破坏, 方块已经从世界移除 */
         voxel::BlockId block = 0; /* 本次挖掘的目标方块 id, 供音效与日志取材质 */
+        voxel::BlockPos blockPos{}; /* 目标方块的世界坐标, 供碎屑与特效定位 */
         float progress = 0.0f;    /* 当前进度, 0 到 1 */
         float elapsed = 0.0f;     /* 已累计的挖掘秒数 */
         float duration = 0.0f;    /* 该方块所需的总秒数, 由硬度换算 */

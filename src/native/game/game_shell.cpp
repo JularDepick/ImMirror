@@ -26,6 +26,7 @@
 #include "progress/progress_hub.h"
 #include "render/chunk_renderer.h"
 #include "render/creature_visual.h"
+#include "render/particle_system.h"
 #include "settings/settings.h"
 #include "settings/settings_tuning.h"
 #include "ui/hud_renderer.h"
@@ -322,6 +323,10 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         return;
     }
     renderer_->SetViewportSize(width_, height_);
+    /* 粒子通道与区块渲染共用同一份图形上下文, 在这里一并初始化. */
+    if (!render::particle::Initialize()) {
+        IM_LOGW(kTag, "particle system unavailable, block debris disabled");
+    }
     surfaceReady_ = true;
     /* 表面重建后旧的指针快照已经失效, 复位输入状态, 不把退出前的按住带进新画面. */
     ResetInputState();
@@ -473,6 +478,8 @@ void GameShell::OnSurfaceLost() {
     if (!surfaceReady_) {
         return;
     }
+    /* 表面销毁前释放粒子通道的图形资源, 与区块渲染器同一时机. */
+    render::particle::Shutdown();
     SaveWorld();
     /* 面板关闭并把合成网格与携带中的堆叠退回物品栏, 避免退出时丢材料. */
     inventoryScreen_.ReturnAllToInventory(inventory_);
@@ -513,6 +520,8 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
         return;
     }
     elapsedSeconds_ += deltaSeconds;
+    /* 粒子按帧推进, 与玩家和世界的推进同一时间片. */
+    render::particle::Update(deltaSeconds);
     lastInput_ = input;
 
     /*
@@ -1329,6 +1338,10 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
     IM_LOGI(kTag, "mine done block=%s hardness=%.2f need=%.2fs elapsed=%.2fs dig=%d", info.name,
             static_cast<double>(info.hardness), static_cast<double>(tick.duration),
             static_cast<double>(tick.elapsed), static_cast<int32_t>(DigSoundOf(info.material)));
+    /* 破坏点撒碎屑: 取方块中心, 颜色按图集格平均色. */
+    render::particle::EmitBlockBreak(tick.block, static_cast<float>(tick.blockPos.x) + 0.5f,
+                                     static_cast<float>(tick.blockPos.y) + 0.5f,
+                                     static_cast<float>(tick.blockPos.z) + 0.5f);
     CollectDrop(tick.block);
     /* 破坏后手指仍按住时接着挖下一格, 与连续挖掘的手感一致. */
     BeginEditMining();
@@ -1732,6 +1745,9 @@ void GameShell::RenderScene() {
     renderer_->SetViewProjection(viewProjection, camera);
     renderer_->Sync(*world_);
     renderer_->Draw();
+
+    /* 方块碎屑在区块之后绘制: 它要压在方块表面之上, 又要在生物与界面之下. */
+    render::particle::Draw(viewProjection);
 
     /*
      * 生物的程序化体素形象: 按定义索引折算部件与配色, 受击闪白与死亡倒地
