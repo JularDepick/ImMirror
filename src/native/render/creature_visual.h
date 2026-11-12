@@ -39,6 +39,20 @@ struct CreatureView {
 
 void Draw(const CreatureView* views, int32_t count, const float* viewProjection16);
 
+/*
+ * 远端玩家的位置与朝向. 与生物共用同一套体素几何与变换,
+ * 只是用一套固定的人形与配色, 玩家之间靠位置区分而不是靠外观.
+ */
+struct PlayerView {
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    float yaw = 0.0f;
+};
+
+/* 提交一帧的全部远端玩家形象, 与 Draw 共用同一个着色器与缓冲. */
+void DrawPlayers(const PlayerView* views, int32_t count, const float* viewProjection16);
+
 /* 类别数, 由生成表条目数决定, 供调用方核对. */
 int32_t DefCount();
 

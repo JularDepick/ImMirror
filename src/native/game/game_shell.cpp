@@ -1960,21 +1960,33 @@ void GameShell::RenderScene() {
 
     if (remotePlayers_.Count() > 0) {
         const auto& players = remotePlayers_.Players();
-        /* 远端玩家进入渲染队列时打一条节流日志, 联机可见性靠它确认. */
-        static double loggedRemote = -100.0;
-        if (elapsedSeconds_ - loggedRemote > 5.0) {
-            loggedRemote = elapsedSeconds_;
-            IM_LOGI(kTag, "remote markers count=%d first=%.1f,%.1f,%.1f", static_cast<int32_t>(players.size()),
-                    static_cast<double>(players[0].x), static_cast<double>(players[0].y),
-                    static_cast<double>(players[0].z));
-        }
         const int32_t rpCount = static_cast<int32_t>(players.size());
+        /*
+         * 远端玩家画成与生物同一套体素人形: 比竖条标记更容易辨认距离与朝向.
+         * 标记通道保留, 作为头顶的辅助标识, 与形象叠加显示.
+         */
+        static std::vector<render::creature::PlayerView> playerViews;
+        playerViews.clear();
+        playerViews.reserve(static_cast<size_t>(rpCount));
+        for (int32_t i = 0; i < rpCount; ++i) {
+            render::creature::PlayerView view;
+            view.x = players[i].x;
+            view.y = players[i].y;
+            view.z = players[i].z;
+            view.yaw = players[i].yaw;
+            playerViews.push_back(view);
+        }
+        render::creature::DrawPlayers(playerViews.data(), rpCount, viewProjection);
+
         std::vector<float> rxs(rpCount), rys(rpCount), rzs(rpCount);
         for (int32_t i = 0; i < rpCount; ++i) {
-            rxs[i] = players[i].x; rys[i] = players[i].y; rzs[i] = players[i].z;
+            rxs[i] = players[i].x;
+            /* 标记抬到头顶, 与形象错开, 不再插进身体里. */
+            rys[i] = players[i].y + 1.9f;
+            rzs[i] = players[i].z;
         }
-        ui::RenderRemoteMarkers(rxs.data(), rys.data(), rzs.data(), rpCount,
-                                viewProjection, width_, height_);
+        ui::RenderRemoteMarkers(rxs.data(), rys.data(), rzs.data(), rpCount, viewProjection, width_,
+                                height_);
     }
 
     if (settings_->HideUi()) {

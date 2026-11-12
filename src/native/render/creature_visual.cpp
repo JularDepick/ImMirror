@@ -521,6 +521,100 @@ void Draw(const CreatureView* views, int32_t count, const float* viewProjection1
     glDisable(GL_CULL_FACE);
 }
 
+/*
+ * 远端玩家的固定形象: 人形轮廓加一对眼睛, 配色取青蓝, 与生物的暗色系分开,
+ * 远处一眼能看出那是玩家而不是怪.
+ */
+DefVisual gPlayerVisual;
+bool gPlayerVisualReady = false;
+
+void BuildPlayerVisual() {
+    if (gPlayerVisualReady) {
+        return;
+    }
+    gPlayerVisualReady = true;
+    gPlayerVisual.boxCount = 0;
+    gPlayerVisual.baseRed = 0.35f;
+    gPlayerVisual.baseGreen = 0.62f;
+    gPlayerVisual.baseBlue = 0.90f;
+
+    /* 尺寸取玩家碰撞盒: 宽 0.6, 高 1.8, 厚 0.6. */
+    const float halfW = 0.30f * 0.8f;
+    const float halfT = 0.30f * 0.8f;
+    const float height = 1.8f;
+    const float headH = height * 0.24f;
+    const float torsoH = height * 0.46f;
+    const float legH = height - headH - torsoH;
+    const float legY = legH * 0.5f;
+    const float torsoY = legH + torsoH * 0.5f;
+    const float headY = legH + torsoH + headH * 0.5f;
+
+    PushBox(gPlayerVisual, 0.0f, torsoY, 0.0f, halfW, torsoH * 0.5f, halfT, 1.0f);
+    PushBox(gPlayerVisual, 0.0f, headY, 0.0f, halfW * 0.85f, headH * 0.5f, halfT * 0.85f, 1.15f);
+    const float legOffX = halfW * 0.55f;
+    PushBox(gPlayerVisual, -legOffX, legY, 0.0f, halfW * 0.35f, legH * 0.5f, halfT * 0.8f, 0.75f);
+    PushBox(gPlayerVisual, legOffX, legY, 0.0f, halfW * 0.35f, legH * 0.5f, halfT * 0.8f, 0.75f);
+    /* 双臂: 躯干两侧的细长条, 让剪影不是一个方块柱. */
+    PushBox(gPlayerVisual, -halfW * 1.3f, torsoY, 0.0f, halfW * 0.28f, torsoH * 0.55f, halfT * 0.6f,
+            0.9f);
+    PushBox(gPlayerVisual, halfW * 1.3f, torsoY, 0.0f, halfW * 0.28f, torsoH * 0.55f, halfT * 0.6f,
+            0.9f);
+    /* 眼睛: 深色, 贴在头部前表面 (-Z 为前向). */
+    PushEyePair(gPlayerVisual, 0.0f, headY, -halfT * 0.85f, halfW * 0.85f, false);
+}
+
+void DrawPlayers(const PlayerView* views, int32_t count, const float* viewProjection16) {
+    if (!gInitialized || views == nullptr || viewProjection16 == nullptr || count <= 0) {
+        return;
+    }
+    if (!HasCurrentContext()) {
+        return;
+    }
+    BuildPlayerVisual();
+    static float vertices[kVertexCapacity * kFloatsPerVertex];
+    int32_t written = 0;
+    for (int32_t i = 0; i < count && written + kBoxesPerCreature * kVertsPerBox <= kVertexCapacity;
+         ++i) {
+        /* 视锥粗剔除: 相机后方的个体直接跳过. */
+        const float clipW = viewProjection16[3] * views[i].x + viewProjection16[7] * views[i].y +
+                            viewProjection16[11] * views[i].z + viewProjection16[15];
+        if (clipW <= 0.1f) {
+            continue;
+        }
+        CreatureView view;
+        view.x = views[i].x;
+        view.y = views[i].y;
+        view.z = views[i].z;
+        view.yaw = views[i].yaw;
+        view.hurt = 0.0f;
+        view.death = 0.0f;
+        view.defIndex = 0;
+        written += WriteCreature(view, gPlayerVisual,
+                                 vertices + static_cast<size_t>(written) * kFloatsPerVertex);
+    }
+    if (written == 0) {
+        return;
+    }
+
+    glUseProgram(gProgram);
+    glUniformMatrix4fv(gViewProjectionLocation, 1, GL_FALSE, viewProjection16);
+    glBindVertexArray(gVao);
+    glBindBuffer(GL_ARRAY_BUFFER, gVbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0,
+                    static_cast<GLsizeiptr>(written) * kFloatsPerVertex * sizeof(float), vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+    glDrawArrays(GL_TRIANGLES, 0, written);
+    glBindVertexArray(0);
+    glDisable(GL_CULL_FACE);
+}
+
 int32_t DefCount() {
     return kDefCount;
 }
