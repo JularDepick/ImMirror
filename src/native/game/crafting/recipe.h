@@ -10,7 +10,7 @@ using item::ItemId;
 using item::ItemStack;
 
 /*
- * 配方匹配方式. 原版 crafting.csv 用横占格与竖占格描述摆放区域,
+ * 配方匹配方式. crafting.csv 用横占格与竖占格描述摆放区域,
  * 每个材料格记一种材料与数量, 同种材料出现在多格时数量累加,
  * 也就是"材料齐备即可合成"的无序语义, 因此表内配方都是 kShapeless.
  * kShaped 按格位精确匹配, 供后续手写的图案配方使用.
@@ -30,10 +30,10 @@ struct RecipeMaterial {
  * 一条配方的只读视图, 与生成表 recipe_data_gen.h 的条目一一对应.
  * 无序配方: materials 前 materialCount 项是聚合后的材料清单;
  * 有序配方: materials 按格位行优先排列, 长度固定为 9, 空位 item 为 0.
- * gridWidth 与 gridHeight 是原版的摆放区域尺寸, 界面据此提示配方大小.
+ * gridWidth 与 gridHeight 是的摆放区域尺寸, 界面据此提示配方大小.
  */
 struct RecipeInfo {
-    uint32_t sourceId;      /* 原版 crafting.csv 的配方 ID */
+    uint32_t sourceId;      /* crafting.csv 的配方 ID */
     ItemId result;          /* 产物物品 id */
     int32_t resultCount;    /* 一次合成的产物数量 */
     RecipeKind kind;
@@ -43,7 +43,7 @@ struct RecipeInfo {
     RecipeMaterial materials[9];
 };
 
-/* 合成网格边长与格数, 与原版工作台的 3x3 一致. */
+/* 合成网格边长与格数, 与工作台的 3x3 一致. */
 constexpr int32_t kGridSize = 3;
 constexpr int32_t kGridSlotCount = kGridSize * kGridSize;
 

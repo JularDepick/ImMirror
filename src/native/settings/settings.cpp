@@ -36,7 +36,7 @@ void Settings::ApplyDefaults() {
     for (int32_t index = 0; index < kSettingKeyCount; ++index) {
         values_[index].store(Info(static_cast<Key>(index)).defaultValue);
     }
-    /* 默认表里 classical 为 0, rocker 为 1, 即默认浮动摇杆, 与原版一致. */
+    /* 默认表里 classical 为 0, rocker 为 1, 即默认浮动摇杆, 与数据表一致. */
 }
 
 void Settings::ApplyEntries(const std::vector<SettingsStore::Entry>& entries) {
@@ -113,7 +113,7 @@ int32_t Settings::Set(Key key, int32_t value) {
     values_[index].store(applied);
 
     /*
-     * 经典模式与摇杆模式在原版是互斥勾选, 数据层保证两者不会同时为 1:
+     * 经典模式与摇杆模式在是互斥勾选, 数据层保证两者不会同时为 1:
      * 打开其中一个立即关掉另一个, 设置界面读到的状态因此始终一致.
      */
     if (key == Key::kClassical) {

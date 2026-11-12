@@ -15,8 +15,8 @@ using ItemId = uint16_t;
 constexpr ItemId kNone = 0;
 
 /*
- * 物品类别, 取值与原版 itemdef 的背包筛选类型一致:
- * 1 装备, 2 工具, 3 方块, 4 材料. 表里留空时按原版 Type 字段兜底.
+ * 物品类别, 取值与itemdef 的背包筛选类型一致:
+ * 1 装备, 2 工具, 3 方块, 4 材料. 表里留空时按Type 字段兜底.
  */
 enum class ItemCategory : uint8_t {
     kUnknown = 0,
@@ -28,17 +28,17 @@ enum class ItemCategory : uint8_t {
 
 /*
  * 物品静态属性, 由 ItemTable 持有, 生存期与进程一致.
- * key 为原版英文键, 界面点阵字只收录 ASCII, 因此标签一律用 key 而不是中文名;
+ * key 为英文键, 界面点阵字只收录 ASCII, 因此标签一律用 key 而不是中文名;
  * displayName 保留中文名, 供日志与后续界面贴图使用.
  */
 struct ItemInfo {
-    uint32_t sourceId;       /* 原版 itemdef 的物品 ID */
-    const char* key;         /* 原版英文键, 也用作界面标签 */
-    const char* displayName; /* 原版中文名, UTF-8 编码 */
-    const char* icon;        /* 原版图标名, 空串表示没有独立图标 */
+    uint32_t sourceId;       /* itemdef 的物品 ID */
+    const char* key;         /* 英文键, 也用作界面标签 */
+    const char* displayName; /* 中文名, UTF-8 编码 */
+    const char* icon;        /* 图标名, 空串表示没有独立图标 */
     uint16_t maxStack;       /* 单格最大堆叠数量 */
     ItemCategory category;   /* 背包筛选类别 */
-    uint8_t itemType;        /* 原版 Type 字段, 保留便于回溯 */
+    uint8_t itemType;        /* Type 字段, 保留便于回溯 */
     int16_t block;           /* 放置出的客户端方块 id, -1 表示不可放置 */
 };
 

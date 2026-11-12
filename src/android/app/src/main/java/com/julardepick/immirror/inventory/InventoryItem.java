@@ -9,7 +9,7 @@ import java.util.Locale;
  * 从 itemdef.csv 生成, 界面需要展示时才通过 InventoryBridge 取一次快照,
  * 这里不做第二份数据表, 也不缓存可写状态.
  *
- * 图标字段沿用原版 itemdef 的写法: 形如 icon11203 的是 assets/items 下的独立 PNG,
+ * 图标字段沿用itemdef 的写法: 形如 icon11203 的是 assets/items 下的独立 PNG,
  * 形如 [sapling_fruittree 的是方块图集里的一格, 界面对后者回落到占位绘制.
  */
 public final class InventoryItem {

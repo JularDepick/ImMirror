@@ -518,8 +518,8 @@ std::string DisassembleProto(const Program& program, const Proto& proto) {
 }
 
 std::string DisassembleProgram(const Program& program) {
-    std::string out = "; 脚本 " + program.chunkName + "  原型数量 " +
-                      std::to_string(program.protos.size()) + "  入口 " +
+    std::string out = "; 脚本 " + program.chunkName + " 原型数量 " +
+                      std::to_string(program.protos.size()) + " 入口 " +
                       std::to_string(program.entry) + "\n";
     for (size_t i = 0; i < program.protos.size(); ++i) {
         out += "\n";

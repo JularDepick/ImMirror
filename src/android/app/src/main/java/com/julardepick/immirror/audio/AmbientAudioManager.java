@@ -12,7 +12,7 @@ import java.util.Random;
 /*
  * 环境音与背景音乐的长音频通道.
  * SoundPool 适合短音效 (挖掘/放置/行走), 环境音与音乐用 MediaPlayer 循环或顺序播放.
- * 场景切换由原生侧通过 JNI 推送触发; 曲表按原版 playmain.lua 的昼夜分组语义组织,
+ * 场景切换由原生侧通过 JNI 推送触发; 曲表按playmain.lua 的昼夜分组语义组织,
  * 分组未接线时音乐从通用表随机取曲.
  */
 public final class AmbientAudioManager {
@@ -68,8 +68,8 @@ public final class AmbientAudioManager {
     };
 
     /*
-     * 背景音乐曲表, 按原版 playmain.lua 的昼夜分组语义组织.
-     * 昼表与夜表只在对应时段播放; 通用表对齐原版 MusicFrequency 的常驻曲池,
+     * 背景音乐曲表, 按playmain.lua 的昼夜分组语义组织.
+     * 昼表与夜表只在对应时段播放; 通用表对齐MusicFrequency 的常驻曲池,
      * 分组未接线或未命中时段表时从通用表随机取曲.
      */
     private static final String[] MUSIC_TRACKS_DAY = {
@@ -139,6 +139,8 @@ public final class AmbientAudioManager {
             return;
         }
         ambientGroup = normalized;
+        /* 分组切换是环境音唯一的状态变化点, 打一行日志便于实机核对. */
+        Log.i(TAG, "ambient group -> " + normalized);
         restartAmbient();
     }
 
@@ -220,7 +222,7 @@ public final class AmbientAudioManager {
 
     /*
      * 音乐播完回调: 释放旧播放器后自动续下一首随机曲目,
-     * 对齐原版 MusicFrequency 播完换曲的循环行为.
+     * 对齐MusicFrequency 播完换曲的循环行为.
      */
     private final class MusicAdvanceListener implements MediaPlayer.OnCompletionListener {
         @Override

@@ -11,7 +11,7 @@ namespace immirror::voxel {
  * 方块 id 常量. 兼容段 0 到 14 的取值与注册表条目顺序一致, 0 恒为空气;
  * 世界数据与存档直接引用这些数值, 兼容段的取值只能保持, 不得重排或复用.
  * 15 起是全量扩展段, 客户端 id 由 scripts/gen_block_data.py 按类别分段分配,
- * 段区间与原版 ID 的对照见 game/generated/block_data_gen.h 的生成说明.
+ * 段区间与ID 的对照见 game/generated/block_data_gen.h 的生成说明.
  */
 namespace block {
 constexpr BlockId Air = 0;
@@ -56,9 +56,9 @@ constexpr const char* kLegacyNames[LegacyCount] = {
  * 方块静态属性注册表. 进程内唯一且只读, 世界与网格构建都通过它查询
  * 名称, 实心与遮挡属性, 图集格索引, 硬度, 采集工具与材质族.
  * 数据分两段:
- *   兼容段 0 到 LegacyCount - 1: 手写表, 与旧版逐字段一致, 保证存档兼容;
- *   扩展段 LegacyCount 起: 引用 game/generated/block_data_gen.h 的
- *   kRegistryEntries, 由生成器从原版 blockdef.csv 全量折算生成.
+ * 兼容段 0 到 LegacyCount - 1: 手写表, 与旧版逐字段一致, 保证存档兼容;
+ * 扩展段 LegacyCount 起: 引用 game/generated/block_data_gen.h 的
+ *   kRegistryEntries, 由生成器从blockdef.csv 全量折算生成.
  * 每个方块可以分别指定顶面, 侧面与底面的图集格, 未指定 (0xFFFF) 的面回落到
  * atlasIndex; 扩展段统一回落, 图集格索引后续随图集扩充接入.
  */

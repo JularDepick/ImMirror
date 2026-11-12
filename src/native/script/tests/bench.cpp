@@ -88,10 +88,10 @@ int RunOne(const BenchItem& item, const BindingRegistry& registry) {
     const double microsPerMillion = millions > 0.0 ? bestMicros / millions : 0.0;
     const double mips = bestMicros > 0.0 ? millions / (bestMicros / 1000000.0) : 0.0;
     std::printf("基准 %s\n", item.name);
-    std::printf("  指令 %llu 条, 耗时 %.3f ms, 每百万指令 %.3f ms, 吞吐 %.1f MIPS\n",
+    std::printf(" 指令 %llu 条, 耗时 %.3f ms, 每百万指令 %.3f ms, 吞吐 %.1f MIPS\n",
                 static_cast<unsigned long long>(bestInstructions), bestMicros / 1000.0,
                 microsPerMillion / 1000.0, mips);
-    std::printf("  内存峰值 %llu 字节, 字节码 %zu 字节\n",
+    std::printf(" 内存峰值 %llu 字节, 字节码 %zu 字节\n",
                 static_cast<unsigned long long>(memoryPeak), compiled.program.ByteSize());
     return 0;
 }

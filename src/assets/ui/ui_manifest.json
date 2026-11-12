@@ -75,7 +75,7 @@
    "width": 51,
    "height": 100,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg78 的 ani_bg",
+   "purpose": "模板 TemplateBkg78 的 ani_bg",
    "source_page": "texture2/common.ktx",
    "source_sprite": "ani_bg",
    "source_rect": [
@@ -98,7 +98,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg8 的 board_blue_r",
+   "purpose": "模板 TemplateBigBkg8 的 board_blue_r",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_blue_r",
    "source_rect": [
@@ -121,7 +121,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg1 的 board_bottom_blue",
+   "purpose": "模板 TemplateBigBkg1 的 board_bottom_blue",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_bottom_blue",
    "source_rect": [
@@ -144,7 +144,7 @@
    "width": 60,
    "height": 60,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg1Big 的 board_bottom_blue_big",
+   "purpose": "模板 TemplateBigBkg1Big 的 board_bottom_blue_big",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_bottom_blue_big",
    "source_rect": [
@@ -167,7 +167,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg23 的 board_bottom_blue_r",
+   "purpose": "模板 TemplateBigBkg23 的 board_bottom_blue_r",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_bottom_blue_r",
    "source_rect": [
@@ -190,7 +190,7 @@
    "width": 24,
    "height": 24,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg8 的 board_check",
+   "purpose": "模板 TemplateBkg8 的 board_check",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_check",
    "source_rect": [
@@ -213,7 +213,7 @@
    "width": 24,
    "height": 24,
    "category": "button",
-   "purpose": "原版模板 $parentBkg 的 board_check_circle",
+   "purpose": "模板 $parentBkg 的 board_check_circle",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_check_circle",
    "source_rect": [
@@ -236,7 +236,7 @@
    "width": 24,
    "height": 24,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg28 的 board_check_select_",
+   "purpose": "模板 TemplateBkg28 的 board_check_select_",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_check_select_",
    "source_rect": [
@@ -259,7 +259,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg12 的 board_map_info_d",
+   "purpose": "模板 TemplateBigBkg12 的 board_map_info_d",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_map_info_d",
    "source_rect": [
@@ -282,7 +282,7 @@
    "width": 15,
    "height": 15,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg12 的 board_map_pic",
+   "purpose": "模板 TemplateBkg12 的 board_map_pic",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_map_pic",
    "source_rect": [
@@ -305,7 +305,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateGrayFrameBkg 的 board_placeholder_ad",
+   "purpose": "模板 TemplateGrayFrameBkg 的 board_placeholder_ad",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_placeholder_ad",
    "source_rect": [
@@ -328,7 +328,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateGrayBkg 的 board_placeholder_map",
+   "purpose": "模板 TemplateGrayBkg 的 board_placeholder_map",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_placeholder_map",
    "source_rect": [
@@ -351,7 +351,7 @@
    "width": 15,
    "height": 15,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg10 的 board_recharge_num",
+   "purpose": "模板 TemplateBkg10 的 board_recharge_num",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_recharge_num",
    "source_rect": [
@@ -374,7 +374,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg5 的 board_sink",
+   "purpose": "模板 TemplateBigBkg5 的 board_sink",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_sink",
    "source_rect": [
@@ -397,7 +397,7 @@
    "width": 36,
    "height": 36,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg24 的 board_sink_d",
+   "purpose": "模板 TemplateBigBkg24 的 board_sink_d",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_sink_d",
    "source_rect": [
@@ -420,7 +420,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg29 的 board_sink_d2",
+   "purpose": "模板 TemplateBigBkg29 的 board_sink_d2",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_sink_d2",
    "source_rect": [
@@ -443,7 +443,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg3 的 board_tab_blue",
+   "purpose": "模板 TemplateBigBkg3 的 board_tab_blue",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_tab_blue",
    "source_rect": [
@@ -466,7 +466,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg2 的 board_white",
+   "purpose": "模板 TemplateBigBkg2 的 board_white",
    "source_page": "texture2/common.ktx",
    "source_sprite": "board_white",
    "source_rect": [
@@ -489,7 +489,7 @@
    "width": 96,
    "height": 61,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg2 的 btn_big_blue",
+   "purpose": "模板 TemplateBkg2 的 btn_big_blue",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_big_blue",
    "source_rect": [
@@ -512,7 +512,7 @@
    "width": 96,
    "height": 61,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg27 的 btn_big_empty",
+   "purpose": "模板 TemplateBkg27 的 btn_big_empty",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_big_empty",
    "source_rect": [
@@ -535,7 +535,7 @@
    "width": 158,
    "height": 61,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg4 的 btn_big_orange",
+   "purpose": "模板 TemplateBkg4 的 btn_big_orange",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_big_orange",
    "source_rect": [
@@ -558,7 +558,7 @@
    "width": 182,
    "height": 61,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg3_1 的 btn_big_red",
+   "purpose": "模板 TemplateBkg3_1 的 btn_big_red",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_big_red",
    "source_rect": [
@@ -581,7 +581,7 @@
    "width": 182,
    "height": 61,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg3 的 btn_big_yellow",
+   "purpose": "模板 TemplateBkg3 的 btn_big_yellow",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_big_yellow",
    "source_rect": [
@@ -604,7 +604,7 @@
    "width": 30,
    "height": 41,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg43 的 btn_long_red",
+   "purpose": "模板 TemplateBkg43 的 btn_long_red",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_long_red",
    "source_rect": [
@@ -627,7 +627,7 @@
    "width": 130,
    "height": 50,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg24 的 btn_middle_blue",
+   "purpose": "模板 TemplateBkg24 的 btn_middle_blue",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_middle_blue",
    "source_rect": [
@@ -650,7 +650,7 @@
    "width": 130,
    "height": 50,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg18 的 btn_middle_empty",
+   "purpose": "模板 TemplateBkg18 的 btn_middle_empty",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_middle_empty",
    "source_rect": [
@@ -673,7 +673,7 @@
    "width": 130,
    "height": 50,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg40 的 btn_middle_red",
+   "purpose": "模板 TemplateBkg40 的 btn_middle_red",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_middle_red",
    "source_rect": [
@@ -696,7 +696,7 @@
    "width": 130,
    "height": 50,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg23 的 btn_middle_yellow",
+   "purpose": "模板 TemplateBkg23 的 btn_middle_yellow",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_middle_yellow",
    "source_rect": [
@@ -719,7 +719,7 @@
    "width": 40,
    "height": 43,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg15 的 btn_mini_blue",
+   "purpose": "模板 TemplateBkg15 的 btn_mini_blue",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_blue",
    "source_rect": [
@@ -742,7 +742,7 @@
    "width": 40,
    "height": 43,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg88 的 btn_mini_empty",
+   "purpose": "模板 TemplateBkg88 的 btn_mini_empty",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_empty",
    "source_rect": [
@@ -765,7 +765,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg7 的 btn_mini_gray",
+   "purpose": "模板 TemplateBkg7 的 btn_mini_gray",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_gray",
    "source_rect": [
@@ -788,7 +788,7 @@
    "width": 40,
    "height": 43,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg84 的 btn_mini_gray_b",
+   "purpose": "模板 TemplateBkg84 的 btn_mini_gray_b",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_gray_b",
    "source_rect": [
@@ -811,7 +811,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateMiniGray_DBkg 的 btn_mini_gray_d",
+   "purpose": "模板 TemplateMiniGray_DBkg 的 btn_mini_gray_d",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_gray_d",
    "source_rect": [
@@ -834,7 +834,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg6 的 btn_mini_gray_n",
+   "purpose": "模板 TemplateBkg6 的 btn_mini_gray_n",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_gray_n",
    "source_rect": [
@@ -857,7 +857,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg6_1 的 btn_mini_gray_n_flat",
+   "purpose": "模板 TemplateBkg6_1 的 btn_mini_gray_n_flat",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_gray_n_flat",
    "source_rect": [
@@ -880,7 +880,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg75 的 btn_mini_gray_p",
+   "purpose": "模板 TemplateBkg75 的 btn_mini_gray_p",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_gray_p",
    "source_rect": [
@@ -903,7 +903,7 @@
    "width": 72,
    "height": 47,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg74 的 btn_mini_gray_r",
+   "purpose": "模板 TemplateBkg74 的 btn_mini_gray_r",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_gray_r",
    "source_rect": [
@@ -926,7 +926,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg76 的 btn_mini_green_n",
+   "purpose": "模板 TemplateBkg76 的 btn_mini_green_n",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_green_n",
    "source_rect": [
@@ -949,7 +949,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg85 的 btn_mini_lightblue",
+   "purpose": "模板 TemplateBigBkg85 的 btn_mini_lightblue",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_lightblue",
    "source_rect": [
@@ -972,7 +972,7 @@
    "width": 40,
    "height": 43,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg5 的 btn_mini_orange",
+   "purpose": "模板 TemplateBkg5 的 btn_mini_orange",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_orange",
    "source_rect": [
@@ -995,7 +995,7 @@
    "width": 40,
    "height": 43,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg21 的 btn_mini_red",
+   "purpose": "模板 TemplateBkg21 的 btn_mini_red",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_red",
    "source_rect": [
@@ -1018,7 +1018,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg77 的 btn_mini_red_n",
+   "purpose": "模板 TemplateBkg77 的 btn_mini_red_n",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_red_n",
    "source_rect": [
@@ -1041,7 +1041,7 @@
    "width": 40,
    "height": 43,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg9 的 btn_mini_yellow",
+   "purpose": "模板 TemplateBkg9 的 btn_mini_yellow",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_mini_yellow",
    "source_rect": [
@@ -1064,7 +1064,7 @@
    "width": 70,
    "height": 81,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg56_1 的 btn_oversized_blue",
+   "purpose": "模板 TemplateBkg56_1 的 btn_oversized_blue",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_oversized_blue",
    "source_rect": [
@@ -1087,7 +1087,7 @@
    "width": 47,
    "height": 50,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg53 的 btn_square_yellow",
+   "purpose": "模板 TemplateBkg53 的 btn_square_yellow",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_square_yellow",
    "source_rect": [
@@ -1110,7 +1110,7 @@
    "width": 70,
    "height": 81,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg56 的 btn_superbig_blue",
+   "purpose": "模板 TemplateBkg56 的 btn_superbig_blue",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_superbig_blue",
    "source_rect": [
@@ -1133,7 +1133,7 @@
    "width": 70,
    "height": 81,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg86 的 btn_superbig_orange",
+   "purpose": "模板 TemplateBkg86 的 btn_superbig_orange",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_superbig_orange",
    "source_rect": [
@@ -1156,7 +1156,7 @@
    "width": 70,
    "height": 81,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg26 的 btn_superbig_red",
+   "purpose": "模板 TemplateBigBkg26 的 btn_superbig_red",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_superbig_red",
    "source_rect": [
@@ -1179,7 +1179,7 @@
    "width": 70,
    "height": 81,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg57 的 btn_superbig_yellow",
+   "purpose": "模板 TemplateBkg57 的 btn_superbig_yellow",
    "source_page": "texture2/common.ktx",
    "source_sprite": "btn_superbig_yellow",
    "source_rect": [
@@ -1202,7 +1202,7 @@
    "width": 30,
    "height": 30,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg30 的 frame_commend",
+   "purpose": "模板 TemplateBkg30 的 frame_commend",
    "source_page": "texture2/common.ktx",
    "source_sprite": "frame_commend",
    "source_rect": [
@@ -1225,7 +1225,7 @@
    "width": 30,
    "height": 36,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg25 的 frame_title_board",
+   "purpose": "模板 TemplateBkg25 的 frame_title_board",
    "source_page": "texture2/common.ktx",
    "source_sprite": "frame_title_board",
    "source_rect": [
@@ -1248,7 +1248,7 @@
    "width": 48,
    "height": 48,
    "category": "button",
-   "purpose": "原版模板 $parentAddIcon 的 icon_add_green",
+   "purpose": "模板 $parentAddIcon 的 icon_add_green",
    "source_page": "texture2/common.ktx",
    "source_sprite": "icon_add_green",
    "source_rect": [
@@ -1271,7 +1271,7 @@
    "width": 26,
    "height": 47,
    "category": "button",
-   "purpose": "原版模板 $parentIcon 的 icon_pull",
+   "purpose": "模板 $parentIcon 的 icon_pull",
    "source_page": "texture2/common.ktx",
    "source_sprite": "icon_pull",
    "source_rect": [
@@ -1294,7 +1294,7 @@
    "width": 20,
    "height": 20,
    "category": "button",
-   "purpose": "原版模板 $parentTick 的 icon_tick_multi",
+   "purpose": "模板 $parentTick 的 icon_tick_multi",
    "source_page": "texture2/common.ktx",
    "source_sprite": "icon_tick_multi",
    "source_rect": [
@@ -1317,7 +1317,7 @@
    "width": 15,
    "height": 15,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg44 的 img_bar_photo",
+   "purpose": "模板 TemplateBkg44 的 img_bar_photo",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_bar_photo",
    "source_rect": [
@@ -1340,7 +1340,7 @@
    "width": 15,
    "height": 15,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg80 的 img_board_select",
+   "purpose": "模板 TemplateBkg80 的 img_board_select",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_board_select",
    "source_rect": [
@@ -1363,7 +1363,7 @@
    "width": 84,
    "height": 56,
    "category": "button",
-   "purpose": "原版模板 TemplateCloseDd 的 img_close_bd",
+   "purpose": "模板 TemplateCloseDd 的 img_close_bd",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_close_bd",
    "source_rect": [
@@ -1386,7 +1386,7 @@
    "width": 70,
    "height": 56,
    "category": "button",
-   "purpose": "原版模板 TemplateHelpDd 的 img_doubt",
+   "purpose": "模板 TemplateHelpDd 的 img_doubt",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_doubt",
    "source_rect": [
@@ -1409,7 +1409,7 @@
    "width": 78,
    "height": 78,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg15 的 img_icon_lignt",
+   "purpose": "模板 TemplateBigBkg15 的 img_icon_lignt",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_icon_lignt",
    "source_rect": [
@@ -1432,7 +1432,7 @@
    "width": 92,
    "height": 92,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg38 的 img_icon_shortcut",
+   "purpose": "模板 TemplateBkg38 的 img_icon_shortcut",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_icon_shortcut",
    "source_rect": [
@@ -1455,7 +1455,7 @@
    "width": 6,
    "height": 1,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg36 的 img_line_drak",
+   "purpose": "模板 TemplateBkg36 的 img_line_drak",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_line_drak",
    "source_rect": [
@@ -1478,7 +1478,7 @@
    "width": 6,
    "height": 3,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg20 的 img_line_sink",
+   "purpose": "模板 TemplateBkg20 的 img_line_sink",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_line_sink",
    "source_rect": [
@@ -1501,7 +1501,7 @@
    "width": 303,
    "height": 56,
    "category": "button",
-   "purpose": "原版模板 TemplateTitleLeftBkg 的 img_title",
+   "purpose": "模板 TemplateTitleLeftBkg 的 img_title",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_title",
    "source_rect": [
@@ -1524,7 +1524,7 @@
    "width": 30,
    "height": 61,
    "category": "button",
-   "purpose": "原版模板 TemplateBigBkg4 的 img_title_bd",
+   "purpose": "模板 TemplateBigBkg4 的 img_title_bd",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_title_bd",
    "source_rect": [
@@ -1547,7 +1547,7 @@
    "width": 303,
    "height": 56,
    "category": "button",
-   "purpose": "原版模板 $parentBkgLeft 的 img_title_gather",
+   "purpose": "模板 $parentBkgLeft 的 img_title_gather",
    "source_page": "texture2/common.ktx",
    "source_sprite": "img_title_gather",
    "source_rect": [
@@ -1570,7 +1570,7 @@
    "width": 154,
    "height": 67,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg93 的 tab_clip_left_h",
+   "purpose": "模板 TemplateBkg93 的 tab_clip_left_h",
    "source_page": "texture2/common.ktx",
    "source_sprite": "tab_clip_left_h",
    "source_rect": [
@@ -1593,7 +1593,7 @@
    "width": 113,
    "height": 60,
    "category": "button",
-   "purpose": "原版模板 TemplateBkg92 的 tab_clip_left_n",
+   "purpose": "模板 TemplateBkg92 的 tab_clip_left_n",
    "source_page": "texture2/common.ktx",
    "source_sprite": "tab_clip_left_n",
    "source_rect": [
@@ -1616,7 +1616,7 @@
    "width": 183,
    "height": 60,
    "category": "button",
-   "purpose": "原版模板 TemplateTabFullpageH 的 tab_fullpage_left_h",
+   "purpose": "模板 TemplateTabFullpageH 的 tab_fullpage_left_h",
    "source_page": "texture2/common.ktx",
    "source_sprite": "tab_fullpage_left_h",
    "source_rect": [
@@ -1639,7 +1639,7 @@
    "width": 175,
    "height": 60,
    "category": "button",
-   "purpose": "原版模板 TemplateTabFullpageN 的 tab_fullpage_left_n",
+   "purpose": "模板 TemplateTabFullpageN 的 tab_fullpage_left_n",
    "source_page": "texture2/common.ktx",
    "source_sprite": "tab_fullpage_left_n",
    "source_rect": [
@@ -1662,7 +1662,7 @@
    "width": 160,
    "height": 49,
    "category": "button",
-   "purpose": "原版模板 $parentChecked 的 tab_up_h",
+   "purpose": "模板 $parentChecked 的 tab_up_h",
    "source_page": "texture2/common.ktx",
    "source_sprite": "tab_up_h",
    "source_rect": [
@@ -2674,7 +2674,7 @@
    "width": 99,
    "height": 98,
    "category": "lobby",
-   "purpose": "原版大厅素材 board_enter_workshop",
+   "purpose": "大厅素材 board_enter_workshop",
    "source_page": "texture0/main_lobby.ktx",
    "source_sprite": "board_enter_workshop",
    "source_rect": [
@@ -2697,7 +2697,7 @@
    "width": 207,
    "height": 48,
    "category": "lobby",
-   "purpose": "原版大厅素材 board_workshop",
+   "purpose": "大厅素材 board_workshop",
    "source_page": "texture0/main_lobby.ktx",
    "source_sprite": "board_workshop",
    "source_rect": [
@@ -2720,7 +2720,7 @@
    "width": 221,
    "height": 88,
    "category": "lobby",
-   "purpose": "原版大厅素材 btn_blue_hall",
+   "purpose": "大厅素材 btn_blue_hall",
    "source_page": "texture0/main_lobby.ktx",
    "source_sprite": "btn_blue_hall",
    "source_rect": [
@@ -2743,7 +2743,7 @@
    "width": 160,
    "height": 54,
    "category": "lobby",
-   "purpose": "原版大厅素材 btn_dgreen_hall",
+   "purpose": "大厅素材 btn_dgreen_hall",
    "source_page": "texture0/main_lobby.ktx",
    "source_sprite": "btn_dgreen_hall",
    "source_rect": [
@@ -2766,7 +2766,7 @@
    "width": 221,
    "height": 88,
    "category": "lobby",
-   "purpose": "原版大厅素材 btn_lgreen_hall",
+   "purpose": "大厅素材 btn_lgreen_hall",
    "source_page": "texture0/main_lobby.ktx",
    "source_sprite": "btn_lgreen_hall",
    "source_rect": [
@@ -2789,7 +2789,7 @@
    "width": 298,
    "height": 97,
    "category": "lobby",
-   "purpose": "原版大厅素材 btn_orange_hall",
+   "purpose": "大厅素材 btn_orange_hall",
    "source_page": "texture0/main_lobby.ktx",
    "source_sprite": "btn_orange_hall",
    "source_rect": [
@@ -2812,7 +2812,7 @@
    "width": 56,
    "height": 56,
    "category": "lobby",
-   "purpose": "原版大厅素材 icon_halltop_friend",
+   "purpose": "大厅素材 icon_halltop_friend",
    "source_page": "texture2/main_lobby.ktx",
    "source_sprite": "icon_halltop_friend",
    "source_rect": [
@@ -2835,7 +2835,7 @@
    "width": 56,
    "height": 56,
    "category": "lobby",
-   "purpose": "原版大厅素材 icon_halltop_letter",
+   "purpose": "大厅素材 icon_halltop_letter",
    "source_page": "texture2/main_lobby.ktx",
    "source_sprite": "icon_halltop_letter",
    "source_rect": [
@@ -2858,7 +2858,7 @@
    "width": 56,
    "height": 56,
    "category": "lobby",
-   "purpose": "原版大厅素材 icon_halltop_pack",
+   "purpose": "大厅素材 icon_halltop_pack",
    "source_page": "texture2/main_lobby.ktx",
    "source_sprite": "icon_halltop_pack",
    "source_rect": [
@@ -2881,7 +2881,7 @@
    "width": 56,
    "height": 56,
    "category": "lobby",
-   "purpose": "原版大厅素材 icon_halltop_set",
+   "purpose": "大厅素材 icon_halltop_set",
    "source_page": "texture2/main_lobby.ktx",
    "source_sprite": "icon_halltop_set",
    "source_rect": [
@@ -3180,7 +3180,7 @@
    "width": 300,
    "height": 90,
    "category": "panel",
-   "purpose": "原版模板 TemplateBkg1 的 board_clip",
+   "purpose": "模板 TemplateBkg1 的 board_clip",
    "source_page": "texture2/messagebox.ktx",
    "source_sprite": "board_clip",
    "source_rect": [
@@ -3203,7 +3203,7 @@
    "width": 330,
    "height": 67,
    "category": "panel",
-   "purpose": "原版模板 TemplateBigBkg31 的 board_clip_title",
+   "purpose": "模板 TemplateBigBkg31 的 board_clip_title",
    "source_page": "texture2/messagebox.ktx",
    "source_sprite": "board_clip_title",
    "source_rect": [
@@ -3226,7 +3226,7 @@
    "width": 30,
    "height": 30,
    "category": "panel",
-   "purpose": "原版模板 TemplateBigBkg20 的 board_tips_explain",
+   "purpose": "模板 TemplateBigBkg20 的 board_tips_explain",
    "source_page": "texture2/messagebox.ktx",
    "source_sprite": "board_tips_explain",
    "source_rect": [
@@ -3249,7 +3249,7 @@
    "width": 30,
    "height": 30,
    "category": "panel",
-   "purpose": "原版模板 TemplateBigBkg19 的 board_tips_icon",
+   "purpose": "模板 TemplateBigBkg19 的 board_tips_icon",
    "source_page": "texture2/messagebox.ktx",
    "source_sprite": "board_tips_icon",
    "source_rect": [

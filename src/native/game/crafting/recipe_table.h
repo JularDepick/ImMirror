@@ -8,8 +8,8 @@ namespace immirror::game::crafting {
 
 /*
  * 配方表. 数据来自 scripts/gen_item_data.py 生成的 recipe_data_gen.h,
- * 进程内唯一且只读; 条目顺序即原版 crafting.csv 的配方顺序, 越界回落到首条.
- * 表内只收录产物与全部材料都在客户端物品表内的配方, 其余留在原版 CSV 中.
+ * 进程内唯一且只读; 条目顺序即crafting.csv 的配方顺序, 越界回落到首条.
+ * 表内只收录产物与全部材料都在客户端物品表内的配方, 其余留在CSV 中.
  */
 class RecipeTable {
 public:

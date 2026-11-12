@@ -26,7 +26,7 @@ public final class InventoryText {
     public static final String DETAIL_COUNT_FORMAT = "数量 %1$d / %2$d";
     public static final String DETAIL_CATEGORY_FORMAT = "类别 %1$s";
     public static final String DETAIL_BLOCK_FORMAT = "放置为方块 %1$d";
-    public static final String DETAIL_KEY_FORMAT = "原版键 %1$s";
+    public static final String DETAIL_KEY_FORMAT = "键 %1$s";
 
     /* 操作按钮. */
     public static final String ACTION_DROP = "丢弃一个";

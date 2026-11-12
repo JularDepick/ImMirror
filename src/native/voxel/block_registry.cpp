@@ -19,22 +19,22 @@ namespace gen = immirror::game::gen;
 constexpr uint16_t kAtlasFallback = 0xFFFF;
 
 /*
- * 兼容段条目, 条目顺序即方块 id 0 到 14. 图集格编号与渲染侧从原版资源合成的
+ * 兼容段条目, 条目顺序即方块 id 0 到 14. 图集格编号与渲染侧从资源合成的
  * 图集一致: 0 草顶, 1 草侧, 2 土, 3 石, 4 沙, 5 水, 6 木侧, 7 木顶,
  * 8 叶, 9 基岩, 10 砖, 11 圆石, 12 雪, 13 冰, 14 砂砾, 15 木板.
  * 除草与木需要区分顶侧底之外, 其余方块三个面共用 atlasIndex.
  *
- * 硬度, 采集工具与采集材质族取自原版 blockdef.csv 的实测值:
+ * 硬度, 采集工具与采集材质族取自 blockdef.csv 的实测值:
  * 草 3.5 铲, 石 8 镐, 沙 3 铲, 雪 1.5 铲, 冰 5 镐, 木板 6 斧, 树叶 0.4 徒手.
- * 表里没有单列的方块按原版归族: 土同草, 圆石与砖同石, 原木同木板,
- * 砂砾的音效取砂砾族, 用它与沙区分开才是原版的材质反馈.
+ * 表里没有单列的方块按数据表归族: 土同草, 圆石与砖同石, 原木同木板,
+ * 砂砾的音效取砂砾族, 用它与沙区分开才是数据表的材质反馈.
  * 水与基岩硬度取 -1, 即不可破坏.
- * 本段字段是存档兼容面, 只能保持, 不得随原版表更新而改动.
+ * 本段字段是存档兼容面, 只能保持, 不得随数据表更新而改动.
  */
 /*
  * 兼容段光照三列与生成表 kLightEntries 前十五条一致, 由 block_light_gen.h
  * 折算后并入此表: 空气与水完全不遮光 (atten 0, cover 0), 草土石沙等
- * 实体方块按原版衰减遮光, 树叶按厚度衰减 (atten 10, cover 2).
+ * 实体方块按数据表衰减遮光, 树叶按厚度衰减 (atten 10, cover 2).
  * 光照传播依赖这里的取值, 数据改动必须同步生成表.
  */
 constexpr BlockInfo kLegacyBlockTable[block::LegacyCount] = {
@@ -72,7 +72,7 @@ constexpr BlockInfo kLegacyBlockTable[block::LegacyCount] = {
 constexpr size_t kLegacyBlockCount = sizeof(kLegacyBlockTable) / sizeof(kLegacyBlockTable[0]);
 
 /*
- * 原版 hardness 的合法范围是 -1 到 200, 绝大多数条目落在 0.5 的网格上,
+ * hardness 的合法范围是 -1 到 200, 绝大多数条目落在 0.5 的网格上,
  * 树叶实测为 0.4, 因此这里只校验范围, 不对步长做强制约束.
  * 兼容段在编译期校验, 填入越界硬度会直接编译失败.
  */
@@ -89,7 +89,7 @@ constexpr bool LegacyHardnessValid() {
     return true;
 }
 
-static_assert(LegacyHardnessValid(), "兼容段方块硬度超出原版的 -1 到 200 范围");
+static_assert(LegacyHardnessValid(), "兼容段方块硬度超出的 -1 到 200 范围");
 
 /*
  * 兼容段英文键逐项校验: 与 block::kLegacyNames 一致, 键序即 id 序,
@@ -133,7 +133,7 @@ struct LegacyDropView {
 };
 
 /*
- * 兼容段方块的掉落映射, 保留原版数据供物品系统后续与 item_table 的 DropOfBlock 对齐;
+ * 兼容段方块的掉落映射, 保留数据供物品系统后续与 item_table 的 DropOfBlock 对齐;
  * 当前掉落走物品表, 本表暂未接入, 因此标注 maybe_unused 而不是删除数据.
  */
 [[maybe_unused]] constexpr LegacyDropView kLegacyDrops[block::LegacyCount] = {

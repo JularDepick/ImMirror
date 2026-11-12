@@ -7,7 +7,7 @@ namespace immirror::ui {
 /*
  * 5x7 点阵字形. 每个字形固定 7 行, 每行低 5 位有效, bit4 为最左列.
  * 界面层目前没有字体纹理, 文字用纯色矩形拼出, 用于方块名这类短标签;
- * 接入原版字体资源后可以直接替换这一层, 调用方不需要改动.
+ * 接入字体资源后可以直接替换这一层, 调用方不需要改动.
  */
 constexpr int32_t kGlyphWidth = 5;
 constexpr int32_t kGlyphHeight = 7;

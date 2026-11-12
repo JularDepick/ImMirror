@@ -115,6 +115,12 @@ public:
 
     /* 当前是否为游戏内白天, 供环境音日相切换. */
     bool IsDay() const;
+
+    /*
+     * 环境音场景: 0 通用, 1 雨天, 2 雷暴, 3 水下, 4 岩浆.
+     * 由相机所在方块与当前天气折算, Java 侧据此切换环境音分组.
+     */
+    int32_t AmbientContext() const;
     void ApplyRemotePlayers(const std::string& json);
     int32_t SelectedSlot() const { return selectedSlot_; }
     void SelectSlotPublic(int32_t index) { SelectSlot(index); }

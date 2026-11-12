@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""从原版矿脉定义生成主世界矿脉分布表.
+"""从矿脉定义生成主世界矿脉分布表.
 
 输入: 素材仓库 csvdef/oredef.csv 与 blockdef.csv
 输出: native/voxel/generated/ore_data_gen.h
 
-字段语义取自原版 oredef 表:
+字段语义取自 oredef 表:
   MapID       0 地表世界, 1 地下世界; 客户端只生成地表世界, 因此只取 0 的行
-  MinHeight   矿脉允许出现的最低高度 (含)
-  MaxHeight   矿脉允许出现的最高高度 (含)
-  Odds        单次矿脉尝试的命中概率, 万分比
-  MaxNum      一条矿脉最多替换的方块数
-  Lode        每个区块的矿脉尝试次数
-  ReplaceBlock 被替换的方块的客户端 id (原版取石头 104, 石油取其它)
+  MinHeight 矿脉允许出现的最低高度 (含)
+  MaxHeight 矿脉允许出现的最高高度 (含)
+  Odds 单次矿脉尝试的命中概率, 万分比
+  MaxNum 一条矿脉最多替换的方块数
+  Lode 每个区块的矿脉尝试次数
+  ReplaceBlock 被替换的方块的客户端 id (取石头 104, 石油取其它)
 
 客户端的方块 id 由 gen_block_data.py 分配, 本脚本直接复用它的分配结果,
 不另行维护一份映射, 避免两处漂移.
@@ -33,7 +33,7 @@ OUT_PATH = os.path.join(SRC_ROOT, "native", "voxel", "generated", "ore_data_gen.
 
 # 地表世界的 MapID; 地下世界与活动地图的矿脉不进主世界生成
 SURFACE_MAP_ID = 0
-# 原版矿石 id 的兜底替换方块: 石头 (blockdef 104) 的客户端 id
+# 矿石 id 的兜底替换方块: 石头 (blockdef 104) 的客户端 id
 DEFAULT_REPLACE_SOURCE = 104
 
 REQUIRED_COLUMNS = ("ID", "MapID", "Name", "MinHeight", "MaxHeight", "Odds", "MaxNum",
@@ -41,7 +41,7 @@ REQUIRED_COLUMNS = ("ID", "MapID", "Name", "MinHeight", "MaxHeight", "Odds", "Ma
 
 
 def load_ores():
-    """读取矿脉表, 返回按原版 ID 排序的条目列表."""
+    """读取矿脉表, 返回按ID 排序的条目列表."""
     with open(ORE_PATH, "r", encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.reader(handle))
     if len(rows) < 3:
@@ -72,7 +72,7 @@ def load_ores():
 
 
 def build_client_id_map():
-    """复用 gen_block_data 的分配结果, 得到 原版方块 id -> 客户端方块 id."""
+    """复用 gen_block_data 的分配结果, 得到 方块 id -> 客户端方块 id."""
     _, rows = gen_block_data.load_rows()
     legacy_rows, extension_rows = gen_block_data.collect_source_rows(rows)
     allocated, _ = gen_block_data.allocate_ids(extension_rows)
@@ -104,7 +104,7 @@ def render_header(entries):
         "    uint16_t odds;         /* 单次尝试命中概率, 万分比 */",
         "    uint8_t maxBlocks;     /* 一条矿脉最多替换的方块数 */",
         "    uint8_t lodes;         /* 每个区块的矿脉尝试次数 */",
-        "    const char* name;      /* 原版中文名, 调试用 */",
+        "    const char* name;      /* 中文名, 调试用 */",
         "};",
         "",
         "constexpr int32_t kOreEntryCount = %d;" % len(entries),

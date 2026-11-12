@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""从原版方块定义表生成方块光照头文件.
+"""从方块定义表生成方块光照头文件.
 
 输入: single-branch/assets/project/csvdef/blockdef.csv 的光源强度, 光衰减与遮挡三列.
 输出: single-branch/client/src/native/voxel/generated/block_light_gen.h
 
 客户端 id 映射与 gen_block_data.py 完全同源: 兼容段按 CLIENT_BLOCKS 固定,
-扩展段按 KEY_SEGMENTS 分段与原版 ID 升序分配, 因此两表条目天然逐位对齐,
+扩展段按 KEY_SEGMENTS 分段与ID 升序分配, 因此两表条目天然逐位对齐,
 不依赖任何中间产物 (此前 temp/gen_light.py 依赖过期 block_mapping.json
 导致扩展段 970 条整体错位的教训, 见生成头注释).
 
@@ -46,7 +46,7 @@ def to_int(text):
 
 
 def base_row_light(source_id, rows):
-    """取某原版方块的光照三列, 缺行按全零处理 (与空气一致)."""
+    """取某方块的光照三列, 缺行按全零处理 (与空气一致)."""
     row = rows.get(str(source_id))
     if row is None:
         return {"light": 0, "atten": 0, "cover": 0}
@@ -85,7 +85,7 @@ def emit_header(entries):
         "/*",
         " * " + NOTICE,
         " * 与 block_data_gen.h 同源映射: 兼容段按 CLIENT_BLOCKS, 扩展段按 KEY_SEGMENTS",
-        " * 分段加原版 ID 升序, 条目顺序与注册表 clientId 逐位一致.",
+        " * 分段加ID 升序, 条目顺序与注册表 clientId 逐位一致.",
         " * lightSource: 0 不发光, 15 最亮; lightAtten: 0-15; coverMode: 0-4",
         " */",
         "",

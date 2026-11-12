@@ -2,12 +2,12 @@
 """把界面精灵页里的九宫模板素材批量导入客户端界面素材索引.
 
 输入:
-  single-branch/client/temp/ui_extract/build/report/templates.tsv  模板表 (draw/tile)
-  single-branch/client/temp/ui_extract/build/report/sprites.tsv    精灵表 (页内矩形)
+  single-branch/client/temp/ui_extract/build/report/templates.tsv 模板表 (draw/tile)
+  single-branch/client/temp/ui_extract/build/report/sprites.tsv 精灵表 (页内矩形)
   single-branch/client/temp/ui_extract/build/png/_png/mobile/<page>.png 解码后的精灵页
 输出:
-  src/assets/ui/<category>/<name>.png      裁好的素材
-  src/assets/ui/ui_manifest.json           追加的素材条目 (已存在则不重复)
+  src/assets/ui/<category>/<name>.png 裁好的素材
+  src/assets/ui/ui_manifest.json 追加的素材条目 (已存在则不重复)
 
 导入范围由 TEMPLATE_PAGES 限定: 目前界面层真正用到的页 (通用件, 消息框, 大厅, 背包, 设置).
 draw 取模板的 draw 字段折算: ninesquare 与 ninesquare_center 按模板的 tile 中心块
@@ -40,7 +40,7 @@ TEMPLATE_PAGES = {
     "texture0/backpack": "slot",
 }
 
-# 按名导入的精灵: 页 -> (目标分类, 精灵名列表). 这些是原版大厅入口按钮与顶部图标,
+# 按名导入的精灵: 页 -> (目标分类, 精灵名列表). 这些是大厅入口按钮与顶部图标,
 # 名字与 main_lobby_ex.xml 的 uvname 一一对应; 拉伸方式按素材原尺寸 1:1 使用, 记 stretch.
 NAMED_SPRITES = {
     "texture0/main_lobby": ("lobby", [
@@ -144,7 +144,7 @@ def main():
             "width": width,
             "height": height,
             "category": category,
-            "purpose": "原版模板 %s 的 %s" % (template["template"], sprite),
+            "purpose": "模板 %s 的 %s" % (template["template"], sprite),
             "source_page": page_key + ".ktx",
             "source_sprite": sprite,
             "source_rect": [left, top, w, h],
@@ -182,7 +182,7 @@ def main():
                 "width": width,
                 "height": height,
                 "category": category,
-                "purpose": "原版大厅素材 %s" % sprite,
+                "purpose": "大厅素材 %s" % sprite,
                 "source_page": page_key + ".ktx",
                 "source_sprite": sprite,
                 "source_rect": [left, top, width, height],

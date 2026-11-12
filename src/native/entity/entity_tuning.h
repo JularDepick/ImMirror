@@ -31,7 +31,7 @@ constexpr float kBlockedJumpCooldown = 0.8f;
  * 超出休眠半径的生物暂停 AI, 超出移除半径的直接回收.
  */
 constexpr int32_t kMaxCreatures = 10;  /* 观感平衡: 同时在场生物上限 */
-/* 玩家生命上限与生成密度. 生命上限取原版玩家数值; 密度按观感可调. */
+/* 玩家生命上限与生成密度. 生命上限取玩家数值; 密度按观感可调. */
 constexpr float kPlayerMaxHealth = 100.0f;
 constexpr float kPlayerRegenPerSecond = 1.0f;    /* 脱战回血 */
 constexpr float kPlayerRespawnSeconds = 3.0f;    /* 死亡后重生延迟 */
@@ -58,7 +58,7 @@ constexpr float kTurnSpeed = 9.0f;         /* 朝向插值速度, 弧度每秒 *
 /* 战斗. */
 constexpr float kPlayerReach = 4.5f;        /* 攻击生物的视线长度 */
 constexpr float kAttackHoldInterval = 0.45f; /* 按住连续攻击的间隔 */
-/* 生物伤害按原表 attack 值折算的比例, 原表数值面向原版血量体系. */
+/* 生物伤害按原表 attack 值折算的比例, 原表数值面向血量体系. */
 constexpr float kDamageScale = 0.5f;
 constexpr float kFistDamage = 5.0f;          /* 空手单次伤害 */
 constexpr float kHeldBlockBaseDamage = 3.0f; /* 手持方块的基础伤害 */

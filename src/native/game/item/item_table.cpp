@@ -64,7 +64,7 @@ voxel::BlockId ItemTable::BlockOf(ItemId id) const {
 
 ItemId ItemTable::DropOfBlock(voxel::BlockId block) const {
     /*
-     * 方块数据表已按原版掉落字段折算好掉落方块, 这里只做方块到物品的最后一步换算,
+     * 方块数据表已按掉落字段折算好掉落方块, 这里只做方块到物品的最后一步换算,
      * 两处都以生成表为准, 不存在第二份掉落规则.
      */
     const voxel::BlockId drop = static_cast<voxel::BlockId>(gen::DropBlockOf(block));

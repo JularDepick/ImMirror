@@ -1,7 +1,7 @@
 # 界面素材命名与来源
 
-本目录的 PNG 全部由 `single-branch/client/temp/ui_extract/ui_extract.py` 从原版界面图集导出,
-文件名按本项目用途重新拟定, 不使用原版文件名与专有词。索引数据在同目录的 `ui_manifest.json`,
+本目录的 PNG 全部由 `single-branch/client/temp/ui_extract/ui_extract.py` 从界面图集导出,
+文件名按本项目用途重新拟定, 不使用文件名与专有词。索引数据在同目录的 `ui_manifest.json`,
 其中 `insets` 是渲染九宫时四边不参与拉伸的像素宽度。
 
 ## 一. 命名规则
@@ -10,12 +10,12 @@
 |:---:|:---|
 | 类别目录 | 按控件用途分 `button` `panel` `dialog` `tab` `slot` `icon` `misc` 七类 |
 | 文件名 | 全小写蛇形, 形如 `<语义>_<变体>.png`, 语义取本项目用语 |
-| 禁止词 | 原版专有词与品牌词 (原版迷你前缀, 渠道名, 联名 IP 名) 一律不出现 |
+| 禁止词 | 专有词与品牌词 (迷你前缀, 渠道名, 联名 IP 名) 一律不出现 |
 | 状态后缀 | `_on` 表示选中或按下, `_off` 表示未选, `_blue` `_gold` `_red` 一类的色名表示同一控件的配色变体 |
 
 ## 二. 素材清单
 
-| 文件 | 类别 | 尺寸 | 拉伸模式 | 九宫边界 (左/上/右/下) | 原版图集页 | 原版精灵 | 用途 |
+| 文件 | 类别 | 尺寸 | 拉伸模式 | 九宫边界 (左/上/右/下) | 图集页 | 精灵 | 用途 |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|
 | `button/alert_orange.png` | 按钮 | 158x61 | 三片横向 | 45/0/46/0 | `texture2/common.ktx` | `btn_big_orange` | 提醒按钮 158x61, 橙底黑边 |
 | `button/circle_blue.png` | 按钮 | 50x53 | 整体拉伸 | - | `texture2/common.ktx` | `btn_circle_blue` | 圆形按钮 50x53 |
@@ -99,7 +99,7 @@
 |:---:|:---:|:---|
 | 原厂标识与启动图 | 12 | 启动图, logo, 动画 logo 组, 属原厂品牌标识, 按复用政策直接排除 |
 | 渠道与第三方标志 | 12 | 渠道图标, 微信支付宝标识, 快手广告位, 联名 IP 图形, 权利方不属于本项目 |
-| 广告 SDK 图形 | 19 | 位于原版 res 目录, 属运营资产, 不进客户端 |
+| 广告 SDK 图形 | 19 | 位于res 目录, 属运营资产, 不进客户端 |
 | 界面字体 heiti.ttf | 1 | 商业字库 (方正粗圆简体), 未取得授权, 改用系统字体 |
 | 标题字图 font_* | 21 | 字图内嵌品牌文字, 无法通过改名去除, 改用文本渲染 |
 | alpha 遮罩页 | 26 | 与同名图集页成对的通道图, 本项目按单张 RGBA 使用, 不需要单独导出 |
@@ -113,5 +113,5 @@ cd single-branch/assets && python -m forge.cli unpack --include ui
 python single-branch/client/temp/ui_extract/ui_extract.py
 ```
 
-脚本只读原版资源与管线工程树, 输出覆盖本目录的 PNG 与 ui_manifest.json。
+脚本只读资源与管线工程树, 输出覆盖本目录的 PNG 与 ui_manifest.json。
 本目录原有的 login_bg.jpg 由历史提交带入, 不在导出清单内。

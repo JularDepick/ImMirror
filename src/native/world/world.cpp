@@ -69,7 +69,7 @@ void World::Update(const core::Vec3& center, int32_t viewDistanceChunks, uint8_t
         viewDistanceChunks = 1;
     }
     viewDistance_ = viewDistanceChunks;
-    /* 树形档只影响本帧新建列, 已加载列保持生成时的树形, 与原版一致. */
+    /* 树形档只影响本帧新建列, 已加载列保持生成时的树形, 与数据表一致. */
     treeShape_ = treeShape;
 
     const int32_t centerX = FloorDiv(static_cast<int32_t>(std::floor(center.x)), voxel::kChunkSizeX);

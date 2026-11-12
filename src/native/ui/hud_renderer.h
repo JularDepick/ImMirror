@@ -122,7 +122,7 @@ struct HudFrame {
     int32_t nameSlot = -1;     /* 长按显示名称的槽位, 负值表示不显示 */
     float health = 1.0f;       /* 血量比例, 0 到 1, 供左上角血条取长度 */
     /*
-     * 饥饿与体力比例, 0 到 1. 对应原版 PlayerFoodLevelBar 与
+     * 饥饿与体力比例, 0 到 1. 对应PlayerFoodLevelBar 与
      * ChickenEnergyFrame, 分别画在血条下方与快捷栏上方.
      */
     float hunger = 1.0f;
@@ -156,7 +156,7 @@ struct HudFrame {
 
 /*
  * 游戏内 HUD 覆盖层: 准星, 血条, 浮动摇杆, 跳跃按钮, 方块栏与背包面板.
- * 底板优先取界面图集 (generated/atlas_ui.rgba) 的原版精灵, 图集缺失或
+ * 底板优先取界面图集 (generated/atlas_ui.rgba) 的精灵, 图集缺失或
  * 精灵未接入时回落到界面视觉规范的角色色; 方块图标仍走方块图集.
  * 文字用内置点阵字.
  * 必须在区块绘制之后调用, 内部会临时关闭深度测试与背面剔除并开启混合.
@@ -171,7 +171,7 @@ public:
 
     /*
      * atlasTexture 为方块图集句柄, 用于绘制底部方块选择栏的方块图标;
-     * uiAtlasTexture 为界面图集句柄, 用于血条, 快捷栏, 跳跃按钮等原版精灵,
+     * uiAtlasTexture 为界面图集句柄, 用于血条, 快捷栏, 跳跃按钮等精灵,
      * 传 0 时界面精灵回落到纯色绘制, 界面不因图集缺失而残缺.
      */
     bool Initialize(uint32_t atlasTexture, uint32_t uiAtlasTexture);

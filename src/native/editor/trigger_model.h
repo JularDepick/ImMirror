@@ -12,7 +12,7 @@ namespace immirror::editor {
 
 /*
  * 触发器事件类型. 三种事件都在编辑器与试玩模式下驱动,
- * 与原版 triggeritem 表里的"事件"控件一一对应, 具体 ID 由生成的参数表给出.
+ * 与triggeritem 表里的"事件"控件一一对应, 具体 ID 由生成的参数表给出.
  */
 enum class TriggerEventType {
     kEnterRegion = 0, /* 玩家进入区域 */
@@ -20,7 +20,7 @@ enum class TriggerEventType {
     kTimer = 2,       /* 定时器到期 */
 };
 
-/* 触发器动作类型, 与原版 triggeritem 表里的"动作"控件对应. */
+/* 触发器动作类型, 与triggeritem 表里的"动作"控件对应. */
 enum class TriggerActionType {
     kLog = 0,      /* 输出日志 */
     kSetBlock = 1, /* 在指定位置放置方块 */
@@ -30,7 +30,7 @@ enum class TriggerActionType {
 /* 单条动作. 字段按类型使用, 未使用的字段保持默认值. */
 struct TriggerAction {
     TriggerActionType type = TriggerActionType::kLog;
-    int32_t itemId = 0;      /* 原版 triggeritem ID, 写盘与回溯用 */
+    int32_t itemId = 0;      /* triggeritem ID, 写盘与回溯用 */
     std::string text;        /* log: 输出文本 */
     int32_t x = 0;           /* set_block: 方块坐标 */
     int32_t y = 0;
@@ -82,7 +82,7 @@ const char* TriggerActionNameZh(TriggerActionType type);
 bool ParseTriggerEventKey(const std::string& key, TriggerEventType& out);
 bool ParseTriggerActionKey(const std::string& key, TriggerActionType& out);
 
-/* 原版 triggeritem ID, 取自生成的参数表; 表里没有时返回 0. */
+/* triggeritem ID, 取自生成的参数表; 表里没有时返回 0. */
 int32_t TriggerEventItemId(TriggerEventType type);
 int32_t TriggerActionItemId(TriggerActionType type);
 

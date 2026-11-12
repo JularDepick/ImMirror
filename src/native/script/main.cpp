@@ -24,13 +24,13 @@ using namespace immirror::script;
 const char* const kUsage =
     "用法: immirror-script <命令> [参数]\n"
     "  compile <源码.ims> [-o 输出.imsc] [--strip-debug]\n"
-    "      把自有语法源码编译为定长字节码, 不写 -o 时只打印统计\n"
+    " 把自有语法源码编译为定长字节码, 不写 -o 时只打印统计\n"
     "  disasm  <字节码.imsc|源码.ims>\n"
-    "      反汇编, 打印常量池与每条指令\n"
+    " 反汇编, 打印常量池与每条指令\n"
     "  run     <源码.ims|字节码.imsc> [--limit 指令数] [--memory 字节] [--timeout 毫秒]\n"
-    "      在沙盒中执行并打印返回值与统计\n"
+    " 在沙盒中执行并打印返回值与统计\n"
     "  bench\n"
-    "      运行斐波那契与表操作基准\n";
+    " 运行斐波那契与表操作基准\n";
 
 /* 控制台宿主: 把脚本日志打到标准输出, 世界接口返回固定值 */
 class ConsoleWorld : public HostWorld {

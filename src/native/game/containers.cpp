@@ -9,7 +9,7 @@ namespace {
 /*
  * 容器存档格式: 魔数与版本头, 熔炉节, 箱子节, 全部小端.
  * 版本 2: 首个容器版本, 箱子 27 格.
- * 版本 3: 箱子按原版 storagebox.lua 扩到 60 格; 读 v2 时按 27 格还原旧档数据.
+ * 版本 3: 箱子按storagebox.lua 扩到 60 格; 读 v2 时按 27 格还原旧档数据.
  */
 constexpr char kContainerMagic[4] = {'I', 'M', 'C', 'F'};
 constexpr uint32_t kContainerVersion = 3;

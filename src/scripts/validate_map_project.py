@@ -11,11 +11,11 @@
 
 目录结构 (与 native/editor/project_format.cpp 的实现一致):
 
-    工程目录/
-    ├── project.json             工程描述
-    ├── chunks/c.<x>.<z>.vox     区块游程文本, 只保存与地形不同的区块
-    ├── triggers/t.<id>.json     触发器, 一条一个文件
-    └── export/<名字>.world      导出产物, IMWF 二进制, 可缺省
+ 工程目录/
+    ├── project.json 工程描述
+    ├── chunks/c.<x>.<z>.vox 区块游程文本, 只保存与地形不同的区块
+    ├── triggers/t.<id>.json 触发器, 一条一个文件
+    └── export/<名字>.world 导出产物, IMWF 二进制, 可缺省
 
 只依赖标准库; 方块 id 取值直接从 native/voxel/block_registry.h 读取,
 新增方块时不需要同步修改本脚本.

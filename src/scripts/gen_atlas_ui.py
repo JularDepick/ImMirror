@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""把 HUD 用的原版界面精灵合成为第二张图集.
+"""把 HUD 用的界面精灵合成为第二张图集.
 
 输入: 素材管线明文工程树 (single-branch/assets/project/ui) 的精灵页 PNG 与
-      本脚本内置的挑选表 (来源 texture0/operate 等页的 63 个精灵, 已对照
+ 本脚本内置的挑选表 (来源 texture0/operate 等页的 63 个精灵, 已对照
       assets/docs/attribution-blocklist.txt 署名排除清单逐页核对).
 输出:
   src/assets/ui/generated/atlas_ui.rgba   2048x2048 裸 RGBA8, 无文件头
-  src/assets/ui/generated/atlas_ui.json   格位表, 供核对与调试
-  src/native/ui/generated/ui_atlas_gen.h  精灵名到 uv 与尺寸的 C++ 常量表
+  src/assets/ui/generated/atlas_ui.json 格位表, 供核对与调试
+  src/native/ui/generated/ui_atlas_gen.h 精灵名到 uv 与尺寸的 C++ 常量表
   src/android/.../generated/UiAtlas.java  Java 侧同源 uv 常量
 
 与方块图集 generated/atlas.rgba 完全独立: HUD 精灵不走 16x16 网格,
@@ -40,7 +40,7 @@ PAD = 2
 
 # 挑选表: HUD 全部控件与通用面板, 一行一个精灵.
 # 字段: 名称, 所在页, 精灵名, 页内矩形, 裁剪画布 (含 trim 偏移), 拉伸方式与四边边界.
-# 边界取自原版 uitemplate 的模板声明, 与 assets/ui/ui_manifest.json 同源同值.
+# 边界取自 uitemplate 的模板声明, 与 assets/ui/ui_manifest.json 同源同值.
 SPRITES = [
     ("hp_track", "texture0/operate.xml", "img_blood_strip_board", 308, 530, 15, 15, 0, 0, 15, 15, "nine_slice", 5, 5, 5, 5),
     ("hp_fill_red", "texture0/operate.xml", "img_blood_strip_red", 308, 477, 15, 16, 0, 0, 15, 16, "stretch", 0, 0, 0, 0),
@@ -424,9 +424,9 @@ def main() -> int:
     java_changed = write_if_changed(JAVA_OUT, render_java(entries, placements))
     print("界面图集: %d 个精灵, 占用 %d/%d 像素 (%.1f%%)" % (
         len(entries), used, ATLAS_PIXELS * ATLAS_PIXELS, 100.0 * used / (ATLAS_PIXELS * ATLAS_PIXELS)))
-    print("  图集  %s (%s)" % (os.path.relpath(os.path.join(OUT_DIR, "atlas_ui.rgba"), SRC_ROOT),
+    print(" 图集  %s (%s)" % (os.path.relpath(os.path.join(OUT_DIR, "atlas_ui.rgba"), SRC_ROOT),
                               "已更新" if atlas_changed else "未变化"))
-    print("  格位  %s (%s)" % (os.path.relpath(os.path.join(OUT_DIR, "atlas_ui.json"), SRC_ROOT),
+    print(" 格位  %s (%s)" % (os.path.relpath(os.path.join(OUT_DIR, "atlas_ui.json"), SRC_ROOT),
                               "已更新" if json_changed else "未变化"))
     print("  C++   %s (%s)" % (os.path.relpath(os.path.join(NATIVE_OUT, "ui_atlas_gen.h"), SRC_ROOT),
                               "已更新" if header_changed else "未变化"))

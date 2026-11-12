@@ -153,7 +153,7 @@ void TerrainGenerator::FillTerrain(ChunkCoord coord, ChunkColumn& column, uint32
             const int32_t height = SurfaceHeight(seed, worldX, worldZ);
             const bool shore = height <= kBeachTop;
             /*
-             * 表层与填充块按群系带折算: 原版 TopBlock/FillBlock 的客户端近似,
+             * 表层与填充块按群系带折算: TopBlock/FillBlock 的客户端近似,
              * 沙滩与水域保持沙与水的旧语义; 草颜色本期不做顶点色.
              */
             const int32_t biome = BiomeAt(seed, worldX, worldZ);
@@ -319,7 +319,7 @@ int32_t TerrainGenerator::PlaceOres(ChunkCoord coord, ChunkColumn& column, uint3
                 continue;
             }
             /*
-             * 布种点取区块内的随机格: 高度按原版矿脉区间取, 横向限定在本区块,
+             * 布种点取区块内的随机格: 高度按矿脉区间取, 横向限定在本区块,
              * 因此矿脉不跨区块边界, 相邻区块各自独立布种.
              */
             int32_t x = static_cast<int32_t>(unit() * static_cast<float>(kChunkSizeX));

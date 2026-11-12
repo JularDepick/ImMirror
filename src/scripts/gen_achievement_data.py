@@ -43,7 +43,7 @@ GOAL_TO_EVENT = {
     37: EVENT_ONLINE,
 }
 
-# 原版目标类型说明, 只用于生成日志
+# 目标类型说明, 只用于生成日志
 GOAL_NAMES = {
     1: "拾取物品",
     2: "合成物品",
@@ -169,7 +169,7 @@ def load_rows():
 
 
 def build_entries(rows):
-    """过滤并折算成就行, 返回按原版 ID 升序排列的条目."""
+    """过滤并折算成就行, 返回按ID 升序排列的条目."""
     entries = []
     seen = set()
     for row in rows:
@@ -223,21 +223,21 @@ def render_achievement_header(entries):
         "",
         "/* 单条成就定义, 字段顺序与 AchievementCatalog 的读取顺序一致. */",
         "struct AchievementData {",
-        "    uint32_t id;             /* 原版 achievement 表的 ID */",
-        "    const char* name;        /* 原版中文名, UTF-8 编码 */",
-        "    const char* description; /* 原版中文描述, 已折叠换行并截断 */",
+        "    uint32_t id;             /* achievement 表的 ID */",
+        "    const char* name;        /* 中文名, UTF-8 编码 */",
+        "    const char* description; /* 中文描述, 已折叠换行并截断 */",
         "    uint8_t category;        /* 1 新手, 2 主线, 3 生产, 4 战斗, 5 其他, 6 极限 */",
         "    uint8_t eventKind;       /* 本地事件类型, 取值见 progress_event.h */",
         "    int32_t target;          /* 达成所需的事件累计量 */",
-        "    uint8_t sourceGoal;      /* 原版目标类型 1..37 */",
-        "    uint32_t sourceGoalId;   /* 原版目标对象 id */",
-        "    uint8_t point;           /* 原版成就点数 */",
+        "    uint8_t sourceGoal;      /* 目标类型 1..37 */",
+        "    uint32_t sourceGoalId;   /* 目标对象 id */",
+        "    uint8_t point;           /* 成就点数 */",
         "    int32_t coinReward;      /* 完成时下发的镜币 */",
         "};",
         "",
         "constexpr int32_t kAchievementDataCount = %d;" % len(entries),
         "",
-        "/* 条目按原版 ID 升序排列, 越界索引由 AchievementCatalog 回落到首条. */",
+        "/* 条目按ID 升序排列, 越界索引由 AchievementCatalog 回落到首条. */",
         "constexpr AchievementData kAchievementData[kAchievementDataCount] = {",
     ]
     for entry in entries:
@@ -432,7 +432,7 @@ def main():
     for entry in entries:
         by_kind[entry["kind"]] = by_kind.get(entry["kind"], 0) + 1
     emit("成就条目 %d 条" % len(entries))
-    # by_kind 的键是事件类型值, 与原版目标值不同域, 取名走事件常量表而不是 GOAL_NAMES
+    # by_kind 的键是事件类型值, 与目标值不同域, 取名走事件常量表而不是 GOAL_NAMES
     event_names = {
         EVENT_BREAK: "破坏方块",
         EVENT_PLACE: "放置方块",

@@ -184,6 +184,17 @@ public final class NativeBridge {
         return nativeGetDayPhase();
     }
 
+    /*
+     * 环境音场景: 0 通用, 1 雨, 2 雷暴, 3 水下, 4 岩浆.
+     * 由原生侧按相机所在方块与当前天气折算, 与日相同一批轮询拉取.
+     */
+    public static int getAmbientContext() {
+        if (!ensureLoaded()) {
+            return 0;
+        }
+        return nativeGetAmbientContext();
+    }
+
     /* 取玩家姿态 JSON; 供联机 presence 轮询使用. */
     public static String takePlayerPose() {
         if (!ensureLoaded()) {
@@ -213,6 +224,8 @@ public final class NativeBridge {
     private static native String nativeTakePlayerPose();
 
     private static native void nativeApplyRemotePlayers(String json);
+
+    private static native int nativeGetAmbientContext();
 
     private static native String nativeTakeProgressCounters();
 

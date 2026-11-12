@@ -7,7 +7,7 @@ namespace immirror::progress {
 
 namespace {
 
-/* 表按原版 ID 升序排列, 这里的查找与表顺序无关, 直接线性扫描. */
+/* 表按ID 升序排列, 这里的查找与表顺序无关, 直接线性扫描. */
 const gen::AchievementData* FindAchievementById(int32_t id) {
     for (int32_t index = 0; index < gen::kAchievementDataCount; ++index) {
         if (static_cast<int32_t>(gen::kAchievementData[index].id) == id) {
@@ -131,7 +131,7 @@ bool AchievementTracker::Matches(const gen::AchievementData& def, GoalAction act
         return false;
     }
     /*
-     * 当前成就表只保存原版对象 ID, 尚未折算到客户端方块 ID, 因此按同类动作
+     * 当前成就表只保存对象 ID, 尚未折算到客户端方块 ID, 因此按同类动作
      * 任意方块计数. 折算表落地后在这里加一层对象到方块 id 的映射即可.
      */
     (void)def;

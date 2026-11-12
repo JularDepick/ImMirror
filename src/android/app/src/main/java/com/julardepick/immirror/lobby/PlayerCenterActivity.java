@@ -97,7 +97,7 @@ public final class PlayerCenterActivity extends Activity {
         final int cardPadding = AccountTheme.dp(this, 20f);
         card.setPadding(cardPadding, cardPadding, cardPadding, cardPadding);
 
-        /* 头像框: 原版 slot/avatar_frame.png 九宫, 缺素材时回落纯色圆角底. */
+        /* 头像框: slot/avatar_frame.png 九宫, 缺素材时回落纯色圆角底. */
         final int avatarHalf = AccountTheme.dp(this, 52f);
         final ImageView avatar = new ImageView(this);
         final Drawable frame = UiTextures.nineSlice(this,

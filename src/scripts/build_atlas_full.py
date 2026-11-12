@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""从原版方块贴图与 blockdef 生成全量图集.
+"""从方块贴图与 blockdef 生成全量图集.
 
 输入: assets/project/blocks/*.png 与 blockdef.csv 的贴图 1 列
 输出: generated/ 下 atlas.rgba + atlas.json + atlas_index_gen.h
@@ -67,7 +67,7 @@ def collect_names():
 
 
 def paint_missing_tile(atlas, slot):
-    """缺图占位格: 64 像素一格的品红与深灰棋盘, 与任何原版贴图都不混淆."""
+    """缺图占位格: 64 像素一格的品红与深灰棋盘, 与任何贴图都不混淆."""
     col, row = slot % GRID, slot // GRID
     tile = Image.new("RGBA", (CELL, CELL), (255, 0, 255, 255))
     step = CELL // 4
@@ -84,10 +84,10 @@ def main():
     pngs = {name[:-4] for name in os.listdir(TEX_SOURCE) if name.endswith(".png")}
 
     """
-    格位分配分三类: 自绘名, 别名, 缺图名.
-    自绘名独占一个格位并写入自己的贴图; 别名只借用源贴图的格位, 自身不绘制,
-    否则别名贴图会覆盖掉源贴图所在的格位 (此前 lavastill 覆盖 stone 即是此因);
-    缺图名统一落到一个专用占位格, 实机上一眼可辨.
+ 格位分配分三类: 自绘名, 别名, 缺图名.
+ 自绘名独占一个格位并写入自己的贴图; 别名只借用源贴图的格位, 自身不绘制,
+ 否则别名贴图会覆盖掉源贴图所在的格位 (此前 lavastill 覆盖 stone 即是此因);
+ 缺图名统一落到一个专用占位格, 实机上一眼可辨.
     """
     slot_of = {}
     drawn_slot_of = {}

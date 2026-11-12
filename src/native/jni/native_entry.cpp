@@ -148,6 +148,21 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeGetDayPhase(JNIEnv* env,
     return shell->IsDay() ? JNI_TRUE : JNI_FALSE;
 }
 
+/*
+ * Java 侧低频入口: 查询环境音场景 (0 通用, 1 雨, 2 雷暴, 3 水下, 4 岩浆).
+ * 与日相同一批轮询, 由环境音管理器按场景切分组.
+ */
+JNIEXPORT jint JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeGetAmbientContext(JNIEnv* env, jclass clazz) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return 0;
+    }
+    return static_cast<jint>(shell->AmbientContext());
+}
+
 /* Java 侧低频入口: 取玩家姿态 JSON, 供联机 presence 轮询. */
 JNIEXPORT jstring JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakePlayerPose(JNIEnv* env, jclass clazz) {

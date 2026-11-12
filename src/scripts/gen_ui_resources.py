@@ -276,7 +276,7 @@ def main(argv):
     emit("  C++   %s (%s)" % (os.path.relpath(NATIVE_OUT_PATH, SRC_ROOT),
                               "已更新" if native_changed else "未变化"))
     if copy:
-        emit("  素材  %d 个已复制到 %s" % (copy_assets(assets),
+        emit(" 素材  %d 个已复制到 %s" % (copy_assets(assets),
                                           os.path.relpath(ASSET_TARGET_ROOT, SRC_ROOT)))
     return 0
 

@@ -21,15 +21,15 @@ UI_DIRS = ("button", "panel", "dialog", "tab", "slot", "icon", "misc")
 # 物品图标源目录: 素材管线的明文工程树 (PNG), 未打包时物品图标回落占位色块
 ITEM_ICON_SOURCE = "../../../assets/project/items"
 
-# 大厅素材目录: 原版大厅模板图与直接引用图, 含 bigtex/ 与 extra/ 两个子目录
+# 大厅素材目录: 大厅模板图与直接引用图, 含 bigtex/ 与 extra/ 两个子目录
 LOBBY_DIR = os.path.join(ASSETS_ROOT, "ui", "lobby")
 
-# HUD 状态条素材目录: 从原版操作图集导出的 RGBA 精灵
+# HUD 状态条素材目录: 从操作图集导出的 RGBA 精灵
 HUD_DIR = os.path.join(ASSETS_ROOT, "ui", "hud")
 
 
 def collect_sound_entries():
-    """音效清单: 全部已打包的 ogg, 覆盖原版 blockdef 里的挖掘/放置/行走音取值."""
+    """音效清单: 全部已打包的 ogg, 覆盖blockdef 里的挖掘/放置/行走音取值."""
     entries = []
     directory = os.path.join(ASSETS_ROOT, "sounds")
     if not os.path.isdir(directory):
@@ -83,7 +83,7 @@ def collect_lobby_entries():
 
 
 def collect_hud_entries():
-    """HUD 素材: 原版状态条精灵, 按 assets/ui/hud 下的目录结构整体复制."""
+    """HUD 素材: 状态条精灵, 按 assets/ui/hud 下的目录结构整体复制."""
     entries = []
     if not os.path.isdir(HUD_DIR):
         return entries

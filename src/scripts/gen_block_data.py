@@ -1,35 +1,35 @@
 #!/usr/bin/env python3
-"""从原版方块定义表生成客户端方块数据头文件.
+"""从方块定义表生成客户端方块数据头文件.
 
 输入: single-branch/assets/project/csvdef/blockdef.csv (双表头, 1191 行数据)
 输出: single-branch/client/src/native/game/generated/block_data_gen.h
 
-生成内容分三块, 全部来自原版方块定义表的实测行:
-  1. BlockEntry 全量表: 原版 id, 客户端 id, 英文键, 中文名, 类别, 移动碰撞,
-     硬度, 采集工具, 工具等级, 三种音效名, 贴图名与掉落物原值.
+生成内容分三块, 全部来自方块定义表的实测行:
+  1. BlockEntry 全量表: id, 客户端 id, 英文键, 中文名, 类别, 移动碰撞,
+ 硬度, 采集工具, 工具等级, 三种音效名, 贴图名与掉落物原值.
   2. BlockData 兼容视图: 沿用旧表字段 (sourceId, name, displayName, 掉落折算),
-     供物品表与界面沿用; 扩展段的掉落折算留 0, 原值保留在 dropSourceId 里.
+ 供物品表与界面沿用; 扩展段的掉落折算留 0, 原值保留在 dropSourceId 里.
   3. RegistryEntry 注册表扩展段: 与 voxel::BlockInfo 对齐的折算结果
      (solid, opaque, 硬度, 采集工具, 材质族, 音效名与贴图名), 客户端 id 15 起生效.
 
 客户端方块 id 分两段:
-  兼容段 0 到 14: 存档与界面引用的 15 种基础方块, 客户端 id 固定不变,
-  由 CLIENT_BLOCKS 按 (客户端 id, 英文键, 原版 ID, 期望贴图) 维护,
-  原版 ID 与贴图键都来自 blockdef.csv, 贴图键用于自检映射是否漂移.
-  扩展段 15 起: 剩余方块按类别分段, 分段顺序由 KEY_SEGMENTS 固定,
-  大类别在前, 段容量取原版表该类别的实测条数, 段内按原版 ID 升序;
-  KEY_SEGMENTS 未列出的类别全部落入收尾的 other 段, 同样按原版 ID 升序.
-  原版表 1191 行数据全部接入: 原版编辑器内部占位行 (无键, 无英文名,
-  无贴图, 无音效, 无掉落) 同样进表, 英文键用 block_<原版 ID> 兜底,
-  硬度按空缺取 -1 保守处理, 供后续原版启用时直接替换数据.
+ 兼容段 0 到 14: 存档与界面引用的 15 种基础方块, 客户端 id 固定不变,
+ 由 CLIENT_BLOCKS 按 (客户端 id, 英文键, ID, 期望贴图) 维护,
+  ID 与贴图键都来自 blockdef.csv, 贴图键用于自检映射是否漂移.
+ 扩展段 15 起: 剩余方块按类别分段, 分段顺序由 KEY_SEGMENTS 固定,
+ 大类别在前, 段容量取数据表该类别的实测条数, 段内按ID 升序;
+  KEY_SEGMENTS 未列出的类别全部落入收尾的 other 段, 同样按ID 升序.
+ 表 1191 行数据全部接入: 编辑器内部占位行 (无键, 无英文名,
+ 无贴图, 无音效, 无掉落) 同样进表, 英文键用 block_<ID> 兜底,
+ 硬度按空缺取 -1 保守处理, 供后续启用时直接替换数据.
 
 掉落物字段按 ToolMineDrop1, HandMineDrop, PreciseDrop 的优先级取原值,
-概率为万分比, 概率为 0 视为该字段不生效; 原版掉落取值是物品 id,
+概率为万分比, 概率为 0 视为该字段不生效; 掉落取值是物品 id,
 与客户端方块 id 不同域, 折算映射留待物品侧接入, 当前记 0 表示无掉落.
 
 移动碰撞折算进注册表扩展段: 1 固体与 3 不挡投射物按实心处理,
 0 空气, 2 液体, 4 空气挡子弹, 5 不阻挡物理与空缺按非实心处理.
-遮挡折算只认原版"遮挡旁边块"为 1 的行, 其余 (含厚度 2 与同材质 3)
+遮挡折算只认"遮挡旁边块"为 1 的行, 其余 (含厚度 2 与同材质 3)
 一律按非遮挡处理, 交由后续按厚度建模时再放开.
 
 生成物列入 .gitignore, 由 scripts/build-native.sh 在构建前调用.
@@ -50,7 +50,7 @@ BLOCKDEF_PATH = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "p
 OUT_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "block_data_gen.h")
 REGISTRY_HEADER_PATH = os.path.join(SRC_ROOT, "native", "voxel", "block_registry.h")
 
-# 兼容段方块表: (客户端 id, 注册表英文键, 原版 blockdef ID, 期望的 Texture1 值)
+# 兼容段方块表: (客户端 id, 注册表英文键, blockdef ID, 期望的 Texture1 值)
 # 空气没有贴图, 纹理键留空跳过自检; 这 15 行的客户端 id 与语义不得变动
 CLIENT_BLOCKS = [
     (0, "air", 0, ""),
@@ -70,8 +70,8 @@ CLIENT_BLOCKS = [
     (14, "planks", 206, "planks_fruittree"),
 ]
 
-# 扩展段类别分段表: (原版 Type 值, 段容量). 顺序即客户端 id 的分配顺序,
-# 容量取原版表该类别的实测条数, 原版新增同类条数超出容量时会直接报错,
+# 扩展段类别分段表: (Type 值, 段容量). 顺序即客户端 id 的分配顺序,
+# 容量取数据表该类别的实测条数, 新增同类条数超出容量时会直接报错,
 # 此时按追加顺序扩一段即可, 已分配的客户端 id 不受影响.
 KEY_SEGMENTS = (
     ("basic", 255),
@@ -107,7 +107,7 @@ OTHER_CATEGORY = "other"
 # 掉落物字段按优先级排列, 概率为万分比, 概率为 0 视为该字段不生效
 DROP_FIELDS = (("ToolMineDrop1", "ToolMineProb1"), ("HandMineDrop", "HandMineProb"))
 
-# 原版挖掘音族到注册表材质族的折算: 键是去掉 blockd./blocks. 前缀的族名,
+# 挖掘音族到注册表材质族的折算: 键是去掉 blockd./blocks. 前缀的族名,
 # 值与 voxel::HarvestMaterial 的取值一致, 0 表示不发声
 SOUND_FAMILY_TO_MATERIAL = {
     "grass": 1,
@@ -122,7 +122,7 @@ SOUND_FAMILY_TO_MATERIAL = {
     "ladder": 10,
 }
 
-# 原版采集工具值域: 0 徒手, 1 斧, 2 镐, 3 铲, 5 剪刀
+# 采集工具值域: 0 徒手, 1 斧, 2 镐, 3 铲, 5 剪刀
 VALID_TOOLS = (0, 1, 2, 3, 5)
 
 # 硬度合法范围, 与 voxel 侧的编译期校验一致
@@ -162,10 +162,10 @@ def escape(text):
 
 
 def fold_key(en_name, key, source_id):
-    """把原版英文名折算成客户端英文键: 小写下划线, 非字母数字折成下划线.
+    """把英文名折算成客户端英文键: 小写下划线, 非字母数字折成下划线.
 
-    英文名称列缺失时回退到原版插件键列 (同为英文标识), 两者都缺时
-    用 block_<原版 ID> 兜底, 保证每个方块都有稳定键名.
+ 英文名称列缺失时回退到插件键列 (同为英文标识), 两者都缺时
+ 用 block_<ID> 兜底, 保证每个方块都有稳定键名.
     """
     base = (en_name or key or "").strip().lower()
     base = re.sub(r"[^0-9a-z]+", "_", base).strip("_")
@@ -232,7 +232,7 @@ def registry_block_count():
 
 
 def collect_source_rows(rows):
-    """把原版行拆成兼容段映射与扩展段候选, 返回 (兼容行表, 扩展行列表, 排除行表)."""
+    """把行拆成兼容段映射与扩展段候选, 返回 (兼容行表, 扩展行列表, 排除行表)."""
     legacy_rows = []
     for client_id, name, source_id, texture in CLIENT_BLOCKS:
         row = rows.get(str(source_id))
@@ -260,7 +260,7 @@ def collect_source_rows(rows):
 def allocate_ids(extension_rows):
     """把扩展段候选按类别分段分配客户端 id, 返回 (分配表, 分段区间表).
 
-    分配表元素是 (客户端 id, 原版 id, 原版行); 分段区间表元素是
+ 分配表元素是 (客户端 id, id, 行); 分段区间表元素是
     (类别名, 段起点, 段条数), 供生成头文件的说明注释与界面分组使用.
     """
     by_category = {}
@@ -294,7 +294,7 @@ def allocate_ids(extension_rows):
 
 
 def build_extension_entry(client_id, source_id, row, used_keys):
-    """把一条扩展段原版行折算成生成表条目."""
+    """把一条扩展段行折算成生成表条目."""
     category = row.get("Type", "").strip()
     display_name = row.get("Name", "").strip() or "未命名"
     key = fold_key(row.get("ENName"), row.get("Key"), source_id)
@@ -328,7 +328,7 @@ def build_extension_entry(client_id, source_id, row, used_keys):
 
     # 移动碰撞到实心属性的折算: 1 固体与 3 不挡投射物按实心处理
     solid = collision in (1, 3)
-    # 遮挡只认原版"遮挡旁边块"为 1 的行, 厚度与同材质的行保守按非遮挡处理
+    # 遮挡只认"遮挡旁边块"为 1 的行, 厚度与同材质的行保守按非遮挡处理
     opaque = row.get("CoverNeighbor", "").strip() == "1"
 
     return {
@@ -360,7 +360,7 @@ def format_float(value):
 
 def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
                       drop_block):
-    """拼出兼容段的一行全表条目. 字段与扩展段一致, 数值取原版原值."""
+    """拼出兼容段的一行全表条目. 字段与扩展段一致, 数值取原值."""
     comment = "兼容段, 掉落字段 %s" % drop_field if drop_field else "兼容段, 无掉落字段"
     collision_text = data.get("MoveCollide", "").strip()
     collision = to_int(collision_text) if collision_text else 1
@@ -401,27 +401,27 @@ def render_header(entries, legacy_rows, segments):
         " * 数据源: single-branch/assets/project/csvdef/blockdef.csv",
         " *",
         " * 客户端方块 id 分配规则:",
-        " *   兼容段 0 到 %d: 存档与界面引用的 %d 种基础方块, id 固定不变,"
+        " * 兼容段 0 到 %d: 存档与界面引用的 %d 种基础方块, id 固定不变,"
         % (len(CLIENT_BLOCKS) - 1, len(CLIENT_BLOCKS)),
-        " *   由生成脚本的 CLIENT_BLOCKS 按 (客户端 id, 原版 ID) 固定映射;",
-        " *   扩展段 %d 起: 按类别分段, 大类别在前, 段内按原版 ID 升序," % len(CLIENT_BLOCKS),
-        " *   分段区间如下 (起点即该类别的首个客户端 id):",
+        " * 由生成脚本的 CLIENT_BLOCKS 按 (客户端 id, ID) 固定映射;",
+        " * 扩展段 %d 起: 按类别分段, 大类别在前, 段内按ID 升序," % len(CLIENT_BLOCKS),
+        " * 分段区间如下 (起点即该类别的首个客户端 id):",
     ]
     lines.extend(segment_lines)
     lines += [
-        " *   原版未启用的内部占位行不接入客户端, 后续启用时在段尾追加.",
+        " * 未启用的内部占位行不接入客户端, 后续启用时在段尾追加.",
         " *",
         " * 字段语义:",
-        " *   sourceId 是原版 blockdef 的 ID, key 是客户端注册表英文键",
-        " *   (原版英文名折算小写下划线, 重名追加原版 ID 后缀),",
-        " *   displayName 是原版中文名 (UTF-8), category 是原版 Type 值,",
-        " *   collision 是原版移动碰撞 (0 空气 1 固体 2 液体 3 不挡投射物",
-        " *   4 空气挡子弹 5 不阻挡物理), hardness 是原版硬度原值",
+        " *   sourceId 是blockdef 的 ID, key 是客户端注册表英文键",
+        " *   (英文名折算小写下划线, 重名追加ID 后缀),",
+        " *   displayName 是中文名 (UTF-8), category 是Type 值,",
+        " *   collision 是移动碰撞 (0 空气 1 固体 2 液体 3 不挡投射物",
+        " *   4 空气挡子弹 5 不阻挡物理), hardness 是硬度原值",
         " *   (-1 不可破坏, 上限 200), tool 是采集工具 (0 徒手 1 斧 2 镐",
         " *   3 铲 5 剪刀), toolLevel 是工具等级, digSound/placeSound/walkSound",
-        " *   保留原版 blockd./blocks. 前缀音效名 (空串表示没有), texture 是",
-        " *   原版贴图1 字段名 (空串表示没有), dropSourceId 是原版掉落物",
-        " *   物品 id (0 表示无掉落), 掉落到客户端 id 的折算映射后续接入.",
+        " * 保留blockd./blocks. 前缀音效名 (空串表示没有), texture 是",
+        " * 贴图1 字段名 (空串表示没有), dropSourceId 是掉落物",
+        " * 物品 id (0 表示无掉落), 掉落到客户端 id 的折算映射后续接入.",
         " */",
         "namespace immirror::game::gen {",
         "",
@@ -433,20 +433,20 @@ def render_header(entries, legacy_rows, segments):
         "",
         "/* 单个方块的完整定义. */",
         "struct BlockEntry {",
-        "    uint32_t sourceId;       /* 原版 blockdef 的 ID */",
+        "    uint32_t sourceId;       /* blockdef 的 ID */",
         "    uint16_t clientId;       /* 客户端方块 id, 与数组下标一致 */",
         "    const char* key;         /* 客户端注册表英文键 */",
-        "    const char* displayName; /* 原版中文名, UTF-8 编码 */",
-        "    const char* category;    /* 原版 Type 类别值 */",
-        "    uint8_t collision;       /* 原版移动碰撞类型 0 到 5 */",
-        "    float hardness;          /* 原版硬度, -1 表示不可破坏 */",
+        "    const char* displayName; /* 中文名, UTF-8 编码 */",
+        "    const char* category;    /* Type 类别值 */",
+        "    uint8_t collision;       /* 移动碰撞类型 0 到 5 */",
+        "    float hardness;          /* 硬度, -1 表示不可破坏 */",
         "    uint8_t tool;            /* 采集工具: 0 徒手 1 斧 2 镐 3 铲 5 剪刀 */",
         "    uint8_t toolLevel;       /* 采集工具等级 */",
-        "    const char* digSound;    /* 原版挖掘音名, 空串表示没有 */",
-        "    const char* placeSound;  /* 原版放置音名, 空串表示没有 */",
-        "    const char* walkSound;   /* 原版行走音名, 空串表示没有 */",
-        "    const char* texture;     /* 原版贴图1 名, 空串表示没有 */",
-        "    uint32_t dropSourceId;   /* 原版掉落物物品 id, 0 表示无掉落 */",
+        "    const char* digSound;    /* 挖掘音名, 空串表示没有 */",
+        "    const char* placeSound;  /* 放置音名, 空串表示没有 */",
+        "    const char* walkSound;   /* 行走音名, 空串表示没有 */",
+        "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
+        "    uint32_t dropSourceId;   /* 掉落物物品 id, 0 表示无掉落 */",
         "};",
         "",
         "/* 条目按客户端 id 升序排列, 下标即客户端 id, 越界回落到首条 (空气). */",
@@ -480,7 +480,7 @@ def render_header(entries, legacy_rows, segments):
         "    return kBlockEntries[id < static_cast<uint32_t>(kBlockEntryCount) ? id : 0u];",
         "}",
         "",
-        "/* 按原版 ID 反查条目, 未收录返回空指针; 表内按 id 升序, 线性扫描足够. */",
+        "/* 按ID 反查条目, 未收录返回空指针; 表内按 id 升序, 线性扫描足够. */",
         "inline const BlockEntry* BlockEntryOfSource(uint32_t sourceId) {",
         "    for (int32_t index = 0; index < kBlockEntryCount; ++index) {",
         "        if (kBlockEntries[index].sourceId == sourceId) {",
@@ -490,7 +490,7 @@ def render_header(entries, legacy_rows, segments):
         "    return nullptr;",
         "}",
         "",
-        "/* 客户端方块 id 到原版 ID 的对照表, 供物品生成与编辑器关联使用. */",
+        "/* 客户端方块 id 到ID 的对照表, 供物品生成与编辑器关联使用. */",
         "constexpr uint32_t kSourceIds[kBlockEntryCount] = {",
     ]
     source_ids = [source_id for _, _, source_id, _ in legacy_rows]
@@ -503,13 +503,13 @@ def render_header(entries, legacy_rows, segments):
         "/*",
         " * 兼容段掉落视图: 沿用旧 BlockData 的字段与语义, 供物品表与界面沿用.",
         " * dropBlock 是破坏后进入物品栏的客户端方块 id, 仅兼容段有折算值,",
-        " * 扩展段掉落折算后续接入时在此补充; dropSourceId 保留原版物品 id.",
+        " * 扩展段掉落折算后续接入时在此补充; dropSourceId 保留物品 id.",
         " */",
         "struct BlockData {",
-        "    uint32_t sourceId;       /* 原版 blockdef 的 ID */",
+        "    uint32_t sourceId;       /* blockdef 的 ID */",
         "    const char* name;        /* 客户端注册表中的英文键 */",
-        "    const char* displayName; /* 原版中文名, UTF-8 编码 */",
-        "    uint32_t dropSourceId;   /* 原版掉落物字段的原始取值, 0 表示无掉落 */",
+        "    const char* displayName; /* 中文名, UTF-8 编码 */",
+        "    uint32_t dropSourceId;   /* 掉落物字段的原始取值, 0 表示无掉落 */",
         "    uint32_t dropBlock;      /* 折算后的客户端掉落方块 id, 0 表示无掉落 */",
         "};",
         "",
@@ -553,22 +553,22 @@ def render_header(entries, legacy_rows, segments):
         "/*",
         " * 注册表扩展段: 与 voxel::BlockInfo 对齐的折算结果, 下标 i 对应客户端",
         " * 方块 id (kLegacyBlockCount + i). solid 由移动碰撞折算 (1 固体与",
-        " * 3 不挡投射物按实心), opaque 由原版遮挡旁边块折算 (仅 1 视为遮挡),",
+        " * 3 不挡投射物按实心), opaque 由遮挡旁边块折算 (仅 1 视为遮挡),",
         " * material 由挖掘音族折算, 取值与 voxel::HarvestMaterial 一致,",
-        " * 音效名与贴图名保留原版原值, 供音频与图集层直接引用.",
+        " * 音效名与贴图名保留原值, 供音频与图集层直接引用.",
         " */",
         "struct RegistryEntry {",
         "    uint16_t clientId;       /* 客户端方块 id, 编译期校验连续 */",
         "    const char* name;        /* 注册表英文键, 与 BlockEntry.key 一致 */",
         "    bool solid;              /* 参与移动碰撞 */",
         "    bool opaque;             /* 遮挡邻面 */",
-        "    float hardness;          /* 原版硬度, -1 表示不可破坏 */",
+        "    float hardness;          /* 硬度, -1 表示不可破坏 */",
         "    uint8_t tool;            /* 采集工具, 与 voxel::HarvestTool 对齐 */",
         "    uint8_t material;        /* 采集材质族, 与 voxel::HarvestMaterial 对齐 */",
-        "    const char* digSound;    /* 原版挖掘音名, 空串表示没有 */",
-        "    const char* placeSound;  /* 原版放置音名, 空串表示没有 */",
-        "    const char* walkSound;   /* 原版行走音名, 空串表示没有 */",
-        "    const char* texture;     /* 原版贴图1 名, 空串表示没有 */",
+        "    const char* digSound;    /* 挖掘音名, 空串表示没有 */",
+        "    const char* placeSound;  /* 放置音名, 空串表示没有 */",
+        "    const char* walkSound;   /* 行走音名, 空串表示没有 */",
+        "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
         "};",
         "",
         "constexpr int32_t kRegistryEntryCount = kBlockEntryCount - kLegacyBlockCount;",
@@ -631,11 +631,11 @@ def main():
         handle.write(render_header(entries, legacy_rows, segments))
 
     emit("方块数据表已生成: %s" % OUT_PATH)
-    emit("  原版行 %d 条, 全量接入 %d 条 (兼容段 %d + 扩展段 %d)"
+    emit(" 行 %d 条, 全量接入 %d 条 (兼容段 %d + 扩展段 %d)"
          % (len(rows), total, len(CLIENT_BLOCKS), len(entries)))
     for category, start, count_in_segment in segments:
-        emit("  段 %-16s %4d 起, %3d 条" % (category, start, count_in_segment))
-    emit("  block_<原版ID> 兜底键: %d 个, 重名追加后缀键: %d 个"
+        emit(" 段 %-16s %4d 起, %3d 条" % (category, start, count_in_segment))
+    emit("  block_<ID> 兜底键: %d 个, 重名追加后缀键: %d 个"
          % (sum(1 for entry in entries if entry["key"].startswith("block_")),
             sum(1 for entry in entries if entry["key"].endswith("_%d" % entry["source_id"])
                 and not entry["key"].startswith("block_"))))

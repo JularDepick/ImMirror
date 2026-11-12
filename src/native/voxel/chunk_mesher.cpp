@@ -42,7 +42,7 @@ constexpr size_t kCachedBlockLimit = 32;
 
 /*
  * 液体判定按名字: 客户端把液体方块建成非实心且非遮挡, 花草树木也有同样的属性,
- * 只看属性会把水与花混为一谈. 原版液体键都含 water/lava 或带 _flow/_still 后缀.
+ * 只看属性会把水与花混为一谈. 液体键都含 water/lava 或带 _flow/_still 后缀.
  */
 bool IsLiquidName(const char* name) {
     if (name == nullptr) {
@@ -203,7 +203,7 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
         const BlockInfo& info = registry.Info(id);
         return !info.solid && !info.opaque && IsLiquidName(info.name);
     };
-    /* 花草类按交叉双面绘制, 与原版花草的平面片一致. */
+    /* 花草类按交叉双面绘制, 与花草的平面片一致. */
     const auto isPlant = [&registry](BlockId id) { return IsPlantLike(registry.Info(id)); };
     std::vector<uint32_t> liquidIndices;
 
@@ -262,7 +262,7 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
 
                 /*
                  * 花草: 两片沿对角线交叉的竖直面, 正反各一遍, 因此不受背面剔除影响.
-                 * 贴图取侧面格, 明暗取该格的天光与方块光, 比整方块更接近原版观感.
+                 * 贴图取侧面格, 明暗取该格的天光与方块光, 比整方块更接近观感.
                  */
                 if (isPlant(id)) {
                     const uint16_t tile = tiles.side == kAtlasFallback ? tiles.top : tiles.side;

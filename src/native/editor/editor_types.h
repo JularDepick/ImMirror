@@ -60,7 +60,7 @@ enum class EditorMode {
 /*
  * 轴对齐区域, 以方块坐标为单位的中心与尺寸.
  * 区域覆盖 [center - size/2, center + size/2] 的闭区间,
- * 与"进入区域"事件的原版语义一致 (中心点加长宽高).
+ * 与"进入区域"事件的语义一致 (中心点加长宽高).
  */
 struct Region {
     int32_t cx = 0;

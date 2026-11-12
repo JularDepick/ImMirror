@@ -25,7 +25,7 @@ import com.julardepick.immirror.ui.UiTextures;
 /*
  * 账号相关界面的视觉常量与控件工厂.
  *
- * 控件优先用 assets/ui 下的原版素材绘制, 九宫边界来自 scripts/gen_ui_resources.py
+ * 控件优先用 assets/ui 下的素材绘制, 九宫边界来自 scripts/gen_ui_resources.py
  * 生成的 UiResources 参数表; 素材缺失时逐项回落到下面的纯色常量, 因此裁剪掉
  * 素材的安装包也能显示完整界面.
  * 纯色回落按视觉规范第四章的像素件规则绘制: 面板是三像素黑描边加一像素白内高光,

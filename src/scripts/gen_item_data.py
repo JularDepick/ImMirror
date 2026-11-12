@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
-"""从原版物品定义表与合成表生成客户端的物品数据与配方数据头文件.
+"""从物品定义表与合成表生成客户端的物品数据与配方数据头文件.
 
 输入:
-  single-branch/assets/project/csvdef/autogen/itemdef.csv  物品定义
-  single-branch/assets/project/csvdef/crafting.csv         合成配方
-  single-branch/assets/project/csvdef/blockdef.csv         方块定义 (仅用于自检)
-  single-branch/client/src/native/game/generated/block_data_gen.h  全量方块表
+  single-branch/assets/project/csvdef/autogen/itemdef.csv 物品定义
+  single-branch/assets/project/csvdef/crafting.csv 合成配方
+  single-branch/assets/project/csvdef/blockdef.csv 方块定义 (仅用于自检)
+  single-branch/client/src/native/game/generated/block_data_gen.h 全量方块表
 输出:
   single-branch/client/src/native/game/generated/item_data_gen.h
   single-branch/client/src/native/game/generated/recipe_data_gen.h
 
 物品 id 与方块 id 一一对应:
   0 号是空气, 方块 1 起的物品 id 与客户端方块 id 同值, 每个客户端方块
-  都有一个可放置物品, 放置与掉落通过同值关系直接换算;
-  其余物品以全部方块为原料逐层合成闭包 (BFS, 无序合成口径) 排在方块之后,
-  闭包只认原版物品表里有名有型的条目.
-  客户端方块 id 到原版方块 ID 的对照读自生成的方块表 (kSourceIds),
-  方块表缺失时回落到本脚本的 CLIENT_BLOCKS 兼容段.
+ 都有一个可放置物品, 放置与掉落通过同值关系直接换算;
+ 其余物品以全部方块为原料逐层合成闭包 (BFS, 无序合成口径) 排在方块之后,
+ 闭包只认物品表里有名有型的条目.
+ 客户端方块 id 到方块 ID 的对照读自生成的方块表 (kSourceIds),
+ 方块表缺失时回落到本脚本的 CLIENT_BLOCKS 兼容段.
 
-原版配方用横占格/竖占格描述摆放区域, 每格记一种材料与数量; 同一材料出现在多格时
-数量按格累加, 也就是"材料数量决定配方"的无序语义 (原版即如此). 因此生成时把配方
+配方用横占格/竖占格描述摆放区域, 每格记一种材料与数量; 同一材料出现在多格时
+数量按格累加, 也就是"材料数量决定配方"的无序语义 (即如此). 因此生成时把配方
 规整成按材料聚合的材料清单, kind 记 kShapeless; 有序配方匹配器同样实现,
 由 SHAPED_RECIPES 显式列出需要按格位精确摆放的配方, 目前表内没有这类数据.
 
@@ -41,17 +41,17 @@ BLOCK_DATA_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "block_d
 OUT_ITEM_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "item_data_gen.h")
 OUT_RECIPE_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "recipe_data_gen.h")
 
-# 兼容段方块与原版 blockdef ID 的对应关系, 与 scripts/gen_block_data.py 的
+# 兼容段方块与blockdef ID 的对应关系, 与 scripts/gen_block_data.py 的
 # CLIENT_BLOCKS 一致; 正常路径以 block_data_gen.h 的 kSourceIds 为准, 本表只兜底
 CLIENT_BLOCKS = [
     (0, 0), (1, 100), (2, 101), (3, 104), (4, 106), (5, 4), (6, 200), (7, 218),
     (8, 1), (9, 547), (10, 505), (11, 115), (12, 123), (13, 107), (14, 206),
 ]
 
-# 需要按格位精确摆放的配方 id; 原版配方是数量制, 这里留作后续手写有序配方的入口
+# 需要按格位精确摆放的配方 id; 配方是数量制, 这里留作后续手写有序配方的入口
 SHAPED_RECIPES = set()
 
-# 原版占位条目, 名称与内容都不可用
+# 占位条目, 名称与内容都不可用
 PLACEHOLDER_NAMES = ("游戏版本过低",)
 
 NOTICE_ITEM = "由 scripts/gen_item_data.py 从 assets 仓库的 itemdef.csv 生成, 请勿手改"
@@ -98,11 +98,11 @@ def load_table(path):
 
 
 def read_block_sources():
-    """取客户端方块 id 到原版方块 ID 的对照, 优先读生成的方块数据表.
+    """取客户端方块 id 到方块 ID 的对照, 优先读生成的方块数据表.
 
-    方块表里 kSourceIds 的下标即客户端 id, 取值即原版方块 ID, 每行 12 个;
-    读取失败或格式不符时回落到 CLIENT_BLOCKS 兼容段, 保证单独重跑物品
-    生成也能工作, 两处不一致时以方块表为准并给出告警.
+ 方块表里 kSourceIds 的下标即客户端 id, 取值即方块 ID, 每行 12 个;
+ 读取失败或格式不符时回落到 CLIENT_BLOCKS 兼容段, 保证单独重跑物品
+ 生成也能工作, 两处不一致时以方块表为准并给出告警.
     """
     pairs = [(client_id, source) for client_id, source in CLIENT_BLOCKS]
     if os.path.isfile(BLOCK_DATA_PATH):
@@ -124,7 +124,7 @@ def read_block_sources():
 
 
 def material_counts(recipe):
-    """把配方的九个材料格聚合成 {原版物品 ID: 总数量}, 保持首次出现顺序."""
+    """把配方的九个材料格聚合成 {物品 ID: 总数量}, 保持首次出现顺序."""
     counts = {}
     order = []
     for index in range(1, 10):
@@ -152,7 +152,7 @@ def cell_materials(recipe):
 
 
 def item_usable(row, source_id):
-    """判断原版物品条目是否可以进入客户端物品表."""
+    """判断物品条目是否可以进入客户端物品表."""
     if source_id <= 0:
         return False
     name = (row.get("Name") or "").strip()
@@ -205,7 +205,7 @@ def main():
             items_by_id[key] = row
     source_pairs = read_block_sources()
     seed_sources = [source for _, source in source_pairs]
-    emit("原版物品 %d 条, 配方 %d 条, 客户端方块 %d 种"
+    emit("物品 %d 条, 配方 %d 条, 客户端方块 %d 种"
          % (len(items_by_id), len(recipes), len(source_pairs)))
 
     closure, rounds = compute_closure(recipes, seed_sources)
@@ -237,17 +237,17 @@ def main():
             continue
         row = items_by_id.get(source, {})
         if not item_usable(row, source):
-            # 方块对应的原版物品行缺失时用方块数据兜底, 保证物品与方块同值
+            # 方块对应的物品行缺失时用方块数据兜底, 保证物品与方块同值
             block_client_id = source_to_block.get(source)
             if block_client_id is None:
-                raise SystemExit("物品 %d 不在原版物品表且不与方块关联" % source)
+                raise SystemExit("物品 %d 不在物品表且不与方块关联" % source)
             key = "block_%d" % source
             name = "未命名"
             icon = ""
             max_stack = 64
             category = "kBlock"
             item_type = 1
-            emit("提示: 方块 %d 的原版物品行缺失, 物品 %d 用兜底数据"
+            emit("提示: 方块 %d 的物品行缺失, 物品 %d 用兜底数据"
                  % (source, item_id))
         else:
             key = (row.get("Key") or "").strip()
@@ -287,7 +287,7 @@ def main():
         if client_id < len(block_items):
             block_items[client_id] = item_id
 
-    # 配方: 产物与全部材料都在物品表内的才纳入, 其余留在原版表中待后续扩展
+    # 配方: 产物与全部材料都在物品表内的才纳入, 其余留在表中待后续扩展
     source_to_item = {row["source"]: row["id"] for row in item_rows}
     kept = []
     skipped_missing = 0
@@ -346,7 +346,7 @@ def main():
 
     blocks_linked = [row for row in item_rows if row["block"] > 0]
     tools = [row for row in item_rows if row["category"] == "kTool"]
-    emit("  方块物品 %d 种, 工具 %d 种, 材料 %d 种"
+    emit(" 方块物品 %d 种, 工具 %d 种, 材料 %d 种"
          % (len(blocks_linked), len(tools),
             sum(1 for row in item_rows if row["category"] == "kMaterial")))
     return 0
@@ -365,7 +365,7 @@ def render_items(rows, block_items):
         " * " + NOTICE_ITEM + ".",
         " * 数据源: single-branch/assets/project/csvdef/autogen/itemdef.csv",
         " * 条目顺序即客户端物品 id: 0 为空气, 方块 1 起的物品 id 与客户端方块 id 同值,",
-        " * 每个客户端方块都有可放置物品, 之后是可合成闭包; sourceId 保留原版物品 ID.",
+        " * 每个客户端方块都有可放置物品, 之后是可合成闭包; sourceId 保留物品 ID.",
         " * block 为物品放置出的客户端方块 id, -1 表示该物品不可放置.",
         " */",
         "namespace immirror::game::gen {",
@@ -408,7 +408,7 @@ def render_recipes(recipes):
         "/*",
         " * " + NOTICE_RECIPE + ".",
         " * 数据源: single-branch/assets/project/csvdef/crafting.csv",
-        " * 只收录产物与全部材料都在客户端物品表内的配方, 网格尺寸沿用原版横占格与竖占格.",
+        " * 只收录产物与全部材料都在客户端物品表内的配方, 网格尺寸沿用横占格与竖占格.",
         " * 无序配方的 materials 是聚合后的材料清单 (材料种类数 = materialCount),",
         " * 有序配方的 materials 按格位行优先排列, 空位 item 为 0.",
         " */",

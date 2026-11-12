@@ -63,7 +63,7 @@ struct MeshData {
 };
 
 /*
- * 采集工具. 取值与原版方块定义表的工具字段一致: 0 徒手, 1 斧, 2 镐, 3 铲.
+ * 采集工具. 取值与方块定义表的工具字段一致: 0 徒手, 1 斧, 2 镐, 3 铲.
  * 客户端当前还没有工具物品, 该字段只作为数据保留: 后续接入工具后,
  * 由手持工具档位与这里的期望档位比较决定挖掘倍率, 不改变硬度本身的语义.
  */
@@ -103,14 +103,14 @@ struct BlockInfo {
     uint16_t atlasSide = 0xFFFF;   /* 侧面图集格, 0xFFFF 表示回落到 atlasIndex */
     uint16_t atlasBottom = 0xFFFF; /* 底面图集格, 0xFFFF 表示回落到 atlasIndex */
     /*
-     * 原版硬度, 合法范围 -1 到 200, 步长 0.5.
+     * 硬度, 合法范围 -1 到 200, 步长 0.5.
      * -1 表示不可破坏 (空气, 水, 基岩), 既不累计挖掘进度也不响应破坏.
      */
     float hardness = -1.0f;
     HarvestTool tool = HarvestTool::kHand;             /* 采集工具档位 */
     HarvestMaterial material = HarvestMaterial::kNone; /* 采集材质族, 决定音效 */
     /*
-     * 原版光照三列折算: 光源强度 0-15 (0 表示不发光), 光衰减 0-15,
+     * 光照三列折算: 光源强度 0-15 (0 表示不发光), 光衰减 0-15,
      * 遮挡旁边块 0 不遮挡 / 1 遮挡 / 2 按厚度 / 3 遮挡同材质.
      * 天光与方块光传播由 LightField 消费, 网格明暗采样由 chunk_mesher 消费.
      */

@@ -38,10 +38,10 @@ struct ProjectMeta {
  * 地图工程: 明文目录, 与运行期的 IMWF 世界存档是两套格式.
  *
  * 目录结构固定为:
- *   project.json              工程描述, 明文 JSON
- *   chunks/c.<x>.<z>.vox      区块方块数据, 明文游程文本
- *   triggers/t.<id>.json      触发器, 一条一个明文 JSON 文件
- *   export/<名字>.world       导出产物, 二进制 IMWF, 由游戏存档路径直接加载
+ *   project.json 工程描述, 明文 JSON
+ *   chunks/c.<x>.<z>.vox 区块方块数据, 明文游程文本
+ *   triggers/t.<id>.json 触发器, 一条一个明文 JSON 文件
+ *   export/<名字>.world 导出产物, 二进制 IMWF, 由游戏存档路径直接加载
  *
  * 工程数据是编辑期的唯一事实来源, 运行时世界只是它的投影:
  * 世界按玩家位置流式加载与卸载区块, 区块卸载后重新生成会回到地形原始状态,

@@ -48,7 +48,7 @@ script/
 ```
 // 行注释, 到行尾结束
 /* 块注释, 不嵌套,
-   可以跨行 */
+ 可以跨行 */
 ```
 
 ### 2.2 字面量
@@ -358,8 +358,8 @@ registry.RegisterFunction("world_get_block", &MyGetBlock,
 
 ```
 immirror-script compile 源码.ims [-o 输出.imsc] [--strip-debug]
-immirror-script disasm  字节码.imsc|源码.ims
-immirror-script run     字节码.imsc|源码.ims [--limit 指令数] [--memory 字节] [--timeout 毫秒]
+immirror-script disasm 字节码.imsc|源码.ims
+immirror-script run 字节码.imsc|源码.ims [--limit 指令数] [--memory 字节] [--timeout 毫秒]
 immirror-script bench
 ```
 

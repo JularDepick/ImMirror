@@ -9,7 +9,7 @@ import com.julardepick.immirror.account.AccountTheme;
 /*
  * 物品栏网格: 上四行背包, 空一行, 再一行快捷栏.
  *
- * 版式与原版一致, 9 列 5 行, 格子边长随控件宽度等比缩放, 因此在各种屏宽下都保持正方形.
+ * 版式与数据表一致, 9 列 5 行, 格子边长随控件宽度等比缩放, 因此在各种屏宽下都保持正方形.
  * 子视图按槽位号一一对应地创建一次, 之后只在下发快照时改写内容, 网格本身不增删视图,
  * 滚动与点击目标都不会因为物品变化而错位.
  *
@@ -18,7 +18,7 @@ import com.julardepick.immirror.account.AccountTheme;
  */
 public final class InventoryGridView extends ViewGroup {
 
-    /* 每行格数, 与原版九列布局一致. */
+    /* 每行格数, 与九列布局一致. */
     public static final int COLUMNS = 9;
 
     /* 点击回调; 页面据此更新详情面板并回写原生侧. */

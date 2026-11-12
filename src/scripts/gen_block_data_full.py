@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""从原版方块定义表生成全量方块注册表头文件.
+"""从方块定义表生成全量方块注册表头文件.
 
 输入: single-branch/assets/project/csvdef/blockdef.csv (双表头, 1193 行)
 输出: single-branch/client/src/native/voxel/generated/block_registry_gen.h
 
-全量 1191 条: 原版 id 顺序分配客户端 id, 现有 15 种 (air..planks) 的客户端 id
-保持不变, 保证世界存档兼容. 硬度/工具/音效名/贴图名按原版原值保留.
+全量 1191 条: id 顺序分配客户端 id, 现有 15 种 (air..planks) 的客户端 id
+保持不变, 保证世界存档兼容. 硬度/工具/音效名/贴图名按原值保留.
 
 生成物列入 .gitignore, 由 scripts/build-native.sh 在构建前调用.
 """
@@ -21,7 +21,7 @@ ROOT = os.path.normpath(os.path.join(SRC_ROOT, "..", ".."))
 BLOCKDEF_PATH = os.path.join(ROOT, "single-branch", "assets", "project", "csvdef", "blockdef.csv")
 OUT_PATH = os.path.join(SRC_ROOT, "native", "voxel", "generated", "block_registry_gen.h")
 
-# 现有 15 种: 客户端 id -> 原版 id (blockdef 第一列 ID), 保持不变保证存档兼容
+# 现有 15 种: 客户端 id -> id (blockdef 第一列 ID), 保持不变保证存档兼容
 EXISTING_IDS = {0: 0, 1: 100, 2: 101, 3: 104, 4: 106, 5: 4, 6: 200, 7: 218, 8: 1,
                 9: 547, 10: 505, 11: 115, 12: 123, 13: 107, 14: 206}
 REVERSE = {v: k for k, v in EXISTING_IDS.items()}
@@ -124,10 +124,10 @@ def emit_header(entries, total):
         "",
         "/*",
         " * " + NOTICE,
-        " * 全量 %d 条: 原版 id 顺序分配客户端 id, 现有 15 种 (air..planks) 保持不变." % total,
-        " * 硬度为原版原值 (-1 到 200), -1 表示不可破坏.",
-        " * 音效名为原版 blockd./blocks. 前缀字符串, 播放映射由音频层负责.",
-        " * 贴图名保留原版名称, 供图集扩充时映射纹理源.",
+        " * 全量 %d 条: id 顺序分配客户端 id, 现有 15 种 (air..planks) 保持不变." % total,
+        " * 硬度为原值 (-1 到 200), -1 表示不可破坏.",
+        " * 音效名为blockd./blocks. 前缀字符串, 播放映射由音频层负责.",
+        " * 贴图名保留名称称, 供图集扩充时映射纹理源.",
         " */",
         "",
         "#include <cstdint>",

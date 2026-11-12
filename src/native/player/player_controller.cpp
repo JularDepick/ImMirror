@@ -374,7 +374,7 @@ PlayerController::MineTick PlayerController::AdvanceMining(double dt, world::Wor
     tick.destroyed = world.SetBlock(mine_.block.x, mine_.block.y, mine_.block.z, 0);
     if (tick.destroyed) {
         tick.digSound = true;
-        /* 破坏按次扣体力 (原版 tili_action_destroyblock). */
+        /* 破坏按次扣体力 (tili_action_destroyblock). */
         ConsumeStamina(survival::kStaminaDestroyBlock);
     }
     CancelMining();
@@ -596,7 +596,7 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     }
 
     /*
-     * 移动状态与倍率折算 (原版 const.lua 第 17 到 22 行的倍率组):
+     * 移动状态与倍率折算 (const.lua 第 17 到 22 行的倍率组):
      * 冲刺按摇杆前向量阈值简化触发, 后退取 y 分量方向, 游泳按浸水判定,
      * 蓄力取挖掘中. 潜行本期无按键恒不触发. 倍率相乘后钳制到合法区间.
      */
@@ -632,7 +632,7 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     velocity_.z = wish.z * kMoveSpeed * ratio;
 
     if (jumpRequested_ && onGround_) {
-        /* 体力低于下限禁止起跳; 冲刺中起跳按快跑跳扣更多体力 (原版分组语义). */
+        /* 体力低于下限禁止起跳; 冲刺中起跳按快跑跳扣更多体力 (分组语义). */
         if (stamina_ >= survival::kStaminaActionFloor) {
             ConsumeStamina(sprinting_ ? survival::kStaminaSprintJump : survival::kStaminaJump);
             velocity_.y = kJumpSpeed;
@@ -885,7 +885,7 @@ void PlayerController::ApplyDamage(float amount) {
     health_ -= amount;
     hurtSeconds_ = kHurtSeconds;
     hurtCooldown_ = kHurtCooldown;
-    /* 受伤按次扣体力 (原版 tili_action_hurt). */
+    /* 受伤按次扣体力 (tili_action_hurt). */
     ConsumeStamina(survival::kStaminaHurt, false);
     if (health_ > 0.0f) {
         IM_LOGI(kTag, "player hurt amount=%.1f health=%.1f", static_cast<double>(amount),
@@ -958,7 +958,7 @@ void PlayerController::TickSurvival(float seconds) {
     }
 
     /*
-     * 体力恢复: 静止 (摇杆量近零) 恢复更快 (原版未给出, 自定注明).
+     * 体力恢复: 静止 (摇杆量近零) 恢复更快 (未给出, 自定注明).
      * 冲刺帧内已扣消耗, 这里只做恢复侧.
      */
     const float stickAmount = std::sqrt(stickValueX_ * stickValueX_ + stickValueY_ * stickValueY_);

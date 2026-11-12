@@ -39,9 +39,9 @@ constexpr float kAtlasGrid = 64.0f;
 
 /*
  * 纹理通道编码: 顶点 uv 复用一对 float, 按 uv.x 的取值范围区分三路来源.
- * uv.x < 0                纯色矩形, 不采样
- * 0 <= uv.x < kUiChannel  方块图集, 采样 uAtlas
- * uv.x >= kUiChannel      界面图集, 采样 uSprite, 采样前减回偏移
+ * uv.x < 0 纯色矩形, 不采样
+ * 0 <= uv.x < kUiChannel 方块图集, 采样 uAtlas
+ * uv.x >= kUiChannel 界面图集, 采样 uSprite, 采样前减回偏移
  * 偏移取 2 而不是 1, 留出余量避免界面 uv 恰好压在 1 上时判错通道;
  * float 在 2 到 3 区间的分辨率约 2.4e-7, 对 1/2048 的图集步长没有精度损失.
  */
@@ -59,11 +59,11 @@ constexpr float kJumpPressedScale = 0.9f;
  * 规范配色, 取自 .agent/UI_VISUAL_SPEC.md 第三章的角色色表.
  * 四个分量依次为红绿蓝与透明度, 数值已从十六进制归一.
  */
-/* #465677: HUD 底板, 原版 img_item 的槽位底色, 与素材一致取不透明 */
+/* #465677: HUD 底板, img_item 的槽位底色, 与素材一致取不透明 */
 constexpr float kHudBoardColor[4] = {0x46 / 255.0f, 0x56 / 255.0f, 0x77 / 255.0f, 1.0f};
-/* #20180F: 提示条底, 原版 board_tips_icon 的深棕黑, 同样不透明 */
+/* #20180F: 提示条底, board_tips_icon 的深棕黑, 同样不透明 */
 constexpr float kHudTipsColor[4] = {0x20 / 255.0f, 0x18 / 255.0f, 0x0F / 255.0f, 1.0f};
-/* #D61919: 血条实心段, 原版 img_blood_strip_red */
+/* #D61919: 血条实心段, img_blood_strip_red */
 constexpr float kHudBloodColor[4] = {0xD6 / 255.0f, 0x19 / 255.0f, 0x19 / 255.0f, 1.0f};
 /* 界面精灵的默认色调: 全白不透明, 保证精灵以原色显示. */
 constexpr float kSpriteTint[4] = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -88,21 +88,21 @@ constexpr float kHealthHalfHeight = 0.014f;
 constexpr float kHealthFillInset = 2.0f;
 
 /*
- * 生存状态条: 原版 PlayerFoodLevelBar 与 ChickenEnergyFrame.
- * 饥饿条与血条同宽, 紧接血条下方一行 (原版行距 30 像素, 按 720 设计高折算);
- * 体力条在快捷栏上方 (原版 269x25, 锚 PlayShortcut 上移 11), 宽度略短于血条.
+ * 生存状态条: PlayerFoodLevelBar 与 ChickenEnergyFrame.
+ * 饥饿条与血条同宽, 紧接血条下方一行 (行距 30 像素, 按 720 设计高折算);
+ * 体力条在快捷栏上方 (269x25, 锚 PlayShortcut 上移 11), 宽度略短于血条.
  * 三条同用一套底板色, 靠填充色区分: 血红, 饥饿橙黄, 体力青蓝.
  */
 constexpr float kHungerFillColor[4] = {0xE8 / 255.0f, 0xA0 / 255.0f, 0x1B / 255.0f, 1.0f};
 constexpr float kStaminaFillColor[4] = {0x3C / 255.0f, 0xC0 / 255.0f, 0xF1 / 255.0f, 1.0f};
-/* 原版 269 设计像素: 按 kHudArtPixel 标尺折算, 半宽 = 269 * 标尺 / 2. */
+/* 269 设计像素: 按 kHudArtPixel 标尺折算, 半宽 = 269 * 标尺 / 2. */
 constexpr float kStaminaHalfWidth = 269.0f * kHudArtPixel / 2.0f;
 constexpr float kStaminaHalfHeight = 0.011f;
 constexpr float kStaminaCenterX = 0.135f;
 constexpr float kStaminaCenterY = 0.865f - 0.055f;
 
 /*
- * 状态条左侧图标: 原版血条 icon_heart 20x16, 饥饿条 icon_chicken_leg 19x20,
+ * 状态条左侧图标: 血条 icon_heart 20x16, 饥饿条 icon_chicken_leg 19x20,
  * 两条同在 300x31 的框内. 用几何近似: 心形取两圆加下三角, 鸡腿取圆头加斜柄,
  * 不额外引入图集精灵, 色块本身即为可读性标记.
  */
@@ -869,7 +869,7 @@ void PushCenteredText(float* out, int32_t& offset, float centerX, float centerY,
 void PushInventorySlot(float* out, int32_t& offset, float centerX, float centerY, float half,
                        float scale, const InventorySlotView& view, float artUnit) {
     /*
-     * 底板取原版 img_item_box 九宫, 高亮格换成 img_item_box_selected;
+     * 底板取img_item_box 九宫, 高亮格换成 img_item_box_selected;
      * 界面图集不在线时回落到纯色九宫, 与快捷栏共用同一套回落逻辑.
      */
     if (uiAtlasAvailable) {
@@ -931,7 +931,7 @@ void DrawInventoryPanel(float* out, int32_t& offset, const HudLayout& layout,
     PushRect(out, offset, 0.0f, 0.0f, layout.DesignLength(0.5f), 1.0f, scale, kPanelScrim);
 
     /*
-     * 面板底板取原版 board_bottom_blue_big 九宫 (texture2/common 的 60x60 大板),
+     * 面板底板取board_bottom_blue_big 九宫 (texture2/common 的 60x60 大板),
      * 界面图集不在线时回落到深色纯色底板.
      */
     if (uiAtlasAvailable) {
@@ -950,7 +950,7 @@ void DrawInventoryPanel(float* out, int32_t& offset, const HudLayout& layout,
              "BAG", scale, kPanelTextColor);
 
     /*
-     * 关闭按钮: 取原版 btn_mini_orange 三片底板加 X 字, 面板内唯一必然可用的出口;
+     * 关闭按钮: 取btn_mini_orange 三片底板加 X 字, 面板内唯一必然可用的出口;
      * 界面图集不在线时回落到纯色底板.
      */
     if (uiAtlasAvailable) {
@@ -985,7 +985,7 @@ void DrawInventoryPanel(float* out, int32_t& offset, const HudLayout& layout,
     }
     const float buttonPixel = layout.DesignLength(kRecipeButtonPixel);
     /*
-     * 两个配方按钮取原版 btn_mini_blue 三片底板: NEXT 轮换候选常亮,
+     * 两个配方按钮取btn_mini_blue 三片底板: NEXT 轮换候选常亮,
      * AUTO 自动摆出可合成配方, 不可用时压暗底板; 图集不在线时回落纯色.
      */
     if (uiAtlasAvailable) {
@@ -1368,7 +1368,7 @@ void HudRenderer::Render(const HudFrame& frame) {
     int32_t offset = 0;
 
     /*
-     * 准星: 原版 operate 页的 sight 精灵, 以屏幕中心等比摆放;
+     * 准星: operate 页的 sight 精灵, 以屏幕中心等比摆放;
      * 界面图集不在线时回落到两条细矩形组成的十字.
      */
     const float white[4] = {1.0f, 1.0f, 1.0f, 0.75f};
@@ -1403,7 +1403,7 @@ void HudRenderer::Render(const HudFrame& frame) {
     artPixelUnit = artUnit;
 
     /*
-     * 血条: 左上角横条. 底槽取原版 img_blood_strip_board 九宫, 实心段取
+     * 血条: 左上角横条. 底槽取img_blood_strip_board 九宫, 实心段取
      * img_blood_strip_red 按血量比例截取, 左端固定, 右端随血量收缩;
      * 界面图集不在线时回落到规范底板色与规范血条色的纯色绘制.
      */
@@ -1441,7 +1441,7 @@ void HudRenderer::Render(const HudFrame& frame) {
 
     /*
      * 饥饿条与体力条: 与血条共用底槽画法, 不额外引入图集精灵.
-     * 原版两行条同宽 (300 设计像素), 饥饿在血条下一行, 体力在快捷栏上方.
+     * 两行条同宽 (300 设计像素), 饥饿在血条下一行, 体力在快捷栏上方.
      * 值只画实心段, 空值保留底槽, 与血条语义一致.
      */
     auto drawVitalBar = [&](float centerX, float centerY, float halfWidth, float halfHeight,
@@ -1472,7 +1472,7 @@ void HudRenderer::Render(const HudFrame& frame) {
      * 纵向设计坐标越小越靠下, 因此饥饿条在血条下方要用减号.
      */
     /*
-     * 行距按原版 PlayerFoodLevelBar 锚偏移 30 设计像素折算,
+     * 行距按PlayerFoodLevelBar 锚偏移 30 设计像素折算,
      * 标尺与 kHudArtPixel 同源 (一个素材像素对应一个设计像素).
      */
     const float iconHalf = healthHalfHeight * 1.1f;
@@ -1522,7 +1522,7 @@ void HudRenderer::Render(const HudFrame& frame) {
     }
 
     /*
-     * 跳跃按钮: 右下角取原版 icon_jump 精灵, 等比放入布局的按钮框;
+     * 跳跃按钮: 右下角取icon_jump 精灵, 等比放入布局的按钮框;
      * 按下时收缩并压暗作为反馈, 界面图集不在线时回落到方块加箭头的纯色画法.
      */
     const float jumpHalf = layout_.DesignLength(layout_.JumpHalfSize());
@@ -1559,7 +1559,7 @@ void HudRenderer::Render(const HudFrame& frame) {
         /* 数量为 0 的格整体压暗, 提示这一格已经耗尽, 不能再用作放置材料. */
         const bool spent = count == 0;
         /*
-         * 底板取原版 img_item_box 九宫, 选中格换成 img_item_box_selected;
+         * 底板取img_item_box 九宫, 选中格换成 img_item_box_selected;
          * 界面图集不在线时回落到纯色九宫, 保持与背包面板同一套底板来源.
          */
         if (uiAtlasAvailable) {
@@ -1637,7 +1637,7 @@ void HudRenderer::Render(const HudFrame& frame) {
         const float plateCenterY = slotCenterY + layout_.DesignLength(layout_.SlotHalfSize()) +
                                    layout_.DesignLength(kNamePlateGap) + plateHalfHeight;
         /*
-         * 方块名标签底板取原版 board_tips_icon 九宫, 图集不在线时回落到
+         * 方块名标签底板取board_tips_icon 九宫, 图集不在线时回落到
          * 深棕黑纯色底板, 两种画法的文字排版一致.
          */
         if (uiAtlasAvailable) {
@@ -1655,8 +1655,8 @@ void HudRenderer::Render(const HudFrame& frame) {
     }
 
     /*
-     * 背包按钮: 右上角常驻, 取原版 icon_backpack 精灵居中等比摆放,
-     * 底板沿用原版 img_item_box 九宫, 按下时压暗底板作为反馈;
+     * 背包按钮: 右上角常驻, 取icon_backpack 精灵居中等比摆放,
+     * 底板沿用img_item_box 九宫, 按下时压暗底板作为反馈;
      * 界面图集不在线时回落到九宫底板加 BAG 点阵字的旧画法.
      */
     const InventoryPanelGeometry bagGeometry = MakeInventoryPanelGeometry(layout_);
@@ -1692,7 +1692,7 @@ void HudRenderer::Render(const HudFrame& frame) {
             static_cast<float>(kGlyphHeight) * pixel * 0.5f + padding * 0.5f;
         const float plateCenterY = slotCenterY + layout_.DesignLength(layout_.SlotHalfSize()) +
                                    layout_.DesignLength(kTipGap) + plateHalfHeight;
-        /* 操作提示条与方块名标签共用同一张原版 board_tips_icon 九宫. */
+        /* 操作提示条与方块名标签共用同一张board_tips_icon 九宫. */
         if (uiAtlasAvailable) {
             PushUiNineSlice(vertices, offset, 0.0f, plateCenterY, plateHalfWidth, plateHalfHeight,
                             scale, gen::UiSpriteOf(gen::UiSprite::TipsBoard), kSpriteTint);

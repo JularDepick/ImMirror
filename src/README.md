@@ -9,7 +9,7 @@
 src/
 ├── .gitignore                  # 源码目录级忽略规则
 ├── README.md                   # 本文件
-├── assets/                     # 随包资源 (方块贴图等, 从原版资源复制的部分在 blocks/)
+├── assets/                     # 随包资源 (方块贴图等, 从资源复制的部分在 blocks/)
 ├── android/                    # Gradle 工程 (Java 平台桥接层)
 │   ├── settings.gradle.kts     # 模块声明与仓库配置
 │   ├── build.gradle.kts        # 插件版本声明
@@ -251,7 +251,7 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 
 ### 5.5 设置
 
-设置项的键名, 默认值与取值范围取自原版 `setting.lua` 的默认表, 共 31 项, 与原版 `setGameData` 的键名逐字一致。
+设置项的键名, 默认值与取值范围取自`setting.lua` 的默认表, 共 31 项, 与`setGameData` 的键名逐字一致。
 键表, 换算常量与持久化集中在 `native/settings/`, 新增或调整设置项只需改键表的一行。
 
 | 项 | 取值 |
@@ -288,7 +288,7 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 2. 只有 GLES 后端; Vulkan 仅在 Java 侧做能力探测, 后端实现留待后续版本
 3. 水面按不透明渲染, 未做透明排序
 4. 只有一种方块材质, 尚未接入物品栏与合成
-5. 游戏内界面覆盖层使用纯色几何绘制, 待接入原版界面纹理
+5. 游戏内界面覆盖层使用纯色几何绘制, 待接入界面纹理
 6. 脚本运行时尚未接入, 玩法逻辑目前全部在原生代码中
 7. 游戏界面固定横屏, 未做竖屏适配
 8. APK 同时打包三个 ABI 并使用静态 C++ 运行时, 包体偏大, 后续按 ABI 拆分或开启裁剪

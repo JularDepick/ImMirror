@@ -55,7 +55,7 @@ public:
 
     /*
      * 是否允许主动攻击的生物自然生成. 总装按世界时间下发: 白天只放动物,
-     * 夜间才放怪物, 与原版昼夜刷怪口径一致.
+     * 夜间才放怪物, 与昼夜刷怪口径一致.
      */
     void SetHostileSpawnAllowed(bool allowed) { hostileSpawnAllowed_ = allowed; }
 

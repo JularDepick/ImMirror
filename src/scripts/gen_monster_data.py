@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""从原版生物定义表生成客户端 C++ 生物数据头文件.
+"""从生物定义表生成客户端 C++ 生物数据头文件.
 
 输入: single-branch/assets/project/csvdef/autogen/monster.csv (双表头, 440 行)
 输出: single-branch/client/src/native/entity/generated/monster_data_gen.h
 
 只提取客户端当前需要的字段: 标识, 中文名, 生命, 攻击, 移动速度, 尺寸,
-感知距离, 攻击距离, 攻击间隔与生物类别. 单位折算与原版表的量纲见下方常量:
-原版的高度, 宽度与厚度以厘米记录 (玩家体型 195/95/100 对应 1.95 米),
+感知距离, 攻击距离, 攻击间隔与生物类别. 单位折算与表的量纲见下方常量:
+的高度, 宽度与厚度以厘米记录 (玩家体型 195/95/100 对应 1.95 米),
 速度同样以厘米每秒记录, 因此统一按 0.01 折算为米与米每秒.
 
 过滤规则: 只保留有生命值与攻击力, 且类别属于怪物, 动物, 稀有动物, 水生物,
 boss 与飞行生物的行; 村民, npc, 坐骑, 球体与占位行不进入客户端生物表.
 
 掉落物在生物掉落系统就位前按类别折算为一种客户端方块, 仅作占位,
-掉落物真实取值在原版表里是物品 id, 与本客户端的方块 id 不同域.
+掉落物真实取值在表里是物品 id, 与本客户端的方块 id 不同域.
 """
 
 import csv
@@ -31,7 +31,7 @@ OUT_PATH = os.path.join(SRC_ROOT, "native", "entity", "generated", "monster_data
 # 客户端接收的生物类别: 0 怪物, 1 动物, 2 稀有动物, 3 水生物, 6 boss, 8 飞行生物
 KEEP_TYPES = (0, 1, 2, 3, 6, 8)
 
-# 占位与模板行的中文名标记, 命中即跳过: 这些行是原版用来占位或给编辑器取模型的
+# 占位与模板行的中文名标记, 命中即跳过: 这些行是用来占位或给编辑器取模型的
 PLACEHOLDER_NAMES = re.compile(r"备用|模型")
 
 # 类别到生成权重的折算: 怪物与动物常见, 稀有种少见.
@@ -57,7 +57,7 @@ LOOT_BY_TYPE = {
     8: (7, 1),   # 飞行生物 -> 树叶
 }
 
-# 单位与取值范围: 原版长度与速度为厘米, 折算后裁剪到客户端可用的区间
+# 单位与取值范围: 长度与速度为厘米, 折算后裁剪到客户端可用的区间
 CM_TO_M = 0.01
 SPEED_MIN = 0.6
 SPEED_MAX = 5.0
@@ -71,7 +71,7 @@ ATTACK_DISTANCE_MIN = 1.0
 ATTACK_DISTANCE_MAX = 16.0
 ATTACK_INTERVAL_MIN = 1.0
 ATTACK_INTERVAL_MAX = 4.0
-# 原版攻击动作时间以二十分之一秒为单位
+# 攻击动作时间以二十分之一秒为单位
 TICKS_PER_SECOND = 20.0
 
 NOTICE = "由 scripts/gen_monster_data.py 从 assets 仓库的 autogen/monster.csv 生成, 请勿手改"
@@ -127,7 +127,7 @@ def load_rows():
 
 
 def build_entries(rows):
-    """过滤并折算生物行, 返回按原版 ID 升序排列的条目."""
+    """过滤并折算生物行, 返回按ID 升序排列的条目."""
     entries = []
     seen = set()
     for row in rows:
@@ -136,7 +136,7 @@ def build_entries(rows):
         kind = to_int(row.get("Type"))
         life = to_int(row.get("Life"))
         attack = to_int(row.get("Attack"))
-        # 占位行与模板行不进入客户端表: 原版用 "备用ID" 与 "生物模型" 标记这类记录
+        # 占位行与模板行不进入客户端表: 用 "备用ID" 与 "生物模型" 标记这类记录
         if source_id <= 0 or not name or source_id in seen:
             continue
         if PLACEHOLDER_NAMES.search(name):
@@ -190,9 +190,9 @@ def render_header(entries):
         "/*",
         " * " + NOTICE + ".",
         " * 数据源: single-branch/assets/project/csvdef/autogen/monster.csv",
-        " * 长度与速度按原版量纲从厘米折算为米与米每秒, 尺寸分高度, 宽度与厚度三项,",
-        " * 攻击间隔由原版攻击动作时间 (二十分之一秒为单位) 折算为秒.",
-        " * 原版攻击类型 0 近程, 1 远程, 2 爆炸; 生物类别 0 怪物, 1 动物, 2 稀有动物,",
+        " * 长度与速度按量纲从厘米折算为米与米每秒, 尺寸分高度, 宽度与厚度三项,",
+        " * 攻击间隔由攻击动作时间 (二十分之一秒为单位) 折算为秒.",
+        " * 攻击类型 0 近程, 1 远程, 2 爆炸; 生物类别 0 怪物, 1 动物, 2 稀有动物,",
         " * 3 水生物, 6 boss, 8 飞行生物. hostile 表示会主动攻击玩家.",
         " * lootBlock 是死亡后进入物品栏的客户端方块 id, 在生物掉落系统就位前按类别占位.",
         " */",
@@ -200,8 +200,8 @@ def render_header(entries):
         "",
         "/* 单个生物的定义, 字段顺序与 MonsterTable 的读取顺序一致. */",
         "struct MonsterData {",
-        "    uint32_t sourceId;       /* 原版 monster 表的 ID */",
-        "    const char* displayName; /* 原版中文名, UTF-8 编码 */",
+        "    uint32_t sourceId;       /* monster 表的 ID */",
+        "    const char* displayName; /* 中文名, UTF-8 编码 */",
         "    float life;              /* 生命值上限 */",
         "    float attack;            /* 单次攻击伤害 */",
         "    float speed;             /* 移动速度, 米每秒 */",
@@ -221,7 +221,7 @@ def render_header(entries):
         "",
         "constexpr int32_t kMonsterDataCount = %d;" % len(entries),
         "",
-        "/* 条目按原版 ID 升序排列, 越界索引由 MonsterTable 回落到首条. */",
+        "/* 条目按ID 升序排列, 越界索引由 MonsterTable 回落到首条. */",
         "constexpr MonsterData kMonsterData[kMonsterDataCount] = {",
     ]
     for entry in entries:
@@ -254,7 +254,7 @@ def main():
 
     hostile = sum(1 for entry in entries if entry["hostile"])
     emit("生物数据表已生成: %s" % OUT_PATH)
-    emit("  条目 %d 条, 其中主动攻击 %d 条" % (len(entries), hostile))
+    emit(" 条目 %d 条, 其中主动攻击 %d 条" % (len(entries), hostile))
     for entry in entries:
         emit("  %5d %-10s type=%d life=%.0f attack=%.0f speed=%.2f size=%.2fx%.2fx%.2f"
              % (entry["source_id"], entry["name"], entry["type"], entry["life"],

@@ -8,13 +8,13 @@
 namespace immirror::entity {
 
 /*
- * 一条生物定义. 由 scripts/gen_monster_data.py 从原版 monster 表折算后
+ * 一条生物定义. 由 scripts/gen_monster_data.py 从monster 表折算后
  * 编译进客户端, 运行期只读, 生存期与进程一致.
  * 长度单位米, 速度单位米每秒, 攻击间隔单位秒.
  */
 struct MonsterDef {
-    uint32_t sourceId = 0;      /* 原版 monster 表的 ID */
-    const char* name = "";      /* 原版中文名, UTF-8 */
+    uint32_t sourceId = 0;      /* monster 表的 ID */
+    const char* name = "";      /* 中文名, UTF-8 */
     float life = 1.0f;
     float attack = 1.0f;
     float speed = 1.0f;
@@ -32,7 +32,7 @@ struct MonsterDef {
     int32_t lootCount = 0;
 
     /*
-     * 碰撞盒半宽取身宽与身厚中较大者的一半. 原版两个字段分别描述正面宽度与
+     * 碰撞盒半宽取身宽与身厚中较大者的一半. 两个字段分别描述正面宽度与
      * 侧面厚度, 体素碰撞只支持轴对齐的方盒, 取较大者保证包裹住模型.
      */
     float HalfWidth() const { return (width > thickness ? width : thickness) * 0.5f; }
@@ -52,10 +52,10 @@ public:
     /* 越界索引回落到首条, 调用方不必判空. */
     const MonsterDef& Def(int32_t index) const;
 
-    /* 按原版 ID 取定义, 找不到时回落到首条. */
+    /* 按ID 取定义, 找不到时回落到首条. */
     const MonsterDef& DefBySourceId(uint32_t sourceId) const;
 
-    /* 按原版 ID 查索引, 找不到返回 -1. */
+    /* 按ID 查索引, 找不到返回 -1. */
     int32_t IndexOfSourceId(uint32_t sourceId) const;
 
     /*

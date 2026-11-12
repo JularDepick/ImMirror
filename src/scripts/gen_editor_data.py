@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""从原版数据表生成编辑器侧 C++ 参数表.
+"""从数据表生成编辑器侧 C++ 参数表.
 
 输入:
-  single-branch/assets/project/csvdef/blockdef.csv     方块定义表 (1193 行)
-  single-branch/assets/project/csvdef/triggeritem.csv  触发器控件表 (事件/条件/动作)
+  single-branch/assets/project/csvdef/blockdef.csv 方块定义表 (1193 行)
+  single-branch/assets/project/csvdef/triggeritem.csv 触发器控件表 (事件/条件/动作)
   single-branch/assets/project/csvdef/triggerparam.csv 触发器参数表
 输出:
   single-branch/client/src/native/editor/generated/editor_data_gen.h
 
 编辑器需要三份只读数据:
   1. 方块调色板的完整属性: 中文名, 硬度, 采集工具, 地形编辑器开放位与触发器开放位.
-     可放置的方块以客户端注册表为准, 原版行只用来补充属性, 两者由 CLIENT_BLOCKS 关联.
-  2. 触发器控件目录: 编辑器支持的三个事件与三个动作, 每个都带原版 triggeritem ID,
-     右侧参数取原版 triggeritem 的 Param1 与 Param2, 参数类型再回查 triggerparam.
+ 可放置的方块以客户端注册表为准, 行只用来补充属性, 两者由 CLIENT_BLOCKS 关联.
+  2. 触发器控件目录: 编辑器支持的三个事件与三个动作, 每个都带triggeritem ID,
+ 右侧参数取triggeritem 的 Param1 与 Param2, 参数类型再回查 triggerparam.
   3. 触发器参数描述: 参数 ID 到中文名与 ASCII 键的映射, 属性面板与校验脚本共用.
 
 输出文件列入 .gitignore, 由 scripts/build-native.sh 在构建前调用本脚本生成.
@@ -37,9 +37,9 @@ OUT_PATH = os.path.join(SRC_ROOT, "native", "editor", "generated", "editor_data_
 
 NOTICE = "由 scripts/gen_editor_data.py 从 assets 仓库的 csvdef 生成, 请勿手改"
 
-# 编辑器支持的事件与动作: (原版 triggeritem ID, ASCII 键, ASCII 显示名, 备注)
-# 事件取原版玩家进入区域, 方块被破坏与计时器变化; 动作取创建方块, 改变位置与输出日志.
-# 输出日志在原版里没有对应控件, 按 triggeritem 的 ID 规则另起动作子类 90 作为编辑器扩展.
+# 编辑器支持的事件与动作: (triggeritem ID, ASCII 键, ASCII 显示名, 备注)
+# 事件取玩家进入区域, 方块被破坏与计时器变化; 动作取创建方块, 改变位置与输出日志.
+# 输出日志在里没有对应控件, 按 triggeritem 的 ID 规则另起动作子类 90 作为编辑器扩展.
 SUPPORTED_ITEMS = [
     (1030021, "EVENT_ENTER_REGION", "ENTER REGION", "事件: 玩家进入区域"),
     (1050002, "EVENT_BLOCK_BROKEN", "BLOCK BROKEN", "事件: 任意方块被破坏"),
@@ -49,7 +49,7 @@ SUPPORTED_ITEMS = [
     (3900001, "ACTION_LOG", "LOG", "动作: 输出日志 (编辑器扩展)"),
 ]
 
-# 编辑器扩展控件的名称, 原版表里查不到
+# 编辑器扩展控件的名称, 表里查不到
 EXTENSION_NAMES = {3900001: "输出日志"}
 
 # 属性面板与工程校验使用的参数 ASCII 键, 其余参数按 PARAM_<id> 兜底
@@ -105,7 +105,7 @@ def parse_param_id(text):
 
 
 def build_blocks():
-    """把客户端方块映射与原版方块行合并, 补充属性面板需要的只读属性."""
+    """把客户端方块映射与方块行合并, 补充属性面板需要的只读属性."""
     _, rows = load_rows()
     entries = []
     for client_id, name, source_id, _texture in CLIENT_BLOCKS:
@@ -129,7 +129,7 @@ def build_blocks():
 
 
 def count_legacy_flags(rows, column):
-    """统计原版方块表里某一列的开放方块数, 作为数据接入的规模指标."""
+    """统计方块表里某一列的开放方块数, 作为数据接入的规模指标."""
     total = 0
     for row in rows.values():
         if to_int(row.get(column, "0")) > 0:
@@ -198,33 +198,33 @@ def render_header(blocks, items, params, stats):
         " */",
         "namespace immirror::editor::gen {",
         "",
-        "/* 方块调色板条目: 客户端可放置方块与原版方块表属性的关联. */",
+        "/* 方块调色板条目: 客户端可放置方块与方块表属性的关联. */",
         "struct BlockEntry {",
         "    uint16_t clientId;      /* 客户端方块 id, 与 voxel::block 命名空间一致 */",
-        "    int32_t legacyId;       /* 原版 blockdef 的 ID, 便于回溯 */",
+        "    int32_t legacyId;       /* blockdef 的 ID, 便于回溯 */",
         "    const char* key;        /* 客户端注册表英文键, ASCII */",
-        "    const char* nameZh;     /* 原版中文名, UTF-8 */",
-        "    float hardness;         /* 原版硬度, -1 表示不可破坏 */",
-        "    int32_t mineTool;       /* 原版采集工具: 1 斧 2 镐 3 铲 5 剪刀, 0 徒手 */",
-        "    int32_t terrainEditor;  /* 地形编辑器开放位, 0 表示原版不开放 */",
-        "    int32_t triggerType;    /* 触发器开放位, 0 表示原版不开放 */",
+        "    const char* nameZh;     /* 中文名, UTF-8 */",
+        "    float hardness;         /* 硬度, -1 表示不可破坏 */",
+        "    int32_t mineTool;       /* 采集工具: 1 斧 2 镐 3 铲 5 剪刀, 0 徒手 */",
+        "    int32_t terrainEditor;  /* 地形编辑器开放位, 0 表示未开放 */",
+        "    int32_t triggerType;    /* 触发器开放位, 0 表示未开放 */",
         "};",
         "",
         "/* 触发器控件: 编辑器支持的事件与动作. */",
         "struct TriggerItemEntry {",
-        "    int32_t itemId;         /* 原版 triggeritem ID */",
+        "    int32_t itemId;         /* triggeritem ID */",
         "    const char* key;        /* ASCII 键, 工程 JSON 与界面共用 */",
         "    const char* nameEn;     /* ASCII 显示名, 点阵字只收录 ASCII */",
-        "    const char* nameZh;     /* 原版中文名, UTF-8 */",
+        "    const char* nameZh;     /* 中文名, UTF-8 */",
         "    int32_t category;       /* 1 事件, 3 动作 */",
-        "    int32_t childType;      /* 原版子类序号 */",
+        "    int32_t childType;      /* 子类序号 */",
         "    int32_t paramId;        /* 第一参数的 triggerparam ID, 0 表示无 */",
         "    int32_t paramTwoId;     /* 第二参数的 triggerparam ID, 0 表示无 */",
         "};",
         "",
         "/* 触发器参数描述. */",
         "struct TriggerParamEntry {",
-        "    int32_t id;             /* 原版 triggerparam ID */",
+        "    int32_t id;             /* triggerparam ID */",
         "    const char* key;        /* ASCII 键 */",
         "    const char* nameZh;     /* 中文描述, UTF-8 */",
         "};",
@@ -243,7 +243,7 @@ def render_header(blocks, items, params, stats):
         "extern const TriggerParamEntry kTriggerParams[];",
         "extern const int32_t kTriggerParamCount;",
         "",
-        "/* 原版方块表行数与地形编辑器/触发器开放方块数, 供自检与界面展示. */",
+        "/* 方块表行数与地形编辑器/触发器开放方块数, 供自检与界面展示. */",
         "constexpr int32_t kLegacyBlockRows = %d;" % stats[0][1],
         "constexpr int32_t kLegacyTerrainEditorBlocks = %d;" % stats[1][1],
         "constexpr int32_t kLegacyTriggerOpenBlocks = %d;" % stats[2][1],
@@ -254,7 +254,7 @@ def render_header(blocks, items, params, stats):
         "/* 按 ASCII 键取触发器控件, 未收录返回空指针. */",
         "const TriggerItemEntry* TriggerItemOfKey(const char* key);",
         "",
-        "/* 按原版 ID 取触发器控件, 未收录返回空指针. */",
+        "/* 按ID 取触发器控件, 未收录返回空指针. */",
         "const TriggerItemEntry* TriggerItemOfId(int32_t itemId);",
         "",
         "}  /* namespace immirror::editor::gen */",
@@ -350,9 +350,9 @@ def main():
 
     _header, legacy_rows = load_rows()
     stats = [
-        ("原版方块表行数", len(legacy_rows)),
-        ("原版地形编辑器开放方块数", count_legacy_flags(legacy_rows, "TerrainEditor")),
-        ("原版触发器开放方块数", count_legacy_flags(legacy_rows, "TriggerType")),
+        ("方块表行数", len(legacy_rows)),
+        ("地形编辑器开放方块数", count_legacy_flags(legacy_rows, "TerrainEditor")),
+        ("触发器开放方块数", count_legacy_flags(legacy_rows, "TriggerType")),
     ]
 
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
@@ -364,7 +364,7 @@ def main():
 
     emit("编辑器参数表已生成: %s" % OUT_PATH)
     emit("编辑器参数表实现: %s" % source_path)
-    emit("  方块调色板 %d 条, 触发器控件 %d 条, 参数 %d 条"
+    emit(" 方块调色板 %d 条, 触发器控件 %d 条, 参数 %d 条"
          % (len(blocks), len(items), len(params)))
     for name, count in stats:
         emit("  %s: %d" % (name, count))

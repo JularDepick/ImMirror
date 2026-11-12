@@ -43,8 +43,8 @@ public final class PlayActivity extends NativeActivity {
      * 1 起始的连续编号取文件 (挖掘族 1..4 号, 行走族取 1..6 号中的前 4 个);
      * 变体数为 1 的放置族在 APK 内是无编号单文件, 按裸名取文件.
      * 别名族不加载新文件, 直接复用目标族已加载的句柄:
-     * 原版放置音没有布族的独立音源, place_cloth 复用 dig_cloth 变体.
-     * 原版 jar 族没有独立行走音, walk 侧不设 jar 档; 原版 glass 族没有放置音,
+     * 放置音没有布族的独立音源, place_cloth 复用 dig_cloth 变体.
+     * jar 族没有独立行走音, walk 侧不设 jar 档; glass 族没有放置音,
      * place 侧不设 glass 档, 两处都由原生侧按近亲材质回落.
      */
     private static final String[][] SOUND_FAMILIES = {
@@ -201,10 +201,29 @@ public final class PlayActivity extends NativeActivity {
         presenceRunnable = null;
     }
 
+    /*
+     * 环境音场景到曲表分组的折算: 水下与岩浆优先于天气, 雨天与雷暴共用雨组,
+     * 其余保持通用组, 与 AmbientAudioManager 的 19 首曲表对应.
+     */
+    private static String ambientGroupOf(int context) {
+        switch (context) {
+            case 1:
+            case 2:
+                return AmbientAudioManager.AMBIENT_GROUP_RAIN;
+            case 3:
+                return AmbientAudioManager.AMBIENT_GROUP_WATER;
+            case 4:
+                return AmbientAudioManager.AMBIENT_GROUP_LAVA;
+            default:
+                return AmbientAudioManager.AMBIENT_GROUP_JUNGLE;
+        }
+    }
+
     private void presenceTick(final Session session) {
         /* 日相与环境音: 顺带查询游戏内昼夜, 切换昼/夜环境音轨. */
         if (ambientManager != null) {
             ambientManager.setDayPhase(NativeBridge.getDayPhase());
+            ambientManager.setAmbientGroup(ambientGroupOf(NativeBridge.getAmbientContext()));
         }
         final String pose = NativeBridge.takePlayerPose();
         if (pose == null || pose.length() <= 2) {

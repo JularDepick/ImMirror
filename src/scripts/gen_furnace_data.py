@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""从原版熔炼定义表生成客户端 C++ 熔炉数据头文件.
+"""从熔炼定义表生成客户端 C++ 熔炉数据头文件.
 
 输入: single-branch/assets/project/csvdef/furnace.csv (双表头, 96 条逻辑记录)
 输出: single-branch/client/src/native/game/generated/furnace_data_gen.h
 
-原版表的行分两类, 与列结构对齐:
-  配方行: Result 列有值, 记一次熔炼的材料与产出;
-  燃料行: Result 列为空且 Combustion 大于 0, 记一种可燃烧物及其燃烧值与热量;
-  其余行 (既无产出也无燃烧值) 是编辑器占位, 不收录.
+表的行分两类, 与列结构对齐:
+ 配方行: Result 列有值, 记一次熔炼的材料与产出;
+ 燃料行: Result 列为空且 Combustion 大于 0, 记一种可燃烧物及其燃烧值与热量;
+ 其余行 (既无产出也无燃烧值) 是编辑器占位, 不收录.
 
-物品 id 折算: 两表的物品引用都是原版 itemdef 的物品 ID, 与客户端物品 id 不同域.
+物品 id 折算: 两表的物品引用都是itemdef 的物品 ID, 与客户端物品 id 不同域.
 折算读 gen_item_data.py 生成的 item_data_gen.h, 其数组顺序即客户端物品 id,
-条目首字段是原版 sourceId, 按 sourceId 对齐换算; 材料或产出不在客户端物品表内的
+条目首字段是sourceId, 按 sourceId 对齐换算; 材料或产出不在客户端物品表内的
 条目跳过并计数, 覆盖数与跳过数见生成日志.
 """
 
@@ -42,8 +42,8 @@ def emit(message):
 def load_item_mapping(path):
     """从 item_data_gen.h 折算 sourceId -> clientId 映射.
 
-    生成表的 kItemInfos 数组元素顺序即客户端物品 id, 条目首字段是原版 sourceId,
-    用宽松的正则逐条捕获, 不依赖字段内部的具体排版.
+ 生成表的 kItemInfos 数组元素顺序即客户端物品 id, 条目首字段是sourceId,
+ 用宽松的正则逐条捕获, 不依赖字段内部的具体排版.
     """
     text = open(path, encoding="utf-8").read()
     start = text.index("kItemInfos[")
@@ -108,7 +108,7 @@ def main():
                 "furnaceType": int(row[col["Type"]].strip() or 0),
             })
         elif heat_text and heat_text != "0":
-            # 燃料行: 原版 furnace.lua 按 Heat>0 判定, 不用 Combustion
+            # 燃料行: furnace.lua 按 Heat>0 判定, 不用 Combustion
             material_item = mapping.get(material_source)
             if material_item is None:
                 skipped_fuel_material += 1
@@ -129,26 +129,26 @@ def main():
     lines.append("")
     lines.append("/* %s */" % NOTICE)
     lines.append("/* 数据源: single-branch/assets/project/csvdef/furnace.csv */")
-    lines.append("/* 原版表行分两类: Result 有值的是配方行, Result 为空且燃烧值大于零的是燃料行. */")
+    lines.append("/* 表行分两类: Result 有值的是配方行, Result 为空且燃烧值大于零的是燃料行. */")
     lines.append("/* 物品引用已按 item_data_gen.h 的 sourceId 映射折算成客户端物品 id, */")
     lines.append("/* 材料或产出不在客户端物品表内的条目跳过, 数量见生成日志. */")
     lines.append("")
     lines.append("namespace immirror::game::gen {")
     lines.append("")
-    lines.append("/* 熔炉类型: 0 熔炉, 1 氧气提炼装置, 与原版 Type 列一致. */")
+    lines.append("/* 熔炉类型: 0 熔炉, 1 氧气提炼装置, 与Type 列一致. */")
     lines.append("struct FurnaceEntry {")
-    lines.append("    uint32_t sourceId;     /* 原版 furnace.csv 的熔炼 ID */")
+    lines.append("    uint32_t sourceId;     /* furnace.csv 的熔炼 ID */")
     lines.append("    uint16_t materialItem; /* 投入材料的客户端物品 id */")
     lines.append("    uint16_t resultItem;   /* 熔炼产出的客户端物品 id */")
-    lines.append("    const char* key;       /* 原版英文键, 供日志与后续界面引用 */")
-    lines.append("    const char* nameZh;    /* 原版中文名, UTF-8 编码 */")
+    lines.append("    const char* key;       /* 英文键, 供日志与后续界面引用 */")
+    lines.append("    const char* nameZh;    /* 中文名, UTF-8 编码 */")
     lines.append("    uint8_t furnaceType;   /* 熔炉类型 */")
     lines.append("};")
     lines.append("")
-    lines.append("/* 一条燃料定义: 燃烧物与燃烧值, 燃烧值是原版 0-1000 的整数. */")
+    lines.append("/* 一条燃料定义: 燃烧物与燃烧值, 燃烧值是0-1000 的整数. */")
     lines.append("struct FuelEntry {")
     lines.append("    uint16_t item;      /* 可燃烧物的客户端物品 id */")
-    lines.append("    uint32_t heat;      /* 原版热量, 越大烧得越久 */")
+    lines.append("    uint32_t heat;      /* 热量, 越大烧得越久 */")
     lines.append("};")
     lines.append("")
     lines.append("constexpr int32_t kFurnaceEntryCount = %d;" % len(recipes))

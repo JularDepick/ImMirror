@@ -3,7 +3,7 @@
 #include <cstdint>
 
 /*
- * 设置键总表. 键名, 默认值与取值范围全部取自原版客户端
+ * 设置键总表. 键名, 默认值与取值范围全部取自客户端
  * temp/original/fake-mini-BUT-true-moments/src/lua/ui/mobile/setting.lua:
  * 该文件第 9 至 12 行的 t_DefaultSetData 共 30 个键, 另加 1 个由设置界面写入
  * 但不在默认表内的 hideui, 合计 31 个键.
@@ -13,8 +13,8 @@
  * 宏参数顺序依次为: 枚举名, 落盘键名, 默认值, 最小值, 最大值, 中文语义.
  * 宏参数内不得出现半角逗号, 否则会被当成新的参数.
  *
- * 与原版的语义对应:
- * configure 画质总档, 原版滑块分三段, 1 低 2 中 3 高;
+ * 与的语义对应:
+ * configure 画质总档, 滑块分三段, 1 低 2 中 3 高;
  * view 视角, 1 主视角 2 背视角 3 正视角;
  * view_distance 视野距离 5 档, 取值为 1 近 2 中 3 远 5 更远 8 最远;
  * fog 雾效, 0 关闭 1 淡雾 2 浓雾;
@@ -71,7 +71,7 @@ constexpr int32_t kSettingKeyCount = static_cast<int32_t>(Key::kCount);
 
 /*
  * 单个设置键的元数据. name 同时用于配置文件行首与 JNI 查表,
- * 与原版 setting.lua 的 setGameData 键名完全一致, 便于逐键对照.
+ * 与setting.lua 的 setGameData 键名完全一致, 便于逐键对照.
  */
 struct KeyInfo {
     Key key;

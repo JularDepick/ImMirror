@@ -14,7 +14,7 @@ namespace immirror::settings {
  * 设置单例. 进程内唯一实例, 由 Java 侧通过 JNI 写入, 原生主线程逐帧只读取
  * 原子快照, 因此逐帧路径上没有锁也没有 JNI 调用.
  *
- * 默认值全部来自 settings_keys.h 的键表, 与原版 setting.lua 的 t_DefaultSetData 一致.
+ * 默认值全部来自 settings_keys.h 的键表, 与setting.lua 的 t_DefaultSetData 一致.
  * 取值写入时立即裁剪到合法范围并置脏, 由主循环低频落盘, 拖滑杆时不会每帧写文件.
  */
 class Settings {

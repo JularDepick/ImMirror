@@ -186,7 +186,7 @@ public final class ApiClient {
         mainHandler.post(() -> callback.onFailure(error));
     }
 
-    /* 执行一次请求并拆包络; 失败统一抛 ApiException. */
+    /* 执行一次请求并解包络; 失败统一抛 ApiException. */
     private JSONObject send(String method, String path, JSONObject body, String token) throws ApiException {
         String baseUrl = AccountSettings.baseUrl(context);
         HttpURLConnection connection = null;

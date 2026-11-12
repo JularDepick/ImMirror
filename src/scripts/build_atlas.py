@@ -6,7 +6,7 @@
 这里只做转发, 保证文档与快捷命令里的入口仍然可用, 且不会产出错误规格的资产.
 
 输出: android/app/src/main/assets/generated/ 下的 atlas.rgba, atlas.png 与 atlas.json,
-      以及 native/voxel/generated/atlas_index_gen.h.
+ 以及 native/voxel/generated/atlas_index_gen.h.
 """
 
 import os

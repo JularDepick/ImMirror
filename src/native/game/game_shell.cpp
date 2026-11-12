@@ -42,8 +42,8 @@ constexpr const char* kTag = "ImMirrorGame";
 
 
 /*
- * 相机参数. 视场角取原版四套预设共用的 75 度 (camera.lua 第 89 行),
- * 近远裁剪面原版未给出数值, 维持现值.
+ * 相机参数. 视场角取四套预设共用的 75 度 (camera.lua 第 89 行),
+ * 近远裁剪面未给出数值, 维持现值.
  */
 constexpr float kFovYDegrees = 75.0f;
 constexpr float kNearPlane = 0.05f;
@@ -51,7 +51,7 @@ constexpr float kFarPlane = 320.0f;
 constexpr float kEyeHeight = 1.62f;
 
 /*
- * 容器方块判定. 方块注册表没有类别字段, 用原版英文键反查:
+ * 容器方块判定. 方块注册表没有类别字段, 用英文键反查:
  * 熔炉族取类别 furnace 的四个键 (熔炉与三个壁炉, blockdef 同类别),
  * 箱子族取类别 chest 的代表键 "box" (其余柜子等后续接入时再扩表).
  */
@@ -135,7 +135,7 @@ audio::SoundId DigSoundOf(voxel::HarvestMaterial material) {
             return audio::SoundId::kDigGlass;
         case voxel::HarvestMaterial::kJar:
             return audio::SoundId::kDigJar;
-        /* 原版阶梯没有独立挖掘音, 挖掘按木族出声. */
+        /* 阶梯没有独立挖掘音, 挖掘按木族出声. */
         case voxel::HarvestMaterial::kLadder:
             return audio::SoundId::kDigWood;
         case voxel::HarvestMaterial::kNone:
@@ -159,7 +159,7 @@ audio::SoundId PlaceSoundOf(voxel::HarvestMaterial material) {
         case voxel::HarvestMaterial::kGravel:
             return audio::SoundId::kPlaceGravel;
         /*
-         * 原版放置音没有布与玻璃的独立族, APK 内也没有 place_cloth/place_glass
+         * 放置音没有布与玻璃的独立族, APK 内也没有 place_cloth/place_glass
          * 音源: 布按挖掘音族出声, 玻璃按石族出声; 罐与阶梯按放置时的材质近亲
          * 折算 (罐归木, 阶梯归木).
          */
@@ -523,7 +523,7 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
 
     /*
      * 天气参数按玩家脚下所在的群系带取: 雪原允许下雪, 沙漠只允许雨,
-     * 三档权重直接来自原版 biomedef; 天气本身按现实秒数重抽.
+     * 三档权重直接来自biomedef; 天气本身按现实秒数重抽.
      */
     {
         const voxel::TerrainGenerator generator;
@@ -627,7 +627,7 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
 
 void GameShell::ApplyControlSettings() {
     /*
-     * 灵敏度以原版滑杆中位 50 为基准折算: LookFactor 在 50 处为 1,
+     * 灵敏度以滑杆中位 50 为基准折算: LookFactor 在 50 处为 1,
      * 控制器据此把横向满屏转角从 150 度按比例放大或缩小.
      */
     player::LookTuning look;
@@ -648,7 +648,7 @@ void GameShell::ApplyControlSettings() {
     player_->SetStickTuning(stick);
 
     /*
-     * 视角键 view: 原版 1 主视角 2 背视角 3 正视角 (setting.lua 1666 至 1724 行),
+     * 视角键 view: 1 主视角 2 背视角 3 正视角 (setting.lua 1666 至 1724 行),
      * 档位直接映射相机模式, 设置变化后下一帧生效, 不需重启.
      */
     const int32_t viewSetting = settings_->Get(settings::Key::kView);
@@ -765,6 +765,39 @@ bool GameShell::IsDay() const {
     return worldTime_->IsDay();
 }
 
+int32_t GameShell::AmbientContext() const {
+    if (world_ == nullptr || player_ == nullptr) {
+        return 0;
+    }
+    /*
+     * 相机所在方块优先: 泡在水里或贴着岩浆时环境音必须是水体或岩浆,
+     * 此时天气声会让玩家以为在下雨. 否则按天气给雨声或雷声.
+     */
+    const core::Vec3 camera = player_->CameraPosition();
+    const voxel::BlockId inside = world_->GetBlock(static_cast<int32_t>(std::floor(camera.x)),
+                                                  static_cast<int32_t>(std::floor(camera.y)),
+                                                  static_cast<int32_t>(std::floor(camera.z)));
+    const char* name = voxel::BlockRegistry::Instance().Info(inside).name;
+    if (name != nullptr) {
+        if (std::strstr(name, "lava") != nullptr) {
+            return 4;
+        }
+        if (std::strstr(name, "water") != nullptr || std::strstr(name, "_still") != nullptr) {
+            return 3;
+        }
+    }
+    switch (weather_.Kind()) {
+        case world::WeatherKind::kRain:
+        case world::WeatherKind::kSnow:
+            return 1;
+        case world::WeatherKind::kThunder:
+            return 2;
+        case world::WeatherKind::kClear:
+        default:
+            return 0;
+    }
+}
+
 std::string GameShell::FormatPlayerPose() const {
     const core::Vec3 position = player_->Position();
     char buffer[256];
@@ -827,7 +860,7 @@ void GameShell::ApplyRemotePlayers(const std::string& json) {
 }
 
 /*
- * 按脚下方块的注册表材质族返回对应行走音效, 与原版 WalkSound 的分族一致;
+ * 按脚下方块的注册表材质族返回对应行走音效, 与WalkSound 的分族一致;
  * 阶梯族走 walk_ladder 音源. 兼容段的方块族保持旧表取值, 未知方块回落石音.
  */
 audio::SoundId GameShell::WalkSoundForBlock(voxel::BlockId block) {
@@ -841,7 +874,7 @@ audio::SoundId GameShell::WalkSoundForBlock(voxel::BlockId block) {
         case voxel::HarvestMaterial::kSnow: return audio::SoundId::kWalkSnow;
         case voxel::HarvestMaterial::kGravel: return audio::SoundId::kWalkGravel;
         case voxel::HarvestMaterial::kCloth: return audio::SoundId::kWalkCloth;
-        /* 原版阶梯行走音走独立族; 玻璃与罐没有行走音, 按近亲材质回落. */
+        /* 阶梯行走音走独立族; 玻璃与罐没有行走音, 按近亲材质回落. */
         case voxel::HarvestMaterial::kLadder: return audio::SoundId::kWalkLadder;
         case voxel::HarvestMaterial::kGlass: return audio::SoundId::kWalkStone;
         case voxel::HarvestMaterial::kJar: return audio::SoundId::kWalkWood;
@@ -1140,7 +1173,7 @@ void GameShell::CloseContainerPanels() {
 /*
  * 编辑手势. 破坏必须按硬度累积进度, 因此按住与轻点各自绑定一种动作:
  * 按住不松手走进度, 挖满才破坏; 轻点(按住不足轻点窗口且没有位移)放置当前材料.
- * 进度从按下那一刻开始累计, 抬手即清零, 与原版"按住挖掘, 松手作废"的语义一致.
+ * 进度从按下那一刻开始累计, 抬手即清零, 与"按住挖掘, 松手作废"的语义一致.
  */
 void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSeconds) {
     /* 死亡等待期间不响应挖掘与攻击, 避免倒下的瞬间还在改动世界. */
@@ -1284,7 +1317,7 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
             static_cast<double>(info.hardness), static_cast<double>(tick.duration),
             static_cast<double>(tick.elapsed), static_cast<int32_t>(DigSoundOf(info.material)));
     CollectDrop(tick.block);
-    /* 破坏后手指仍按住时接着挖下一格, 与连续挖掘的原版手感一致. */
+    /* 破坏后手指仍按住时接着挖下一格, 与连续挖掘的手感一致. */
     BeginEditMining();
 }
 
@@ -1314,7 +1347,7 @@ bool GameShell::TryAttackCreature() {
         progressCounters_.kills += 1;
         progress::ProgressHub::Instance().OnKill(1);
     }
-    /* 攻击命中按次扣体力 (原版 tili_action_attack), 未命中不扣. */
+    /* 攻击命中按次扣体力 (tili_action_attack), 未命中不扣. */
     player_->ConsumeStaminaPublic(player::survival::kStaminaAttack);
     IM_LOGI(kTag, "attack creature id=%u damage=%.1f distance=%.2f killed=%d held=%d",
             static_cast<uint32_t>(target->Id()), static_cast<double>(damage),
@@ -1577,7 +1610,7 @@ void GameShell::SyncVisualSettings() {
 
 namespace {
 
-/* 原版昼夜口径: 6 点日出, 12 点天顶, 18 点日落, 夜间太阳落到地平线以下. */
+/* 昼夜口径: 6 点日出, 12 点天顶, 18 点日落, 夜间太阳落到地平线以下. */
 constexpr float kPiForSun = 3.14159265358979323846f;
 
 void SunDirectionOf(const world::WorldTime& time, float* out) {
@@ -1755,10 +1788,10 @@ void GameShell::RenderScene() {
     frame.nameSlot = nameSlot_;
     /*
      * 血条取真实血量比例; 死亡等待期间为 0, 重生后回满.
-     * 血条开关关闭时恒显示满血 (原版语义: 隐藏掉血状态而非隐藏血条).
+     * 血条开关关闭时恒显示满血 (语义: 隐藏掉血状态而非隐藏血条).
      */
     frame.health = bloodSwitch_ != 0 ? player_->HealthRatio() : 1.0f;
-    /* 饥饿与体力取控制器的同源比例, 与原版两条状态条一一对应. */
+    /* 饥饿与体力取控制器的同源比例, 与两条状态条一一对应. */
     frame.hunger = player_->HungerRatio();
     frame.stamina = player_->StaminaRatio();
     /*

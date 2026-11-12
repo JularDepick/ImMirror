@@ -128,7 +128,7 @@ uint32_t HashId(uint32_t value) {
 }
 
 /*
- * 类别基色: 按原版 ID 哈希后在类别色域内取值, 保证同类生物色相相近,
+ * 类别基色: 按ID 哈希后在类别色域内取值, 保证同类生物色相相近,
  * 不同个体的明暗有差别, 视觉上可辨识又成族群.
  */
 void BaseColorOf(uint32_t sourceId, uint8_t type, float* outRgb) {

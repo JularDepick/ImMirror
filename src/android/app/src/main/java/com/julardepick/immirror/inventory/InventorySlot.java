@@ -37,7 +37,7 @@ public final class InventorySlot {
         return item <= InventoryItem.NONE || count <= 0;
     }
 
-    /* 数量文本: 单格只有一个时不显示数字, 与原版快捷栏一致. */
+    /* 数量文本: 单格只有一个时不显示数字, 与快捷栏一致. */
     public String countText() {
         return count > 1 ? Integer.toString(count) : "";
     }

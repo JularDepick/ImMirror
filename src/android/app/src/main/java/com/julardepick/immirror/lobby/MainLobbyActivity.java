@@ -54,7 +54,7 @@ public final class MainLobbyActivity extends Activity {
     private static final int NOTICE_CLOSED_VISIBILITY = View.GONE;
 
     /*
-     * 字号档位: 对齐原版 main_lobby.xml 的高频档 24 / 20 / 18 与次级档 16 / 14,
+     * 字号档位: 对齐main_lobby.xml 的高频档 24 / 20 / 18 与次级档 16 / 14,
      * 该文件内 BlackFont24 出现 20 次, BlackFont18 出现 13 次, BlackFont20 出现 3 次.
      * AccountTheme 的字号收敛会把非三档数值吸附到 18sp, 大厅需要更细的分层,
      * 因此这里给出实际字号并在控件上显式覆写.
@@ -62,13 +62,13 @@ public final class MainLobbyActivity extends Activity {
     private static final float TEXT_TITLE = 24f;
     private static final float TEXT_UID = 20f;
     private static final float TEXT_BALANCE = 16f;
-    /* 中部卡片标题: 大卡取标题档 24, 小卡取正文档 20, 与原版 BlackFont24 / BlackFont20 一致. */
+    /* 中部卡片标题: 大卡取标题档 24, 小卡取正文档 20, 与BlackFont24 / BlackFont20 一致. */
     private static final float TEXT_CARD_TITLE = 20f;
     private static final float TEXT_SECONDARY = 14f;
     private static final float TEXT_NOTE = 14f;
     private static final float TEXT_FOOTER = 12f;
 
-    /* 原版大厅顶部图标的设计尺寸 (像素), main_lobby_ex.xml 里 icon_halltop_* 都是 56x56. */
+    /* 大厅顶部图标的设计尺寸 (像素), main_lobby_ex.xml 里 icon_halltop_* 都是 56x56. */
     private static final float SETTINGS_ICON_PX = 56f;
 
     /*
@@ -82,7 +82,7 @@ public final class MainLobbyActivity extends Activity {
     /*
      * 顶部条压暗层: 保留常量以便调试对比, 当前不启用.
      * 早期在全局暗罩之前需要它压住底图亮部, 底图统一压暗后模板自身的 alpha=128
-     * 已足够形成半透明玻璃感, 再加实心压暗会丢掉原版的透光观感.
+     * 已足够形成半透明玻璃感, 再加实心压暗会丢掉的透光观感.
      */
     @SuppressWarnings("unused")
     private static final int TOP_BAND_SHADE = 0x7A000000;
@@ -127,7 +127,7 @@ public final class MainLobbyActivity extends Activity {
     private static final int ICON_TINT = 0xFFFFFFFF;
 
     /*
-     * 卡面图标: 原版卡片静态图 (img_board_start / img_board_online / img_board_workshop)
+     * 卡面图标: 卡片静态图 (img_board_start / img_board_online / img_board_workshop)
      * 在资源树中缺失, 改用 extra/ 下的白色功能图标压在深色卡上.
      * 图标路径直接由 assets 根给出, 与 LobbyArt.ROOT 同一目录前缀, 不改动 LobbyArt 常量.
      */
@@ -148,7 +148,7 @@ public final class MainLobbyActivity extends Activity {
     private static final int ACCENT_INVENTORY = 0xFF9C7BE0;
     private static final int CARD_TEXT = 0xFFFFFFFF;
     private static final int CARD_TEXT_MUTED = 0xFFC6D3DA;
-    /* 深色九宫底板压在渐变上的不透明度: 太高会盖掉强调色, 太低看不到原版描边纹理. */
+    /* 深色九宫底板压在渐变上的不透明度: 太高会盖掉强调色, 太低看不到描边纹理. */
     private static final int CARD_PLATE_ALPHA = 0x78;
     /* 卡片底部强调色条的不透明度. */
     private static final int CARD_STRIPE_ALPHA = 0xE6;
@@ -247,7 +247,7 @@ public final class MainLobbyActivity extends Activity {
     private View buildContentView() {
         final ScrollView scroll = new ScrollView(this);
         /*
-         * 最底层用原版大厅全屏底图 (texture0/bigtex/main_lobby, 640x360 设计分辨率, 铺满不留白),
+         * 最底层用大厅全屏底图 (texture0/bigtex/main_lobby, 640x360 设计分辨率, 铺满不留白),
          * 顶部条与中部卡片浮在其上; 底图缺失时回落页面纯色, 不出现空白块.
          *
          * 底图是一张明亮的户外场景, 直接铺会让白色面板与浅色文字无从分辨,
@@ -264,7 +264,7 @@ public final class MainLobbyActivity extends Activity {
         scroll.setFillViewport(true);
 
         /*
-         * 顶部条与底栏横向铺满屏幕 (原版 MiniLobbyFrameTop 与 MiniLobbyFrameBottom 宽 1.0 相对),
+         * 顶部条与底栏横向铺满屏幕 (MiniLobbyFrameTop 与 MiniLobbyFrameBottom 宽 1.0 相对),
          * 因此纵向容器不再留左右内边距; 中部三列卡片与页脚另按居中带宽约束, 避免被拉宽.
          */
         final LinearLayout column = new LinearLayout(this);
@@ -281,7 +281,7 @@ public final class MainLobbyActivity extends Activity {
         /* 顶部: 顶部条 (标题大图) 与玩家条两层, 对应 MiniLobbyFrameTop 与 TopRoleInfo. */
         column.addView(buildHeader(), fullRowParams());
 
-        /* 中部主入口 (原版一大两小结构): 单人游戏, 联机大厅, 迷你工坊, 我的背包. */
+        /* 中部主入口 (一大两小结构): 单人游戏, 联机大厅, 迷你工坊, 我的背包. */
         column.addView(buildCenterBand(), centerParams());
 
         /* 底栏: 次入口一行: 成就, 钱包, 换绑邮箱, 玩家中心. */
@@ -372,7 +372,7 @@ public final class MainLobbyActivity extends Activity {
                 NINE_TILE_LARGE, NINE_TILE_LARGE, NINE_TILE_LARGE, NINE_TILE_LARGE);
         if (base != null) {
             /*
-             * 只叠模板自身: 原版 TopBkgTemplate 整图 alpha=128, 压在全局暗罩后的底图上
+             * 只叠模板自身: TopBkgTemplate 整图 alpha=128, 压在全局暗罩后的底图上
              * 就是半透明玻璃质感, 再垫一层实心压暗会把它变成不透明的深青板.
              */
             band.setBackground(base);
@@ -456,7 +456,7 @@ public final class MainLobbyActivity extends Activity {
 
         final Button settings = button(false, getString(R.string.lobby_settings),
                 COLOR_ART_TEXT, TEXT_SECONDARY);
-        /* 原版顶部设置按钮是 56x56 的齿轮图标, 有素材时贴在文字左侧, 与大厅同一套视觉. */
+        /* 顶部设置按钮是 56x56 的齿轮图标, 有素材时贴在文字左侧, 与大厅同一套视觉. */
         final Drawable settingsIcon = LobbyArt.image(this, LobbyArt.ICON_HALLTOP_SET);
         if (settingsIcon != null) {
             final int iconSize = LobbyArt.designSize(this, SETTINGS_ICON_PX);
@@ -495,7 +495,7 @@ public final class MainLobbyActivity extends Activity {
         return avatar;
     }
 
-    /* 镜币胶囊: TemplateBkg55 九宫底 (原版顶部迷你币数量底板), 左侧配镜币图标. */
+    /* 镜币胶囊: TemplateBkg55 九宫底 (顶部迷你币数量底板), 左侧配镜币图标. */
     private View buildWalletChip() {
         final LinearLayout chip = new LinearLayout(this);
         chip.setOrientation(LinearLayout.HORIZONTAL);
@@ -528,7 +528,7 @@ public final class MainLobbyActivity extends Activity {
         return chip;
     }
 
-    /* 玩家条右侧竖分隔线: 原版 line_blue_hall (2x26), 素材缺失时不插入. */
+    /* 玩家条右侧竖分隔线: line_blue_hall (2x26), 素材缺失时不插入. */
     private View buildDivider() {
         final Drawable line = LobbyArt.image(this, LobbyArt.LINE_BLUE);
         if (line == null) {
@@ -541,12 +541,12 @@ public final class MainLobbyActivity extends Activity {
     }
 
     /*
-     * 中部主入口: 复刻原版 MiniLobbyFrameCenter 的一大两小结构.
+     * 中部主入口: 复刻MiniLobbyFrameCenter 的一大两小结构.
      *
-     * 原版三个子控件横排: 左 $parentLocalMap 465 宽, 中 $parentMultiplayer 356 宽 (与左卡间距 21),
+     * 三个子控件横排: 左 $parentLocalMap 465 宽, 中 $parentMultiplayer 356 宽 (与左卡间距 21),
      * 右列 $parentMiniWorks 363 宽且其下叠 $parentHomeChest 363 宽, 右列两张卡在 517 像素高度内
      * 按 267 / 265 分配. 折算到本界面即三列: 左列整列大卡 "单人游戏", 中列整列大卡 "联机大厅",
-     * 右列上下两小卡 "迷你工坊" 与 "我的背包" (对应原版家园宝箱位). 四列比例用 weight 保持,
+     * 右列上下两小卡 "迷你工坊" 与 "我的背包" (对应家园宝箱位). 四列比例用 weight 保持,
      * 与屏幕宽度无关; 容器不再铺底板, 卡与卡之间露出的 11dp 就是大厅底图本身.
      */
     private View buildCenterBand() {
@@ -577,7 +577,7 @@ public final class MainLobbyActivity extends Activity {
         return band;
     }
 
-    /* 右列: 上下两张小卡按原版 267 / 265 的高度比分掉整列高度, 中间留 8dp 贴缝. */
+    /* 右列: 上下两张小卡按267 / 265 的高度比分掉整列高度, 中间留 8dp 贴缝. */
     private View smallColumn(View top, View bottom) {
         final LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
@@ -591,7 +591,7 @@ public final class MainLobbyActivity extends Activity {
     }
 
     /*
-     * 单张卡: 卡面自下而上为强调色渐变底, 原版深色九宫底板 (TemplateBkg8), 底部强调色条,
+     * 单张卡: 卡面自下而上为强调色渐变底, 深色九宫底板 (TemplateBkg8), 底部强调色条,
      * 内容为 "图标在上, 标题在中, 副标题在下" 的居中竖列.
      * 图标缺失时只少一张图, 标题与副标题照常居中显示, 卡面不会留白.
      */
@@ -649,7 +649,7 @@ public final class MainLobbyActivity extends Activity {
 
     /*
      * 卡面底: 强调色到深底的纵向渐变 (自上而下三档), 描一圈同色细边,
-     * 再压一层原版 TemplateBkg8 深色九宫, 保留原版卡片的描边与像素纹理.
+     * 再压一层TemplateBkg8 深色九宫, 保留卡片的描边与像素纹理.
      */
     private Drawable cardSurface(int accent) {
         final GradientDrawable base = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
@@ -671,8 +671,8 @@ public final class MainLobbyActivity extends Activity {
     }
 
     /*
-     * 底栏: TopBkgTemplate 九宫做底条, 其上叠 bigtex/img_board_bottom 大图 (原版底栏大图),
-     * 最上层是次入口一行, 位于原版 $parentBottom 的按钮串位置.
+     * 底栏: TopBkgTemplate 九宫做底条, 其上叠 bigtex/img_board_bottom 大图 (底栏大图),
+     * 最上层是次入口一行, 位于$parentBottom 的按钮串位置.
      */
     private View buildBottomBand() {
         final FrameLayout band = new FrameLayout(this);
@@ -702,7 +702,7 @@ public final class MainLobbyActivity extends Activity {
         return band;
     }
 
-    /* 次入口一行: 成就, 钱包, 换绑邮箱, 玩家中心 (均为已有页面), 对应原版底部栏按钮串. */
+    /* 次入口一行: 成就, 钱包, 换绑邮箱, 玩家中心 (均为已有页面), 对应底部栏按钮串. */
     private LinearLayout buildSecondaryRow() {
         final LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
@@ -816,7 +816,7 @@ public final class MainLobbyActivity extends Activity {
     }
 
     /*
-     * 中部容器宽度: 原版 $parentCenter 宽 1258 像素 (629dp) 的等宽带,
+     * 中部容器宽度: $parentCenter 宽 1258 像素 (629dp) 的等宽带,
      * 屏幕比该值更窄时退化为可用宽度, 保证四宫格不被压扁.
      */
     private int bandWidth() {
@@ -840,14 +840,14 @@ public final class MainLobbyActivity extends Activity {
         return view;
     }
 
-    /* 中部三列参数: 宽度按原版像素比分配, 高度统一取整列高. */
+    /* 中部三列参数: 宽度按像素比分配, 高度统一取整列高. */
     private LinearLayout.LayoutParams columnParams(int weight, int leftMargin, int height) {
         final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, height, weight);
         params.leftMargin = leftMargin;
         return params;
     }
 
-    /* 中部区域参数: 宽度沿用 630dp 居中带, 高度取原版 517 像素折算的 259dp. */
+    /* 中部区域参数: 宽度沿用 630dp 居中带, 高度取517 像素折算的 259dp. */
     private LinearLayout.LayoutParams centerParams() {
         final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 bandWidth(), dimen(R.dimen.lobby_center_height));

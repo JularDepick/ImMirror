@@ -151,7 +151,7 @@ public final class WalletApi {
         mainHandler.post(() -> callback.onFailure(error));
     }
 
-    /* 执行一次 GET 并拆包络; 成功返回 data 对象, 失败抛 ApiException. */
+    /* 执行一次 GET 并解包络; 成功返回 data 对象, 失败抛 ApiException. */
     private JSONObject get(String path, String token) throws ApiException {
         String baseUrl = AccountSettings.baseUrl(context);
         HttpURLConnection connection = null;
@@ -178,7 +178,7 @@ public final class WalletApi {
         }
     }
 
-    /* 执行一次 POST 并拆包络; 与 get 共用超时与错误处理. */
+    /* 执行一次 POST 并解包络; 与 get 共用超时与错误处理. */
     private JSONObject post(String path, JSONObject body, String token) throws ApiException, IOException, JSONException {
         String baseUrl = AccountSettings.baseUrl(context);
         HttpURLConnection connection = null;

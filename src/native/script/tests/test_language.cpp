@@ -259,7 +259,7 @@ TEST_CASE(comment_forms) {
     const Outcome outcome = Run(R"SRC(
         // 行注释
         var a = 1; /* 块注释
-        跨行 */
+ 跨行 */
         var b = 2; // 行尾注释
         return a + b;
     )SRC");

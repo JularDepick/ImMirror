@@ -3,7 +3,7 @@
 /*
  * 由 scripts/gen_block_light.py 从 assets 仓库的 blockdef.csv 生成, 请勿手改
  * 与 block_data_gen.h 同源映射: 兼容段按 CLIENT_BLOCKS, 扩展段按 KEY_SEGMENTS
- * 分段加原版 ID 升序, 条目顺序与注册表 clientId 逐位一致.
+ * 分段加ID 升序, 条目顺序与注册表 clientId 逐位一致.
  * lightSource: 0 不发光, 15 最亮; lightAtten: 0-15; coverMode: 0-4
  */
 
