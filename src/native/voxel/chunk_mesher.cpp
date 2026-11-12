@@ -67,6 +67,45 @@ bool IsPlantLike(const BlockInfo& info) {
     return !info.solid && !info.opaque && !IsLiquidName(info.name);
 }
 
+/*
+ * 非整块形状的包围盒. 每个形状给一到两个盒子, 盒内按立方体生成六个面.
+ * 这些形状不做邻居面剔除: 体积小, 面数有限, 剔除逻辑的复杂度不划算.
+ */
+struct ShapeBox {
+    float minX;
+    float minY;
+    float minZ;
+    float maxX;
+    float maxY;
+    float maxZ;
+};
+
+/* 返回该形状的盒子数, 盒子写进 out; 整块形状返回 0 表示走常规路径. */
+int32_t ShapeBoxesOf(BlockShape shape, ShapeBox* out) {
+    switch (shape) {
+        case BlockShape::kSlab:
+            out[0] = ShapeBox{0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f};
+            return 1;
+        case BlockShape::kStair:
+            /* 下半整格, 上半只占 z 前半, 与楼梯的踏面一致. */
+            out[0] = ShapeBox{0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f};
+            out[1] = ShapeBox{0.0f, 0.5f, 0.0f, 1.0f, 1.0f, 0.5f};
+            return 2;
+        case BlockShape::kFence:
+            out[0] = ShapeBox{0.375f, 0.0f, 0.375f, 0.625f, 1.0f, 0.625f};
+            return 1;
+        case BlockShape::kPane:
+            out[0] = ShapeBox{0.4375f, 0.0f, 0.0f, 0.5625f, 1.0f, 1.0f};
+            return 1;
+        case BlockShape::kCarpet:
+            out[0] = ShapeBox{0.0f, 0.0f, 0.0f, 1.0f, 0.0625f, 1.0f};
+            return 1;
+        case BlockShape::kCube:
+        default:
+            return 0;
+    }
+}
+
 /* 一层方块在一维数组中的步长 (16x16), 相邻层相差这个值. */
 constexpr size_t kLayerStride = static_cast<size_t>(kChunkSizeX) * static_cast<size_t>(kChunkSizeZ);
 
@@ -221,6 +260,65 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                 if (id == block::Air) {
                     continue;
                 }
+                /*
+                 * 非整块形状: 按包围盒逐盒生成六个面, 不做邻居剔除.
+                 * 台阶, 楼梯, 栅栏, 玻璃板, 地毯属于这一类, 体积小面数有限.
+                 */
+                {
+                    ShapeBox boxes[2];
+                    const int32_t boxCount = ShapeBoxesOf(registry.Info(id).shape, boxes);
+                    if (boxCount > 0) {
+                        const FaceTiles shapedTiles = tilesOf(id);
+                        const uint16_t topTile =
+                            shapedTiles.top == kAtlasFallback ? shapedTiles.side : shapedTiles.top;
+                        const uint16_t sideTile =
+                            shapedTiles.side == kAtlasFallback ? shapedTiles.top : shapedTiles.side;
+                        const uint16_t bottomTile =
+                            shapedTiles.bottom == kAtlasFallback ? sideTile : shapedTiles.bottom;
+                        for (int32_t box = 0; box < boxCount; ++box) {
+                            const ShapeBox& shape = boxes[box];
+                            const float light = lightAt(x, y, z, 2);
+                            for (int32_t face = 0; face < kFaceCount; ++face) {
+                                const FaceLayout& layout = kFaceLayouts[face];
+                                const uint16_t tile =
+                                    face == 2 ? topTile : (face == 3 ? bottomTile : sideTile);
+                                if (tile == kAtlasFallback) {
+                                    continue;
+                                }
+                                const float tileU =
+                                    static_cast<float>(static_cast<int32_t>(tile) % kTileGridSize) * kTileExtent;
+                                const float tileV =
+                                    static_cast<float>(static_cast<int32_t>(tile) / kTileGridSize) * kTileExtent;
+                                const uint32_t base = static_cast<uint32_t>(out.vertices.size());
+                                for (int32_t corner = 0; corner < 4; ++corner) {
+                                    /* 角点先按单位立方体取, 再线性映射进形状盒. */
+                                    const float unitX = layout.cornerX[corner];
+                                    const float unitY = layout.cornerY[corner];
+                                    const float unitZ = layout.cornerZ[corner];
+                                    Vertex vertex;
+                                    vertex.px = static_cast<float>(x) + shape.minX +
+                                                (shape.maxX - shape.minX) * unitX;
+                                    vertex.py = static_cast<float>(y) + shape.minY +
+                                                (shape.maxY - shape.minY) * unitY;
+                                    vertex.pz = static_cast<float>(z) + shape.minZ +
+                                                (shape.maxZ - shape.minZ) * unitZ;
+                                    vertex.u = tileU + ((corner == 1 || corner == 2) ? kTileExtent : 0.0f);
+                                    vertex.v = tileV + (corner >= 2 ? kTileExtent : 0.0f);
+                                    vertex.shade = layout.shade * light;
+                                    out.vertices.push_back(vertex);
+                                }
+                                out.indices.push_back(base);
+                                out.indices.push_back(base + 1);
+                                out.indices.push_back(base + 2);
+                                out.indices.push_back(base);
+                                out.indices.push_back(base + 2);
+                                out.indices.push_back(base + 3);
+                            }
+                        }
+                        continue;
+                    }
+                }
+
                 /*
                  * 先判定六个方向是否需要出面. 水平方向越出区块时查相邻列,
                  * 相邻列缺失就把边界当空气处理, 保证不出现漏洞.

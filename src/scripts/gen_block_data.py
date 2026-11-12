@@ -325,6 +325,7 @@ def build_extension_entry(client_id, source_id, row, used_keys):
 
     texture = row.get("Texture1", "").strip()
     drop_source, drop_field = pick_drop(row)
+    shape = shape_of(category)
 
     # 移动碰撞到实心属性的折算: 1 固体与 3 不挡投射物按实心处理
     solid = collision in (1, 3)
@@ -350,7 +351,28 @@ def build_extension_entry(client_id, source_id, row, used_keys):
         "texture": texture,
         "drop_source": drop_source,
         "drop_field": drop_field,
+        "shape": shape,
     }
+
+
+# 方块类别到渲染形状的折算. 只对"不是整块立方体"的类别给形状,
+# 其余类别按整块处理; 植物类由网格构建按实心与遮挡属性另行判定, 这里不重复.
+SHAPE_OF_CATEGORY = {
+    "slab": "Slab",        # 台阶: 下半高
+    "stair": "Stair",      # 楼梯: 下半加上半后半
+    "fence": "Fence",      # 栅栏: 中心立柱
+    "glasspane": "Pane",   # 玻璃板: 中心薄片
+    "carpet": "Carpet",    # 地毯: 贴地薄层
+}
+
+
+# 形状名到生成表下标的映射, 下标与 voxel::BlockShape 的枚举顺序一致.
+SHAPE_INDEX = {"Cube": 0, "Slab": 1, "Stair": 2, "Fence": 3, "Pane": 4, "Carpet": 5}
+
+
+def shape_of(category):
+    """类别折算成形状名; 未登记的类别一律按整块处理."""
+    return SHAPE_OF_CATEGORY.get(category, "Cube")
 
 
 def format_float(value):
@@ -569,6 +591,7 @@ def render_header(entries, legacy_rows, segments):
         "    const char* placeSound;  /* 放置音名, 空串表示没有 */",
         "    const char* walkSound;   /* 行走音名, 空串表示没有 */",
         "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
+        "    uint8_t shape;           /* 渲染形状, 与 voxel::BlockShape 对齐 */",
         "};",
         "",
         "constexpr int32_t kRegistryEntryCount = kBlockEntryCount - kLegacyBlockCount;",
@@ -576,14 +599,15 @@ def render_header(entries, legacy_rows, segments):
         "constexpr RegistryEntry kRegistryEntries[kRegistryEntryCount] = {",
     ]
     for entry in entries:
-        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, "%s", "%s", "%s", "%s"},'
+        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, "%s", "%s", "%s", "%s", %du},'
                      % (entry["client_id"], escape(entry["key"]),
                         "true" if entry["solid"] else "false",
                         "true" if entry["opaque"] else "false",
                         format_float(entry["hardness"]), entry["tool"],
                         entry["material"], escape(entry["dig_sound"]),
                         escape(entry["place_sound"]), escape(entry["walk_sound"]),
-                        escape(entry["texture"])))
+                        escape(entry["texture"]),
+                        SHAPE_INDEX.get(entry["shape"], 0)))
     lines += [
         "};",
         "",

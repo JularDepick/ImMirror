@@ -280,6 +280,8 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.atlasTop = kAtlasFallback;
         info.atlasSide = kAtlasFallback;
         info.atlasBottom = kAtlasFallback;
+        /* 形状下标与 voxel::BlockShape 的枚举顺序一致, 生成器侧同步维护. */
+        info.shape = static_cast<BlockShape>(entry.shape <= 5 ? entry.shape : 0);
         info.hardness = entry.hardness;
         info.tool = ToolOf(entry.tool);
         info.material = MaterialOf(entry.material);

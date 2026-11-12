@@ -287,6 +287,17 @@ void GameShell::SeedStartingItems() {
     /* 背包起步材料: 果木与木板可以直接做工具, 木棍是多数工具的第二材料. */
     inventory_.Add(items.OfBlock(voxel::block::Planks), 32);
     inventory_.Add(items.OfBlock(voxel::block::Wood), 16);
+    /*
+     * 建筑构件: 台阶, 楼梯, 栅栏, 玻璃片, 地毯各带一份,
+     * 新建世界后可以直接验证这几类非整块形状的摆放与外观.
+     */
+    const voxel::BlockId buildingParts[] = {396u, 421u, 459u, 527u};
+    for (const voxel::BlockId part : buildingParts) {
+        const item::ItemId partItem = items.OfBlock(part);
+        if (partItem != item::kNone) {
+            inventory_.Add(partItem, 16);
+        }
+    }
     const item::ItemId stick = items.FindByKey("WoodBar");
     if (stick != item::kNone) {
         inventory_.Add(stick, 16);

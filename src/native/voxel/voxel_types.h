@@ -41,6 +41,19 @@ struct Vertex {
     float shade = 1.0f;
 };
 
+/*
+ * 方块渲染形状. 整块以外的形状只影响几何, 不影响碰撞与光照:
+ * 碰撞仍按整格判定, 避免半高方块把玩家卡在半空.
+ */
+enum class BlockShape : uint8_t {
+    kCube = 0,   /* 整块立方体 */
+    kSlab = 1,   /* 台阶: 下半高 */
+    kStair = 2,  /* 楼梯: 下半整格加上半后半 */
+    kFence = 3,  /* 栅栏: 中心立柱 */
+    kPane = 4,   /* 玻璃板: 中心薄片 */
+    kCarpet = 5, /* 地毯: 贴地薄层 */
+};
+
 struct MeshData {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
@@ -117,6 +130,8 @@ struct BlockInfo {
     uint8_t lightSource = 0;
     uint8_t lightAtten = 0;
     uint8_t coverMode = 1;
+    /* 渲染形状只影响网格几何, 放在末尾以免打乱既有字段的初始化顺序. */
+    BlockShape shape = BlockShape::kCube;
 };
 
 }  /* namespace immirror::voxel */
