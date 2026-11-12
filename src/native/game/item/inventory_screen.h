@@ -55,6 +55,16 @@ public:
     /* 合成网格的只读视图, 供日志与自检使用. */
     const crafting::CraftingGrid& Grid() const { return grid_; }
 
+    /*
+     * 面板内的合成完成计数: 每次成功合成累加本次产出件数,
+     * 由总装逐帧取走清零, 折算成成就事件. 只增不减, 溢出量级远超实际游玩.
+     */
+    int64_t TakeCraftEventCount() {
+        const int64_t value = craftEvents_;
+        craftEvents_ = 0;
+        return value;
+    }
+
 private:
     /* 网格变化后重算候选; 候选顺序与配方表顺序一致. */
     void EnsureCandidates();
@@ -84,6 +94,8 @@ private:
     float carryY_ = 0.5f;
     bool open_ = false;
     bool gridDirty_ = true;
+    /* 面板自上次取走以来完成的合成产出件数. */
+    int64_t craftEvents_ = 0;
 };
 
 }  /* namespace immirror::game */

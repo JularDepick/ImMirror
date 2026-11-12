@@ -166,6 +166,8 @@ bool InventoryScreen::CraftOnce(Inventory& inventory) {
     IM_LOGI(kTag, "craft ok recipe=%u result=%u x%d added=%d grid=%d", recipe->sourceId,
             static_cast<uint32_t>(recipe->result), recipe->resultCount, added,
             grid_.FilledSlots());
+    /* 按实际入包件数累加事件计数, 由总装取走折算成成就事件. */
+    craftEvents_ += added > 0 ? added : 0;
     gridDirty_ = true;
     return true;
 }

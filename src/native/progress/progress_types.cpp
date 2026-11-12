@@ -14,6 +14,9 @@ constexpr const char* kStatKeys[kStatCount] = {
     "online",
     "checkin",
     "online_days",
+    "craft_item",
+    "smelt_item",
+    "kill_creature",
 };
 
 /* 统计中文名表, 下标即 StatKind. */
@@ -25,6 +28,9 @@ constexpr const char* kStatTitles[kStatCount] = {
     "在线时长",
     "签到",
     "在线天数",
+    "合成物品",
+    "熔炼物品",
+    "击败生物",
 };
 
 /* 动作类别映射表, 下标即 StatKind; 签到与在线天数不推进计数类成就. */
@@ -36,6 +42,9 @@ constexpr GoalAction kStatActions[kStatCount] = {
     GoalAction::kNone,
     GoalAction::kNone,
     GoalAction::kOnlineDay,
+    GoalAction::kCount,
+    GoalAction::kCount,
+    GoalAction::kCount,
 };
 
 }  /* namespace */

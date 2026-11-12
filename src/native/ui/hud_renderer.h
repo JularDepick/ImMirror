@@ -20,6 +20,11 @@ enum class InventoryRegion : uint8_t {
     kHotbar,     /* 快捷栏 9 格 */
     kNextRecipe, /* 轮换候选配方 */
     kBookRecipe, /* 自动摆出下一张可合成配方 */
+    /* 以下为容器面板区域, 追加在表尾, 既有取值不受影响. */
+    kFurnaceInput,  /* 熔炉输入格 */
+    kFurnaceFuel,   /* 熔炉燃料格 */
+    kFurnaceOutput, /* 熔炉产出格 */
+    kChest,         /* 储物箱 27 格 */
 };
 
 /* 一次面板命中: 区域与格序号, 非槽位区域的 index 为 -1. */
@@ -69,6 +74,42 @@ struct InventoryPanelFrame {
     const char* hint = nullptr;
 };
 
+/* 熔炉面板的槽位格数, 面板自身三格加背包与快捷栏. */
+constexpr int32_t kFurnaceBackpackSlots = kInventoryBackpackSlots;
+constexpr int32_t kFurnaceHotbarSlots = kInventoryHotbarSlots;
+
+/*
+ * 熔炉面板的一帧内容. 输入, 燃料与产出三格, 熔炼进度条与燃料余量比例,
+ * 背包与快捷栏按背包面板的同源排布, 交互语义也一致.
+ */
+struct FurnacePanelFrame {
+    InventorySlotView input;
+    InventorySlotView fuel;
+    InventorySlotView output;
+    float progress = 0.0f;  /* 熔炼进度 0 到 1 */
+    float fuelRatio = 0.0f; /* 燃料剩余比例 0 到 1 */
+    InventorySlotView backpack[kFurnaceBackpackSlots];
+    InventorySlotView hotbar[kFurnaceHotbarSlots];
+    InventorySlotView carried;
+    bool carriedVisible = false;
+    float carriedX = 0.5f;
+    float carriedY = 0.5f;
+};
+
+/* 储物箱格数, 与 game::ChestState 的 27 格一致. */
+constexpr int32_t kChestSlots = 27;
+
+/* 储物箱面板的一帧内容: 27 格容器, 背包, 快捷栏与携带堆叠. */
+struct ChestPanelFrame {
+    InventorySlotView chest[kChestSlots];
+    InventorySlotView backpack[kInventoryBackpackSlots];
+    InventorySlotView hotbar[kInventoryHotbarSlots];
+    InventorySlotView carried;
+    bool carriedVisible = false;
+    float carriedX = 0.5f;
+    float carriedY = 0.5f;
+};
+
 /*
  * 一帧 HUD 的输入状态, 由游戏总装填好后交给渲染层.
  * 摇杆几何直接取自玩家控制器的实际锚点与半径, 命中判定与绘制共用同一份布局,
@@ -80,6 +121,12 @@ struct HudFrame {
     bool jumpPressed = false;  /* 跳跃按钮按下中, 用于视觉反馈 */
     int32_t nameSlot = -1;     /* 长按显示名称的槽位, 负值表示不显示 */
     float health = 1.0f;       /* 血量比例, 0 到 1, 供左上角血条取长度 */
+    /*
+     * 饥饿与体力比例, 0 到 1. 对应原版 PlayerFoodLevelBar 与
+     * ChickenEnergyFrame, 分别画在血条下方与快捷栏上方.
+     */
+    float hunger = 1.0f;
+    float stamina = 1.0f;
     float mineProgress = 0.0f; /* 破坏进度, 0 到 1, 归零时不绘制进度环 */
 
     /* 每格剩余数量, 由物品栏逐帧填入; 数量为 0 时该格变暗, 数字仍显示 0. */
@@ -102,6 +149,9 @@ struct HudFrame {
     const char* tipText = nullptr;
     /* 背包面板, 空指针表示不绘制. */
     const InventoryPanelFrame* inventory = nullptr;
+    /* 容器面板, 与背包面板互斥打开, 空指针表示不绘制. */
+    const FurnacePanelFrame* furnace = nullptr;
+    const ChestPanelFrame* chest = nullptr;
 };
 
 /*
@@ -154,6 +204,15 @@ public:
     /* 背包面板的命中判定: 返回区域与格序号, 未命中返回 kNone. */
     InventoryHit HitTestInventory(float normalizedX, float normalizedY) const;
 
+    /* 熔炉面板是否命中底板范围. */
+    bool HitTestContainerPanel(float normalizedX, float normalizedY) const;
+
+    /* 熔炉面板的命中判定, 与背包面板共用一套返回结构. */
+    InventoryHit HitTestFurnace(float normalizedX, float normalizedY) const;
+
+    /* 储物箱面板的命中判定. */
+    InventoryHit HitTestChest(float normalizedX, float normalizedY) const;
+
     const HudLayout& Layout() const { return layout_; }
 
 private:
@@ -194,9 +253,5 @@ void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, int3
  */
 uint32_t LoadUiAtlasFromAssets(AAssetManager* assets);
 
-
-/* 生物标记: 世界坐标竖条渲染, 绿色区分远程玩家. */
-void RenderCreatureMarkers(const float* xs, const float* ys, const float* zs, int32_t count,
-                           const float* viewProjection, int32_t width, int32_t height);
 
 }  /* namespace immirror::ui */

@@ -4,7 +4,11 @@
 
 namespace immirror::voxel {
 
-ChunkColumn::ChunkColumn() : blocks_(static_cast<size_t>(kChunkVolume), block::Air) {}
+ChunkColumn::ChunkColumn()
+    : blocks_(static_cast<size_t>(kChunkVolume), block::Air),
+      /* 天光初始按全亮假设填充, 方块光清零; 正式值由 LightField 重算写入. */
+      skyLight_(static_cast<size_t>(kChunkVolume), kMaxLightLevel),
+      blockLight_(static_cast<size_t>(kChunkVolume), 0) {}
 
 void ChunkColumn::Fill(BlockId id) {
     std::fill(blocks_.begin(), blocks_.end(), id);
@@ -32,6 +36,9 @@ void ChunkColumn::AssignBlocks(const std::vector<BlockId>& data) {
         return;
     }
     blocks_ = data;
+    /* 方块数据整体替换后旧光照失效, 回到全亮天光假设, 等待世界侧重算. */
+    std::fill(skyLight_.begin(), skyLight_.end(), kMaxLightLevel);
+    std::fill(blockLight_.begin(), blockLight_.end(), static_cast<uint8_t>(0));
     dirty_ = true;
     /* RefreshTopBlockY 从当前最高层往下扫描, 批量赋值时必须先置顶再重算. */
     topBlockY_ = kWorldHeight - 1;

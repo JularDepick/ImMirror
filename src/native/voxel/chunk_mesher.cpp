@@ -8,6 +8,14 @@ namespace {
 
 constexpr int32_t kFaceCount = 6;
 
+/*
+ * 六向面外法线方向表, 顺序与 kFaceLayouts 的面序一致:
+ * +X, -X, +Y, -Y, +Z, -Z; 光照采样按该方向取面外侧邻格.
+ */
+constexpr int32_t kDirX[6] = {1, -1, 0, 0, 0, 0};
+constexpr int32_t kDirY[6] = {0, 0, 1, -1, 0, 0};
+constexpr int32_t kDirZ[6] = {0, 0, 0, 0, 1, -1};
+
 /* 图集按 16x16 格切分, 每格在 uv 上占 1/16; 列 = 格索引 % 16, 行 = 格索引 / 16. */
 constexpr int32_t kTileGridSize = 64;
 constexpr float kTileExtent = 1.0f / static_cast<float>(kTileGridSize);
@@ -118,6 +126,42 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
         return !opaque;
     };
 
+    /*
+     * 面外侧邻格光照采样: 光照系数取两通道较大值, 归一化到 0.25 到
+     * 1.0 区间, 下限防纯黑. 采样格在列边界外时转向对应方向的相邻列
+     * 取对侧边界格, 相邻列缺失才回落, 天光按全亮, 方块光按 0,
+     * 避免边缘黑缝; 相邻列就位后随网格重建自然修正.
+     */
+    const auto lightAt = [&column, neighbors](int32_t lx, int32_t ly, int32_t lz, int32_t face) {
+        int32_t x = lx + kDirX[face];
+        int32_t y = ly + kDirY[face];
+        int32_t z = lz + kDirZ[face];
+        const ChunkColumn* source = &column;
+        if (x >= kChunkSizeX) {
+            source = neighbors[0];
+            x = 0;
+        } else if (x < 0) {
+            source = neighbors[1];
+            x = kChunkSizeX - 1;
+        } else if (z >= kChunkSizeZ) {
+            source = neighbors[2];
+            z = 0;
+        } else if (z < 0) {
+            source = neighbors[3];
+            z = kChunkSizeZ - 1;
+        }
+        uint8_t sky = kMaxLightLevel;
+        uint8_t blockLight = 0;
+        if (source != nullptr && y >= 0 && y < kWorldHeight) {
+            sky = source->SkyLightAt(x, y, z);
+            blockLight = source->BlockLightAt(x, y, z);
+        } else if (y < 0) {
+            sky = 0;
+        }
+        const uint8_t level = sky > blockLight ? sky : blockLight;
+        return 0.25f + 0.75f * static_cast<float>(level) / static_cast<float>(kMaxLightLevel);
+    };
+
     const std::vector<BlockId>& blocks = column.Blocks();
     out.vertices.reserve(kInitialVertexReserve);
     out.indices.reserve(kInitialIndexReserve);
@@ -175,6 +219,8 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                         continue;
                     }
                     const FaceLayout& layout = kFaceLayouts[face];
+                    /* 面外侧邻格的光照系数与朝向底色相乘, 写入 shade 通道. */
+                    const float lightFactor = lightAt(x, y, z, face);
                     /* 朝向决定用哪一格: +Y 顶面, -Y 底面, 其余四个侧面. */
                     const uint8_t tile = (face == 2) ? tiles.top : ((face == 3) ? tiles.bottom : tiles.side);
                     const float tileU =
@@ -189,7 +235,7 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                         vertex.pz = originZ + layout.cornerZ[corner];
                         vertex.u = tileU + ((corner == 1 || corner == 2) ? kTileExtent : 0.0f);
                         vertex.v = tileV + (corner >= 2 ? kTileExtent : 0.0f);
-                        vertex.shade = layout.shade;
+                        vertex.shade = layout.shade * lightFactor;
                         out.vertices.push_back(vertex);
                     }
                     out.indices.push_back(baseVertex);

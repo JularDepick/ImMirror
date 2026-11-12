@@ -31,36 +31,42 @@ constexpr uint8_t kAtlasFallback = 0xFF;
  * 水与基岩硬度取 -1, 即不可破坏.
  * 本段字段是存档兼容面, 只能保持, 不得随原版表更新而改动.
  */
+/*
+ * 兼容段光照三列与生成表 kLightEntries 前十五条一致, 由 block_light_gen.h
+ * 折算后并入此表: 空气与水完全不遮光 (atten 0, cover 0), 草土石沙等
+ * 实体方块按原版衰减遮光, 树叶按厚度衰减 (atten 10, cover 2).
+ * 光照传播依赖这里的取值, 数据改动必须同步生成表.
+ */
 constexpr BlockInfo kLegacyBlockTable[block::LegacyCount] = {
-    /* name          solid  opaque  index  top    side   bottom   hardness  tool   material */
+    /* name          solid  opaque  index  top    side   bottom   hardness  tool   material  source atten cover */
     {"air", false, false, 0, kAtlasFallback, kAtlasFallback, kAtlasFallback, -1.0f,
-     HarvestTool::kHand, HarvestMaterial::kNone},
-    {"grass", true, true, 1, 0, 1, 2, 3.5f, HarvestTool::kShovel, HarvestMaterial::kGrass},
+     HarvestTool::kHand, HarvestMaterial::kNone, 0, 0, 0},
+    {"grass", true, true, 1, 0, 1, 2, 3.5f, HarvestTool::kShovel, HarvestMaterial::kGrass, 0, 15, 1},
     {"dirt", true, true, 2, kAtlasFallback, kAtlasFallback, kAtlasFallback, 3.5f,
-     HarvestTool::kShovel, HarvestMaterial::kGrass},
+     HarvestTool::kShovel, HarvestMaterial::kGrass, 0, 15, 1},
     {"stone", true, true, 3, kAtlasFallback, kAtlasFallback, kAtlasFallback, 8.0f,
-     HarvestTool::kPickaxe, HarvestMaterial::kStone},
+     HarvestTool::kPickaxe, HarvestMaterial::kStone, 0, 15, 1},
     {"sand", true, true, 4, kAtlasFallback, kAtlasFallback, kAtlasFallback, 3.0f,
-     HarvestTool::kShovel, HarvestMaterial::kSand},
+     HarvestTool::kShovel, HarvestMaterial::kSand, 0, 15, 1},
     {"water", false, false, 5, kAtlasFallback, kAtlasFallback, kAtlasFallback, -1.0f,
-     HarvestTool::kHand, HarvestMaterial::kNone},
-    {"wood", true, true, 6, 7, 6, 7, 6.0f, HarvestTool::kAxe, HarvestMaterial::kWood},
+     HarvestTool::kHand, HarvestMaterial::kNone, 0, 1, 0},
+    {"wood", true, true, 6, 7, 6, 7, 6.0f, HarvestTool::kAxe, HarvestMaterial::kWood, 0, 15, 2},
     {"leaves", true, true, 8, kAtlasFallback, kAtlasFallback, kAtlasFallback, 0.4f,
-     HarvestTool::kHand, HarvestMaterial::kGrass},
+     HarvestTool::kHand, HarvestMaterial::kGrass, 0, 10, 0},
     {"bedrock", true, true, 9, kAtlasFallback, kAtlasFallback, kAtlasFallback, -1.0f,
-     HarvestTool::kHand, HarvestMaterial::kNone},
+     HarvestTool::kHand, HarvestMaterial::kNone, 0, 15, 1},
     {"brick", true, true, 10, kAtlasFallback, kAtlasFallback, kAtlasFallback, 8.0f,
-     HarvestTool::kPickaxe, HarvestMaterial::kStone},
+     HarvestTool::kPickaxe, HarvestMaterial::kStone, 0, 15, 2},
     {"cobblestone", true, true, 11, kAtlasFallback, kAtlasFallback, kAtlasFallback, 8.0f,
-     HarvestTool::kPickaxe, HarvestMaterial::kStone},
+     HarvestTool::kPickaxe, HarvestMaterial::kStone, 0, 15, 2},
     {"snow", true, true, 12, kAtlasFallback, kAtlasFallback, kAtlasFallback, 1.5f,
-     HarvestTool::kShovel, HarvestMaterial::kSnow},
+     HarvestTool::kShovel, HarvestMaterial::kSnow, 0, 2, 2},
     {"ice", true, true, 13, kAtlasFallback, kAtlasFallback, kAtlasFallback, 5.0f,
-     HarvestTool::kPickaxe, HarvestMaterial::kStone},
+     HarvestTool::kPickaxe, HarvestMaterial::kStone, 0, 3, 2},
     {"gravel", true, true, 14, kAtlasFallback, kAtlasFallback, kAtlasFallback, 3.0f,
-     HarvestTool::kShovel, HarvestMaterial::kGravel},
+     HarvestTool::kShovel, HarvestMaterial::kGravel, 0, 15, 1},
     {"planks", true, true, 15, kAtlasFallback, kAtlasFallback, kAtlasFallback, 6.0f,
-     HarvestTool::kAxe, HarvestMaterial::kWood},
+     HarvestTool::kAxe, HarvestMaterial::kWood, 0, 15, 2},
 };
 
 constexpr size_t kLegacyBlockCount = sizeof(kLegacyBlockTable) / sizeof(kLegacyBlockTable[0]);
@@ -126,7 +132,11 @@ struct LegacyDropView {
     uint32_t dropBlock;
 };
 
-constexpr LegacyDropView kLegacyDrops[block::LegacyCount] = {
+/*
+ * 兼容段方块的掉落映射, 保留原版数据供物品系统后续与 item_table 的 DropOfBlock 对齐;
+ * 当前掉落走物品表, 本表暂未接入, 因此标注 maybe_unused 而不是删除数据.
+ */
+[[maybe_unused]] constexpr LegacyDropView kLegacyDrops[block::LegacyCount] = {
     {0u, 0u, 0u},      {100u, 101u, 2u},   {101u, 101u, 2u},   {104u, 505u, 10u},
     {106u, 106u, 4u},  {4u, 0u, 0u},       {200u, 200u, 6u},   {218u, 12500u, 7u},
     {1u, 1u, 8u},      {547u, 547u, 9u},   {505u, 505u, 10u},  {115u, 12054u, 11u},
@@ -180,8 +190,8 @@ constexpr HarvestTool ToolOf(uint8_t tool) {
 
 /*
  * 材质族折算: 生成表的 material 值即 HarvestMaterial 的取值顺序,
- * 7 到 10 (cloth, glass, jar, ladder) 是新增族, 当前音频层还没有对应音效,
- * 先统一回落到 stone 档保证有声音, 音效接入后改为直接映射.
+ * 1 到 10 逐族直接映射 (grass/stone/sand/wood/snow/gravel/cloth/glass/jar/ladder),
+ * 音效侧已按同族接入 dig_cloth/glass/jar 与 walk_cloth/ladder 音源.
  */
 constexpr HarvestMaterial MaterialOf(uint8_t material) {
     switch (material) {
@@ -198,11 +208,15 @@ constexpr HarvestMaterial MaterialOf(uint8_t material) {
         case 6:
             return HarvestMaterial::kGravel;
         case 7:
+            return HarvestMaterial::kCloth;
         case 8:
+            return HarvestMaterial::kGlass;
         case 9:
+            return HarvestMaterial::kJar;
         case 10:
+            return HarvestMaterial::kLadder;
         default:
-            return HarvestMaterial::kStone;
+            return HarvestMaterial::kNone;
     }
 }
 
@@ -246,9 +260,14 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
      * 调用方拿到的仍是引用语义的只读视图; 折算规则集中在这一处,
      * 音效与图集接入后只改这里的映射, 不动数据.
      */
+    /*
+     * 条目填充标记: BlockInfo 的 name 默认值是 "air" 而非空指针,
+     * 不能用 name 判空作哨兵, 单独用布尔标记记录是否已折算.
+     */
     static BlockInfo cache[gen::kRegistryEntryCount == 0 ? 1 : gen::kRegistryEntryCount];
+    static bool filled[gen::kRegistryEntryCount == 0 ? 1 : gen::kRegistryEntryCount] = {};
     BlockInfo& info = cache[index];
-    if (info.name == nullptr) {
+    if (!filled[index]) {
         info.name = entry.name;
         info.solid = entry.solid;
         info.opaque = entry.opaque;
@@ -264,6 +283,7 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.hardness = entry.hardness;
         info.tool = ToolOf(entry.tool);
         info.material = MaterialOf(entry.material);
+        filled[index] = true;
     }
     return info;
 }

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  大厅尺寸表.
+
+  来源: 原版 single-branch/assets/project/ui/mobile/main_lobby.xml.
+  设计基准 2560x1440 像素, 目标设备同为 2560x1440 @320dpi, 密度 2.0,
+  故 1 设计像素 = 0.5dp, 1440 像素高 = 720dp 高.
+  每条注释给出原版控件名, 原始像素值, 折算 dp 与最终取值的调整理由.
+-->
+<resources>
+
+    <!-- 顶部玩家条: 原版 $parentRoleInfo 76 像素 (内嵌 $parentHead 头像按钮 81 像素),
+         折算 38dp / 40.5dp; Android 侧 UID 20sp 与邮箱 14sp 与镜币 16sp 三行约需 60dp,
+         加头像 64dp 与上下内边距, 取 80dp -->
+    <dimen name="lobby_player_bar_height">80dp</dimen>
+
+    <!-- 头像: 原版 $parentRoleInfo$parentHead 81x81 像素, 折算 40.5dp;
+         按与玩家条 80dp 的视觉比例放大到 64dp -->
+    <dimen name="lobby_avatar_size">64dp</dimen>
+
+    <!-- 标题区: 原版卡片名条 $parentLocalMap$parentNameBkg 89 像素, 折算 44.5dp;
+         需容纳主标题 24sp 与副标题 14sp 两行, 取 56dp -->
+    <dimen name="lobby_title_area_height">56dp</dimen>
+
+    <!-- 中部容器宽度: 原版 $parentCenter 1258 像素宽, 折算 629dp, 取 630dp;
+         窄屏时退化为屏幕宽度减页面左右内边距 -->
+    <dimen name="lobby_grid_max_width">630dp</dimen>
+
+    <!-- 四宫格按钮高度: 原版 $parentCenter 内卡片高 517 像素, 扣除行间距 21 像素后
+         单格 (517 - 21) / 2 = 248 像素, 折算 124dp -->
+    <dimen name="lobby_grid_button_height">124dp</dimen>
+
+    <!-- 主入口间距: 原版 $parentLocalMap 与 $parentMultiplayer 之间的 21 像素间隔,
+         折算 10.5dp, 取 11dp; 同时用作四宫格容器的内边距 -->
+    <dimen name="lobby_gap">11dp</dimen>
+
+    <!-- 次入口按钮高度: 原版底部栏 $parentBottom 按钮 170x64 像素, 高度折算 32dp;
+         32dp 低于 48dp 的触摸命中下限, 该行又是次级入口, 折中取 44dp -->
+    <dimen name="lobby_secondary_button_height">44dp</dimen>
+
+    <!-- 底部栏按钮高度: 同上 64 像素折 32dp, 退出登录需要足够的命中区, 取 48dp -->
+    <dimen name="lobby_footer_button_height">48dp</dimen>
+
+    <!-- 区块间距: 原版顶部条与中部容器的垂直间隔约 28 像素, 折算 14dp -->
+    <dimen name="lobby_block_gap">14dp</dimen>
+
+    <!-- 中部整列高: 原版 $parentLocalMap 与 $parentMultiplayer 均为 465x517 / 356x517,
+         高 517 像素折算 258.5dp, 取 259dp; 三列同高, 右列两张小卡在该高度内按 267/265 分配 -->
+    <dimen name="lobby_center_height">259dp</dimen>
+
+    <!-- 右列两小卡间距: 原版 $parentHomeChest 相对 $parentMiniWorks 底边为 -17 像素,
+         即两卡贴合 (折算 -8.5dp); Android 侧不用负边距, 避免两块触摸区互相覆盖,
+         改为 8dp 贴缝, 让两张卡各自的底边高光露出 -->
+    <dimen name="lobby_center_small_gap">8dp</dimen>
+
+    <!-- 卡面图标边长: 原版卡面静态图 img_board_start / img_board_online / img_board_workshop
+         在资源树中缺失 (见视觉规格第 7 节), 改用 extra/ 下的功能图标, 原尺寸 31x33 ~ 60x60 像素
+         (15dp ~ 30dp); 大卡放大到 56dp, 小卡取 40dp, 卡片形成图标在上标题在下的结构 -->
+    <dimen name="lobby_card_icon_size">56dp</dimen>
+    <dimen name="lobby_card_icon_size_small">40dp</dimen>
+
+    <!-- 卡内边距: 原版卡面图距卡片边缘约 28 像素 (14dp), 图标放大后同步保留该留白 -->
+    <dimen name="lobby_card_padding">14dp</dimen>
+
+    <!-- 大卡图标到标题的间距: 原版 $parentLocalMap$parentNameBkg 名条与卡面图之间约 20 像素, 折算 10dp -->
+    <dimen name="lobby_card_title_gap">10dp</dimen>
+
+    <!-- 卡片底部强调色条: 原版卡片底边高光约 6 像素, 折算 3dp -->
+    <dimen name="lobby_card_stripe_height">3dp</dimen>
+
+</resources>

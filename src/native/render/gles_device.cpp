@@ -1,5 +1,9 @@
 #include "render/gles_device.h"
 
+#include <cerrno>
+#include <cmath>
+#include <ctime>
+
 #include <EGL/eglext.h>
 #include <GLES3/gl3.h>
 #include <android/native_window.h>
@@ -159,8 +163,46 @@ void GlesDevice::Resize(int32_t width, int32_t height) {
     }
 }
 
-bool GlesDevice::RenderFrame(double elapsedSeconds) {
-    (void)elapsedSeconds;
+void GlesDevice::SetFrameLimit(int32_t fps) {
+    if (fps < 0) {
+        fps = 0;
+    }
+    if (fps == frameLimit_) {
+        return;
+    }
+    frameLimit_ = fps;
+    IM_LOGI(kTag, "frame limit set to %d fps", fps);
+}
+
+bool GlesDevice::RenderFrame(double frameDeltaSeconds) {
+    /*
+     * 帧门控: 交换间隔保持 0, 由本函数按目标帧率把本帧富余的时间睡掉.
+     * 入参是本帧相对上一帧的现实秒数, 富余量等于目标周期减去本帧耗时;
+     * 富余为正说明本帧够快, 睡掉差额让帧间距贴近目标周期,
+     * 富余为负说明本帧已超预算, 直接进入绘制不再补睡, 避免卡顿叠加.
+     * 逐帧重新计算而不跨帧累计, 长时间运行也不会因误差积累而漂移.
+     * 目标为 0 时不做任何节流. 门控只作用于交换节奏, 场景绘制照常执行,
+     * 逻辑侧的固定步长推进不受影响.
+     */
+    if (frameLimit_ > 0 && frameDeltaSeconds > 0.0) {
+        const double targetSeconds = 1.0 / static_cast<double>(frameLimit_);
+        const double surplusMillis = (targetSeconds - frameDeltaSeconds) * 1000.0;
+        /* 留 1 毫秒余量, 睡眠本身有调度误差, 睡满反而容易超过目标周期. */
+        const int32_t sleepMillis = static_cast<int32_t>(std::floor(surplusMillis - 1.0));
+        if (sleepMillis > 0) {
+            /*
+             * nanosleep 在安卓上会被信号打断并提前返回, 打断后剩余时长写回 remain,
+             * 必须循环续睡直到睡满, 否则门控形同虚设.
+             */
+            struct timespec request;
+            request.tv_sec = sleepMillis / 1000;
+            request.tv_nsec = (sleepMillis % 1000) * 1000000L;
+            struct timespec remain = request;
+            while (nanosleep(&remain, &remain) == -1 && errno == EINTR) {
+                /* 继续睡剩余部分 */
+            }
+        }
+    }
     if (!ready_) {
         return false;
     }

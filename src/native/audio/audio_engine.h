@@ -2,6 +2,7 @@
 
 #include <jni.h>
 
+#include <cstdint>
 #include <mutex>
 
 namespace immirror::audio {
@@ -31,8 +32,15 @@ enum class SoundId {
     kWalkSnow,
     kWalkGravel,
     kWalkCloth,
+    kWalkLadder,
     kCount,
 };
+
+/*
+ * 每族音效的变体上限: Java 侧为 dig 与 walk 族各加载多个变体,
+ * 原生侧按族保存句柄数组, 播放时随机取一个.
+ */
+constexpr int kSoundVariants = 4;
 
 /*
  * 音效播放. 音频输出交给平台层的 SoundPool, 由 Java 侧在 Activity 创建时
@@ -50,8 +58,12 @@ public:
     AudioEngine(const AudioEngine&) = delete;
     AudioEngine& operator=(const AudioEngine&) = delete;
 
-    /* Java 侧推送 SoundPool 与音效句柄; 内部保存全局引用. */
-    void Attach(JNIEnv* env, jobject soundPool, jintArray soundIds);
+    /*
+     * Java 侧推送 SoundPool 与音效句柄; 内部保存全局引用.
+     * soundIds 按族顺序平铺, 每族最多 kSoundVariants 个变体;
+     * familyCounts 给出各族实际拥有的变体数, 计数缺省或为 0 时按单文件族处理.
+     */
+    void Attach(JNIEnv* env, jobject soundPool, jintArray soundIds, jintArray familyCounts);
 
     /* Activity 销毁前释放全局引用. */
     void Detach(JNIEnv* env);
@@ -87,9 +99,13 @@ private:
 
     JavaVM* vm_ = nullptr;
     jobject soundPool_ = nullptr;
-    jint soundIds_[static_cast<int>(SoundId::kCount)] = {0};
+    /* 同族多变体的句柄表: 第一维是 SoundId, 第二维是族内变体, counts 记录实际数量. */
+    jint soundIds_[static_cast<int>(SoundId::kCount)][kSoundVariants] = {{0}};
+    int32_t variantCounts_[static_cast<int>(SoundId::kCount)] = {0};
     jmethodID playMethod_ = nullptr;
     int32_t attachedCount_ = 0;
+    /* 播放选变体用, 只在持锁的播放与挂接路径触碰. */
+    uint32_t randomState_ = 0x20261101u;
     float volume_ = 1.0f;         /* 主音量, 0 到 1 */
     bool soundEnabled_ = true;    /* 音效开关 */
     bool musicEnabled_ = true;    /* 音乐开关, 暂无音源 */

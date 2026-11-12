@@ -19,7 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.julardepick.immirror.LauncherActivity;
+import com.julardepick.immirror.lobby.MainLobbyActivity;
 import com.julardepick.immirror.R;
 import com.julardepick.immirror.net.LanDiscovery;
 
@@ -630,8 +630,9 @@ public final class LoginActivity extends Activity {
     }
 
     private void enterEntryScreen() {
-        Intent intent = new Intent(this, LauncherActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        /* 登录与注册与换绑成功的落点都是大厅, 不再回旧入口页. */
+        Intent intent = new Intent(this, MainLobbyActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
     }

@@ -29,6 +29,14 @@ constexpr size_t kPositionOffset = 0;
 constexpr size_t kTexCoordOffset = sizeof(float) * 3;
 constexpr size_t kShadeOffset = sizeof(float) * 5;
 
+/*
+ * 雾色常量, 取值与 gles_device.cpp 的清屏底色一致 (即天空色):
+ * 远处地形融进雾里时与背景无缝衔接, 不出现雾色与天空色的断层.
+ */
+constexpr float kFogRed = 0.07f;
+constexpr float kFogGreen = 0.12f;
+constexpr float kFogBlue = 0.20f;
+
 /* 顶点布局是渲染与网格构建之间的硬约定, 这里的断言用于尽早发现接口漂移. */
 static_assert(sizeof(voxel::Vertex) == sizeof(float) * 6, "顶点结构必须为 6 个 float, 共 24 字节");
 static_assert(sizeof(voxel::Vertex) == 24, "顶点步长必须为 24 字节");
@@ -51,15 +59,20 @@ layout(location = 2) in float aShade;
 
 uniform mat4 uViewProjection;
 uniform vec3 uChunkOrigin;
+uniform vec3 uCameraPosition;
 
 out vec2 vTexCoord;
 out float vShade;
+out float vViewDistance;
 
 void main() {
     vTexCoord = aTexCoord;
     vShade = aShade;
     /* 网格顶点是区块局部坐标, 逐个区块加上世界原点后再变换. */
-    gl_Position = uViewProjection * vec4(aPosition + uChunkOrigin, 1.0);
+    vec3 worldPosition = aPosition + uChunkOrigin;
+    /* 视距在顶点算好传给片元, 片元只做雾混合, 避免逐片元求长度. */
+    vViewDistance = length(worldPosition - uCameraPosition);
+    gl_Position = uViewProjection * vec4(worldPosition, 1.0);
 }
 )glsl";
 
@@ -74,8 +87,14 @@ precision mediump float;
 
 in vec2 vTexCoord;
 in float vShade;
+in float vViewDistance;
 
 uniform sampler2D uAtlas;
+uniform float uFogDensity;
+uniform vec3 uFogColor;
+uniform float uBrightness;
+/* 天光混合因子: 夜 0, 昼 1, 晨昏线性过渡; 只压天空贡献, 方块光不在本 shader 内. */
+uniform float uSkyFactor;
 
 out vec4 outColor;
 
@@ -87,7 +106,12 @@ void main() {
     if (texel.a < kAlphaCutoff) {
         discard;
     }
-    outColor = vec4(texel.rgb * vShade, texel.a);
+    vec3 color = texel.rgb * vShade * mix(0.27, 1.0, clamp(uSkyFactor, 0.0, 1.0));
+    /* 指数平方雾: 密度为 0 时雾因子恒为 0, 关雾时不产生混合开销. */
+    float fogFactor = 1.0 - exp(-uFogDensity * uFogDensity * vViewDistance * vViewDistance);
+    color = mix(color, uFogColor, clamp(fogFactor, 0.0, 1.0));
+    /* 亮度系数乘在最终颜色上, 滑杆 50 对应 1.0 即原色. */
+    outColor = vec4(color * uBrightness, texel.a);
 }
 )glsl";
 
@@ -399,9 +423,17 @@ bool ChunkRenderer::Initialize(AAssetManager* assets) {
     uniformViewProjection_ = glGetUniformLocation(program_, "uViewProjection");
     uniformAtlas_ = glGetUniformLocation(program_, "uAtlas");
     uniformChunkOrigin_ = glGetUniformLocation(program_, "uChunkOrigin");
-    if (uniformViewProjection_ < 0 || uniformAtlas_ < 0 || uniformChunkOrigin_ < 0) {
-        IM_LOGE(kTag, "shader uniform missing, vp=%d atlas=%d origin=%d", uniformViewProjection_,
-                uniformAtlas_, uniformChunkOrigin_);
+    uniformCameraPosition_ = glGetUniformLocation(program_, "uCameraPosition");
+    uniformFogDensity_ = glGetUniformLocation(program_, "uFogDensity");
+    uniformFogColor_ = glGetUniformLocation(program_, "uFogColor");
+    uniformBrightness_ = glGetUniformLocation(program_, "uBrightness");
+    uniformSkyFactor_ = glGetUniformLocation(program_, "uSkyFactor");
+    if (uniformViewProjection_ < 0 || uniformAtlas_ < 0 || uniformChunkOrigin_ < 0 ||
+        uniformCameraPosition_ < 0 || uniformFogDensity_ < 0 || uniformFogColor_ < 0 ||
+        uniformBrightness_ < 0) {
+        IM_LOGE(kTag, "shader uniform missing, vp=%d atlas=%d origin=%d cam=%d fog=%d color=%d bright=%d",
+                uniformViewProjection_, uniformAtlas_, uniformChunkOrigin_, uniformCameraPosition_,
+                uniformFogDensity_, uniformFogColor_, uniformBrightness_, uniformSkyFactor_);
         Shutdown();
         return false;
     }
@@ -457,6 +489,13 @@ void ChunkRenderer::Shutdown() {
     uniformViewProjection_ = -1;
     uniformAtlas_ = -1;
     uniformChunkOrigin_ = -1;
+    uniformCameraPosition_ = -1;
+    uniformFogDensity_ = -1;
+    uniformFogColor_ = -1;
+    uniformBrightness_ = -1;
+    uniformSkyFactor_ = -1;
+    fogDensity_ = 0.0f;
+    brightness_ = 1.0f;
     syncedWorld_ = nullptr;
     syncedVersion_ = 0;
     drawnChunks_ = 0;
@@ -473,11 +512,19 @@ void ChunkRenderer::SetViewProjection(const float* matrix16, const float* camera
         std::memcpy(viewProjection_, matrix16, sizeof(viewProjection_));
     }
     if (cameraPosition3 != nullptr) {
-        /* 相机位置本版本不参与着色, 保留给后续的视距裁剪与雾化. */
+        /* 相机位置供顶点着色器计算视距, 雾化强度由此推导. */
         cameraPosition_[0] = cameraPosition3[0];
         cameraPosition_[1] = cameraPosition3[1];
         cameraPosition_[2] = cameraPosition3[2];
     }
+}
+
+void ChunkRenderer::SetAtmosphere(float fogDensity, float brightness, float skyFactor) {
+    fogDensity_ = fogDensity > 0.0f ? fogDensity : 0.0f;
+    /* 亮度钳制在 0.5 到 2 之间, 极端值保护视觉可读性. */
+    brightness_ = brightness < 0.5f ? 0.5f : (brightness > 2.0f ? 2.0f : brightness);
+    /* 天光因子钳制在 0 到 1, 夜间压暗由 shader 的 mix 下限兜底. */
+    skyFactor_ = skyFactor < 0.0f ? 0.0f : (skyFactor > 1.0f ? 1.0f : skyFactor);
 }
 
 /*
@@ -575,6 +622,12 @@ void ChunkRenderer::Draw() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, atlasTexture_);
     glUniform1i(uniformAtlas_, 0);
+    /* 雾与亮度按场景组装方折算好的参数下发, 相机位置供顶点求视距. */
+    glUniform1f(uniformFogDensity_, fogDensity_);
+    glUniform3f(uniformFogColor_, kFogRed, kFogGreen, kFogBlue);
+    glUniform1f(uniformBrightness_, brightness_);
+    glUniform1f(uniformSkyFactor_, skyFactor_);
+    glUniform3f(uniformCameraPosition_, cameraPosition_[0], cameraPosition_[1], cameraPosition_[2]);
 
     /* 深度测试与背面剔除常开; 本版本不做透明排序, 因此关闭混合. */
     glEnable(GL_DEPTH_TEST);

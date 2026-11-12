@@ -24,8 +24,18 @@ public:
     /* 同步新的窗口尺寸到视口. */
     virtual void Resize(int32_t width, int32_t height) = 0;
 
-    /* 提交一帧; 返回 false 表示本帧失败, 调用方据此跳过帧率统计. */
-    virtual bool RenderFrame(double elapsedSeconds) = 0;
+    /*
+     * 提交一帧; 返回 false 表示本帧失败, 调用方据此跳过帧率统计.
+     * frameDeltaSeconds 是距上一帧的现实秒数, 帧门控按它记账.
+     */
+    virtual bool RenderFrame(double frameDeltaSeconds) = 0;
+
+    /*
+     * 设置帧率上限, 单位 fps, 0 表示不限帧. 目标帧率只在数值变化时下发,
+     * 门控在设备内部按帧间隔累计, 不依赖交换间隔, 避免部分驱动把
+     * eglSwapInterval(1) 锁死在 60 帧导致 30 与 50 档失效.
+     */
+    virtual void SetFrameLimit(int32_t fps) = 0;
 
     virtual bool Ready() const = 0;
 

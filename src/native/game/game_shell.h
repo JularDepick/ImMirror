@@ -3,13 +3,17 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "audio/audio_engine.h"
 #include "core/vec3.h"
 #include "entity/entity_manager.h"
+#include "game/containers.h"
+#include "game/container_screen.h"
 #include "game/inventory.h"
 #include "game/item/inventory_screen.h"
 #include "platform/input_state.h"
+#include "world/world_time.h"
 #include "ui/hud_renderer.h"
 #include "voxel/block_registry.h"
 #include "game/remote_player.h"
@@ -85,8 +89,25 @@ public:
     /* 试玩模式: 读取编辑器导出的世界存档; 装配后调用, 在下次 Update 前生效. */
     void LoadNamedWorld(const std::string& projectName);
 
+    /*
+     * 多世界: 把当前存档路径切换到 worlds 目录下指定名字的存档并立即载入;
+     * 文件不存在时只切路径, 后续进入流程走地形生成, 即"新建世界".
+     * 返回是否载入了已有存档.
+     */
+    bool SelectWorld(const std::string& name);
+
+    /*
+     * 扫描目录下的 *.world 存档, 逐个读头取元数据, 返回 JSON 数组:
+     * [{"file":..,"name":..,"lastPlayed":..,"seed":..,"playerX":..,"playerZ":..},..]
+     * 目录不存在或没有存档时返回空数组.
+     */
+    std::string ListWorlds(const std::string& directory);
+
     /* 联机: 输出玩家姿态 JSON, 接收远程玩家快照 JSON. */
     std::string FormatPlayerPose() const;
+
+    /* 当前是否为游戏内白天, 供环境音日相切换. */
+    bool IsDay() const;
     void ApplyRemotePlayers(const std::string& json);
     int32_t SelectedSlot() const { return selectedSlot_; }
     void SelectSlotPublic(int32_t index) { SelectSlot(index); }
@@ -100,6 +121,9 @@ public:
         int64_t placeBlocks = 0;
         int64_t pickedItems = 0;
         int64_t walkedMeters = 0;
+        int64_t crafts = 0;
+        int64_t smelted = 0;
+        int64_t kills = 0;
     };
     ProgressCounters TakeProgressCounters();
     void CountProgressEvent(int32_t kind);
@@ -114,6 +138,12 @@ private:
 
     /* 界面按钮与方块栏的认领与结算: 跳跃按钮按下即跳, 方块栏短按选中, 长按显示名称. */
     void UpdateHudButtons(platform::InputSnapshot& input, double deltaSeconds);
+
+    /*
+     * 容器面板 (熔炉与储物箱) 的指针结算, 与背包面板同源:
+     * 命中面板交给容器状态机, 点在面板以外关闭并退回物品.
+     */
+    void UpdateContainerPanel(platform::InputSnapshot& input);
 
     /*
      * 背包面板的指针认领与结算. 面板打开时独占全部指针:
@@ -176,22 +206,44 @@ private:
     /* 设置改动后的视距与音量同步. */
     void SyncViewDistance();
 
+    /*
+     * 雾效与亮度的设置同步: 折算出密度与亮度系数缓存, 变化时经渲染器下发.
+     * 血条开关与树形同样在这里取缓存, 供 RenderScene 与世界更新使用.
+     */
+    void SyncVisualSettings();
+
     /* 把视距折算成生物生成半径下发, 视距外没有区块数据, 生成会落空. */
     void SyncEntitySpawnExtent();
     void SyncAudioSettings();
 
     void LogStatus(double deltaSeconds);
 
-    /* 把世界与玩家状态写入存档. */
+    /* 把世界与玩家状态写入存档, 容器状态写入独立的容器文件. */
     void SaveWorld();
+
+    /*
+     * 编辑手势按下时探测视线目标是否为容器方块:
+     * 熔炉或箱子按住超过长按窗口即打开对应面板, 探测失败走原有挖掘路径.
+     */
+    bool ProbeContainerTarget();
+
+    /* 推进长按开面板的计时, 返回本次手势是否已被容器面板接管. */
+    bool AdvanceContainerProbe(double deltaSeconds);
+
+    /* 关闭全部容器面板并把格子里的东西退回物品栏. */
+    void CloseContainerPanels();
 
     /* 组装存档路径, 必要时创建目录. */
     void PrepareSavePath(const char* dataPath);
+
+    /* 由存档文件路径折算同目录的容器文件路径, 两文件始终配套. */
+    void SyncContainerPath();
 
     /* 表面重建后复位指针快照与手势持有的状态. */
     void ResetInputState();
 
     std::unique_ptr<world::World> world_;
+    std::unique_ptr<world::WorldTime> worldTime_;
     std::unique_ptr<player::PlayerController> player_;
     std::unique_ptr<render::ChunkRenderer> renderer_;
     ui::HudRenderer hud_;
@@ -231,6 +283,28 @@ private:
     InventoryScreen inventoryScreen_;
     ui::InventoryPanelFrame inventoryFrame_;
 
+    /*
+     * 容器系统: 世界里的熔炉与储物箱按方块坐标存放,
+     * 面板状态机与背包面板同源, 互斥打开.
+     */
+    FurnaceMap furnaces_;
+    ChestMap chests_;
+    FurnaceScreen furnaceScreen_;
+    ChestScreen chestScreen_;
+    ui::FurnacePanelFrame furnaceFrame_;
+    ui::ChestPanelFrame chestFrame_;
+    /* 容器存档路径, 与世界存档同目录, 后缀区分. */
+    std::string containerPath_;
+    /* 熔炼事件采样基线: 全部熔炉产出堆叠的上帧合计, 负值表示尚未采样. */
+    int64_t smeltBaseline_ = -1;
+    /* 长按开面板的探测: 编辑指针按下时的目标方块与计时. */
+    voxel::BlockId containerProbeBlock_ = voxel::block::Air;
+    int32_t containerProbeX_ = 0;
+    int32_t containerProbeY_ = 0;
+    int32_t containerProbeZ_ = 0;
+    double containerProbeSeconds_ = 0.0;
+    bool containerProbeOpened_ = false;
+
     /* 背包按钮持有的指针, 按下期间保持按压反馈. */
     int32_t bagPointerId_ = -1;
     bool bagHeld_ = false;
@@ -260,18 +334,35 @@ private:
     int32_t audioSoundOpen_ = -1;
     int32_t audioMusicOpen_ = -1;
 
+    /* 视觉设置生效状态的缓存: 雾密度, 亮度系数, 血条开关与树形档. */
+    float fogDensity_ = -1.0f;
+    float brightness_ = -1.0f;
+    int32_t fogCachedSetting_ = -1;
+    int32_t brightCachedSetting_ = -1;
+    int32_t bloodSwitch_ = -1;
+    int32_t treeShape_ = -1;
+
     /* 上次自动跳跃的时刻, 用于限制触发频率. */
     double lastAutoJumpSeconds_ = -1.0;
+
+    /* 生物死亡起点时刻: 实体 id 到死亡登记时的 elapsedSeconds_, 供倒地渐变折算. */
+    std::unordered_map<uint32_t, double> deathStartTimes_;
 
     double elapsedSeconds_ = 0.0;
     double logAccumulator_ = 0.0;
     double saveAccumulator_ = 0.0;
     std::string savePath_;
+    /*
+     * 大厅在表面就绪前下发的世界名: 此时存档路径还没建立, 先记住,
+     * 等 OnSurfaceReady 建好路径后再切换, 保证读档落到正确的文件.
+     */
+    std::string pendingWorldName_;
     int32_t viewDistanceChunks_ = 4;
+    /* 天光混合因子的平滑缓存, 每帧向目标值靠近, 10 秒完成过渡. */
+    float skyBlend_ = 1.0f;
     ProgressCounters progressCounters_;
     net::RemotePlayerManager remotePlayers_;
     double walkSoundTimer_ = 0.0;
-    voxel::BlockId lastWalkBlock_ = voxel::block::Air;
     int32_t selectedSlot_ = 0;
     voxel::BlockId selectedBlock_ = voxel::block::Grass;
     const char* qualityGrade_ = "high";

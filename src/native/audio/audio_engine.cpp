@@ -9,6 +9,7 @@ namespace {
 
 constexpr const char* kTag = "ImMirrorAudio";
 constexpr int32_t kSoundCount = static_cast<int32_t>(SoundId::kCount);
+constexpr int32_t kVariantsPerFamily = static_cast<int32_t>(kSoundVariants);
 
 }  /* namespace */
 
@@ -21,7 +22,8 @@ AudioEngine::AudioEngine() = default;
 
 AudioEngine::~AudioEngine() = default;
 
-void AudioEngine::Attach(JNIEnv* env, jobject soundPool, jintArray soundIds) {
+void AudioEngine::Attach(JNIEnv* env, jobject soundPool, jintArray soundIds,
+                         jintArray familyCounts) {
     if (env == nullptr || soundPool == nullptr || soundIds == nullptr) {
         return;
     }
@@ -44,10 +46,64 @@ void AudioEngine::Attach(JNIEnv* env, jobject soundPool, jintArray soundIds) {
         return;
     }
 
+    /* 先展开族计数: Java 侧按 [族1变体1, 族1变体2, ..., 族2变体1, ...] 平铺推送,
+     * familyCounts 给出各族实际变体数, 缺省按 1 处理, 保持单文件族的兼容语义. */
+    jint counts[kSoundCount] = {0};
+    jsize familyTotal = 0;
+    if (familyCounts != nullptr) {
+        const jsize countLength = env->GetArrayLength(familyCounts);
+        const jsize copyCounts = countLength < kSoundCount ? countLength : kSoundCount;
+        env->GetIntArrayRegion(familyCounts, 0, copyCounts, counts);
+        for (int32_t i = 0; i < copyCounts; ++i) {
+            if (counts[i] <= 0) {
+                counts[i] = 1;
+            }
+            if (counts[i] > kVariantsPerFamily) {
+                counts[i] = kVariantsPerFamily;
+            }
+            familyTotal += counts[i];
+        }
+    }
+    if (familyTotal <= 0) {
+        /* 旧式单文件推送: 每族一个句柄. */
+        const jsize length = env->GetArrayLength(soundIds);
+        for (int32_t i = 0; i < kSoundCount && i < length; ++i) {
+            counts[i] = 1;
+        }
+        familyTotal = length < kSoundCount ? length : kSoundCount;
+    }
+
+    for (int32_t i = 0; i < kSoundCount; ++i) {
+        for (int32_t v = 0; v < kVariantsPerFamily; ++v) {
+            soundIds_[i][v] = 0;
+        }
+        variantCounts_[i] = 0;
+    }
+
+    /* 平铺句柄按族计数切开: 超出该族上限的变体被丢弃, 句柄总量以数组长度封顶. */
     const jsize length = env->GetArrayLength(soundIds);
-    const jsize copy = length < kSoundCount ? length : kSoundCount;
-    env->GetIntArrayRegion(soundIds, 0, copy, soundIds_);
-    __android_log_print(ANDROID_LOG_INFO, kTag, "audio attached, sounds=%d", static_cast<int>(copy));
+    jint flat[kSoundCount * kVariantsPerFamily] = {0};
+    const jsize expected = familyTotal;
+    const jsize copyTotal = length < expected ? length : expected;
+    env->GetIntArrayRegion(soundIds, 0, copyTotal, flat);
+
+    int32_t cursor = 0;
+    for (int32_t i = 0; i < kSoundCount; ++i) {
+        const int32_t count = counts[i];
+        for (int32_t v = 0; v < count && cursor < copyTotal; ++v, ++cursor) {
+            soundIds_[i][v] = flat[cursor];
+        }
+        /* 按实际拿到的有效句柄数收口, 全族加载失败时保持 0, 播放时静默跳过. */
+        int32_t valid = 0;
+        for (int32_t v = 0; v < count; ++v) {
+            if (soundIds_[i][v] > 0) {
+                valid = v + 1;
+            }
+        }
+        variantCounts_[i] = valid;
+    }
+    __android_log_print(ANDROID_LOG_INFO, kTag, "audio attached, families=%d handles=%d",
+                        static_cast<int>(kSoundCount), static_cast<int>(copyTotal));
 }
 
 void AudioEngine::Detach(JNIEnv* env) {
@@ -62,6 +118,12 @@ void AudioEngine::Detach(JNIEnv* env) {
     }
     soundPool_ = nullptr;
     playMethod_ = nullptr;
+    for (int32_t i = 0; i < kSoundCount; ++i) {
+        for (int32_t v = 0; v < kVariantsPerFamily; ++v) {
+            soundIds_[i][v] = 0;
+        }
+        variantCounts_[i] = 0;
+    }
     if (hadPool) {
         __android_log_print(ANDROID_LOG_INFO, kTag, "audio detached");
     }
@@ -124,7 +186,7 @@ void AudioEngine::Play(SoundId id) {
         return;
     }
     const int32_t index = static_cast<int32_t>(id);
-    if (index < 0 || index >= kSoundCount || soundIds_[index] <= 0) {
+    if (index < 0 || index >= kSoundCount) {
         return;
     }
     /* 参数依次为: 音效句柄, 左声道, 右声道, 优先级, 循环次数, 播放速率.
@@ -132,11 +194,27 @@ void AudioEngine::Play(SoundId id) {
     if (volume_ <= 0.0f) {
         return;
     }
+    /* 同族多句柄时随机挑一个变体, 用 xorshift 生成轻量伪随机, 避免每次踩同一样音色. */
+    const int32_t count = variantCounts_[index];
+    if (count <= 0 || soundIds_[index][0] <= 0) {
+        return;
+    }
+    int32_t variant = 0;
+    if (count > 1) {
+        randomState_ ^= randomState_ << 13;
+        randomState_ ^= randomState_ >> 17;
+        randomState_ ^= randomState_ << 5;
+        variant = static_cast<int32_t>(randomState_ % static_cast<uint32_t>(count));
+    }
+    const jint handle = soundIds_[index][variant];
+    if (handle <= 0) {
+        return;
+    }
     JNIEnv* env = CurrentEnv();
     if (env == nullptr) {
         return;
     }
-    env->CallIntMethod(soundPool_, playMethod_, soundIds_[index], volume_, volume_, 1, 0, 1.0f);
+    env->CallIntMethod(soundPool_, playMethod_, handle, volume_, volume_, 1, 0, 1.0f);
 }
 
 }  /* namespace immirror::audio */

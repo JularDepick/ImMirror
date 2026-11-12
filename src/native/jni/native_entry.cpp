@@ -7,6 +7,7 @@
 #include "core/log.h"
 #include "audio/audio_engine.h"
 #include "game/game_shell.h"
+#include "world/world.h"
 #include "jni/engine_host.h"
 #include "platform/android_runtime.h"
 #include "settings/settings.h"
@@ -88,6 +89,65 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeSelectWorld(JNIEnv* env,
     }
 }
 
+/* Java 侧低频入口: 世界列表, 扫描内部存储 worlds 目录下的全部存档头. */
+JNIEXPORT jstring JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeListWorlds(JNIEnv* env, jclass clazz,
+                                                                   jstring directory) {
+    (void)clazz;
+    if (directory == nullptr) {
+        return env->NewStringUTF("[]");
+    }
+    const char* chars = env->GetStringUTFChars(directory, nullptr);
+    const std::string dir = chars != nullptr ? chars : "";
+    if (chars != nullptr) {
+        env->ReleaseStringUTFChars(directory, chars);
+    }
+    /*
+     * 列表读取只碰文件头, 不依赖游戏运行时: 大厅与冷启动时原生主循环尚未接管,
+     * 走 Shell 实例会拿不到对象而返回空列表, 因此直接调用世界模块的静态实现.
+     */
+    const std::string listed = immirror::world::ListWorldsJson(dir.c_str());
+    return env->NewStringUTF(listed.c_str());
+}
+
+/*
+ * Java 侧低频入口: 选择游玩的世界 (多世界语义, 与编辑器试玩的 nativeSelectWorld 区分):
+ * 切换存档路径并载入; 文件不存在时按新世界处理.
+ */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeChooseWorld(JNIEnv* env, jclass clazz,
+                                                                    jstring worldName) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr || worldName == nullptr) {
+        return;
+    }
+    const char* chars = env->GetStringUTFChars(worldName, nullptr);
+    const std::string name = chars != nullptr ? chars : "";
+    if (chars != nullptr) {
+        env->ReleaseStringUTFChars(worldName, chars);
+    }
+    if (!name.empty()) {
+        shell->SelectWorld(name);
+    }
+}
+
+/*
+ * Java 侧低频入口: 查询当前是否为游戏内白天.
+ * 环境音按日相切换曲目, 由 PlayActivity 的轮询周期顺带拉取;
+ * Shell 未装配时回落 true, 避免误切到夜曲.
+ */
+JNIEXPORT jboolean JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeGetDayPhase(JNIEnv* env, jclass clazz) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return JNI_TRUE;
+    }
+    return shell->IsDay() ? JNI_TRUE : JNI_FALSE;
+}
+
 /* Java 侧低频入口: 取玩家姿态 JSON, 供联机 presence 轮询. */
 JNIEXPORT jstring JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakePlayerPose(JNIEnv* env, jclass clazz) {
@@ -125,16 +185,19 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeProgressCounters(JNI
         const auto counters = shell->TakeProgressCounters();
         json = "{\"break_block\":" + std::to_string(counters.breakBlocks)
              + ",\"place_block\":" + std::to_string(counters.placeBlocks)
-             + ",\"pick_item\":" + std::to_string(counters.pickedItems) + "}";
+             + ",\"pick_item\":" + std::to_string(counters.pickedItems)
+             + ",\"craft_item\":" + std::to_string(counters.crafts)
+             + ",\"smelt_item\":" + std::to_string(counters.smelted)
+             + ",\"kill_creature\":" + std::to_string(counters.kills) + "}";
     }
     return env->NewStringUTF(json.c_str());
 }
 
-/* Java 侧低频入口: 把音效池与音效句柄推给原生侧. */
-JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeAttachAudio(
-    JNIEnv* env, jclass clazz, jobject soundPool, jintArray soundIds) {
+/* Java 侧低频入口: 把音效池与分族变体句柄推给原生侧. */
+JNIEXPORT void JNICALL Java_com_julardepick_immirror_bridge_NativeBridge_nativeAttachAudioEx(
+    JNIEnv* env, jclass clazz, jobject soundPool, jintArray soundIds, jintArray familyCounts) {
     (void)clazz;
-    immirror::audio::AudioEngine::Instance().Attach(env, soundPool, soundIds);
+    immirror::audio::AudioEngine::Instance().Attach(env, soundPool, soundIds, familyCounts);
 }
 
 /* Java 侧低频入口: Activity 销毁前解除音效引用. */

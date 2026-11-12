@@ -13,6 +13,12 @@ constexpr int32_t kChunkSizeZ = 16;
 constexpr int32_t kWorldHeight = 256;
 constexpr int32_t kChunkVolume = kChunkSizeX * kWorldHeight * kChunkSizeZ;
 
+/*
+ * 光场等级上限: 天光与方块光两通道共用, 值域 0 到 15.
+ * 放在公共头保证列数据, 光场计算与网格采样引用同一语义.
+ */
+constexpr uint8_t kMaxLightLevel = 15;
+
 struct ChunkCoord {
     int32_t x = 0;
     int32_t z = 0;
@@ -31,6 +37,7 @@ struct Vertex {
     float pz = 0.0f;
     float u = 0.0f;
     float v = 0.0f;
+    /* 朝向底色与光照系数的乘积, 光照系数由面外侧邻格光场折算. */
     float shade = 1.0f;
 };
 
@@ -71,6 +78,10 @@ enum class HarvestMaterial : uint8_t {
     kWood,
     kSnow,
     kGravel,
+    kCloth,
+    kGlass,
+    kJar,
+    kLadder,
 };
 
 /* 方块静态属性, 由注册表持有, 生存期与进程一致. */
@@ -92,7 +103,7 @@ struct BlockInfo {
     /*
      * 原版光照三列折算: 光源强度 0-15 (0 表示不发光), 光衰减 0-15,
      * 遮挡旁边块 0 不遮挡 / 1 遮挡 / 2 按厚度 / 3 遮挡同材质.
-     * 光照传播系统接入后由 chunk_mesher 读取, 现阶段仅保留数据.
+     * 天光与方块光传播由 LightField 消费, 网格明暗采样由 chunk_mesher 消费.
      */
     uint8_t lightSource = 0;
     uint8_t lightAtten = 0;

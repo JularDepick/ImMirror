@@ -1,24 +1,31 @@
 #include "game/game_shell.h"
 
+#include <dirent.h>
 #include <sys/stat.h>
 
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 
 #include "core/log.h"
 #include "core/vec3.h"
 #include "entity/entity_tuning.h"
 #include "game/crafting/recipe_matcher.h"
 #include "game/generated/block_data_gen.h"
+#include "game/containers.h"
+#include "game/furnace.h"
 #include "game/inventory.h"
 #include "game/item/inventory_screen.h"
 #include "game/item/item_table.h"
 #include "player/input_tuning.h"
 #include "player/mining_tuning.h"
 #include "player/player_controller.h"
+#include "player/survival_tuning.h"
 #include "platform/input_state.h"
+#include "progress/progress_hub.h"
 #include "render/chunk_renderer.h"
+#include "render/creature_visual.h"
 #include "settings/settings.h"
 #include "settings/settings_tuning.h"
 #include "ui/hud_renderer.h"
@@ -31,6 +38,7 @@ namespace {
 
 constexpr const char* kTag = "ImMirrorGame";
 
+
 /*
  * 相机参数. 视场角取原版四套预设共用的 75 度 (camera.lua 第 89 行),
  * 近远裁剪面原版未给出数值, 维持现值.
@@ -39,6 +47,37 @@ constexpr float kFovYDegrees = 75.0f;
 constexpr float kNearPlane = 0.05f;
 constexpr float kFarPlane = 320.0f;
 constexpr float kEyeHeight = 1.62f;
+
+/*
+ * 容器方块判定. 方块注册表没有类别字段, 用原版英文键反查:
+ * 熔炉族取类别 furnace 的四个键 (熔炉与三个壁炉, blockdef 同类别),
+ * 箱子族取类别 chest 的代表键 "box" (其余柜子等后续接入时再扩表).
+ */
+const char* const kFurnaceBlockKeys[] = {"smeltingfurnace", "brownfireplace",
+                                         "whitefireplace", "blackfireplace"};
+const char* const kChestBlockKeys[] = {"box"};
+
+/* 方块 id 是否属于熔炉族. */
+bool IsFurnaceBlock(voxel::BlockId block) {
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    for (const char* key : kFurnaceBlockKeys) {
+        if (registry.FindByName(key) == block) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* 方块 id 是否属于箱子族. */
+bool IsChestBlock(voxel::BlockId block) {
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    for (const char* key : kChestBlockKeys) {
+        if (registry.FindByName(key) == block) {
+            return true;
+        }
+    }
+    return false;
+}
 
 /* 方块栏长按显示名称的判定阈值, 以及编辑手势判定轻点的最大位移. */
 constexpr double kLongPressSeconds = 0.5;
@@ -88,6 +127,15 @@ audio::SoundId DigSoundOf(voxel::HarvestMaterial material) {
             return audio::SoundId::kDigSnow;
         case voxel::HarvestMaterial::kGravel:
             return audio::SoundId::kDigGravel;
+        case voxel::HarvestMaterial::kCloth:
+            return audio::SoundId::kDigCloth;
+        case voxel::HarvestMaterial::kGlass:
+            return audio::SoundId::kDigGlass;
+        case voxel::HarvestMaterial::kJar:
+            return audio::SoundId::kDigJar;
+        /* 原版阶梯没有独立挖掘音, 挖掘按木族出声. */
+        case voxel::HarvestMaterial::kLadder:
+            return audio::SoundId::kDigWood;
         case voxel::HarvestMaterial::kNone:
             break;
     }
@@ -108,6 +156,19 @@ audio::SoundId PlaceSoundOf(voxel::HarvestMaterial material) {
             return audio::SoundId::kPlaceSnow;
         case voxel::HarvestMaterial::kGravel:
             return audio::SoundId::kPlaceGravel;
+        /*
+         * 原版放置音没有布与玻璃的独立族, APK 内也没有 place_cloth/place_glass
+         * 音源: 布按挖掘音族出声, 玻璃按石族出声; 罐与阶梯按放置时的材质近亲
+         * 折算 (罐归木, 阶梯归木).
+         */
+        case voxel::HarvestMaterial::kCloth:
+            return audio::SoundId::kPlaceCloth;
+        case voxel::HarvestMaterial::kGlass:
+            return audio::SoundId::kPlaceStone;
+        case voxel::HarvestMaterial::kJar:
+            return audio::SoundId::kPlaceWood;
+        case voxel::HarvestMaterial::kLadder:
+            return audio::SoundId::kPlaceWood;
         case voxel::HarvestMaterial::kNone:
             break;
     }
@@ -191,6 +252,7 @@ void Multiply4x4(const float* a, const float* b, float* out) {
 
 GameShell::GameShell()
     : world_(std::make_unique<world::World>(kWorldSeed)),
+  worldTime_(std::make_unique<world::WorldTime>()),
       player_(std::make_unique<player::PlayerController>()),
       renderer_(std::make_unique<render::ChunkRenderer>()) {
     /* 设置单例在构造时已填好默认值, 因此未初始化存储也能取到视距. */
@@ -248,6 +310,12 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     /* 表面重建后旧的指针快照已经失效, 复位输入状态, 不把退出前的按住带进新画面. */
     ResetInputState();
     PrepareSavePath(dataPath);
+    /* 大厅可能在本函数之前就下发了世界名, 这里补上切换, 让随后的读档走对文件. */
+    if (!pendingWorldName_.empty()) {
+        const std::string pending = pendingWorldName_;
+        pendingWorldName_.clear();
+        SelectWorld(pending);
+    }
 
     /*
      * 设置文件与存档放在同一个内部存储根目录下. Java 侧可能已经初始化过,
@@ -256,18 +324,29 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     settings_->Initialize(dataPath);
     SyncViewDistance();
     SyncAudioSettings();
+    SyncVisualSettings();
     ApplyControlSettings();
 
     world::World::SaveState state;
     if (!savePath_.empty() && world_->LoadFromFile(savePath_.c_str(), state)) {
         player_->SetPose(core::Vec3{state.playerX, state.playerY, state.playerZ}, state.yaw, state.pitch);
+        /* 容器文件与世界存档配套: 旧世界档没有容器文件时按空容器处理. */
+        if (!containerPath_.empty()) {
+            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_);
+        }
+        /* 世界时间: v3 早期档没有时间字段, 读出 0 按 0 点处理, 新档带时间. */
+        worldTime_->SetTotalSeconds(state.timeOfDaySeconds);
+        /* 读档后产出基线随存档重建, 从当前状态重新采样, 不把读档前的差值算进去. */
+        smeltBaseline_ = -1;
         IM_LOGI(kTag, "world loaded from save, chunks=%d", world_->LoadedChunkCount());
     } else {
         /* 先让中心区块生成地形, 再按地表高度放置玩家, 否则出生点会落在虚空. */
-        world_->Update(core::Vec3{8.0f, 0.0f, 8.0f}, viewDistanceChunks_);
+        world_->Update(core::Vec3{8.0f, 0.0f, 8.0f}, viewDistanceChunks_,
+                       static_cast<uint8_t>(treeShape_ < 0 ? 1 : treeShape_));
         player_->Spawn(*world_, 8.0f, 8.0f);
     }
-    world_->Update(player_->Position(), viewDistanceChunks_);
+    world_->Update(player_->Position(), viewDistanceChunks_,
+                   static_cast<uint8_t>(treeShape_ < 0 ? 1 : treeShape_));
     /*
      * 生物不进存档: 每次进入世界都从生物表重新播种生成,
      * 因此读档与新建世界走同一条复位路径.
@@ -281,6 +360,8 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
      */
     const uint32_t uiAtlasTexture = ui::LoadUiAtlasFromAssets(assets);
     hud_.Initialize(renderer_->AtlasTexture(), uiAtlasTexture);
+    /* 生物形象程序与几何在上下文就绪后初始化, 失败只记日志, 生物退回无形象. */
+    render::creature::Initialize();
     IM_LOGI(kTag, "game shell ready, chunks=%d fov=%.0f", world_->LoadedChunkCount(),
             static_cast<double>(kFovYDegrees));
 }
@@ -310,16 +391,29 @@ void GameShell::ResetInputState() {
     attackHeld_ = false;
     editAttacked_ = false;
     attackAccumulator_ = 0.0;
+    containerProbeBlock_ = voxel::block::Air;
+    containerProbeOpened_ = false;
 }
 
 void GameShell::PrepareSavePath(const char* dataPath) {
     if (dataPath == nullptr || dataPath[0] == '\0') {
         savePath_.clear();
+        containerPath_.clear();
         return;
     }
     std::string directory = std::string(dataPath) + "/worlds";
     ::mkdir(directory.c_str(), 0700);
     savePath_ = directory + "/default.world";
+    SyncContainerPath();
+}
+
+/* 容器文件与世界存档同名不同后缀, 两文件始终配套. */
+void GameShell::SyncContainerPath() {
+    if (savePath_.size() > 6 && savePath_.compare(savePath_.size() - 6, 6, ".world") == 0) {
+        containerPath_ = savePath_.substr(0, savePath_.size() - 6) + ".containers";
+    } else {
+        containerPath_ = savePath_ + ".containers";
+    }
 }
 
 void GameShell::SaveWorld() {
@@ -333,8 +427,30 @@ void GameShell::SaveWorld() {
     state.playerZ = position.z;
     state.yaw = player_->Yaw();
     state.pitch = player_->Pitch();
+    /*
+     * 世界元数据: 名字取当前存档文件名去后缀 (选择世界时已由文件名确定),
+     * 空名回落 "default"; 时间取当前 Unix 秒.
+     */
+    const size_t nameBegin = savePath_.find_last_of("/\\");
+    std::string fileName = nameBegin == std::string::npos ? savePath_ : savePath_.substr(nameBegin + 1);
+    if (fileName.size() > 6 && fileName.compare(fileName.size() - 6, 6, ".world") == 0) {
+        fileName = fileName.substr(0, fileName.size() - 6);
+    }
+    /* 存档头里的世界名不带扩展名: 去掉 .world 后缀, 列表展示与再次进入都用干净名字. */
+    if (fileName.size() > 6 && fileName.compare(fileName.size() - 6, 6, ".world") == 0) {
+        fileName.resize(fileName.size() - 6);
+    }
+    state.worldName = fileName.empty() ? "default" : fileName;
+    state.lastPlayed = static_cast<uint64_t>(std::time(nullptr));
+    state.timeOfDaySeconds = worldTime_->TotalSeconds();
     const bool saved = world_->SaveToFile(savePath_.c_str(), state);
-    IM_LOGI(kTag, "world save %s, path=%s", saved ? "ok" : "failed", savePath_.c_str());
+    /* 容器状态存独立文件: 世界存档格式归 world 模块, 本期不改动它的版本号. */
+    bool containersSaved = false;
+    if (!containerPath_.empty()) {
+        containersSaved = SaveContainersToFile(containerPath_.c_str(), furnaces_, chests_);
+    }
+    IM_LOGI(kTag, "world save %s, containers %s, path=%s", saved ? "ok" : "failed",
+            containersSaved ? "ok" : "skipped", savePath_.c_str());
 }
 
 void GameShell::OnSurfaceLost() {
@@ -345,6 +461,10 @@ void GameShell::OnSurfaceLost() {
     /* 面板关闭并把合成网格与携带中的堆叠退回物品栏, 避免退出时丢材料. */
     inventoryScreen_.ReturnAllToInventory(inventory_);
     inventoryScreen_.Reset();
+    /* 容器面板同样退回输入格与燃料格, 再统一落盘一次容器状态. */
+    CloseContainerPanels();
+    /* 生物形象程序先于 HUD 释放, 同一上下文内逆序清理. */
+    render::creature::Shutdown();
     hud_.Shutdown();
     renderer_->Shutdown();
     surfaceReady_ = false;
@@ -388,10 +508,25 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     settings_->FlushIfDirty();
     SyncViewDistance();
     SyncAudioSettings();
+    SyncVisualSettings();
     ApplyControlSettings();
 
+    /* 世界时间先行推进, 光照与环境音都取本帧的昼夜状态. */
+    worldTime_->Tick(static_cast<float>(deltaSeconds));
+    /*
+     * 天光混合因子按小时数取目标值后做 10 秒级平滑, 避免晨昏切换跳变;
+     * 渲染侧按 mix(0.27, 1.0, factor) 折算天空亮度, 方块光不受影响.
+     */
+    const float skyTarget = worldTime_->SkyFactor();
+    const float skyBlendRate = static_cast<float>(deltaSeconds) / 10.0f;
+    if (skyBlend_ < skyTarget) {
+        skyBlend_ = skyBlend_ + skyBlendRate < skyTarget ? skyBlend_ + skyBlendRate : skyTarget;
+    } else if (skyBlend_ > skyTarget) {
+        skyBlend_ = skyBlend_ - skyBlendRate > skyTarget ? skyBlend_ - skyBlendRate : skyTarget;
+    }
     const core::Vec3 position = player_->Position();
-    world_->Update(position, viewDistanceChunks_);
+    world_->Update(position, viewDistanceChunks_,
+                   static_cast<uint8_t>(treeShape_ < 0 ? 1 : treeShape_));
 
     /*
      * 顺序固定: 先让界面认领指针, 认领过的指针不再参与摇杆与视角分配.
@@ -403,11 +538,43 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
             player_->CancelMining();
         }
         UpdateInventoryPanel(lastInput_);
+    } else if (furnaceScreen_.Open() || chestScreen_.Open()) {
+        /* 容器面板与背包面板同一互斥语义: 打开期间独占全部指针. */
+        if (player_->Mining()) {
+            player_->CancelMining();
+        }
+        UpdateContainerPanel(lastInput_);
     } else {
         UpdateHudButtons(lastInput_, deltaSeconds);
         MaybeRequestAutoJump();
         player_->Update(deltaSeconds, lastInput_, *world_);
         UpdateEditGesture(lastInput_, deltaSeconds);
+    }
+
+    /* 熔炉在世界推进后统一推进, 与是否打开面板无关. */
+    const float dtSeconds = static_cast<float>(deltaSeconds);
+    for (auto& entry : furnaces_) {
+        entry.second.Tick(dtSeconds);
+    }
+    /*
+     * 熔炼事件按产出堆叠总量差值折算: 每完成一件产出 +1, 收取只是转移不重复计.
+     * 数量为正的产出格合计与上帧的差值就是本帧新完成的件数, 读档时基线随存档重建.
+     */
+    int64_t smeltTotal = 0;
+    for (const auto& entry : furnaces_) {
+        smeltTotal += entry.second.output.count > 0 ? entry.second.output.count : 0;
+    }
+    if (smeltBaseline_ >= 0 && smeltTotal > smeltBaseline_) {
+        const int64_t smelted = smeltTotal - smeltBaseline_;
+        progressCounters_.smelted += smelted;
+        progress::ProgressHub::Instance().OnSmelt(static_cast<int32_t>(smelted));
+    }
+    smeltBaseline_ = smeltTotal;
+    /* 合成事件: 面板状态机记录的完成件数取走即清零, 并入上报增量与本地成就进度. */
+    const int64_t crafted = inventoryScreen_.TakeCraftEventCount();
+    if (crafted > 0) {
+        progressCounters_.crafts += crafted;
+        progress::ProgressHub::Instance().OnCraft(static_cast<int32_t>(crafted));
     }
     RefreshSelectedItem();
     /* 生物在玩家之后推进: 位置与朝向都取本帧最新的玩家状态. */
@@ -457,6 +624,21 @@ void GameShell::ApplyControlSettings() {
     stick.anchorY = settings::tuning::kPadCenterY;
     stick.leftHanded = settings_->LeftHanded();
     player_->SetStickTuning(stick);
+
+    /*
+     * 视角键 view: 原版 1 主视角 2 背视角 3 正视角 (setting.lua 1666 至 1724 行),
+     * 档位直接映射相机模式, 设置变化后下一帧生效, 不需重启.
+     */
+    const int32_t viewSetting = settings_->Get(settings::Key::kView);
+    player::CameraMode mode = player::CameraMode::kFirstPerson;
+    if (viewSetting == 2) {
+        mode = player::CameraMode::kThirdBack;
+    } else if (viewSetting == 3) {
+        mode = player::CameraMode::kThirdFront;
+    }
+    if (mode != player_->GetCameraMode()) {
+        player_->SetCameraMode(mode);
+    }
 }
 
 void GameShell::LoadNamedWorld(const std::string& projectName) {
@@ -478,6 +660,67 @@ void GameShell::LoadNamedWorld(const std::string& projectName) {
     } else {
         IM_LOGW(kTag, "playtest world missing, project=%s path=%s", projectName.c_str(), path.c_str());
     }
+}
+
+/*
+ * 多世界选择: 把存档路径切换到 worlds 目录下指定名字的文件并立即载入.
+ * 名字安全化与世界名回落规则与 LoadNamedWorld 一致; 文件不存在时只切路径,
+ * 容器文件同步切换, 后续进入流程由 LoadFromFile 失败自然走进地形生成.
+ */
+bool GameShell::SelectWorld(const std::string& name) {
+    if (savePath_.empty()) {
+        /*
+         * 表面尚未就绪时存档路径还没建立: 记下世界名, 等 OnSurfaceReady
+         * 建好路径后重新调用本函数, 否则这次选择会被静默丢弃.
+         */
+        pendingWorldName_ = name;
+        IM_LOGI(kTag, "world selection deferred until surface ready, name=%s", name.c_str());
+        return false;
+    }
+    const size_t slash = savePath_.find_last_of("/\\");
+    if (slash == std::string::npos) {
+        return false;
+    }
+    const std::string directory = savePath_.substr(0, slash);
+    const std::string safe = world::World::SafeFileName(name);
+    savePath_ = directory + "/" + safe + ".world";
+    SyncContainerPath();
+
+    world::World::SaveState state;
+    if (world_->LoadFromFile(savePath_.c_str(), state)) {
+        player_->SetPose(core::Vec3{state.playerX, state.playerY, state.playerZ}, state.yaw,
+                         state.pitch);
+        if (!containerPath_.empty()) {
+            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_);
+        }
+        worldTime_->SetTotalSeconds(state.timeOfDaySeconds);
+        /* 换世界读档后基线同样重采样. */
+        smeltBaseline_ = -1;
+        IM_LOGI(kTag, "world selected, name=%s file=%s", safe.c_str(), savePath_.c_str());
+        return true;
+    }
+    /* 新世界: 关掉面板并清空容器, 时间回落正午, 世界本体由生成流程补齐. */
+    CloseContainerPanels();
+    furnaces_.clear();
+    chests_.clear();
+    worldTime_->SetTotalSeconds(world::WorldTime::kDayLengthSeconds * 0.5f);
+    smeltBaseline_ = -1;
+    IM_LOGI(kTag, "world created, name=%s file=%s", safe.c_str(), savePath_.c_str());
+    return false;
+}
+
+/*
+ * 世界列表: 扫描目录下全部 .world 文件, 逐个读头取元数据.
+ * 名字取存档头里的世界名, 旧档 (版本 1) 空名回落文件名.
+ * 输出 JSON 数组, 字段顺序固定, 由 Java 侧解析展示.
+ */
+std::string GameShell::ListWorlds(const std::string& directory) {
+    /* 实现下放到世界模块的静态函数: 列表只读文件头, 不需要游戏运行时. */
+    return world::ListWorldsJson(directory.c_str());
+}
+
+bool GameShell::IsDay() const {
+    return worldTime_->IsDay();
 }
 
 std::string GameShell::FormatPlayerPose() const {
@@ -541,18 +784,28 @@ void GameShell::ApplyRemotePlayers(const std::string& json) {
     remotePlayers_.ReplaceAll(uids, xs, ys, zs, yaws, pitches, count);
 }
 
-/* 按脚下方块 id 返回对应行走音效; 未知方块回落石音. */
+/*
+ * 按脚下方块的注册表材质族返回对应行走音效, 与原版 WalkSound 的分族一致;
+ * 阶梯族走 walk_ladder 音源. 兼容段的方块族保持旧表取值, 未知方块回落石音.
+ */
 audio::SoundId GameShell::WalkSoundForBlock(voxel::BlockId block) {
-    switch (block) {
-        case voxel::block::Grass: return audio::SoundId::kWalkGrass;
-        case voxel::block::Stone: return audio::SoundId::kWalkStone;
-        case voxel::block::Sand: return audio::SoundId::kWalkSand;
-        case voxel::block::Wood: return audio::SoundId::kWalkWood;
-        case voxel::block::Snow: return audio::SoundId::kWalkSnow;
-        case voxel::block::Gravel: return audio::SoundId::kWalkGravel;
-        case voxel::block::Planks: return audio::SoundId::kWalkWood;
-        default: return audio::SoundId::kWalkStone;
+    const voxel::HarvestMaterial material =
+        voxel::BlockRegistry::Instance().Info(block).material;
+    switch (material) {
+        case voxel::HarvestMaterial::kGrass: return audio::SoundId::kWalkGrass;
+        case voxel::HarvestMaterial::kStone: return audio::SoundId::kWalkStone;
+        case voxel::HarvestMaterial::kSand: return audio::SoundId::kWalkSand;
+        case voxel::HarvestMaterial::kWood: return audio::SoundId::kWalkWood;
+        case voxel::HarvestMaterial::kSnow: return audio::SoundId::kWalkSnow;
+        case voxel::HarvestMaterial::kGravel: return audio::SoundId::kWalkGravel;
+        case voxel::HarvestMaterial::kCloth: return audio::SoundId::kWalkCloth;
+        /* 原版阶梯行走音走独立族; 玻璃与罐没有行走音, 按近亲材质回落. */
+        case voxel::HarvestMaterial::kLadder: return audio::SoundId::kWalkLadder;
+        case voxel::HarvestMaterial::kGlass: return audio::SoundId::kWalkStone;
+        case voxel::HarvestMaterial::kJar: return audio::SoundId::kWalkWood;
+        case voxel::HarvestMaterial::kNone: break;
     }
+    return audio::SoundId::kWalkStone;
 }
 
 void GameShell::CountProgressEvent(int32_t kind) {
@@ -711,6 +964,138 @@ void GameShell::UpdateInventoryPanel(platform::InputSnapshot& input) {
 }
 
 /*
+ * 容器面板的指针结算, 与 UpdateInventoryPanel 同一结构:
+ * 命中交给熔炉或储物箱状态机, 点在面板以外关闭并把携带物退回物品栏.
+ */
+void GameShell::UpdateContainerPanel(platform::InputSnapshot& input) {
+    const uint64_t pressed = input.downMask & ~previousDownMask_;
+
+    for (int32_t index = 0; index < platform::kMaxPointers; ++index) {
+        platform::PointerState& pointer = input.pointers[index];
+        if (pointer.down) {
+            pointer.uiClaimed = true;
+        }
+    }
+
+    if (pressed != 0ull) {
+        for (int32_t index = 0; index < platform::kMaxPointers; ++index) {
+            platform::PointerState& pointer = input.pointers[index];
+            if (!pointer.down || (pressed & BitOf(pointer.id)) == 0ull) {
+                continue;
+            }
+            /* 命中判定按当前打开的容器走, 熔炉与储物箱不同时打开. */
+            ui::InventoryHit hit;
+            if (furnaceScreen_.Open()) {
+                hit = hud_.HitTestFurnace(pointer.x, pointer.y);
+            } else if (chestScreen_.Open()) {
+                hit = hud_.HitTestChest(pointer.x, pointer.y);
+            } else {
+                continue;
+            }
+            if (hit.region == ui::InventoryRegion::kNone) {
+                if (furnaceScreen_.Open()) {
+                    furnaceScreen_.SetOpen(false, inventory_);
+                } else {
+                    chestScreen_.SetOpen(false, inventory_);
+                }
+                continue;
+            }
+            if (furnaceScreen_.Open()) {
+                furnaceScreen_.SetCarryPosition(pointer.x, pointer.y);
+                furnaceScreen_.HandlePress(hit, inventory_);
+            } else {
+                chestScreen_.SetCarryPosition(pointer.x, pointer.y);
+                chestScreen_.HandlePress(hit, inventory_);
+            }
+        }
+    }
+
+    if (furnaceScreen_.Carrying() || chestScreen_.Carrying()) {
+        for (int32_t index = 0; index < platform::kMaxPointers; ++index) {
+            const platform::PointerState& pointer = input.pointers[index];
+            if (pointer.down) {
+                if (furnaceScreen_.Carrying()) {
+                    furnaceScreen_.SetCarryPosition(pointer.x, pointer.y);
+                }
+                if (chestScreen_.Carrying()) {
+                    chestScreen_.SetCarryPosition(pointer.x, pointer.y);
+                }
+                break;
+            }
+        }
+    }
+}
+
+/*
+ * 编辑手势按下时的容器探测: 视线命中熔炉或箱子方块即记录目标,
+ * 本次手势不再进入挖掘与放置, 由 AdvanceContainerProbe 计时长按开面板.
+ */
+bool GameShell::ProbeContainerTarget() {
+    /* 只读视线探测: 用 ProbeBlock 拿不到坐标, 这里直接向世界做一次 DDA 是玩家层的私有路径,
+     * 改为复用玩家探测: 命中的方块坐标经 MiningBlock 不适用 (未开始挖掘),
+     * 因此用一次轻量世界查询: 从眼位沿视线逐 0.25 米采样 24 步找首个非空气方块.
+     */
+    const core::Vec3 eye{player_->Position().x,
+                         player_->Position().y + player::PlayerController::kEyeHeight,
+                         player_->Position().z};
+    const core::Vec3 dir = player_->LookDirection();
+    for (int32_t step = 1; step <= 24; ++step) {
+        const float travelled = static_cast<float>(step) * 0.25f;
+        const core::Vec3 point{eye.x + dir.x * travelled, eye.y + dir.y * travelled,
+                               eye.z + dir.z * travelled};
+        const int32_t blockX = FloorToInt(point.x);
+        const int32_t blockY = FloorToInt(point.y);
+        const int32_t blockZ = FloorToInt(point.z);
+        const voxel::BlockId block = world_->GetBlock(blockX, blockY, blockZ);
+        if (block == voxel::block::Air) {
+            continue;
+        }
+        if (!IsFurnaceBlock(block) && !IsChestBlock(block)) {
+            return false;
+        }
+        containerProbeBlock_ = block;
+        containerProbeX_ = blockX;
+        containerProbeY_ = blockY;
+        containerProbeZ_ = blockZ;
+        containerProbeSeconds_ = 0.0;
+        containerProbeOpened_ = false;
+        return true;
+    }
+    return false;
+}
+
+/* 容器长按推进: 按住超过 kLongPressSeconds 打开对应面板, 抬手或移出轻点范围作废. */
+bool GameShell::AdvanceContainerProbe(double deltaSeconds) {
+    if (containerProbeOpened_ || containerProbeBlock_ == voxel::block::Air) {
+        return false;
+    }
+    containerProbeSeconds_ += deltaSeconds;
+    if (containerProbeSeconds_ < kLongPressSeconds) {
+        return true;
+    }
+    const uint64_t key = ContainerKeyOf(containerProbeX_, containerProbeY_, containerProbeZ_);
+    if (IsFurnaceBlock(containerProbeBlock_)) {
+        furnaceScreen_.OpenFurnace(furnaces_[key], inventory_);
+        IM_LOGI(kTag, "furnace panel opened at %d,%d,%d", containerProbeX_, containerProbeY_,
+                containerProbeZ_);
+    } else {
+        chestScreen_.OpenChest(chests_[key], inventory_);
+        IM_LOGI(kTag, "chest panel opened at %d,%d,%d", containerProbeX_, containerProbeY_,
+                containerProbeZ_);
+    }
+    containerProbeOpened_ = true;
+    return true;
+}
+
+/* 关闭全部容器面板并退回携带物, 世界卸载与表面重建时调用. */
+void GameShell::CloseContainerPanels() {
+    furnaceScreen_.SetOpen(false, inventory_);
+    chestScreen_.SetOpen(false, inventory_);
+    furnaceScreen_.Reset();
+    chestScreen_.Reset();
+}
+
+/*
  * 编辑手势. 破坏必须按硬度累积进度, 因此按住与轻点各自绑定一种动作:
  * 按住不松手走进度, 挖满才破坏; 轻点(按住不足轻点窗口且没有位移)放置当前材料.
  * 进度从按下那一刻开始累计, 抬手即清零, 与原版"按住挖掘, 松手作废"的语义一致.
@@ -749,9 +1134,12 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
             attackAccumulator_ = 0.0;
             editAttacked_ = false;
             /*
-             * 视线先判定生物: 命中即转为攻击, 本次手势不再进入挖掘与放置;
-             * 未命中时保持原来的按住挖掘与抬手放置语义.
+             * 视线先判定容器方块: 命中即进入长按开面板探测, 本次手势不再挖掘;
+             * 未命中再判生物与挖掘, 保持原有语义.
              */
+            if (ProbeContainerTarget()) {
+                break;
+            }
             attackHeld_ = TryAttackCreature();
             if (attackHeld_) {
                 editAttacked_ = true;
@@ -770,6 +1158,11 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
     if (pointer != nullptr) {
         editLastX_ = pointer->x;
         editLastY_ = pointer->y;
+        /* 容器探测接管的手势: 计时长按开面板, 不进入攻击与挖掘. */
+        if (containerProbeBlock_ != voxel::block::Air) {
+            AdvanceContainerProbe(deltaSeconds);
+            return;
+        }
         if (attackHeld_) {
             /* 按住攻击: 按固定间隔连续出手, 目标消失后回落到挖掘. */
             AdvanceHeldAttack(deltaSeconds);
@@ -785,6 +1178,7 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
         attackHeld_ = false;
         editAttacked_ = false;
         editPointerId_ = -1;
+        containerProbeBlock_ = voxel::block::Air;
         return;
     }
 
@@ -795,10 +1189,14 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
     const float moved = std::sqrt(movedX * movedX + movedY * movedY);
     player_->CancelMining();
     const bool attacked = editAttacked_;
+    const bool containerOpened = containerProbeOpened_;
     attackHeld_ = false;
     editAttacked_ = false;
+    containerProbeBlock_ = voxel::block::Air;
+    containerProbeOpened_ = false;
     /* 本次手势出手过就不再放置方块: 攻击与放置互斥, 避免同一次点击两件事都做. */
-    if (!attacked && held < player::mining::kTapSeconds && moved < kTapMoveLimit) {
+    if (!attacked && !containerOpened && held < player::mining::kTapSeconds &&
+        moved < kTapMoveLimit) {
         /* 轻点放置: 使用方块栏当前选中的材料, 成功放置才扣减数量. */
         if (TryPlaceSelectedBlock()) {
             PlayHarvestSound(selectedBlock_, true);
@@ -869,6 +1267,13 @@ bool GameShell::TryAttackCreature() {
     const float hardness = voxel::BlockRegistry::Instance().Info(heldBlock).hardness;
     const float damage = entity::tuning::HeldAttackDamage(holding, hardness);
     const bool killed = entities_.Damage(target->Id(), damage);
+    if (killed) {
+        /* 致死一击计一次击败事件, 并入上报增量与本地成就进度. */
+        progressCounters_.kills += 1;
+        progress::ProgressHub::Instance().OnKill(1);
+    }
+    /* 攻击命中按次扣体力 (原版 tili_action_attack), 未命中不扣. */
+    player_->ConsumeStaminaPublic(player::survival::kStaminaAttack);
     IM_LOGI(kTag, "attack creature id=%u damage=%.1f distance=%.2f killed=%d held=%d",
             static_cast<uint32_t>(target->Id()), static_cast<double>(damage),
             static_cast<double>(distance), killed ? 1 : 0, holding ? 1 : 0);
@@ -899,7 +1304,9 @@ void GameShell::UpdateEntities(double deltaSeconds) {
 
     const entity::EntityFrameStats stats = entities_.Update(deltaSeconds, *world_, probe);
 
-    /* 生物伤害汇总后一次性施加, 玩家控制器内部完成免伤窗口与死亡判定. */
+    /* 生物伤害汇总后一次性施加, 玩家控制器内部完成免伤窗口与死亡判定.
+     * 伤害数值显示 (kDamageSwitch) 暂无消费点: 伤害数字系统尚未实现,
+     * 接入飘字后在此按开关决定是否生成数字事件. */
     if (stats.playerDamage > 0.0f) {
         player_->ApplyDamage(stats.playerDamage);
         IM_LOGI(kTag, "player damaged by creature amount=%.1f health=%.1f",
@@ -1097,6 +1504,32 @@ void GameShell::SyncAudioSettings() {
             soundOpen, musicOpen, settings_->VoiceEnabled() ? 1 : 0);
 }
 
+void GameShell::SyncVisualSettings() {
+    const int32_t fogSetting = settings_->Get(settings::Key::kFog);
+    const int32_t brightSetting = settings_->Get(settings::Key::kScreenBright);
+    const int32_t bloodSetting = settings_->Get(settings::Key::kBloodSwitch);
+    const int32_t treeSetting = settings_->Get(settings::Key::kTreeShape);
+    if (fogSetting == fogCachedSetting_ && brightSetting == brightCachedSetting_) {
+        bloodSwitch_ = bloodSetting;
+        treeShape_ = treeSetting;
+        return;
+    }
+    fogCachedSetting_ = fogSetting;
+    brightCachedSetting_ = brightSetting;
+    /* 雾密度查表, 档位越界时回落到关闭; 亮度按 0.7 到 1.3 线性折算. */
+    const int32_t fogLevel = fogSetting >= 0 && fogSetting < settings::tuning::kFogDensityLevelCount
+                                 ? fogSetting : 0;
+    fogDensity_ = settings::tuning::kFogDensityLevels[fogLevel];
+    brightness_ = settings::tuning::kBrightnessAtZero +
+                  settings::tuning::kBrightnessSpan * (static_cast<float>(brightSetting) /
+                                                       settings::tuning::kBrightnessFull);
+    bloodSwitch_ = bloodSetting;
+    treeShape_ = treeSetting;
+    IM_LOGI(kTag, "visual settings applied, fog=%d density=%.4f bright=%d factor=%.2f",
+            fogSetting, static_cast<double>(fogDensity_), brightSetting,
+            static_cast<double>(brightness_));
+}
+
 void GameShell::RenderScene() {
     if (!surfaceReady_ || !renderer_->Ready()) {
         return;
@@ -1109,8 +1542,12 @@ void GameShell::RenderScene() {
     player_->GetViewMatrix(view);
     Multiply4x4(projection, view, viewProjection);
 
-    const core::Vec3 position = player_->Position();
-    float camera[3] = {position.x, position.y + kEyeHeight, position.z};
+    /*
+     * 摇晃基准用控制器的当前相机视点: 第一人称即眼位, 第三人称是
+     * 后撤后的轨点, 与视图矩阵的平移项共用同一来源, 摇晃不会偏移视点.
+     */
+    const core::Vec3 cameraBase = player_->CameraPosition();
+    float camera[3] = {cameraBase.x, cameraBase.y, cameraBase.z};
 
     /*
      * 镜头摇晃. 移动强度给一层轻微摆动, 受击时再叠一层快速衰减的抖动,
@@ -1137,29 +1574,59 @@ void GameShell::RenderScene() {
         }
     }
 
+    /* 雾, 亮度与天光因子分别下发: 天光由 shader 的 mix(0.27, 1.0) 承担月夜下限. */
+    renderer_->SetAtmosphere(fogDensity_, brightness_, skyBlend_);
     renderer_->SetViewProjection(viewProjection, camera);
     renderer_->Sync(*world_);
     renderer_->Draw();
 
     /*
-     * 世界坐标标记: 生物与远程玩家的占位渲染.
+     * 生物的程序化体素形象: 按定义索引折算部件与配色, 受击闪白与死亡倒地
+     * 由实体状态直接折算; 远程玩家仍走竖条标记 (那是玩家).
      * 都在区块绘制之后, HUD 之前, 共享投影矩阵; 屏外自动剔除.
      */
     const auto& creatures = entities_.Creatures();
     const int32_t creatureCount = static_cast<int32_t>(creatures.size());
-    if (creatureCount > 0) {
-        std::vector<float> cxs(creatureCount), cys(creatureCount), czs(creatureCount);
-        for (int32_t i = 0; i < creatureCount; ++i) {
-            const auto& creature = creatures[i];
+    if (creatureCount > 0 && render::creature::Initialize()) {
+        static std::vector<render::creature::CreatureView> views;
+        views.clear();
+        views.reserve(static_cast<size_t>(creatureCount));
+        for (const auto& creature : creatures) {
             if (creature == nullptr || creature->Removed()) {
-                cxs[i] = 0.0f; cys[i] = -1000.0f; czs[i] = 0.0f;
                 continue;
             }
+            /* 容量上限与渲染侧一致, 超出部分不提交. */
+            if (views.size() >= 32) {
+                break;
+            }
             const core::Vec3 pos = creature->Position();
-            cxs[i] = pos.x; cys[i] = pos.y; czs[i] = pos.z;
+            render::creature::CreatureView view;
+            view.x = pos.x;
+            view.y = pos.y;
+            view.z = pos.z;
+            view.yaw = creature->Yaw();
+            /* 受击闪白: 受击剩余秒数与总时长求比例. */
+            view.hurt = creature->HurtSeconds() / entity::tuning::kHurtFlashSeconds;
+            /*
+             * 死亡倒地: 实体只暴露 Dying 布尔, 渐变进度在总装侧记死亡起点
+             * (进程内 map), 按死亡保留时长折算, 越接近回收越躺平.
+             */
+            if (creature->Dying()) {
+                const uint32_t id = static_cast<uint32_t>(creature->Id());
+                auto died = deathStartTimes_.find(id);
+                if (died == deathStartTimes_.end()) {
+                    died = deathStartTimes_.emplace(id, elapsedSeconds_).first;
+                }
+                view.death = static_cast<float>((elapsedSeconds_ - died->second) /
+                                                entity::tuning::kDeathSeconds);
+            } else {
+                deathStartTimes_.erase(static_cast<uint32_t>(creature->Id()));
+            }
+            view.defIndex = entity::MonsterTable::Instance().IndexOfSourceId(
+                creature->Definition().sourceId);
+            views.push_back(view);
         }
-        ui::RenderCreatureMarkers(cxs.data(), cys.data(), czs.data(), creatureCount,
-                                  viewProjection, width_, height_);
+        render::creature::Draw(views.data(), static_cast<int32_t>(views.size()), viewProjection);
     }
 
     if (remotePlayers_.Count() > 0) {
@@ -1187,8 +1654,14 @@ void GameShell::RenderScene() {
     frame.stick = player_->GetStickVisual();
     frame.jumpPressed = jumpHeld_;
     frame.nameSlot = nameSlot_;
-    /* 血条取真实血量比例; 死亡等待期间为 0, 重生后回满. */
-    frame.health = player_->HealthRatio();
+    /*
+     * 血条取真实血量比例; 死亡等待期间为 0, 重生后回满.
+     * 血条开关关闭时恒显示满血 (原版语义: 隐藏掉血状态而非隐藏血条).
+     */
+    frame.health = bloodSwitch_ != 0 ? player_->HealthRatio() : 1.0f;
+    /* 饥饿与体力取控制器的同源比例, 与原版两条状态条一一对应. */
+    frame.hunger = player_->HungerRatio();
+    frame.stamina = player_->StaminaRatio();
     /*
      * 快捷栏每格的数量, 图标与首字母都取自物品栏, 与背包面板同源:
      * 关联方块的物品用图集格, 工具与材料用类别色块加首字母占位.
@@ -1218,6 +1691,14 @@ void GameShell::RenderScene() {
     if (inventoryScreen_.Open()) {
         inventoryScreen_.BuildFrame(inventory_, inventoryFrame_);
         frame.inventory = &inventoryFrame_;
+    }
+    /* 容器面板与背包互斥, 打开时组装对应帧. */
+    if (furnaceScreen_.Open()) {
+        furnaceScreen_.BuildFrame(inventory_, furnaceFrame_);
+        frame.furnace = &furnaceFrame_;
+    } else if (chestScreen_.Open()) {
+        chestScreen_.BuildFrame(inventory_, chestFrame_);
+        frame.chest = &chestFrame_;
     }
     /*
      * 破坏进度只在按住超过轻点窗口后显示: 轻点放置时进度虽然累计了几帧,

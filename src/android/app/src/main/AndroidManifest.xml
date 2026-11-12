@@ -16,7 +16,7 @@
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
         android:usesCleartextTraffic="true">
 
-        <!-- 入口界面: 已登录直接进入游戏, 未登录进入登录界面; 从游戏返回后作为账号与设备信息页 -->
+        <!-- 入口路由页: 已登录进大厅, 未登录进登录界面; 不承载界面内容 -->
         <activity
             android:name=".LauncherActivity"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
@@ -28,6 +28,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 大厅主界面: 登录后的落点, 玩家条 + 主入口四宫格 + 公告与页脚 -->
+        <activity
+            android:name=".lobby.MainLobbyActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/lobby_title"
+            android:screenOrientation="sensorLandscape" />
+
+        <!-- 世界列表页: 世界选择与新建与删除, 数据来自原生 listWorlds -->
+        <activity
+            android:name=".lobby.WorldListActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/world_list_title"
+            android:screenOrientation="sensorLandscape" />
 
         <!-- 登录界面: 登录, 注册与找回密码共用一页, 服务端地址可在此修改 -->
         <activity
@@ -86,6 +102,22 @@
             android:label="@string/rebind_title"
             android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="adjustResize" />
+
+        <!-- 联机大厅: 局域网扫描与房间列表, 房间服就位后接入房间数据 -->
+        <activity
+            android:name=".lobby.MultiplayerLobbyActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/lobby_title"
+            android:screenOrientation="sensorLandscape" />
+
+        <!-- 玩家中心: 资料卡与背包成就钱包入口, 数据来自本地会话与钱包接口 -->
+        <activity
+            android:name=".lobby.PlayerCenterActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/playercenter_title"
+            android:screenOrientation="sensorLandscape" />
 
         <!-- 游戏界面: NativeActivity, 主循环与输入全部在原生线程内完成 -->
         <activity

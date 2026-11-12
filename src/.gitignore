@@ -39,6 +39,18 @@ native/game/generated/
 # 由 scripts/gen_monster_data.py 生成的生物数据表: 名称, 生命, 攻击, 尺寸与掉落
 native/entity/generated/
 
+# 由 scripts/gen_furnace_data.py 生成的熔炉配方与燃料表
+# (与 native/game/generated/ 同目录, 规则已覆盖)
+
+# 由 scripts/gen_block_light.py 生成的方块光照表
+native/voxel/generated/
+
+# 由 scripts/gen_biome_data.py 生成的群系带表
+# (与 native/voxel/generated/ 同目录, 规则已覆盖)
+
+# 由 scripts/gen_achievement_data.py 生成的成就与每日任务表
+native/progress/generated/
+
 # Python 缓存
 __pycache__/
 *.pyc

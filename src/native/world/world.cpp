@@ -4,12 +4,14 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <dirent.h>
 #include <algorithm>
 #include <utility>
 
 #include "voxel/block_registry.h"
 #include "voxel/chunk_column.h"
 #include "voxel/chunk_mesher.h"
+#include "voxel/light_field.h"
 #include "voxel/terrain_generator.h"
 
 namespace immirror::world {
@@ -29,6 +31,15 @@ int32_t FloorDiv(int32_t value, int32_t divisor) {
 }
 
 }  /* namespace */
+
+/*
+ * 列光场计算器: 主循环单线程访问, 无状态除复用的 BFS 队列外,
+ * 各列重算按调用顺序串行执行.
+ */
+voxel::LightField& ColumnLightField() {
+    static voxel::LightField field;
+    return field;
+}
 
 /* 单个区块列: 方块数据 + 已构建网格. */
 struct World::Chunk {
@@ -53,11 +64,13 @@ void World::SetSeed(uint32_t seed) {
     version_ += 1;
 }
 
-void World::Update(const core::Vec3& center, int32_t viewDistanceChunks) {
+void World::Update(const core::Vec3& center, int32_t viewDistanceChunks, uint8_t treeShape) {
     if (viewDistanceChunks < 1) {
         viewDistanceChunks = 1;
     }
     viewDistance_ = viewDistanceChunks;
+    /* 树形档只影响本帧新建列, 已加载列保持生成时的树形, 与原版一致. */
+    treeShape_ = treeShape;
 
     const int32_t centerX = FloorDiv(static_cast<int32_t>(std::floor(center.x)), voxel::kChunkSizeX);
     const int32_t centerZ = FloorDiv(static_cast<int32_t>(std::floor(center.z)), voxel::kChunkSizeZ);
@@ -93,7 +106,7 @@ void World::Update(const core::Vec3& center, int32_t viewDistanceChunks) {
                 if (FindChunk(coord) != nullptr) {
                     continue;
                 }
-                EnsureChunk(coord);
+                EnsureChunk(coord, treeShape_);
                 budget -= 1;
             }
         }
@@ -107,24 +120,41 @@ World::Chunk* World::FindChunk(voxel::ChunkCoord coord) const {
     return it == chunks_.end() ? nullptr : it->second.get();
 }
 
-World::Chunk* World::EnsureChunk(voxel::ChunkCoord coord) {
+World::Chunk* World::EnsureChunk(voxel::ChunkCoord coord, uint8_t treeShape) {
     Chunk* existing = FindChunk(coord);
     if (existing != nullptr) {
         return existing;
     }
     auto chunk = std::make_unique<Chunk>();
     chunk->coord = coord;
-    voxel::TerrainGenerator{}.Generate(coord, chunk->column, seed_);
+    voxel::TerrainGenerator{}.Generate(coord, chunk->column, seed_, treeShape);
+    /* 生成后全量重算本列光场, 网格构建按光照采样顶点明暗. */
+    ColumnLightField().Recompute(chunk->column, voxel::BlockRegistry::Instance());
     chunk->meshDirty = true;
     Chunk* raw = chunk.get();
     chunks_.emplace(ChunkKey(coord.x, coord.z), std::move(chunk));
     RebuildMesh(*raw);
 
-    /* 新列加入后, 已存在的相邻列边界遮挡关系发生变化, 需要一并重建. */
-    if (Chunk* n = FindChunk({coord.x + 1, coord.z})) RebuildMesh(*n);
-    if (Chunk* n = FindChunk({coord.x - 1, coord.z})) RebuildMesh(*n);
-    if (Chunk* n = FindChunk({coord.x, coord.z + 1})) RebuildMesh(*n);
-    if (Chunk* n = FindChunk({coord.x, coord.z - 1})) RebuildMesh(*n);
+    /*
+     * 新列加入后, 已存在的相邻列边界面从全亮回落切换到真实光场,
+     * 需要先重算相邻列光场再重建网格.
+     */
+    if (Chunk* n = FindChunk({coord.x + 1, coord.z})) {
+        ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+        RebuildMesh(*n);
+    }
+    if (Chunk* n = FindChunk({coord.x - 1, coord.z})) {
+        ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+        RebuildMesh(*n);
+    }
+    if (Chunk* n = FindChunk({coord.x, coord.z + 1})) {
+        ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+        RebuildMesh(*n);
+    }
+    if (Chunk* n = FindChunk({coord.x, coord.z - 1})) {
+        ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+        RebuildMesh(*n);
+    }
 
     version_ += 1;
     return raw;
@@ -170,13 +200,38 @@ bool World::SetBlock(int32_t x, int32_t y, int32_t z, voxel::BlockId id) {
         return false;
     }
     chunk->column.Set(localX, y, localZ, id);
+    /* 方块增删改变遮光与光源分布, 全列重算光场后再重建网格. */
+    ColumnLightField().Recompute(chunk->column, voxel::BlockRegistry::Instance());
     RebuildMesh(*chunk);
 
-    /* 边界方块影响相邻列的剔除结果, 一并重建. */
-    if (localX == 0) { if (Chunk* n = FindChunk({coord.x - 1, coord.z})) RebuildMesh(*n); }
-    if (localX == voxel::kChunkSizeX - 1) { if (Chunk* n = FindChunk({coord.x + 1, coord.z})) RebuildMesh(*n); }
-    if (localZ == 0) { if (Chunk* n = FindChunk({coord.x, coord.z - 1})) RebuildMesh(*n); }
-    if (localZ == voxel::kChunkSizeZ - 1) { if (Chunk* n = FindChunk({coord.x, coord.z + 1})) RebuildMesh(*n); }
+    /*
+     * 边界方块影响相邻列的光照与剔除结果, 相邻列先重算光场
+     * 再重建, 其余方向的相邻列光场不受影响, 只需重建网格.
+     */
+    if (localX == 0) {
+        if (Chunk* n = FindChunk({coord.x - 1, coord.z})) {
+            ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+            RebuildMesh(*n);
+        }
+    }
+    if (localX == voxel::kChunkSizeX - 1) {
+        if (Chunk* n = FindChunk({coord.x + 1, coord.z})) {
+            ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+            RebuildMesh(*n);
+        }
+    }
+    if (localZ == 0) {
+        if (Chunk* n = FindChunk({coord.x, coord.z - 1})) {
+            ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+            RebuildMesh(*n);
+        }
+    }
+    if (localZ == voxel::kChunkSizeZ - 1) {
+        if (Chunk* n = FindChunk({coord.x, coord.z + 1})) {
+            ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+            RebuildMesh(*n);
+        }
+    }
 
     version_ += 1;
     RebuildVisibleList();
@@ -217,9 +272,15 @@ void World::RebuildVisibleList() {
 
 namespace {
 
-/* 存档格式: 文件头 + 区块记录, 方块数据用游程编码存储. */
+/*
+ * 存档格式: 文件头 + 区块记录, 方块数据用游程编码存储.
+ * 版本历史:
+ *   1: 首个多世界之前的格式, 头内只有玩家姿态与种子;
+ *   3: 追加世界名 (长度前缀 UTF-8 字节串) 与最后游玩时间, 支持世界列表.
+ * 版本 2 从未在 world.cpp 落过盘 (容器状态走独立容器文件), 跳过不设防.
+ */
 constexpr char kSaveMagic[4] = {'I', 'M', 'W', 'F'};
-constexpr uint32_t kSaveVersion = 1;
+constexpr uint32_t kSaveVersion = 3;
 constexpr uint32_t kMaxChunks = 65536;
 
 struct SaveHeader {
@@ -282,6 +343,26 @@ bool World::SaveToFile(const char* path, const SaveState& state) const {
         std::fclose(file);
         return false;
     }
+    /* 版本 3 附加段: 世界名按长度前缀写入, 再写最后游玩时间. */
+    const std::string& worldName = state.worldName;
+    const uint32_t nameLength = static_cast<uint32_t>(worldName.size());
+    if (std::fwrite(&nameLength, sizeof(nameLength), 1, file) != 1 ||
+        (!worldName.empty() &&
+         std::fwrite(worldName.data(), worldName.size(), 1, file) != 1)) {
+        std::fclose(file);
+        return false;
+    }
+    const uint64_t lastPlayed = state.lastPlayed;
+    if (std::fwrite(&lastPlayed, sizeof(lastPlayed), 1, file) != 1) {
+        std::fclose(file);
+        return false;
+    }
+    /* 版本 3 扩展段尾: 世界时间总秒数, 与任务 10 的日夜循环配套. */
+    const uint32_t timeOfDay = static_cast<uint32_t>(state.timeOfDaySeconds);
+    if (std::fwrite(&timeOfDay, sizeof(timeOfDay), 1, file) != 1) {
+        std::fclose(file);
+        return false;
+    }
 
     for (const auto& entry : chunks_) {
         const Chunk& chunk = *entry.second;
@@ -329,9 +410,47 @@ bool World::LoadFromFile(const char* path, SaveState& state) {
     SaveHeader header{};
     if (std::fread(&header, sizeof(header), 1, file) != 1 ||
         std::memcmp(header.magic, kSaveMagic, sizeof(header.magic)) != 0 ||
-        header.version != kSaveVersion || header.chunkCount > kMaxChunks) {
+        header.chunkCount > kMaxChunks) {
         std::fclose(file);
         return false;
+    }
+    /*
+     * 版本兼容: 只接受 1 与 3. 版本 1 是旧档, 头后没有世界名与游玩时间,
+     * 两个新字段回落空名与 0; 版本 2 从未落过盘, 与未知版本一并拒绝.
+     */
+    if (header.version != 1 && header.version != kSaveVersion) {
+        std::fclose(file);
+        return false;
+    }
+
+    /* 版本 3 的元数据紧跟文件头, 先于区块数据读出. */
+    state.worldName.clear();
+    state.lastPlayed = 0;
+    if (header.version >= kSaveVersion) {
+        uint32_t nameLength = 0;
+        if (std::fread(&nameLength, sizeof(nameLength), 1, file) != 1 || nameLength > 256) {
+            std::fclose(file);
+            return false;
+        }
+        if (nameLength > 0) {
+            state.worldName.resize(nameLength);
+            if (std::fread(&state.worldName[0], nameLength, 1, file) != 1) {
+                std::fclose(file);
+                return false;
+            }
+        }
+        if (std::fread(&state.lastPlayed, sizeof(state.lastPlayed), 1, file) != 1) {
+            std::fclose(file);
+            return false;
+        }
+        /*
+         * 世界时间是 v3 的后扩字段: 早期 v3 档没有这一段, 读失败不致命,
+         * 回落 0 秒, 游戏侧把 0 折算成 0 点, 面板侧再按需回落正午.
+         */
+        uint32_t timeOfDay = 0;
+        if (std::fread(&timeOfDay, sizeof(timeOfDay), 1, file) == 1) {
+            state.timeOfDaySeconds = static_cast<float>(timeOfDay);
+        }
     }
 
     chunks_.clear();
@@ -359,8 +478,9 @@ bool World::LoadFromFile(const char* path, SaveState& state) {
     }
     std::fclose(file);
 
-    /* 相邻列的边界面按加载后的完整数据重新计算一次. */
+    /* 相邻列的边界面按加载后的完整数据重新计算一次光照与网格. */
     for (auto& entry : chunks_) {
+        ColumnLightField().Recompute(entry.second->column, voxel::BlockRegistry::Instance());
         RebuildMesh(*entry.second);
     }
     version_ += 1;
@@ -373,6 +493,157 @@ bool World::LoadFromFile(const char* path, SaveState& state) {
     state.pitch = header.pitch;
     state.seed = header.seed;
     return true;
+}
+
+/*
+ * 只读头部: 与 LoadFromFile 同一套魔数与版本检查, 读到玩家姿态与元数据即返回,
+ * 不触碰区块数据, 供世界列表逐文件扫描.
+ */
+bool World::PeekHeader(const char* path, SaveState& state) {
+    if (path == nullptr) {
+        return false;
+    }
+    FILE* file = std::fopen(path, "rb");
+    if (file == nullptr) {
+        return false;
+    }
+    SaveHeader header{};
+    if (std::fread(&header, sizeof(header), 1, file) != 1 ||
+        std::memcmp(header.magic, kSaveMagic, sizeof(header.magic)) != 0 ||
+        header.chunkCount > kMaxChunks ||
+        (header.version != 1 && header.version != kSaveVersion)) {
+        std::fclose(file);
+        return false;
+    }
+    state.playerX = header.playerX;
+    state.playerY = header.playerY;
+    state.playerZ = header.playerZ;
+    state.yaw = header.yaw;
+    state.pitch = header.pitch;
+    state.seed = header.seed;
+    state.worldName.clear();
+    state.lastPlayed = 0;
+    if (header.version >= kSaveVersion) {
+        uint32_t nameLength = 0;
+        if (std::fread(&nameLength, sizeof(nameLength), 1, file) != 1 || nameLength > 256) {
+            std::fclose(file);
+            return false;
+        }
+        if (nameLength > 0) {
+            state.worldName.resize(nameLength);
+            if (std::fread(&state.worldName[0], nameLength, 1, file) != 1) {
+                std::fclose(file);
+                return false;
+            }
+        }
+        if (std::fread(&state.lastPlayed, sizeof(state.lastPlayed), 1, file) != 1) {
+            std::fclose(file);
+            return false;
+        }
+        uint32_t timeOfDay = 0;
+        if (std::fread(&timeOfDay, sizeof(timeOfDay), 1, file) == 1) {
+            state.timeOfDaySeconds = static_cast<float>(timeOfDay);
+        }
+    }
+    std::fclose(file);
+    return true;
+}
+
+/*
+ * 世界名安全化: 文件系统非法字符与控制字符折成下划线, 其余字节原样保留,
+ * 因此中文与其余多字节字符的世界名可以正常落成文件名 (UTF-8 文件系统支持).
+ * 折损后为空时回落 "default", 保证任意输入都能得到一个可用文件名.
+ */
+std::string World::SafeFileName(const std::string& name) {
+    std::string safe;
+    safe.reserve(name.size());
+    for (const char c : name) {
+        const unsigned char byte = static_cast<unsigned char>(c);
+        /* 控制字符与 Windows 文件系统保留字符一律折成下划线. */
+        const bool control = byte < 0x20u || byte == 0x7Fu;
+        const bool reserved = c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' ||
+                              c == '"' || c == '<' || c == '>' || c == '|';
+        safe += (control || reserved) ? '_' : c;
+    }
+    /* 首尾空格与点会被部分文件系统吞掉, 统一折成下划线避免名字漂移. */
+    for (size_t i = 0; i < safe.size(); ++i) {
+        if (safe[i] == ' ') {
+            safe[i] = '_';
+        }
+    }
+    while (!safe.empty() && safe.front() == '.') {
+        safe.front() = '_';
+    }
+    if (safe.empty()) {
+        safe = "default";
+    }
+    return safe;
+}
+
+
+namespace {
+
+/* JSON 字符串转义: 只处理会破坏 JSON 结构的字符, 其余字节原样保留. */
+std::string EscapeListJson(const std::string& text) {
+    std::string out;
+    out.reserve(text.size() + 8);
+    for (const char c : text) {
+        switch (c) {
+            case '"': out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default: out += c; break;
+        }
+    }
+    return out;
+}
+
+}  /* namespace */
+
+std::string ListWorldsJson(const char* directory) {
+    if (directory == nullptr) {
+        return "[]";
+    }
+    DIR* dir = ::opendir(directory);
+    if (dir == nullptr) {
+        return "[]";
+    }
+    std::string json = "[";
+    bool firstEntry = true;
+    struct dirent* entry = nullptr;
+    while ((entry = ::readdir(dir)) != nullptr) {
+        const std::string fileName = entry->d_name;
+        if (fileName.size() <= 6 || fileName.compare(fileName.size() - 6, 6, ".world") != 0) {
+            continue;
+        }
+        const std::string path = std::string(directory) + "/" + fileName;
+        World::SaveState state;
+        if (!World::PeekHeader(path.c_str(), state)) {
+            continue;
+        }
+        std::string name = state.worldName;
+        if (name.empty()) {
+            name = fileName.substr(0, fileName.size() - 6);
+        }
+        /* 早期版本把带 .world 后缀的文件名当世界名写入, 读取时兼容剥离. */
+        if (name.size() > 6 && name.compare(name.size() - 6, 6, ".world") == 0) {
+            name.resize(name.size() - 6);
+        }
+        if (!firstEntry) {
+            json += ",";
+        }
+        firstEntry = false;
+        json += "{\"file\":\"" + EscapeListJson(fileName) + "\",\"name\":\"" + EscapeListJson(name) +
+                "\",\"lastPlayed\":" + std::to_string(state.lastPlayed) +
+                ",\"seed\":" + std::to_string(state.seed) +
+                ",\"playerX\":" + std::to_string(state.playerX) +
+                ",\"playerZ\":" + std::to_string(state.playerZ) + "}";
+    }
+    ::closedir(dir);
+    json += "]";
+    return json;
 }
 
 }  /* namespace immirror::world */

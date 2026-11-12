@@ -87,6 +87,29 @@ constexpr float kHealthHalfHeight = 0.014f;
 /* 血条实心段相对底槽的内缩, 让底槽描边露出一圈. */
 constexpr float kHealthFillInset = 2.0f;
 
+/*
+ * 生存状态条: 原版 PlayerFoodLevelBar 与 ChickenEnergyFrame.
+ * 饥饿条与血条同宽, 紧接血条下方一行 (原版行距 30 像素, 按 720 设计高折算);
+ * 体力条在快捷栏上方 (原版 269x25, 锚 PlayShortcut 上移 11), 宽度略短于血条.
+ * 三条同用一套底板色, 靠填充色区分: 血红, 饥饿橙黄, 体力青蓝.
+ */
+constexpr float kHungerFillColor[4] = {0xE8 / 255.0f, 0xA0 / 255.0f, 0x1B / 255.0f, 1.0f};
+constexpr float kStaminaFillColor[4] = {0x3C / 255.0f, 0xC0 / 255.0f, 0xF1 / 255.0f, 1.0f};
+/* 原版 269 设计像素: 按 kHudArtPixel 标尺折算, 半宽 = 269 * 标尺 / 2. */
+constexpr float kStaminaHalfWidth = 269.0f * kHudArtPixel / 2.0f;
+constexpr float kStaminaHalfHeight = 0.011f;
+constexpr float kStaminaCenterX = 0.135f;
+constexpr float kStaminaCenterY = 0.865f - 0.055f;
+
+/*
+ * 状态条左侧图标: 原版血条 icon_heart 20x16, 饥饿条 icon_chicken_leg 19x20,
+ * 两条同在 300x31 的框内. 用几何近似: 心形取两圆加下三角, 鸡腿取圆头加斜柄,
+ * 不额外引入图集精灵, 色块本身即为可读性标记.
+ */
+constexpr float kVitalHeartColor[4] = {0xD6 / 255.0f, 0x19 / 255.0f, 0x19 / 255.0f, 1.0f};
+constexpr float kVitalFoodColor[4] = {0xE8 / 255.0f, 0xA0 / 255.0f, 0x1B / 255.0f, 1.0f};
+constexpr float kVitalStrokeColor[4] = {0x00 / 255.0f, 0x00 / 255.0f, 0x00 / 255.0f, 0.75f};
+
 /* 纯色填充时传给九宫的纹理坐标首项, 顶点着色器按负数判定走纯色分支. */
 constexpr float kSolidUv[4] = {-1.0f, -1.0f, -1.0f, -1.0f};
 
@@ -1015,6 +1038,239 @@ void DrawInventoryPanel(float* out, int32_t& offset, const HudLayout& layout,
     }
 }
 
+/*
+ * 以下为容器面板 (熔炉与储物箱) 的几何与绘制, 与背包面板同源同风格.
+ * 为保持既有代码区不动, 本段以新的匿名命名空间块追加在原匿名块之后.
+ */
+namespace {
+
+/* 容器面板几何, 归一化屏幕坐标, 复用背包面板的底板范围. */
+constexpr float kContainerPanelLeft = kPanelLeft;
+constexpr float kContainerPanelRight = kPanelRight;
+constexpr float kContainerPanelTop = kPanelTop;
+constexpr float kContainerPanelBottom = kPanelBottom;
+constexpr float kContainerSlotHalf = kPanelSlotHalf;
+
+/* 熔炉三格: 输入, 燃料与产出, 纵向排在面板上部. */
+constexpr float kFurnaceInputX = 0.30f;
+constexpr float kFurnaceInputY = 0.22f;
+constexpr float kFurnaceFuelX = 0.30f;
+constexpr float kFurnaceFuelY = 0.40f;
+constexpr float kFurnaceOutputX = 0.62f;
+constexpr float kFurnaceOutputY = 0.31f;
+constexpr float kFurnaceOutputHalf = 0.046f;
+/* 熔炼进度条: 在输入与产出之间横向延伸. */
+constexpr float kFurnaceProgressLeft = 0.38f;
+constexpr float kFurnaceProgressRight = 0.54f;
+constexpr float kFurnaceProgressY = 0.31f;
+constexpr float kFurnaceProgressHalfH = 0.008f;
+/* 燃料余量条: 燃料格右侧的竖条. */
+constexpr float kFurnaceFlameX = 0.37f;
+constexpr float kFurnaceFlameY = 0.40f;
+constexpr float kFurnaceFlameHalfW = 0.010f;
+constexpr float kFurnaceFlameHalfH = 0.026f;
+
+/* 储物箱 27 格: 9 列 3 行, 位于面板上部, 与背包区的行距一致. */
+constexpr float kChestOriginX = 0.10f;
+constexpr float kChestOriginY = 0.17f;
+constexpr float kChestPitchX = 0.095f;
+constexpr float kChestPitchY = 0.088f;
+
+/* 容器面板的几何结果, 绘制与命中判定共用. */
+struct ContainerPanelGeometry {
+    float centerX = 0.0f;
+    float centerY = 0.0f;
+    float halfWidth = 0.0f;
+    float halfHeight = 0.0f;
+    float slotHalf = 0.0f;
+    float inputX = 0.0f;
+    float inputY = 0.0f;
+    float fuelX = 0.0f;
+    float fuelY = 0.0f;
+    float outputX = 0.0f;
+    float outputY = 0.0f;
+    float outputHalf = 0.0f;
+    float chestX[9] = {};
+    float chestY[3] = {};
+    float backpackX[9] = {};
+    float backpackY[4] = {};
+    float hotbarX[9] = {};
+    float hotbarY = 0.0f;
+    float closeX = 0.0f;
+    float closeY = 0.0f;
+    float closeHalf = 0.0f;
+    float titleX = 0.0f;
+    float titleY = 0.0f;
+};
+ContainerPanelGeometry MakeContainerPanelGeometry(const HudLayout& layout) {
+    ContainerPanelGeometry geometry;
+    geometry.centerX = layout.DesignX((kContainerPanelLeft + kContainerPanelRight) * 0.5f);
+    geometry.centerY = layout.DesignY((kContainerPanelTop + kContainerPanelBottom) * 0.5f);
+    geometry.halfWidth = layout.DesignLength((kContainerPanelRight - kContainerPanelLeft) * 0.5f);
+    geometry.halfHeight = layout.DesignLength((kContainerPanelBottom - kContainerPanelTop) * 0.5f);
+    geometry.slotHalf = layout.DesignLength(kContainerSlotHalf);
+    geometry.inputX = layout.DesignX(kFurnaceInputX);
+    geometry.inputY = layout.DesignY(kFurnaceInputY);
+    geometry.fuelX = layout.DesignX(kFurnaceFuelX);
+    geometry.fuelY = layout.DesignY(kFurnaceFuelY);
+    geometry.outputX = layout.DesignX(kFurnaceOutputX);
+    geometry.outputY = layout.DesignY(kFurnaceOutputY);
+    geometry.outputHalf = layout.DesignLength(kFurnaceOutputHalf);
+    for (int32_t index = 0; index < 9; ++index) {
+        geometry.chestX[index] =
+            layout.DesignX(kChestOriginX + static_cast<float>(index) * kChestPitchX);
+        geometry.backpackX[index] =
+            layout.DesignX(kBackpackOriginX + static_cast<float>(index) * kBackpackPitchX);
+        geometry.hotbarX[index] = geometry.backpackX[index];
+    }
+    for (int32_t index = 0; index < 3; ++index) {
+        geometry.chestY[index] =
+            layout.DesignY(kChestOriginY + static_cast<float>(index) * kChestPitchY);
+    }
+    for (int32_t index = 0; index < 4; ++index) {
+        geometry.backpackY[index] =
+            layout.DesignY(kBackpackOriginY + static_cast<float>(index) * kBackpackPitchY);
+    }
+    geometry.hotbarY = layout.DesignY(kHotbarY);
+    geometry.closeX = layout.DesignX(kPanelCloseX);
+    geometry.closeY = layout.DesignY(kPanelCloseY);
+    geometry.closeHalf = layout.DesignLength(kPanelCloseHalf);
+    geometry.titleX = layout.DesignX(kPanelTitleX);
+    geometry.titleY = layout.DesignY(kPanelTitleY);
+    return geometry;
+}
+/* 容器面板的遮罩, 底板, 标题与关闭按钮, 熔炉与储物箱面板共用. */
+void DrawContainerPanelBase(float* out, int32_t& offset, const HudLayout& layout,
+                            const ContainerPanelGeometry& geometry, float scale,
+                            const char* title) {
+    const float artUnit = layout.DesignLength(kHudArtPixel);
+    PushRect(out, offset, 0.0f, 0.0f, layout.DesignLength(0.5f), 1.0f, scale, kPanelScrim);
+    if (uiAtlasAvailable) {
+        PushUiNineSlice(out, offset, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                        geometry.halfHeight, scale, gen::UiSpriteOf(gen::UiSprite::PanelBlue),
+                        kSpriteTint);
+    } else {
+        PushNineSlice(out, offset, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                      geometry.halfHeight, scale,
+                      gen::UiAssetOf(gen::UiWidget::PanelSurfaceBlueLarge), artUnit, kSolidUv,
+                      kPanelBoard);
+    }
+    const float titlePixel = layout.DesignLength(kPanelTitlePixel);
+    PushText(out, offset, geometry.titleX,
+             geometry.titleY + static_cast<float>(kGlyphHeight) * titlePixel * 0.5f, titlePixel,
+             title, scale, kPanelTextColor);
+    if (uiAtlasAvailable) {
+        PushUiNineSlice(out, offset, geometry.closeX, geometry.closeY, geometry.closeHalf,
+                        geometry.closeHalf, scale, gen::UiSpriteOf(gen::UiSprite::BtnCompactOrange),
+                        kSpriteTint);
+    } else {
+        PushNineSlice(out, offset, geometry.closeX, geometry.closeY, geometry.closeHalf,
+                      geometry.closeHalf, scale, gen::UiAssetOf(gen::UiWidget::ButtonCompactOrange),
+                      artUnit, kSolidUv, kPanelButtonColor);
+    }
+    PushCenteredText(out, offset, geometry.closeX, geometry.closeY,
+                     layout.DesignLength(0.0075f), "X", scale, kPanelTextColor);
+}
+
+/* 容器面板的背包四行与快捷栏一行, 与背包面板同源. */
+void DrawContainerInventoryGrids(float* out, int32_t& offset,
+                                 const ContainerPanelGeometry& geometry, float scale,
+                                 const InventorySlotView* backpack,
+                                 const InventorySlotView* hotbar, float artUnit) {
+    for (int32_t row = 0; row < 4; ++row) {
+        for (int32_t column = 0; column < 9; ++column) {
+            PushInventorySlot(out, offset, geometry.backpackX[column], geometry.backpackY[row],
+                              geometry.slotHalf, scale, backpack[row * 9 + column], artUnit);
+        }
+    }
+    for (int32_t column = 0; column < 9; ++column) {
+        PushInventorySlot(out, offset, geometry.hotbarX[column], geometry.hotbarY,
+                          geometry.slotHalf, scale, hotbar[column], artUnit);
+    }
+}
+
+/* 容器面板的携带堆叠, 画在最后. */
+void DrawContainerCarried(float* out, int32_t& offset, const HudLayout& layout,
+                          const ContainerPanelGeometry& geometry, float scale,
+                          const InventorySlotView& carried, bool visible, float x, float y) {
+    if (!visible || !carried.hasItem) {
+        return;
+    }
+    const float carryHalf = geometry.slotHalf * 1.15f;
+    PushInventorySlot(out, offset, layout.DesignX(x), layout.DesignY(y), carryHalf, scale,
+                      carried, layout.DesignLength(kHudArtPixel));
+}
+/* 熔炉面板: 三格, 进度条, 燃料余量条, 背包与快捷栏. */
+void DrawFurnacePanel(float* out, int32_t& offset, const HudLayout& layout,
+                      const FurnacePanelFrame& frame, float scale) {
+    const ContainerPanelGeometry geometry = MakeContainerPanelGeometry(layout);
+    const float artUnit = layout.DesignLength(kHudArtPixel);
+    DrawContainerPanelBase(out, offset, layout, geometry, scale, "FURNACE");
+
+    PushInventorySlot(out, offset, geometry.inputX, geometry.inputY, geometry.slotHalf, scale,
+                      frame.input, artUnit);
+    PushInventorySlot(out, offset, geometry.fuelX, geometry.fuelY, geometry.slotHalf, scale,
+                      frame.fuel, artUnit);
+    PushInventorySlot(out, offset, geometry.outputX, geometry.outputY, geometry.outputHalf,
+                      scale, frame.output, artUnit);
+
+    /* 熔炼进度条: 底槽加填充, 填充比例取 frame.progress. */
+    const float progressLeft = layout.DesignX(kFurnaceProgressLeft);
+    const float progressRight = layout.DesignX(kFurnaceProgressRight);
+    const float progressY = layout.DesignY(kFurnaceProgressY);
+    const float progressHalfW = (progressRight - progressLeft) * 0.5f;
+    const float progressHalfH = layout.DesignLength(kFurnaceProgressHalfH);
+    PushRect(out, offset, (progressLeft + progressRight) * 0.5f, progressY, progressHalfW,
+             progressHalfH, scale, kPanelButtonIdleColor);
+    float fillRatio = frame.progress;
+    if (fillRatio < 0.0f) fillRatio = 0.0f;
+    if (fillRatio > 1.0f) fillRatio = 1.0f;
+    const float fillHalfW = progressHalfW * fillRatio;
+    if (fillHalfW > 0.0f) {
+        PushRect(out, offset, progressLeft + fillHalfW, progressY, fillHalfW,
+                 progressHalfH * 0.7f, scale, kSlotBorderColor);
+    }
+
+    /* 燃料余量条: 竖条底槽加自下而上的填充. */
+    const float flameX = layout.DesignX(kFurnaceFlameX);
+    const float flameY = layout.DesignY(kFurnaceFlameY);
+    const float flameHalfW = layout.DesignLength(kFurnaceFlameHalfW);
+    const float flameHalfH = layout.DesignLength(kFurnaceFlameHalfH);
+    PushRect(out, offset, flameX, flameY, flameHalfW, flameHalfH, scale, kPanelButtonIdleColor);
+    float fuelRatio = frame.fuelRatio;
+    if (fuelRatio < 0.0f) fuelRatio = 0.0f;
+    if (fuelRatio > 1.0f) fuelRatio = 1.0f;
+    const float fillHalfH = flameHalfH * fuelRatio;
+    if (fillHalfH > 0.0f) {
+        PushRect(out, offset, flameX, flameY - flameHalfH + fillHalfH, flameHalfW * 0.7f,
+                 fillHalfH, scale, kPanelButtonColor);
+    }
+
+    DrawContainerInventoryGrids(out, offset, geometry, scale, frame.backpack, frame.hotbar,
+                                artUnit);
+    DrawContainerCarried(out, offset, layout, geometry, scale, frame.carried,
+                         frame.carriedVisible, frame.carriedX, frame.carriedY);
+}
+
+/* 储物箱面板: 27 格容器, 背包与快捷栏. */
+void DrawChestPanel(float* out, int32_t& offset, const HudLayout& layout,
+                    const ChestPanelFrame& frame, float scale) {
+    const ContainerPanelGeometry geometry = MakeContainerPanelGeometry(layout);
+    const float artUnit = layout.DesignLength(kHudArtPixel);
+    DrawContainerPanelBase(out, offset, layout, geometry, scale, "CHEST");
+    for (int32_t row = 0; row < 3; ++row) {
+        for (int32_t column = 0; column < 9; ++column) {
+            PushInventorySlot(out, offset, geometry.chestX[column], geometry.chestY[row],
+                              geometry.slotHalf, scale, frame.chest[row * 9 + column], artUnit);
+        }
+    }
+    DrawContainerInventoryGrids(out, offset, geometry, scale, frame.backpack, frame.hotbar,
+                                artUnit);
+    DrawContainerCarried(out, offset, layout, geometry, scale, frame.carried,
+                         frame.carriedVisible, frame.carriedX, frame.carriedY);
+}
+
+}  /* namespace */
 }  /* namespace */
 
 HudRenderer::HudRenderer() = default;
@@ -1182,6 +1438,70 @@ void HudRenderer::Render(const HudFrame& frame) {
                      healthCenterY, fillHalfWidth, fillHalfHeight, scale, kHudBloodColor);
         }
     }
+
+    /*
+     * 饥饿条与体力条: 与血条共用底槽画法, 不额外引入图集精灵.
+     * 原版两行条同宽 (300 设计像素), 饥饿在血条下一行, 体力在快捷栏上方.
+     * 值只画实心段, 空值保留底槽, 与血条语义一致.
+     */
+    auto drawVitalBar = [&](float centerX, float centerY, float halfWidth, float halfHeight,
+                            float ratio, const float fillColor[4]) {
+        const float clamped = ratio < 0.0f ? 0.0f : (ratio > 1.0f ? 1.0f : ratio);
+        /* 先铺一层略大的深色外沿, 底槽压在其上, 形成一像素级别的分离描边. */
+        const float edge = artUnit * kHealthFillInset;
+        PushRect(vertices, offset, centerX, centerY, halfWidth + edge, halfHeight + edge,
+                 scale, kVitalStrokeColor);
+        if (uiAtlasAvailable) {
+            PushUiNineSlice(vertices, offset, centerX, centerY, halfWidth, halfHeight, scale,
+                            gen::UiSpriteOf(gen::UiSprite::HpTrack), kHudBoardColor);
+        } else {
+            PushNineSlice(vertices, offset, centerX, centerY, halfWidth, halfHeight, scale,
+                          gen::UiAssetOf(gen::UiWidget::MiscBarHpTrack), artUnit,
+                          kSolidUv, kHudBoardColor);
+        }
+        if (clamped <= 0.0f) {
+            return;
+        }
+        const float fillHalfWidth = halfWidth * clamped;
+        const float fillHalfHeight = std::fmax(halfHeight - edge, 0.0f);
+        PushRect(vertices, offset, centerX - halfWidth + fillHalfWidth, centerY,
+                 fillHalfWidth, fillHalfHeight, scale, fillColor);
+    };
+    /*
+     * 图标与行距全部按条高换算成设计坐标, 与血条主体同一标尺.
+     * 纵向设计坐标越小越靠下, 因此饥饿条在血条下方要用减号.
+     */
+    /*
+     * 行距按原版 PlayerFoodLevelBar 锚偏移 30 设计像素折算,
+     * 标尺与 kHudArtPixel 同源 (一个素材像素对应一个设计像素).
+     */
+    const float iconHalf = healthHalfHeight * 1.1f;
+    const float iconGap = healthHalfHeight * 0.6f;
+    const float rowGap = layout_.DesignLength(30.0f * kHudArtPixel);
+    const float iconX = healthCenterX - healthHalfWidth - iconGap - iconHalf;
+    /* 血条左端心形近似: 两瓣方块加下方三角, 与填充色同族. */
+    PushRect(vertices, offset, iconX - iconHalf * 0.5f,
+             healthCenterY - iconHalf * 0.35f, iconHalf * 0.55f,
+             iconHalf * 0.45f, scale, kVitalHeartColor);
+    PushRect(vertices, offset, iconX + iconHalf * 0.5f,
+             healthCenterY - iconHalf * 0.35f, iconHalf * 0.55f,
+             iconHalf * 0.45f, scale, kVitalHeartColor);
+    PushTriangle(vertices, offset, iconX, healthCenterY + iconHalf * 0.55f,
+                 iconHalf, iconHalf * 0.9f, scale, kVitalHeartColor);
+    const float hungerY = healthCenterY - rowGap;
+    drawVitalBar(healthCenterX, hungerY, healthHalfWidth,
+                 healthHalfHeight, frame.hunger, kHungerFillColor);
+    /* 饥饿条左端鸡腿近似: 圆头方块加斜向柄, 与填充色同族. */
+    PushRect(vertices, offset, iconX, hungerY - iconHalf * 0.2f,
+             iconHalf * 0.8f, iconHalf * 0.65f, scale, kVitalFoodColor);
+    PushRect(vertices, offset, iconX + iconHalf * 0.75f,
+             hungerY + iconHalf * 0.55f, iconHalf * 0.7f,
+             iconHalf * 0.22f, scale, kVitalFoodColor);
+    /* 与血条严格共用设计坐标系: 横纵都走 DesignX/DesignLength/DesignY,
+     * 避免两套标尺混用把条推离预期位置. */
+    drawVitalBar(layout_.DesignX(kStaminaCenterX), layout_.DesignY(kStaminaCenterY),
+                 layout_.DesignLength(kStaminaHalfWidth),
+                 layout_.DesignLength(kStaminaHalfHeight), frame.stamina, kStaminaFillColor);
 
     /*
      * 浮动摇杆: 环画在控制器回报的锚点上, 也就是这一路的按下点;
@@ -1390,6 +1710,13 @@ void HudRenderer::Render(const HudFrame& frame) {
     if (frame.inventory != nullptr) {
         DrawInventoryPanel(vertices, offset, layout_, *frame.inventory, scale);
     }
+    /* 容器面板与背包面板互斥打开, 画在其后保证压在最上层. */
+    if (frame.furnace != nullptr) {
+        DrawFurnacePanel(vertices, offset, layout_, *frame.furnace, scale);
+    }
+    if (frame.chest != nullptr) {
+        DrawChestPanel(vertices, offset, layout_, *frame.chest, scale);
+    }
 
     if (offset == 0) {
         return;
@@ -1440,7 +1767,6 @@ void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, int3
     }
     const HudLayout layout(width, height);
     const float scale = layout.Scale();
-    const int32_t total = count > 0 ? count : 0;
     if (count == 0) {
         return;
     }
@@ -1636,6 +1962,126 @@ InventoryHit HudRenderer::HitTestInventory(float normalizedX, float normalizedY)
 }
 
 /*
+ * 容器面板命中判定组. 三个方法与背包面板的命中同一套返回结构,
+ * 命中顺序与绘制顺序一致: 关闭按钮最上, 其次三格或 27 格, 再次背包与快捷栏,
+ * 底板兜底吃掉点击避免穿透到世界.
+ */
+bool HudRenderer::HitTestContainerPanel(float normalizedX, float normalizedY) const {
+    if (!layout_.Valid()) {
+        return false;
+    }
+    const ContainerPanelGeometry geometry = MakeContainerPanelGeometry(layout_);
+    const float x = layout_.DesignX(normalizedX);
+    const float y = layout_.DesignY(normalizedY);
+    return InsideBox(x, y, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                     geometry.halfHeight);
+}
+
+InventoryHit HudRenderer::HitTestFurnace(float normalizedX, float normalizedY) const {
+    InventoryHit hit;
+    if (!layout_.Valid()) {
+        return hit;
+    }
+    const ContainerPanelGeometry geometry = MakeContainerPanelGeometry(layout_);
+    const float x = layout_.DesignX(normalizedX);
+    const float y = layout_.DesignY(normalizedY);
+    if (InsideBox(x, y, geometry.closeX, geometry.closeY, geometry.closeHalf,
+                  geometry.closeHalf)) {
+        hit.region = InventoryRegion::kClose;
+        return hit;
+    }
+    if (InsideBox(x, y, geometry.inputX, geometry.inputY, geometry.slotHalf,
+                  geometry.slotHalf)) {
+        hit.region = InventoryRegion::kFurnaceInput;
+        hit.index = 0;
+        return hit;
+    }
+    if (InsideBox(x, y, geometry.fuelX, geometry.fuelY, geometry.slotHalf,
+                  geometry.slotHalf)) {
+        hit.region = InventoryRegion::kFurnaceFuel;
+        hit.index = 0;
+        return hit;
+    }
+    if (InsideBox(x, y, geometry.outputX, geometry.outputY, geometry.outputHalf,
+                  geometry.outputHalf)) {
+        hit.region = InventoryRegion::kFurnaceOutput;
+        hit.index = 0;
+        return hit;
+    }
+    for (int32_t row = 0; row < 4; ++row) {
+        for (int32_t column = 0; column < 9; ++column) {
+            if (InsideBox(x, y, geometry.backpackX[column], geometry.backpackY[row],
+                          geometry.slotHalf, geometry.slotHalf)) {
+                hit.region = InventoryRegion::kBackpack;
+                hit.index = row * 9 + column;
+                return hit;
+            }
+        }
+    }
+    for (int32_t column = 0; column < 9; ++column) {
+        if (InsideBox(x, y, geometry.hotbarX[column], geometry.hotbarY, geometry.slotHalf,
+                      geometry.slotHalf)) {
+            hit.region = InventoryRegion::kHotbar;
+            hit.index = column;
+            return hit;
+        }
+    }
+    if (InsideBox(x, y, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                  geometry.halfHeight)) {
+        hit.region = InventoryRegion::kPanel;
+    }
+    return hit;
+}
+
+InventoryHit HudRenderer::HitTestChest(float normalizedX, float normalizedY) const {
+    InventoryHit hit;
+    if (!layout_.Valid()) {
+        return hit;
+    }
+    const ContainerPanelGeometry geometry = MakeContainerPanelGeometry(layout_);
+    const float x = layout_.DesignX(normalizedX);
+    const float y = layout_.DesignY(normalizedY);
+    if (InsideBox(x, y, geometry.closeX, geometry.closeY, geometry.closeHalf,
+                  geometry.closeHalf)) {
+        hit.region = InventoryRegion::kClose;
+        return hit;
+    }
+    for (int32_t row = 0; row < 3; ++row) {
+        for (int32_t column = 0; column < 9; ++column) {
+            if (InsideBox(x, y, geometry.chestX[column], geometry.chestY[row],
+                          geometry.slotHalf, geometry.slotHalf)) {
+                hit.region = InventoryRegion::kChest;
+                hit.index = row * 9 + column;
+                return hit;
+            }
+        }
+    }
+    for (int32_t row = 0; row < 4; ++row) {
+        for (int32_t column = 0; column < 9; ++column) {
+            if (InsideBox(x, y, geometry.backpackX[column], geometry.backpackY[row],
+                          geometry.slotHalf, geometry.slotHalf)) {
+                hit.region = InventoryRegion::kBackpack;
+                hit.index = row * 9 + column;
+                return hit;
+            }
+        }
+    }
+    for (int32_t column = 0; column < 9; ++column) {
+        if (InsideBox(x, y, geometry.hotbarX[column], geometry.hotbarY, geometry.slotHalf,
+                      geometry.slotHalf)) {
+            hit.region = InventoryRegion::kHotbar;
+            hit.index = column;
+            return hit;
+        }
+    }
+    if (InsideBox(x, y, geometry.centerX, geometry.centerY, geometry.halfWidth,
+                  geometry.halfHeight)) {
+        hit.region = InventoryRegion::kPanel;
+    }
+    return hit;
+}
+
+/*
  * 界面图集随包路径, 由 gen_atlas_ui.py 生成, pack_assets.py 复制进 APK.
  * 裸 RGBA8 数据, 无文件头, 行序与生成器画布一致.
  */
@@ -1714,94 +2160,5 @@ uint32_t LoadUiAtlasFromAssets(AAssetManager* assets) {
 }
 
 
-/* 生物标记: 与远程玩家标记同模式, 绿色区分, 高度略低. */
-void RenderCreatureMarkers(const float* xs, const float* ys, const float* zs, int32_t count,
-                           const float* viewProjection, int32_t width, int32_t height) {
-    if (viewProjection == nullptr || width <= 0 || height <= 0 || count <= 0) {
-        return;
-    }
-    const HudLayout layout(width, height);
-    const float halfWidth = layout.DesignLength(0.003f);
-    const float bottomLift = 0.05f;
-    const float topHeight = 1.4f;
-    static float vertices[kVertexCapacity * kFloatsPerVertex];
-    int32_t offset = 0;
-    for (int32_t i = 0; i < count; ++i) {
-        const float wx = xs[i];
-        const float wy = ys[i];
-        const float wz = zs[i];
-        if (wy < -500.0f) {
-            continue;
-        }
-        const float clipW = viewProjection[3] * wx + viewProjection[7] * wy +
-                            viewProjection[11] * wz + viewProjection[15];
-        if (clipW <= 0.1f) {
-            continue;
-        }
-        const float ndcX = (viewProjection[0] * wx + viewProjection[4] * wy +
-                            viewProjection[8] * wz + viewProjection[12]) / clipW;
-        const float ndcYB = (viewProjection[1] * wx + viewProjection[5] * (wy + bottomLift) +
-                             viewProjection[9] * wz + viewProjection[13]) / clipW;
-        const float ndcYT = (viewProjection[1] * wx + viewProjection[5] * (wy + topHeight) +
-                             viewProjection[9] * wz + viewProjection[13]) / clipW;
-        if (ndcX < -1.2f || ndcX > 1.2f || ndcYB < -1.2f || ndcYT > 1.2f) {
-            continue;
-        }
-        const float sx = (ndcX + 1.0f) * 0.5f * static_cast<float>(width);
-        const float sb = (ndcYB + 1.0f) * 0.5f * static_cast<float>(height);
-        const float st = (ndcYT + 1.0f) * 0.5f * static_cast<float>(height);
-        const float green[4] = {0.3f, 0.85f, 0.3f, 0.6f};
-        const float lw = 4.0f;
-        const float lft = sx - lw * 0.5f;
-        const float rgt = sx + lw * 0.5f;
-        const float quads[4][2] = {
-            {lft, sb}, {rgt, sb}, {rgt, st}, {lft, st},
-        };
-        const int32_t order[6] = {0, 1, 2, 0, 2, 3};
-        for (int32_t v = 0; v < 6 && offset < kVertexCapacity; ++v) {
-            float* target = vertices + static_cast<size_t>(offset) * kFloatsPerVertex;
-            target[0] = quads[order[v]][0] / static_cast<float>(width) * 2.0f - 1.0f;
-            target[1] = quads[order[v]][1] / static_cast<float>(height) * 2.0f - 1.0f;
-            target[2] = -1.0f;
-            target[3] = -1.0f;
-            target[4] = green[0];
-            target[5] = green[1];
-            target[6] = green[2];
-            target[7] = green[3];
-            offset += 1;
-        }
-    }
-    if (offset == 0) {
-        return;
-    }
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glUseProgram(program_shared);
-    GLuint tempVao = 0, tempVbo = 0;
-    glGenVertexArrays(1, &tempVao);
-    glGenBuffers(1, &tempVbo);
-    glBindVertexArray(tempVao);
-    glBindBuffer(GL_ARRAY_BUFFER, tempVbo);
-    glBufferData(GL_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(offset) * kFloatsPerVertex * sizeof(float), vertices,
-                 GL_STREAM_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float), nullptr);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float),
-                          reinterpret_cast<const void*>(2 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float),
-                          reinterpret_cast<const void*>(4 * sizeof(float)));
-    glDrawArrays(GL_TRIANGLES, 0, offset);
-    glBindVertexArray(0);
-    glDeleteBuffers(1, &tempVbo);
-    glDeleteVertexArrays(1, &tempVao);
-    glDisable(GL_BLEND);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-}
 
 }  /* namespace immirror::ui */

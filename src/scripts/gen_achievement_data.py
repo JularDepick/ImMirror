@@ -1,32 +1,8 @@
 #!/usr/bin/env python3
-"""从原版成就表生成客户端 C++ 成就数据与服务端成就目录.
+"""从成就定义表生成客户端头文件与服务端目录.
 
-输入: single-branch/assets/project/csvdef/autogen/achievement.csv (双表头)
-输出:
-  single-branch/client/src/native/progress/generated/achievement_data_gen.h
-  single-branch/client/src/native/progress/generated/daily_task_data_gen.h
-  single-branch/server/src/server/api/v1/achievements/catalog.ts
-
-提取字段: 成就 id, 中文名称, 中文描述, 分组, 原版目标类型, 目标对象 id,
-目标数量与成就点数. 客户端与服务端读取同一份生成结果, 因此两端的成就定义
-不可能漂移; 服务端仓库缺席时只跳过 catalog.ts, 不中断 C++ 头文件的生成.
-
-事件折算: 客户端只观测破坏方块, 放置方块, 行走距离, 采集物品, 在线时长与
-签到六类事件, 原版 37 种目标类型中只有下列几种能落到本地事件上,
-其余目标 (合成, 熔炼, 击败生物, 驯服, NPC 交易等) 不在本客户端表内:
-
-  1  拾取物品 -> 采集物品, 达成量单位为件
-  4  使用物品 -> 放置方块, 客户端没有物品使用系统, 按消耗物品的最接近行为折算
-  6  开采物品 -> 破坏方块, 达成量单位为块
-  10 行走距离 -> 行走距离, 达成量单位为米
-  11 游泳距离 -> 行走距离, 与 10 合并计程
-  37 存活天数 -> 在线时长, 达成量按一天 86400 秒折算
-
-镜币奖励: 原版奖励域为道具, 星星与迷你币, 与镜币不同域, 因此镜币数额由
-成就点数与目标档位换算, 公式见 coin_reward().
-
-每日任务模板: 成就条件模板按事件类型与目标档位给出, 每日按日期键确定性地
-抽取三条, 抽取算法见 daily_task_pick 段注释, 客户端与服务端实现必须一致.
+输入: assets/project/csvdef/autogen/achievement.csv
+输出: native/progress/generated/ 下的两个头文件与服务端 achievements/catalog.ts
 """
 
 import csv
@@ -36,7 +12,6 @@ import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_ROOT = os.path.dirname(SCRIPT_DIR)
-# 成就定义表只在素材仓库维护一份, 与本仓库同级
 ACHIEVEMENT_PATH = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "project",
                                                   "csvdef", "autogen", "achievement.csv"))
 CLIENT_OUT_DIR = os.path.join(SRC_ROOT, "native", "progress", "generated")
@@ -44,20 +19,25 @@ SERVER_OUT_PATH = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "server", 
                                                 "server", "api", "v1", "achievements",
                                                 "catalog.ts"))
 
-# 事件类型取值, 与 native/progress/progress_event.h 的 EventKind 和服务端
-# EVENT_KIND 完全一致, 上报时直接传这些整数
+# 事件类型取值
 EVENT_BREAK = 1
 EVENT_PLACE = 2
 EVENT_WALK = 3
 EVENT_COLLECT = 4
 EVENT_ONLINE = 5
 EVENT_CHECKIN = 6
+EVENT_CRAFT = 7
+EVENT_SMELT = 8
+EVENT_KILL = 9
 
-# 原版目标类型 -> 本地事件类型; 未列出的目标不进入本客户端成就表
+# 目标类型到事件类型的映射
 GOAL_TO_EVENT = {
     1: EVENT_COLLECT,
+    2: EVENT_CRAFT,
     4: EVENT_PLACE,
+    5: EVENT_SMELT,
     6: EVENT_BREAK,
+    7: EVENT_KILL,
     10: EVENT_WALK,
     11: EVENT_WALK,
     37: EVENT_ONLINE,
@@ -66,8 +46,11 @@ GOAL_TO_EVENT = {
 # 原版目标类型说明, 只用于生成日志
 GOAL_NAMES = {
     1: "拾取物品",
+    2: "合成物品",
     4: "使用物品",
+    5: "熔炼物品",
     6: "开采物品",
+    7: "击败生物",
     10: "行走距离",
     11: "游泳距离",
     37: "存活天数",
@@ -105,12 +88,15 @@ DAILY_TEMPLATES = [
     (9, EVENT_ONLINE, 0, 900, 40, "上线报到"),
     (10, EVENT_ONLINE, 0, 1800, 80, "冒险常客"),
     (11, EVENT_CHECKIN, 0, 1, 30, "每日签到"),
+    (12, EVENT_CRAFT, 0, 10, 40, "巧手匠心"),
+    (13, EVENT_SMELT, 0, 5, 40, "炉火纯青"),
+    (14, EVENT_KILL, 0, 3, 40, "初试锋芒"),
 ]
 
 # 每日任务条数, 与 native/progress/daily_task_board.h 的 kTaskCount 一致
 DAILY_TASK_COUNT = 3
 
-NOTICE = "由 scripts/gen_achievement_data.py 从 assets 仓库的 autogen/achievement.csv 生成, 请勿手改"
+NOTICE = "生成文件, 请勿手改"
 
 
 def emit(message):
@@ -232,17 +218,6 @@ def render_achievement_header(entries):
         "",
         "/*",
         " * " + NOTICE + ".",
-        " * 数据源: single-branch/assets/project/csvdef/autogen/achievement.csv",
-        " * 只收录能落到本地六类事件的成就: 原版目标 1 拾取物品 -> 采集物品,",
-        " * 4 使用物品 -> 放置方块, 6 开采物品 -> 破坏方块, 10 与 11 行走/游泳 -> 行走距离,",
-        " * 37 存活天数 -> 在线时长 (按一天 86400 秒折算). 其余目标类型 (合成, 熔炼,",
-        " * 击败生物, 驯服, NPC 交易等) 不在本客户端表内.",
-        " * category 取值 1 新手, 2 主线, 3 生产, 4 战斗, 5 其他, 6 极限.",
-        " * target 是达成所需的事件累计量, 单位随 eventKind 变化: 破坏与放置为块,",
-        " * 采集为件, 行走为米, 在线时长为秒, 签名为次数.",
-        " * sourceGoalId 是原版目标对象 id, 与原版物品 id 同域, 与客户端方块 id 不同域,",
-        " * 因此本地事件的对象筛选暂时只按 0 (不限) 处理, 该字段留给后续的映射表.",
-        " * coinReward 是完成时下发的镜币, 由成就点数与达成量档位换算, 公式见生成脚本.",
         " */",
         "namespace immirror::progress::gen {",
         "",
@@ -289,9 +264,7 @@ def render_daily_header(templates):
         "",
         "/*",
         " * " + NOTICE + ".",
-        " * 每日任务模板: 每条模板是一种成就条件 (事件类型 + 达成量 + 镜币档位),",
-        " * 每天按日期键确定性地抽取 %d 条, 抽取算法见 daily_task_board.cpp." % DAILY_TASK_COUNT,
-        " * 服务端的 catalog.ts 使用同一份模板表与同一套抽取算法, 两端结果必须一致.",
+        " * 每日任务模板 %d 条." % DAILY_TASK_COUNT,
         " */",
         "namespace immirror::progress::gen {",
         "",
@@ -330,19 +303,17 @@ def render_server_catalog(entries, templates):
         EVENT_COLLECT: "COLLECT_ITEM",
         EVENT_ONLINE: "ONLINE_SECONDS",
         EVENT_CHECKIN: "CHECKIN",
+        EVENT_CRAFT: "CRAFT_ITEM",
+        EVENT_SMELT: "SMELT_ITEM",
+        EVENT_KILL: "KILL_CREATURE",
     }
     lines = [
         "/**",
-        " * ImMirror 我之镜界 服务端 作者: JularDepick",
-        " * 成就与每日任务定义",
+        " * 作者: JularDepick",
         " * " + NOTICE + ".",
-        " * 数据源与服务端共用: single-branch/assets/project/csvdef/autogen/achievement.csv",
-        " * 事件类型取值与客户端 native/progress/progress_event.h 的 EventKind 一致,",
-        " * 客户端上报的 kind 字段直接对应这里的 EVENT_KIND.",
-        " * 只收录能落到六类事件的成就, 折算规则见生成脚本的模块说明.",
         " */",
         "",
-        "/* 事件类型: 与客户端 EventKind 同值, 上报时作为 kind 字段传输. */",
+        "/* 事件类型. */",
         "export const EVENT_KIND = {",
         "  BREAK_BLOCK: 1,",
         "  PLACE_BLOCK: 2,",
@@ -350,6 +321,9 @@ def render_server_catalog(entries, templates):
         "  COLLECT_ITEM: 4,",
         "  ONLINE_SECONDS: 5,",
         "  CHECKIN: 6,",
+        "  CRAFT_ITEM: 7,",
+        "  SMELT_ITEM: 8,",
+        "  KILL_CREATURE: 9,",
         "} as const;",
         "",
         "export type EventKind = (typeof EVENT_KIND)[keyof typeof EVENT_KIND];",
@@ -362,6 +336,9 @@ def render_server_catalog(entries, templates):
         "  [EVENT_KIND.COLLECT_ITEM]: \"件\",",
         "  [EVENT_KIND.ONLINE_SECONDS]: \"秒\",",
         "  [EVENT_KIND.CHECKIN]: \"次\",",
+        "  [EVENT_KIND.CRAFT_ITEM]: \"件\",",
+        "  [EVENT_KIND.SMELT_ITEM]: \"件\",",
+        "  [EVENT_KIND.KILL_CREATURE]: \"只\",",
         "};",
         "",
         "/* 分组: 1 新手, 2 主线, 3 生产, 4 战斗, 5 其他, 6 极限. */",
@@ -408,7 +385,7 @@ def render_server_catalog(entries, templates):
         "  ACHIEVEMENT_CATALOG.map((item) => [item.id, item]),",
         ");",
         "",
-        "/* 每日任务模板: 与客户端 daily_task_data_gen.h 同表同序. */",
+        "/* 每日任务模板. */",
         "export const DAILY_TASK_TEMPLATES: readonly DailyTaskTemplate[] = [",
     ]
     for item in templates:
@@ -418,7 +395,7 @@ def render_server_catalog(entries, templates):
     lines += [
         "];",
         "",
-        "/* 每日任务条数, 与客户端 DailyTaskBoard::kTaskCount 一致. */",
+        "/* 每日任务条数. */",
         "export const DAILY_TASK_COUNT = %d;" % DAILY_TASK_COUNT,
         "",
     ]
@@ -455,8 +432,20 @@ def main():
     for entry in entries:
         by_kind[entry["kind"]] = by_kind.get(entry["kind"], 0) + 1
     emit("成就条目 %d 条" % len(entries))
+    # by_kind 的键是事件类型值, 与原版目标值不同域, 取名走事件常量表而不是 GOAL_NAMES
+    event_names = {
+        EVENT_BREAK: "破坏方块",
+        EVENT_PLACE: "放置方块",
+        EVENT_WALK: "行走距离",
+        EVENT_COLLECT: "采集物品",
+        EVENT_ONLINE: "在线时长",
+        EVENT_CHECKIN: "签到",
+        EVENT_CRAFT: "合成物品",
+        EVENT_SMELT: "熔炼物品",
+        EVENT_KILL: "击败生物",
+    }
     for kind in sorted(by_kind):
-        emit("  %-8s %3d 条" % (GOAL_NAMES.get(kind, str(kind)), by_kind[kind]))
+        emit("  %-8s %3d 条" % (event_names.get(kind, str(kind)), by_kind[kind]))
     emit("每日任务模板 %d 条, 每日抽取 %d 条" % (len(DAILY_TEMPLATES), DAILY_TASK_COUNT))
     total_coin = sum(entry["coin_reward"] for entry in entries)
     emit("全部成就镜币合计 %d" % total_coin)

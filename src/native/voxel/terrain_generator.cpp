@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "voxel/block_registry.h"
+#include "voxel/generated/biome_data_gen.h"
 #include "voxel/chunk_column.h"
 #include "voxel/voxel_noise.h"
 
@@ -37,12 +38,15 @@ constexpr float kRidgeFreq = 0.0175f;
 
 /* 树木候选格边长, 每格最多一棵树, 是否成树由格哈希决定. */
 constexpr int32_t kTreeCell = 6;
-/* 树冠水平半径, 决定需要参与本区块的候选格范围. */
+/* 树冠水平半径, 决定需要参与本区块的候选格范围. 候选格外扩按两档中较大者计算. */
 constexpr int32_t kTreeCanopyRadius = 2;
+/* 标准树 (treeshape=1): 干高 4 到 6, 树冠底两层半径 2. */
 constexpr int32_t kTreeMinTrunk = 4;
 constexpr int32_t kTreeTrunkVariants = 3;
-/* 每格成树概率, 以 256 分之一为单位, 数值越大树越密. */
-constexpr uint32_t kTreeChance = 90u;
+/* 矮树 (treeshape=0): 干高 3 到 4, 树冠底两层半径 1. */
+constexpr int32_t kTreeShortMinTrunk = 3;
+constexpr int32_t kTreeShortTrunkVariants = 2;
+constexpr int32_t kTreeShortCanopyRadius = 1;
 
 /* 向下取整的整数除法, 保证负坐标附近与正坐标行为对称. */
 int32_t FloorDiv(int32_t value, int32_t divisor) {
@@ -98,6 +102,31 @@ int32_t TerrainGenerator::SurfaceHeight(uint32_t seed, int32_t worldX, int32_t w
     return ClampInt(RoundToInt(height), kMinHeight, kMaxHeight);
 }
 
+/*
+ * 群系选取: 温度与湿度两个低频值噪声, 频率取地形大陆层的四分之一,
+ * 一片群系区域约上百格宽; 两值各折算到 0-100 后按生成表的四元区间
+ * 顺序查带, 兜底带是森林. 海洋不占带, 由地表高度另行折算表层.
+ */
+int32_t TerrainGenerator::BiomeAt(uint32_t seed, int32_t worldX, int32_t worldZ) const {
+    const float x = static_cast<float>(worldX);
+    const float z = static_cast<float>(worldZ);
+    constexpr float kBiomeFreq = 0.0030f;
+    const float heat = (detail::ValueNoise(seed ^ 0x243f6a88u, x * kBiomeFreq, z * kBiomeFreq) + 1.0f) * 50.0f;
+    const float humid = (detail::ValueNoise(seed ^ 0x13198a2eu, x * kBiomeFreq, z * kBiomeFreq) + 1.0f) * 50.0f;
+    const int32_t heatLevel = ClampInt(RoundToInt(heat), 0, 100);
+    const int32_t humidLevel = ClampInt(RoundToInt(humid), 0, 100);
+    for (int32_t index = 0; index < kBiomeBandCount; ++index) {
+        const BiomeBand& band = kBiomeBands[index];
+        if (heatLevel >= static_cast<int32_t>(band.heatMin) &&
+            heatLevel < static_cast<int32_t>(band.heatMax) &&
+            humidLevel >= static_cast<int32_t>(band.humidMin) &&
+            humidLevel < static_cast<int32_t>(band.humidMax)) {
+            return index;
+        }
+    }
+    return kBiomeBandCount - 1;
+}
+
 void TerrainGenerator::FillTerrain(ChunkCoord coord, ChunkColumn& column, uint32_t seed) const {
     column.Fill(block::Air);
     const int32_t baseX = coord.x * kChunkSizeX;
@@ -108,8 +137,17 @@ void TerrainGenerator::FillTerrain(ChunkCoord coord, ChunkColumn& column, uint32
             const int32_t worldX = baseX + localX;
             const int32_t height = SurfaceHeight(seed, worldX, worldZ);
             const bool shore = height <= kBeachTop;
-            const BlockId surfaceBlock = shore ? block::Sand : block::Grass;
-            const BlockId soilBlock = shore ? block::Sand : block::Dirt;
+            /*
+             * 表层与填充块按群系带折算: 原版 TopBlock/FillBlock 的客户端近似,
+             * 沙滩与水域保持沙与水的旧语义; 草颜色本期不做顶点色.
+             */
+            const int32_t biome = BiomeAt(seed, worldX, worldZ);
+            const BiomeBand& band = kBiomeBands[biome];
+            const BlockId surfaceBlock = shore
+                                             ? block::Sand
+                                             : static_cast<BlockId>(band.topBlock);
+            const BlockId soilBlock = shore ? block::Sand
+                                            : static_cast<BlockId>(band.fillBlock);
             for (int32_t y = 0; y <= height; ++y) {
                 BlockId id = block::Stone;
                 if (y == 0) {
@@ -129,10 +167,20 @@ void TerrainGenerator::FillTerrain(ChunkCoord coord, ChunkColumn& column, uint32
     }
 }
 
-void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_t seed) const {
+void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_t seed,
+                                  uint8_t treeShape) const {
     const int32_t baseX = coord.x * kChunkSizeX;
     const int32_t baseZ = coord.z * kChunkSizeZ;
-    /* 本区块外扩树冠半径后覆盖的候选格范围, 保证边界树冠两侧一致. */
+    /* 树形档位折算: 0 矮树, 其余按标准树. 档内参数成组取用. */
+    const bool shortTree = treeShape == 0;
+    const int32_t canopyRadius = shortTree ? kTreeShortCanopyRadius : kTreeCanopyRadius;
+    const int32_t minTrunk = shortTree ? kTreeShortMinTrunk : kTreeMinTrunk;
+    const int32_t trunkVariants = shortTree ? kTreeShortTrunkVariants : kTreeTrunkVariants;
+    /*
+     * 本区块外扩树冠半径后覆盖的候选格范围, 保证边界树冠两侧一致.
+     * 外扩按两档中较大的标准树冠计算: 矮树冠必然落在标准范围内,
+     * 邻列即使树形档不同, 各自生成的树也互不缺格.
+     */
     const int32_t cellXMin = FloorDiv(baseX - kTreeCanopyRadius, kTreeCell);
     const int32_t cellXMax = FloorDiv(baseX + kChunkSizeX + kTreeCanopyRadius - 1, kTreeCell);
     const int32_t cellZMin = FloorDiv(baseZ - kTreeCanopyRadius, kTreeCell);
@@ -140,8 +188,16 @@ void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_
 
     for (int32_t cellZ = cellZMin; cellZ <= cellZMax; ++cellZ) {
         for (int32_t cellX = cellXMin; cellX <= cellXMax; ++cellX) {
+            /*
+             * 树密度按候选格中心的群系带折算: 生成表 treeChance 0-255
+             * 与成树哈希同口径, 沙漠带为 0 自然无树.
+             */
+            const int32_t cellCenterX = cellX * kTreeCell + kTreeCell / 2;
+            const int32_t cellCenterZ = cellZ * kTreeCell + kTreeCell / 2;
+            const int32_t biome = BiomeAt(seed, cellCenterX, cellCenterZ);
+            const uint32_t treeChance = kBiomeBands[biome].treeChance;
             const uint32_t hash = detail::HashLattice(seed ^ 0x51ed270bu, cellX, cellZ);
-            if ((hash & 0xffu) >= kTreeChance) {
+            if ((hash & 0xffu) >= treeChance) {
                 continue;
             }
             const int32_t trunkWorldX =
@@ -154,7 +210,7 @@ void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_
                 continue;
             }
             const int32_t trunkHeight =
-                kTreeMinTrunk + static_cast<int32_t>((hash >> 19) % static_cast<uint32_t>(kTreeTrunkVariants));
+                minTrunk + static_cast<int32_t>((hash >> 19) % static_cast<uint32_t>(trunkVariants));
             const int32_t localTrunkX = trunkWorldX - baseX;
             const int32_t localTrunkZ = trunkWorldZ - baseZ;
 
@@ -162,12 +218,12 @@ void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_
                 PutTreeBlock(column, localTrunkX, groundY + y, localTrunkZ, block::Wood, true);
             }
 
-            /* 树冠自下而上三层, 顶层收成一个方块. */
+            /* 树冠自下而上三层, 顶层收成一个方块; 矮树各层半径取矮树档. */
             const int32_t topY = groundY + trunkHeight;
             for (int32_t dy = -1; dy <= 2; ++dy) {
-                int32_t radius = 2;
+                int32_t radius = canopyRadius;
                 if (dy == 1) {
-                    radius = 1;
+                    radius = canopyRadius > 0 ? canopyRadius - 1 : 0;
                 } else if (dy >= 2) {
                     radius = 0;
                 }
@@ -175,7 +231,7 @@ void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_
                     for (int32_t dz = -radius; dz <= radius; ++dz) {
                         const int32_t absX = dx < 0 ? -dx : dx;
                         const int32_t absZ = dz < 0 ? -dz : dz;
-                        /* 削掉 5x5 两层的四角, 树冠边缘更圆. */
+                        /* 削掉底层的四角, 树冠边缘更圆; 半径 1 的矮树没有可削的角. */
                         if (radius == 2 && absX == 2 && absZ == 2) {
                             continue;
                         }
@@ -187,9 +243,10 @@ void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_
     }
 }
 
-void TerrainGenerator::Generate(ChunkCoord coord, ChunkColumn& column, uint32_t seed) const {
+void TerrainGenerator::Generate(ChunkCoord coord, ChunkColumn& column, uint32_t seed,
+                                uint8_t treeShape) const {
     FillTerrain(coord, column, seed);
-    PlantTrees(coord, column, seed);
+    PlantTrees(coord, column, seed, treeShape);
 }
 
 }  /* namespace immirror::voxel */

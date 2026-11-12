@@ -126,6 +126,42 @@ void ProgressHub::OnItemPicked(uint32_t clientBlockId, int32_t count) {
     DispatchLocked(StatKind::kItemPick, static_cast<int32_t>(clientBlockId), count);
 }
 
+void ProgressHub::OnCraft(int32_t amount) {
+    if (amount <= 0) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!ready_) {
+        return;
+    }
+    EnsureDayLocked();
+    DispatchLocked(StatKind::kCraft, -1, amount);
+}
+
+void ProgressHub::OnSmelt(int32_t amount) {
+    if (amount <= 0) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!ready_) {
+        return;
+    }
+    EnsureDayLocked();
+    DispatchLocked(StatKind::kSmelt, -1, amount);
+}
+
+void ProgressHub::OnKill(int32_t amount) {
+    if (amount <= 0) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!ready_) {
+        return;
+    }
+    EnsureDayLocked();
+    DispatchLocked(StatKind::kKill, -1, amount);
+}
+
 void ProgressHub::OnCheckin() {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!ready_) {

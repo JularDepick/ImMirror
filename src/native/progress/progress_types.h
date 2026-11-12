@@ -18,7 +18,10 @@ enum class StatKind : int32_t {
     kOnlineMinutes = 4,
     kCheckin = 5,
     kOnlineDays = 6,
-    kCount = 7,
+    kCraft = 7,
+    kSmelt = 8,
+    kKill = 9,
+    kCount = 10,
 };
 
 constexpr int32_t kStatCount = static_cast<int32_t>(StatKind::kCount);
@@ -54,10 +57,7 @@ std::string LocalDateKey();
 /* 从 Unix 秒换算自然日键, 供测试与跨日换算使用. */
 std::string LocalDateKeyOf(int64_t unixSeconds);
 
-/*
- * 32 位 FNV-1a 散列. 每日任务的档位选择在客户端与服务端各实现一份,
- * 算法必须一致, 因此这里给出唯一的参考实现与常量.
- */
+/* 32 位 FNV-1a 散列. */
 uint32_t Fnv1a32(const std::string& text);
 
 }  /* namespace immirror::progress */

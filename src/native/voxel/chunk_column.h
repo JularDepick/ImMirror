@@ -12,6 +12,8 @@ namespace immirror::voxel {
  * 16x256x16 的列式区块. 内部按 y 分层存放, 同一层的 16x16 数据连续,
  * 网格构建自下而上顺序扫描时访存局部性最好.
  * 所有越界访问都是安全的: 读返回空气, 写被忽略.
+ * 光场缓冲由 LightField 全量重算维护, 改动方块数据的调用方
+ * 必须随后重算本列光场, 网格构建经采样接口读取光照.
  */
 class ChunkColumn {
 public:
@@ -26,6 +28,34 @@ public:
 
     std::vector<BlockId>& Blocks() { return blocks_; }
     const std::vector<BlockId>& Blocks() const { return blocks_; }
+
+    /*
+     * 天光采样: 列内返回存储值; 水平越界与高于世界顶按地表全亮回落 15,
+     * 低于世界底返回 0; 避免列边界出现黑缝.
+     */
+    uint8_t SkyLightAt(int32_t x, int32_t y, int32_t z) const {
+        if (!InRange(x, y, z)) {
+            return (y >= kWorldHeight || (y >= 0 && !InRange(x, 0, z))) ? kMaxLightLevel : 0;
+        }
+        return skyLight_[Index(x, y, z)];
+    }
+
+    /*
+     * 方块光采样: 列内返回存储值; 越界一律回落 0, 光源光不虚构到列外.
+     */
+    uint8_t BlockLightAt(int32_t x, int32_t y, int32_t z) const {
+        if (!InRange(x, y, z)) {
+            return 0;
+        }
+        return blockLight_[Index(x, y, z)];
+    }
+
+    /*
+     * 光场数据直写通道: 仅供 LightField 重算时整块替换使用,
+     * 常规读取走 SkyLightAt 与 BlockLightAt 采样接口.
+     */
+    std::vector<uint8_t>& SkyLightData() { return skyLight_; }
+    std::vector<uint8_t>& BlockLightData() { return blockLight_; }
 
     /* 最高非空气方块的 y, 整列为空时返回 -1; 网格构建据此截断扫描高度. */
     int32_t TopBlockY() const { return topBlockY_; }
@@ -51,6 +81,9 @@ private:
     void RefreshTopBlockY();
 
     std::vector<BlockId> blocks_;
+    /* 天光与方块光两通道, 布局与 blocks_ 一致, 由 LightField 维护. */
+    std::vector<uint8_t> skyLight_;
+    std::vector<uint8_t> blockLight_;
     int32_t topBlockY_ = -1;
     bool dirty_ = true;
 };

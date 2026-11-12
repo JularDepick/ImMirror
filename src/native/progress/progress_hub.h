@@ -50,6 +50,15 @@ public:
     /* 采集物品: 推进拾取类成就, 采集计数与采集类每日任务. */
     void OnItemPicked(uint32_t clientBlockId, int32_t count);
 
+    /* 合成物品: 推进合成类成就与每日任务, amount 为本次产出的件数. */
+    void OnCraft(int32_t amount);
+
+    /* 熔炼物品: 推进熔炼类成就与每日任务, amount 为本次产出的件数. */
+    void OnSmelt(int32_t amount);
+
+    /* 击败生物: 推进击败类成就与每日任务, amount 为本次击杀数. */
+    void OnKill(int32_t amount);
+
     /* 签到成功: 推进签到类每日任务. */
     void OnCheckin();
 

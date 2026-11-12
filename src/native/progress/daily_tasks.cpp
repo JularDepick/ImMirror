@@ -11,12 +11,20 @@ namespace {
  * 的 DAILY_TASK_CATALOG 保持一致, 改动时两侧同时改.
  */
 constexpr DailyTaskDef kDailyCatalog[kDailyCatalogCount] = {
-    {StatKind::kBlockBreak, 30, 60, "破坏 30 个方块"},
-    {StatKind::kBlockPlace, 20, 60, "放置 20 个方块"},
-    {StatKind::kItemPick, 20, 60, "采集 20 个物品"},
-    {StatKind::kWalkDistance, 200, 80, "行走 200 米"},
-    {StatKind::kOnlineMinutes, 10, 80, "在线 10 分钟"},
-    {StatKind::kCheckin, 1, 100, "完成当日签到"},
+    {StatKind::kBlockBreak, 20, 40, "开山取石"},
+    {StatKind::kBlockBreak, 60, 80, "挖掘达人"},
+    {StatKind::kBlockPlace, 10, 40, "开工建造"},
+    {StatKind::kBlockPlace, 30, 80, "施工队长"},
+    {StatKind::kItemPick, 10, 40, "采集新手"},
+    {StatKind::kItemPick, 30, 80, "采集行家"},
+    {StatKind::kWalkDistance, 100, 30, "四处走走"},
+    {StatKind::kWalkDistance, 300, 60, "长途跋涉"},
+    {StatKind::kOnlineMinutes, 15, 40, "上线报到"},
+    {StatKind::kOnlineMinutes, 30, 80, "冒险常客"},
+    {StatKind::kCheckin, 1, 30, "每日签到"},
+    {StatKind::kCraft, 10, 40, "巧手匠心"},
+    {StatKind::kSmelt, 5, 40, "炉火纯青"},
+    {StatKind::kKill, 3, 40, "初试锋芒"},
 };
 
 /* 线性同余发生器的常量, 与服务端保持一致. */

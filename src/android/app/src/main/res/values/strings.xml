@@ -16,6 +16,70 @@
     <string name="launcher_logout_confirm">再按一次退出登录</string>
     <string name="launcher_session_invalid">登录状态已失效, 请重新登录</string>
     <string name="launcher_settings">设置</string>
+    <string name="launcher_worlds">进入世界</string>
+    <string name="launcher_world_new">新建世界</string>
+    <string name="launcher_world_enter">进入</string>
+    <string name="launcher_world_empty">还没有世界, 先新建一个吧</string>
+    <string name="launcher_world_name_hint">世界名</string>
+    <string name="launcher_world_default_name">新世界</string>
+    <string name="launcher_world_last_format">最后游玩: %1$s</string>
+    <string name="launcher_world_last_never">从未游玩</string>
+    <!-- 大厅主界面 -->
+    <string name="lobby_uid_format">UID %1$s</string>
+    <string name="lobby_balance_loading">镜币 读取中...</string>
+    <string name="lobby_balance_format">镜币 %1$d</string>
+    <string name="lobby_balance_failed">镜币 读取失败</string>
+    <string name="lobby_settings">设置</string>
+    <string name="lobby_single">单人游戏</string>
+    <string name="lobby_multiplayer">联机大厅</string>
+    <string name="lobby_mini_works">迷你工坊</string>
+    <string name="lobby_buddy">我的背包</string>
+    <!-- 中部卡片副标题: 一大两小结构下每张卡的第二行说明 -->
+    <string name="lobby_single_subtitle">本地地图 · 独自开局</string>
+    <string name="lobby_multiplayer_subtitle">局域网联机 · 好友同玩</string>
+    <string name="lobby_mini_works_subtitle">搭建与分享地图</string>
+    <string name="lobby_buddy_subtitle">随身物品与资源</string>
+    <string name="lobby_player_center">玩家中心</string>
+    <string name="lobby_logout">退出登录</string>
+    <string name="lobby_logout_confirm">再按一次退出登录</string>
+    <string name="lobby_notice_text">提示: 世界列表与多存档已可用.</string>
+    <string name="lobby_notice_close">关闭</string>
+    <string name="lobby_avatar_fallback">镜</string>
+    <!-- 世界列表页 -->
+    <string name="world_list_title">我的世界</string>
+    <string name="world_list_refresh">刷新</string>
+    <string name="world_list_empty">还没有世界, 点下面新建一个</string>
+    <string name="world_list_delete">删除</string>
+    <string name="world_list_delete_confirm">确认删除</string>
+    <string name="world_list_meta_format">%1$s | 种子 %2$d</string>
+
+    <string name="lobby_title">联机大厅</string>
+    <string name="lobby_back">返回</string>
+    <string name="lobby_refresh">刷新</string>
+    <string name="lobby_create_room">创建房间</string>
+    <string name="lobby_room_empty">局域网内没有找到可加入的房间\n确认主机已开局且在同一网络后刷新</string>
+    <string name="lobby_room_scanning">正在扫描局域网...</string>
+    <string name="lobby_room_host_format">房主: %1$s</string>
+    <string name="lobby_room_world_format">世界: %1$s</string>
+    <string name="lobby_room_players_format">%1$d/%2$d 人</string>
+    <string name="lobby_room_ping_format">%1$d ms</string>
+    <string name="lobby_room_joinable">可加入</string>
+    <string name="lobby_room_full">已满员</string>
+    <string name="lobby_create_name_hint">房间名</string>
+    <string name="lobby_create_default_name">我的房间</string>
+    <string name="lobby_server_unavailable">房间服未部署, 暂时无法创建房间</string>
+    <string name="lobby_scan_failed">局域网扫描不可用</string>
+
+    <string name="playercenter_title">玩家中心</string>
+    <string name="playercenter_uid_format">UID %1$s</string>
+    <string name="playercenter_email_format">邮箱 %1$s</string>
+    <string name="playercenter_balance_format">镜币 %1$d</string>
+    <string name="playercenter_balance_loading">镜币 读取中...</string>
+    <string name="playercenter_balance_failed">镜币 读取失败</string>
+    <string name="playercenter_inventory">背包</string>
+    <string name="playercenter_progress">成就</string>
+    <string name="playercenter_wallet">钱包</string>
+    <string name="playercenter_login_required">未登录, 无法读取玩家资料</string>
 
     <string name="settings_title">设置</string>
     <string name="settings_subtitle">改动即时生效, 返回时写入本地</string>

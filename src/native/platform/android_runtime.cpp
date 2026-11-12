@@ -16,6 +16,8 @@
 #include "jni/engine_host.h"
 #include "platform/app_bridge.h"
 #include "render/render_device.h"
+#include "settings/settings.h"
+#include "settings/settings_tuning.h"
 
 namespace immirror::game {
 class GameShell;
@@ -115,6 +117,10 @@ private:
     std::unique_ptr<render::Device> device_;
     std::unique_ptr<game::GameShell> shell_;
     core::FrameStats stats_{kReportWindowFrames};
+
+    /* 渲染前同步限帧设置: 缓存上次下发的目标帧率, 数值变化才进设备. */
+    void SyncFrameLimit();
+    int32_t appliedFrameLimit_ = -1;
     ProfileEntries profile_;
     std::string abi_;
     std::string grade_;
@@ -182,7 +188,9 @@ void Runtime::Render(double frameDeltaSeconds) {
         return;
     }
     LogDeviceProfileOnce();
-    if (!device_->RenderFrame(elapsedSeconds_)) {
+    SyncFrameLimit();
+    /* 传帧间隔而不是累计时长: 帧门控按帧间隔记账, 累计时长会让欠账算错. */
+    if (!device_->RenderFrame(frameDeltaSeconds)) {
         return;
     }
     stats_.AddFrame(frameDeltaSeconds);
@@ -195,6 +203,17 @@ void Runtime::Render(double frameDeltaSeconds) {
             report.averageFps, report.averageMs, report.maxMs, static_cast<long long>(report.frames),
             device_->Width(), device_->Height(), device_->DriverName(),
             abi_.empty() ? "unknown" : abi_.c_str(), grade_.empty() ? "unknown" : grade_.c_str());
+}
+
+void Runtime::SyncFrameLimit() {
+    const int32_t setting = settings::Settings::Instance().Get(settings::Key::kLimiteFps);
+    const int32_t target = setting != 0 ? settings::tuning::kFrameLimitOnFps
+                                        : settings::tuning::kFrameLimitOffFps;
+    if (target == appliedFrameLimit_) {
+        return;
+    }
+    appliedFrameLimit_ = target;
+    device_->SetFrameLimit(target);
 }
 
 void Runtime::CheckStartGate() {

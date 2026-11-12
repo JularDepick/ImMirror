@@ -21,6 +21,12 @@ UI_DIRS = ("button", "panel", "dialog", "tab", "slot", "icon", "misc")
 # 物品图标源目录: 素材管线的明文工程树 (PNG), 未打包时物品图标回落占位色块
 ITEM_ICON_SOURCE = "../../../assets/project/items"
 
+# 大厅素材目录: 原版大厅模板图与直接引用图, 含 bigtex/ 与 extra/ 两个子目录
+LOBBY_DIR = os.path.join(ASSETS_ROOT, "ui", "lobby")
+
+# HUD 状态条素材目录: 从原版操作图集导出的 RGBA 精灵
+HUD_DIR = os.path.join(ASSETS_ROOT, "ui", "hud")
+
 
 def collect_sound_entries():
     """音效清单: 全部已打包的 ogg, 覆盖原版 blockdef 里的挖掘/放置/行走音取值."""
@@ -60,6 +66,38 @@ def collect_ui_atlas_entries():
     return entries
 
 
+def collect_lobby_entries():
+    """大厅素材: 模板图与补充图, 按 assets/ui/lobby 下的目录结构整体复制."""
+    entries = []
+    if not os.path.isdir(LOBBY_DIR):
+        return entries
+    for directory, subdirs, files in os.walk(LOBBY_DIR):
+        subdirs.sort()
+        for name in sorted(files):
+            if not name.lower().endswith(".png"):
+                continue
+            source = os.path.join(directory, name)
+            relative = os.path.relpath(source, LOBBY_DIR).replace(os.sep, "/")
+            entries.append((source, "ui/lobby/" + relative))
+    return entries
+
+
+def collect_hud_entries():
+    """HUD 素材: 原版状态条精灵, 按 assets/ui/hud 下的目录结构整体复制."""
+    entries = []
+    if not os.path.isdir(HUD_DIR):
+        return entries
+    for directory, subdirs, files in os.walk(HUD_DIR):
+        subdirs.sort()
+        for name in sorted(files):
+            if not name.lower().endswith(".png"):
+                continue
+            source = os.path.join(directory, name)
+            relative = os.path.relpath(source, HUD_DIR).replace(os.sep, "/")
+            entries.append((source, "ui/hud/" + relative))
+    return entries
+
+
 def collect_item_entries():
     """物品图标: 源在素材管线仓库, 保持文件名与物品表 icon 字段一致."""
     entries = []
@@ -77,7 +115,8 @@ def main() -> int:
     copied = 0
     missing = []
     entries = (collect_sound_entries() + collect_ui_entries()
-               + collect_ui_atlas_entries() + collect_item_entries())
+               + collect_ui_atlas_entries() + collect_lobby_entries()
+               + collect_hud_entries() + collect_item_entries())
     for source, target_rel in entries:
         target = os.path.join(TARGET_ROOT, target_rel)
         if not os.path.exists(source):

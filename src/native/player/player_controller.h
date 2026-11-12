@@ -2,7 +2,9 @@
 
 #include "core/vec3.h"
 #include "player/input_tuning.h"
+#include "player/survival_tuning.h"
 #include "platform/input_state.h"
+#include "settings/settings_tuning.h"
 #include "voxel/block_registry.h"
 #include "voxel/voxel_types.h"
 
@@ -32,6 +34,17 @@ enum class PointerRole {
     kNone = 0,
     kStick = 1,
     kLook = 2,
+};
+
+/*
+ * 相机模式. 与设置键 view 的三个档位一一对应 (原版 setting.lua 1666 至 1724 行):
+ * 1 主视角为第一人称, 2 背视角为过肩第三人称 (相机在玩家身后跟随),
+ * 3 正视角为面向玩家的第三人称 (相机在玩家前方回望).
+ */
+enum class CameraMode {
+    kFirstPerson = 0,
+    kThirdBack = 1,
+    kThirdFront = 2,
 };
 
 /*
@@ -65,8 +78,18 @@ public:
      */
     void Update(double dt, platform::InputSnapshot& input, const world::World& world);
 
-    /* 列主序 4x4 视图矩阵. */
+    /* 列主序 4x4 视图矩阵. 第三人称时视点按当前预设后撤与上抬. */
     void GetViewMatrix(float* out16) const;
+
+    /*
+     * 当前相机视点世界坐标: 第一人称即眼位, 第三人称是后撤回收后的轨点,
+     * 总装的镜头摇晃以它为基准, 与视图矩阵共用同一视点.
+     */
+    core::Vec3 CameraPosition() const;
+
+    /* 切换相机模式, 与设置键 view 的档位直接对应. */
+    void SetCameraMode(CameraMode mode) { cameraMode_ = mode; }
+    CameraMode GetCameraMode() const { return cameraMode_; }
 
     /* 返回脚底中心的世界坐标, 相机视点在此之上 kEyeHeight 处. */
     core::Vec3 Position() const;
@@ -89,6 +112,24 @@ public:
     float Health() const { return health_; }
     float HealthRatio() const;
     bool Alive() const { return health_ > 0.0f; }
+
+    /*
+     * 生存属性查询, 供 HUD 下一波接入: 饥饿与体力各取绝对值与 0 到 1 比例,
+     * 冲刺与潜行状态供界面高亮与音效分支使用.
+     */
+    float Hunger() const { return hunger_; }
+    float HungerRatio() const;
+    float Stamina() const { return stamina_; }
+    float StaminaRatio() const;
+    bool IsSprinting() const { return sprinting_; }
+    bool IsSneaking() const { return sneaking_; }
+
+    /*
+     * 体力消耗的公共入口: 挖掘与跳跃在控制器内部结算, 攻击结算在总装侧,
+     * 因此对总装开放这一个窄接口; 体力到饥饿的折算在内部统一完成.
+     */
+    void ConsumeStaminaPublic(float amount) { ConsumeStamina(amount); }
+
     /* 受击反馈剩余秒数, 0 表示没有受击; 供总装叠加镜头摇晃. */
     float HurtSeconds() const { return hurtSeconds_; }
     /* 是否处于死亡等待中. */
@@ -210,11 +251,38 @@ private:
     /* 推进受击反馈与免伤窗口的计时. */
     void TickHurt(float seconds);
 
+    /*
+     * 生存属性结算: 消耗体力并按食物倍率折算成饥饿推进,
+     * 体力不足时消耗被忽略 (动作照常执行, 只是不扣资源以外的惩罚本期不做).
+     */
+    /*
+     * 消耗体力. advanceHunger 为真时按独立系数推进饥饿 (主动动作),
+     * 受伤这类被动损失只扣体力, 不消耗长期饱食度.
+     */
+    void ConsumeStamina(float amount, bool advanceHunger = true);
+
+    /*
+     * 逐帧生存结算: 体力恢复, 冲刺与移动的持续消耗, 饥饿的回血与饿死.
+     * 在 Update 末尾统一调用, 血量增减直接改 health_, 不走 ApplyDamage,
+     * 避免与受击免伤窗口互锁.
+     */
+    void TickSurvival(float seconds);
+
+    /* 判定脚部或身体是否浸在水中 (游泳倍率与游泳消耗的共用判定). */
+    bool InWater(const world::World& world) const;
+
     /* 回到出生点并清空运动状态. */
     void Respawn();
 
     core::Vec3 EyePosition() const;
     core::Vec3 ForwardDirection() const;
+
+    /*
+     * 第三人称视点: 从眼位沿视线反方向后撤预设距离并上抬预设高度,
+     * 路径逐 0.1 米步进回收, 终点落在实心方块内时缩短到不碰撞.
+     * 正视角的视线反向由 ForwardDirection 的取反封装处理.
+     */
+    core::Vec3 ThirdPersonEyePosition() const;
 
     /*
      * 一次挖掘会话: 目标格, 方块 id, 已累计秒数与总时长.
@@ -243,6 +311,12 @@ private:
     float hurtSeconds_ = 0.0f;
     float hurtCooldown_ = 0.0f;
     float deathSeconds_ = 0.0f;
+
+    /* 生存属性: 饥饿与体力, 冲刺与潜行状态. 初始值取 survival_tuning. */
+    float hunger_ = survival::kHungerInitial;
+    float stamina_ = survival::kStaminaInitial;
+    bool sprinting_ = false;
+    bool sneaking_ = false;   /* 本期无潜行按键, 恒为 false, 字段先留 */
     bool spawnPending_ = false;   /* 出生列尚无区块数据, 等待地形生成后落位 */
     float pendingSeconds_ = 0.0f; /* 已等待落位的秒数, 用于超时保护 */
 
@@ -265,6 +339,9 @@ private:
     LookTuning look_;
     StickTuning stick_;
     MineSession mine_;
+    CameraMode cameraMode_ = CameraMode::kFirstPerson;
+    /* 最近一次 Update 的世界, 相机后撤的碰撞回收在渲染期按同帧数据判定. */
+    const world::World* worldRef_ = nullptr;
 };
 
 }  /* namespace immirror::player */

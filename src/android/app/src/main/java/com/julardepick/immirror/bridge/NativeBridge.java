@@ -60,12 +60,15 @@ public final class NativeBridge {
         nativeStop();
     }
 
-    /* 把音效池与音效句柄推给原生侧; 音效播放属于事件触发的低频调用. */
-    public static void attachAudio(SoundPool pool, int[] soundIds) {
+    /*
+     * 把音效池与音效句柄推给原生侧; 音效播放属于事件触发的低频调用.
+     * soundIds 按族顺序平铺多变体句柄, familyCounts 给出各族变体数.
+     */
+    public static void attachAudio(SoundPool pool, int[] soundIds, int[] familyCounts) {
         if (!ensureLoaded()) {
             return;
         }
-        nativeAttachAudio(pool, soundIds);
+        nativeAttachAudioEx(pool, soundIds, familyCounts);
     }
 
     /* Activity 销毁前解除引用. */
@@ -154,6 +157,33 @@ public final class NativeBridge {
         nativeSelectWorld(projectName == null ? "" : projectName);
     }
 
+    /*
+     * 多世界列表: 扫描内部存储 worlds 目录下的全部存档,
+     * 返回 JSON 数组 (file,name,lastPlayed,seed,playerX,playerZ), 空目录返回 [].
+     */
+    public static String listWorlds(String directory) {
+        if (!ensureLoaded()) {
+            return "[]";
+        }
+        return nativeListWorlds(directory == null ? "" : directory);
+    }
+
+    /* 选择游玩的世界: 载入已有存档或按名字新建; 与试玩模式的 selectWorld 互不影响. */
+    public static void chooseWorld(String worldName) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeChooseWorld(worldName == null ? "" : worldName);
+    }
+
+    /* 查询游戏内是否为白天, 供环境音按日相切换曲目. */
+    public static boolean getDayPhase() {
+        if (!ensureLoaded()) {
+            return true;
+        }
+        return nativeGetDayPhase();
+    }
+
     /* 取玩家姿态 JSON; 供联机 presence 轮询使用. */
     public static String takePlayerPose() {
         if (!ensureLoaded()) {
@@ -170,13 +200,14 @@ public final class NativeBridge {
         nativeApplyRemotePlayers(json);
     }
 
-    /* 环境音与音乐开关 (由设置层联动). */
+    /*
+     * 环境音与音乐开关: 环境音与音乐由 Java 侧 AmbientAudioManager 直接管理,
+     * 原生侧的联动接口留待场景接线时启用, 当前为预留空实现.
+     */
     public static void setAmbientEnabled(boolean enabled) {
-        // Java 侧 AmbientAudioManager 直接管理, 此处为原生侧联动接口预留
     }
 
     public static void setMusicEnabled(boolean enabled) {
-        // 同上
     }
 
     private static native String nativeTakePlayerPose();
@@ -187,13 +218,19 @@ public final class NativeBridge {
 
     private static native void nativeSelectWorld(String projectName);
 
+    private static native String nativeListWorlds(String directory);
+
+    private static native void nativeChooseWorld(String worldName);
+
+    private static native boolean nativeGetDayPhase();
+
     private static native void nativeOnDeviceProfile(String payload);
 
     private static native void nativeStart();
 
     private static native void nativeStop();
 
-    private static native void nativeAttachAudio(SoundPool pool, int[] soundIds);
+    private static native void nativeAttachAudioEx(SoundPool pool, int[] soundIds, int[] familyCounts);
 
     private static native void nativeDetachAudio();
 

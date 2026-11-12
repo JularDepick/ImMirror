@@ -1,4 +1,4 @@
-# 编辑器命令层的单元测试, 只在主机工具链开启时参与构建:
+# 主机单元测试 (编辑器命令层与体素光照), 只在主机工具链开启时参与构建:
 #   cmake -S src/native/tests -B native/temp/editor-tests-build
 #   cmake --build native/temp/editor-tests-build
 #   ctest --test-dir native/temp/editor-tests-build
@@ -22,6 +22,7 @@ get_filename_component(IMMIRROR_NATIVE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." ABS
 add_executable(immirror-editor-tests
     test_main.cpp
     test_editor_command.cpp
+    test_light_field.cpp
     host_log_stub.cpp
     ../editor/editor_command.cpp
     ../editor/project_format.cpp
@@ -35,6 +36,7 @@ add_executable(immirror-editor-tests
     ../voxel/chunk_column.cpp
     ../voxel/terrain_generator.cpp
     ../voxel/chunk_mesher.cpp
+    ../voxel/light_field.cpp
     ../world/world.cpp
 )
 

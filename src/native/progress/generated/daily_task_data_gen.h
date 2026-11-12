@@ -3,10 +3,8 @@
 #include <cstdint>
 
 /*
- * 由 scripts/gen_achievement_data.py 从 assets 仓库的 autogen/achievement.csv 生成, 请勿手改.
- * 每日任务模板: 每条模板是一种成就条件 (事件类型 + 达成量 + 镜币档位),
- * 每天按日期键确定性地抽取 3 条, 抽取算法见 daily_task_board.cpp.
- * 服务端的 catalog.ts 使用同一份模板表与同一套抽取算法, 两端结果必须一致.
+ * 生成文件, 请勿手改.
+ * 每日任务模板 3 条.
  */
 namespace immirror::progress::gen {
 
@@ -20,7 +18,7 @@ struct DailyTaskTemplate {
     const char* name;   /* 任务名, UTF-8 编码 */
 };
 
-constexpr int32_t kDailyTaskTemplateCount = 11;
+constexpr int32_t kDailyTaskTemplateCount = 14;
 
 constexpr DailyTaskTemplate kDailyTaskTemplateData[kDailyTaskTemplateCount] = {
     {1u, 1, 0, 20, 40, "开山取石"},
@@ -34,6 +32,9 @@ constexpr DailyTaskTemplate kDailyTaskTemplateData[kDailyTaskTemplateCount] = {
     {9u, 5, 0, 900, 40, "上线报到"},
     {10u, 5, 0, 1800, 80, "冒险常客"},
     {11u, 6, 0, 1, 30, "每日签到"},
+    {12u, 7, 0, 10, 40, "巧手匠心"},
+    {13u, 8, 0, 5, 40, "炉火纯青"},
+    {14u, 9, 0, 3, 40, "初试锋芒"},
 };
 
 }  // namespace immirror::progress::gen

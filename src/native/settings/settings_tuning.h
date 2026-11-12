@@ -67,11 +67,57 @@ constexpr float kAutoJumpProbeDistance = 0.6f;
 constexpr double kAutoJumpIntervalSeconds = 0.30;
 
 /*
- * 镜头摇晃. 原版由受击等事件触发, 现阶段没有伤害事件,
- * 先用随移动强度变化的轻微摆动占位.
+ * 镜头摇晃. 受击抖动已对齐原版语义 (受击事件触发, 快速衰减),
+ * 随移动强度变化的轻微摆动仍为占位.
  */
 constexpr float kCameraShakeAmplitude = 0.03f;
 constexpr float kCameraShakeFrequency = 1.6f;
 constexpr float kCameraShakeMotionFloor = 0.05f;
+
+/*
+ * 第三人称预设折算. 原版 camera.lua 60 至 127 行的"四套预设 8 参数"
+ * 是自定义视角编辑器的选项索引组合 (背视角 1 平视角 2 俯视角 3 与自定义),
+ * 不是米制距离; 真实的距离与高度在 PlayerControl::updateGameCamera 的
+ * native 代码里, 逆向工程未还原出数值. 这里按视角语义折算成米制:
+ *   背视角 (view=2): 过肩跟随, 后撤 4.0 米, 眼位上抬 1.2 米,
+ *     俯仰偏置 12 度向下 (约肩后高位俯看, 俯视角度取常用第三人称手感);
+ *   正视角 (view=3): 相机在玩家前方回望, 后撤与高度与背视角一致.
+ * 视野角 fov 固定 75 度: 原版 camera.lua 417 至 437 行的 fov 滑杆
+ * 属于自定义视角编辑器, 设置键 view 没有 fov 档位, 本期不做滑杆.
+ */
+constexpr float kThirdPersonDistance = 4.0f;
+constexpr float kThirdPersonHeight = 1.2f;
+/* 俯仰偏置, 弧度, 相机从高处向下俯看的角度. */
+constexpr float kThirdPersonPitchOffset = 12.0f * 3.14159265358979f / 180.0f;
+
+/*
+ * 限帧档位对应的帧率. 原版 setting.lua 的 MOBILE_LIMIT_ON 为 30,
+ * MOBILE_LIMIT_OFF 为 50: limiteFps=1 锁 30 帧, 0 走 50 帧上限.
+ * 实际的帧门控在渲染设备内完成, 这里只做档位到帧率的换算.
+ */
+constexpr int32_t kFrameLimitOnFps = 30;
+constexpr int32_t kFrameLimitOffFps = 50;
+
+/*
+ * 雾效密度档位. fog 取值 0 关闭, 1 淡雾, 2 浓雾;
+ * 密度按指数平方衰减模型折算, 淡雾约在百米外起雾, 浓雾起始距离减半.
+ * 雾色由渲染层内定为与清屏底色一致的天空色, 不经设置下发.
+ */
+constexpr float kFogDensityLevels[] = {0.0f, 0.006f, 0.012f};
+constexpr int32_t kFogDensityLevelCount = 3;
+
+/*
+ * 亮度滑杆折算. screenbright 取值 0 到 100, 线性映射到 0.7 到 1.3 的
+ * 输出颜色系数: 0 对应 0.7, 50 对应 1.0, 100 对应 1.3.
+ */
+constexpr float kBrightnessAtZero = 0.7f;
+constexpr float kBrightnessSpan = 0.6f;
+constexpr float kBrightnessFull = 100.0f;
+
+/*
+ * 水面反射与实时光影. 渲染层当前没有反射与阴影管线, reflect 与 shadow
+ * 两键先只保存取值, 等待后端管线扩展后接入; 消费面审计时不要把
+ * 这两键计为缺失接线, 它们是已知的等待后端项.
+ */
 
 }  /* namespace immirror::settings::tuning */

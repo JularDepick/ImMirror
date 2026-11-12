@@ -6,7 +6,9 @@
 #include "core/log.h"
 #include "core/vec3.h"
 #include "player/mining_tuning.h"
+#include "player/survival_tuning.h"
 #include "voxel/block_registry.h"
+#include "voxel/voxel_types.h"
 #include "world/world.h"
 
 namespace immirror::player {
@@ -147,6 +149,8 @@ bool PlayerController::LiftOutOfSolid(const world::World& world) {
 }
 
 void PlayerController::Update(double dt, platform::InputSnapshot& input, const world::World& world) {
+    /* 缓存世界引用, 相机后撤碰撞回收在渲染期使用, 与 Update 同帧数据一致. */
+    worldRef_ = &world;
     /* 未显式出生时按当前水平坐标补一次出生, 避免玩家自由落体掉出世界. */
     if (!spawned_) {
         Spawn(world, position_.x, position_.z);
@@ -220,17 +224,25 @@ void PlayerController::Update(double dt, platform::InputSnapshot& input, const w
     if (position_.y < 0.0f || position_.y > static_cast<float>(voxel::kWorldHeight)) {
         Respawn();
     }
+
+    /* 生存结算放在帧末: 体力恢复, 饥饿推进, 回血与饿死统一在此生效. */
+    TickSurvival(static_cast<float>(clamped));
 }
 
 void PlayerController::GetViewMatrix(float* out16) const {
     if (out16 == nullptr) {
         return;
     }
-    const core::Vec3 forward = ForwardDirection();
+    /* 第三人称正视角的相机回望玩家, 视线方向取反, 俯仰与偏航共用玩家视角. */
+    const bool mirrored = cameraMode_ == CameraMode::kThirdFront;
+    core::Vec3 forward = ForwardDirection();
+    if (mirrored) {
+        forward = core::Vec3{-forward.x, -forward.y, -forward.z};
+    }
     /* 右向只取水平分量, 与俯仰角无关, 保证翻滚角恒为零. */
     const core::Vec3 right{std::cos(yaw_), 0.0f, -std::sin(yaw_)};
     const core::Vec3 up = core::Cross(right, forward);
-    const core::Vec3 eye = EyePosition();
+    const core::Vec3 eye = CameraPosition();
 
     /* 列主序: 前三列是相机基向量, 第四列是视点平移. */
     out16[0] = right.x;
@@ -362,6 +374,8 @@ PlayerController::MineTick PlayerController::AdvanceMining(double dt, world::Wor
     tick.destroyed = world.SetBlock(mine_.block.x, mine_.block.y, mine_.block.z, 0);
     if (tick.destroyed) {
         tick.digSound = true;
+        /* 破坏按次扣体力 (原版 tili_action_destroyblock). */
+        ConsumeStamina(survival::kStaminaDestroyBlock);
     }
     CancelMining();
     return tick;
@@ -580,17 +594,68 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     if (wishLength > 1.0f) {
         wish = wish * (1.0f / wishLength);
     }
-    velocity_.x = wish.x * kMoveSpeed;
-    velocity_.z = wish.z * kMoveSpeed;
+
+    /*
+     * 移动状态与倍率折算 (原版 const.lua 第 17 到 22 行的倍率组):
+     * 冲刺按摇杆前向量阈值简化触发, 后退取 y 分量方向, 游泳按浸水判定,
+     * 蓄力取挖掘中. 潜行本期无按键恒不触发. 倍率相乘后钳制到合法区间.
+     */
+    const bool swimming = InWater(world);
+    const bool moving = wishLength > 0.001f;
+    const bool movingForward = stickValueY_ > 0.0f;
+    const bool movingBackward = stickValueY_ < 0.0f;
+    sprinting_ = moving && movingForward && stickValueY_ >= survival::kSprintStickThreshold &&
+                 stamina_ >= survival::kStaminaActionFloor && !swimming && !sneaking_;
+    float ratio = 1.0f;
+    if (sprinting_) {
+        ratio *= survival::kMoveSprintRatio;
+    }
+    if (movingBackward) {
+        ratio *= survival::kMoveBackwardRatio;
+    }
+    if (swimming) {
+        ratio *= survival::kMoveSwimRatio;
+    }
+    if (mine_.active) {
+        ratio *= survival::kMoveChargeRatio;
+    }
+    if (sneaking_) {
+        ratio *= survival::kMoveSneakRatio;
+    }
+    if (ratio < survival::kMoveRatioMin) {
+        ratio = survival::kMoveRatioMin;
+    }
+    if (ratio > survival::kMoveRatioMax) {
+        ratio = survival::kMoveRatioMax;
+    }
+    velocity_.x = wish.x * kMoveSpeed * ratio;
+    velocity_.z = wish.z * kMoveSpeed * ratio;
 
     if (jumpRequested_ && onGround_) {
-        velocity_.y = kJumpSpeed;
-        onGround_ = false;
-        /* 跳跃真正生效的时刻打一条日志, 便于区分按钮, 双击与键盘三条来源. */
-        IM_LOGI(kTag, "jump applied vy=%.2f feet=%.2f", static_cast<double>(velocity_.y),
-                static_cast<double>(position_.y));
+        /* 体力低于下限禁止起跳; 冲刺中起跳按快跑跳扣更多体力 (原版分组语义). */
+        if (stamina_ >= survival::kStaminaActionFloor) {
+            ConsumeStamina(sprinting_ ? survival::kStaminaSprintJump : survival::kStaminaJump);
+            velocity_.y = kJumpSpeed;
+            onGround_ = false;
+            /* 跳跃真正生效的时刻打一条日志, 便于区分按钮, 双击与键盘三条来源. */
+            IM_LOGI(kTag, "jump applied vy=%.2f feet=%.2f", static_cast<double>(velocity_.y),
+                    static_cast<double>(position_.y));
+        } else {
+            IM_LOGD(kTag, "jump rejected, stamina %.1f below floor", static_cast<double>(stamina_));
+        }
     }
     jumpRequested_ = false;
+
+    /* 移动的持续体力消耗: 冲刺按快跑, 游泳按游泳, 普通移动按走路; 静止不耗. */
+    if (moving) {
+        if (swimming) {
+            ConsumeStamina(survival::kStaminaSwimPerSecond * seconds);
+        } else if (sprinting_) {
+            ConsumeStamina(survival::kStaminaSprintPerSecond * seconds);
+        } else {
+            ConsumeStamina(survival::kStaminaWalkPerSecond * seconds);
+        }
+    }
 
     velocity_.y += kGravity * seconds;
     if (velocity_.y < kFallSpeedLimit) {
@@ -820,6 +885,8 @@ void PlayerController::ApplyDamage(float amount) {
     health_ -= amount;
     hurtSeconds_ = kHurtSeconds;
     hurtCooldown_ = kHurtCooldown;
+    /* 受伤按次扣体力 (原版 tili_action_hurt). */
+    ConsumeStamina(survival::kStaminaHurt, false);
     if (health_ > 0.0f) {
         IM_LOGI(kTag, "player hurt amount=%.1f health=%.1f", static_cast<double>(amount),
                 static_cast<double>(health_));
@@ -847,6 +914,89 @@ void PlayerController::TickHurt(float seconds) {
     }
 }
 
+void PlayerController::ConsumeStamina(float amount, bool advanceHunger) {
+    if (!(amount > 0.0f) || stamina_ <= 0.0f) {
+        return;
+    }
+    stamina_ -= amount;
+    if (stamina_ < 0.0f) {
+        stamina_ = 0.0f;
+    }
+    /*
+     * 主动动作按独立系数推进饥饿; 受伤等被动损失只扣体力.
+     * food_beilv 是食物数值放大倍率, 不是这里的除数.
+     */
+    if (advanceHunger) {
+        hunger_ -= amount * survival::kStaminaToHungerRatio;
+    }
+    if (hunger_ < 0.0f) {
+        hunger_ = 0.0f;
+    }
+}
+
+bool PlayerController::InWater(const world::World& world) const {
+    /*
+     * 浸水判定: 取身体中段 (脚底上方半人高) 所在格, 该格或脚部格为水即视为在水中.
+     * 中段而非眼位, 半人高以上入水才开始游泳倍率, 涉水时保持正常速度.
+     */
+    const int32_t bodyX = FloorToInt(position_.x);
+    const int32_t bodyZ = FloorToInt(position_.z);
+    const int32_t midY = FloorToInt(position_.y + kHeight * 0.5f);
+    const int32_t footY = FloorToInt(position_.y + 0.1f);
+    const voxel::BlockId mid = world.GetBlock(bodyX, midY, bodyZ);
+    const voxel::BlockId foot = world.GetBlock(bodyX, footY, bodyZ);
+    return mid == voxel::block::Water || foot == voxel::block::Water;
+}
+
+void PlayerController::TickSurvival(float seconds) {
+    if (seconds <= 0.0f) {
+        return;
+    }
+    /* 死亡等待期不再结算, 重生时统一回满. */
+    if (health_ <= 0.0f) {
+        return;
+    }
+
+    /*
+     * 体力恢复: 静止 (摇杆量近零) 恢复更快 (原版未给出, 自定注明).
+     * 冲刺帧内已扣消耗, 这里只做恢复侧.
+     */
+    const float stickAmount = std::sqrt(stickValueX_ * stickValueX_ + stickValueY_ * stickValueY_);
+    const bool still = stickAmount < 0.01f;
+    stamina_ += still ? survival::kStaminaRegenStillPerSecond * seconds
+                      : survival::kStaminaRegenPerSecond * seconds;
+    if (stamina_ > survival::kStaminaMax) {
+        stamina_ = survival::kStaminaMax;
+    }
+
+    /* 饥饿驱动的血量节奏: 归零饿死, 高位吃饱回血; 直接改 health_, 不触发免伤窗口. */
+    if (hunger_ <= 0.0f) {
+        health_ -= survival::kStarveDamagePerSecond * survival::kMaxHealth * seconds;
+        if (health_ <= 0.0f) {
+            health_ = 0.0f;
+            deathSeconds_ = kDeathSeconds;
+            CancelMining();
+            IM_LOGW(kTag, "player starved to death");
+            return;
+        }
+    } else if (hunger_ >= survival::kWellFedHungerFloor) {
+        health_ += survival::kWellFedHealPerSecond * survival::kMaxHealth * seconds;
+        if (health_ > survival::kMaxHealth) {
+            health_ = survival::kMaxHealth;
+        }
+    }
+}
+
+float PlayerController::HungerRatio() const {
+    const float ratio = hunger_ / survival::kHungerMax;
+    return ratio > 1.0f ? 1.0f : ratio;
+}
+
+float PlayerController::StaminaRatio() const {
+    const float ratio = stamina_ / survival::kStaminaMax;
+    return ratio > 1.0f ? 1.0f : ratio;
+}
+
 void PlayerController::Respawn() {
     position_ = spawnPosition_;
     velocity_ = core::Vec3{};
@@ -857,6 +1007,10 @@ void PlayerController::Respawn() {
     hurtSeconds_ = 0.0f;
     hurtCooldown_ = 0.0f;
     deathSeconds_ = 0.0f;
+    /* 生存属性一并回满: 饿死或摔死重生不应继承饿死进度. */
+    hunger_ = survival::kHungerInitial;
+    stamina_ = survival::kStaminaInitial;
+    sprinting_ = false;
     /* 回到出生点后旧目标格已经无意义, 顺带清掉挖掘进度. */
     CancelMining();
     stickPointerId_ = -1;
@@ -867,6 +1021,50 @@ void PlayerController::Respawn() {
 
 core::Vec3 PlayerController::EyePosition() const {
     return core::Vec3{position_.x, position_.y + kEyeHeight, position_.z};
+}
+
+core::Vec3 PlayerController::CameraPosition() const {
+    if (cameraMode_ == CameraMode::kFirstPerson) {
+        return EyePosition();
+    }
+    return ThirdPersonEyePosition();
+}
+
+/*
+ * 第三人称视点折算: 距离与高度取 settings_tuning.h 的预设常量, 数值依据见
+ * 该文件注释. 相机从眼位沿视线反方向后撤, 同时按预设上抬, 并把俯仰偏置
+ * 折成随距离线性增长的额外抬升 (每后退一米抬升 tan(偏置角)), 相机整体
+ * 从高处俯看玩家. 正视角的相机放在玩家前方, 后撤方向取视线正向.
+ * 轨点逐 0.1 米步进做简化碰撞回收: 检测点落在实心方块内则退回上一步.
+ */
+core::Vec3 PlayerController::ThirdPersonEyePosition() const {
+    const float distance = settings::tuning::kThirdPersonDistance;
+    const float height = settings::tuning::kThirdPersonHeight;
+    core::Vec3 backward = ForwardDirection();
+    /* 背视角在玩家身后 (视线反向), 正视角在玩家前方 (视线正向). */
+    if (cameraMode_ == CameraMode::kThirdBack) {
+        backward = core::Vec3{-backward.x, -backward.y, -backward.z};
+    }
+    /* 俯仰偏置折算成随距离增长的抬升率, 与水平后撤量相乘. */
+    const float liftPerMeter = std::tan(settings::tuning::kThirdPersonPitchOffset);
+    const core::Vec3 eye = EyePosition();
+
+    /* 逐 0.1 米步进回收: 从满距离试起, 命中实心方块则缩短到上一个可行点. */
+    constexpr float kStep = 0.1f;
+    const int32_t steps = static_cast<int32_t>(distance / kStep + 0.5f);
+    core::Vec3 chosen = eye;
+    for (int32_t i = steps; i >= 1; --i) {
+        const float travelled = static_cast<float>(i) * kStep;
+        const core::Vec3 candidate{eye.x + backward.x * travelled,
+                                   eye.y + height + backward.y * travelled + liftPerMeter * travelled,
+                                   eye.z + backward.z * travelled};
+        /* 检测点复用玩家碰撞盒的实心判定, 与移动碰撞同一口径. */
+        if (!CollidesAt(*worldRef_, candidate)) {
+            chosen = candidate;
+            break;
+        }
+    }
+    return chosen;
 }
 
 core::Vec3 PlayerController::ForwardDirection() const {
@@ -888,6 +1086,11 @@ void PlayerController::SetPose(const core::Vec3& position, float yaw, float pitc
     hurtSeconds_ = 0.0f;
     hurtCooldown_ = 0.0f;
     deathSeconds_ = 0.0f;
+    /* 存档当前不保存生存属性, 读档统一回满, 与血量口径一致. */
+    hunger_ = survival::kHungerInitial;
+    stamina_ = survival::kStaminaInitial;
+    sprinting_ = false;
+    sneaking_ = false;
 }
 
 }  /* namespace immirror::player */

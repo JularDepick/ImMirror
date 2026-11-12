@@ -32,6 +32,13 @@ public:
     /* 列主序 4x4 视图投影矩阵与相机世界坐标. */
     void SetViewProjection(const float* matrix16, const float* cameraPosition3);
 
+    /*
+     * 设置距离雾密度, 输出亮度与天光混合因子, 每帧由场景组装方折算后下发.
+     * density 为 0 表示关闭雾; brightness 为输出颜色的线性系数;
+     * skyFactor 夜 0 昼 1, 渲染端按 mix(0.27, 1.0, factor) 压顶点明暗.
+     */
+    void SetAtmosphere(float fogDensity, float brightness, float skyFactor);
+
     /* 按世界版本增量上传脏区块的网格. */
     void Sync(const world::World& world);
 
@@ -51,6 +58,14 @@ private:
     int32_t uniformViewProjection_ = -1;
     int32_t uniformAtlas_ = -1;
     int32_t uniformChunkOrigin_ = -1;
+    int32_t uniformCameraPosition_ = -1;
+    int32_t uniformFogDensity_ = -1;
+    int32_t uniformFogColor_ = -1;
+    int32_t uniformBrightness_ = -1;
+    int32_t uniformSkyFactor_ = -1;
+    float fogDensity_ = 0.0f;
+    float brightness_ = 1.0f;
+    float skyFactor_ = 1.0f;
     const world::World* syncedWorld_ = nullptr;
 
     bool ready_ = false;
