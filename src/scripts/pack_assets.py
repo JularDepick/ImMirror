@@ -40,16 +40,20 @@ SOUND_SOURCE = "../../../assets/project/sounds"
 SOUND_PREFIX = {
     "blockd": "dig",
     "blocks": "place",
-    "phy": "walk",
     "env": "env",
+    # phy 是机械与载具音效 (刹车, 碰撞, 引擎), 不是脚步声;
+    # 脚步声来自客户端自制目录, 前缀已经在文件名里, 这里不能再改.
 }
 
 
 def collect_sound_entries():
-    """音效清单: 把工程树的分类子目录扁平化成 assets/sounds/<前缀>_<名称>.ogg.
+    """音效清单: 工程树的分类子目录扁平化, 再叠加客户端自制音效.
 
     播放侧按扁平文件名拼路径, 因此这里统一改名; 带二级子目录的分类
     (例如界面音的 button 分组) 把子目录名并入文件名, 不丢分类信息.
+
+    客户端仓库的 assets/sounds 里另有一批自制音效 (脚步声与部分挖掘放置音),
+    工程树里没有对应来源, 必须一并收进来并覆盖同名项, 否则这些族会整体失声.
     """
     entries = []
     source_root = os.path.normpath(os.path.join(SCRIPT_DIR, SOUND_SOURCE))
@@ -68,6 +72,18 @@ def collect_sound_entries():
             parts = [prefix] + sub_dirs + [stem]
             target = "sounds/" + "_".join(parts) + ".ogg"
             entries.append((os.path.join(base, name), target))
+
+    # 客户端自制音效放在前面, 同名的后写覆盖先写, 保证自制版本优先.
+    local_root = os.path.join(ASSETS_ROOT, "sounds")
+    local = []
+    if os.path.isdir(local_root):
+        for name in sorted(os.listdir(local_root)):
+            if name.lower().endswith(".ogg"):
+                local.append((os.path.join(local_root, name), "sounds/" + name))
+    if local:
+        local_targets = {target for _, target in local}
+        entries = [pair for pair in entries if pair[1] not in local_targets]
+        entries = local + entries
     return entries
 
 

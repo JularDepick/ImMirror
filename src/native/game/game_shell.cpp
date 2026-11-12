@@ -953,13 +953,22 @@ void GameShell::ApplyRemotePlayers(const std::string& json) {
         if (uidPos == std::string::npos) {
             continue;
         }
-        uids[count] = obj.substr(uidPos + 6, obj.find(',', uidPos) - uidPos - 6);
+        /* uid 的值是带引号的字符串, 取到下一个引号为止. */
+        const size_t uidValueStart = obj.find('"', uidPos + 6);
+        const size_t uidValueEnd = uidValueStart == std::string::npos
+                                       ? std::string::npos
+                                       : obj.find('"', uidValueStart + 1);
+        if (uidValueStart == std::string::npos || uidValueEnd == std::string::npos) {
+            continue;
+        }
+        uids[count] = obj.substr(uidValueStart + 1, uidValueEnd - uidValueStart - 1);
         const auto readFloat = [&](const char* key) -> float {
             const size_t pos = obj.find(key);
             if (pos == std::string::npos) {
                 return 0.0f;
             }
-            const size_t valStart = pos + std::strlen(key) + 2;
+            /* key 自带引号与冒号, 值紧跟在 key 之后, 不能再多跳字符. */
+            const size_t valStart = pos + std::strlen(key);
             return std::strtof(obj.c_str() + valStart, nullptr);
         };
         xs[count] = readFloat("\"x\":");
@@ -1951,6 +1960,14 @@ void GameShell::RenderScene() {
 
     if (remotePlayers_.Count() > 0) {
         const auto& players = remotePlayers_.Players();
+        /* 远端玩家进入渲染队列时打一条节流日志, 联机可见性靠它确认. */
+        static double loggedRemote = -100.0;
+        if (elapsedSeconds_ - loggedRemote > 5.0) {
+            loggedRemote = elapsedSeconds_;
+            IM_LOGI(kTag, "remote markers count=%d first=%.1f,%.1f,%.1f", static_cast<int32_t>(players.size()),
+                    static_cast<double>(players[0].x), static_cast<double>(players[0].y),
+                    static_cast<double>(players[0].z));
+        }
         const int32_t rpCount = static_cast<int32_t>(players.size());
         std::vector<float> rxs(rpCount), rys(rpCount), rzs(rpCount);
         for (int32_t i = 0; i < rpCount; ++i) {

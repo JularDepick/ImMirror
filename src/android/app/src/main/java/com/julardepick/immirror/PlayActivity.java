@@ -177,8 +177,10 @@ public final class PlayActivity extends NativeActivity {
     private void startPresenceReporting() {
         presenceSession = SessionStore.load(this);
         if (presenceSession == null || !presenceSession.isUsable()) {
+            Log.w(TAG, "presence not started, session unavailable");
             return;
         }
+        Log.i(TAG, "presence started, interval=" + PRESENCE_INTERVAL_MS);
         if (presenceApi == null) {
             presenceApi = new PresenceApi(this);
         }
