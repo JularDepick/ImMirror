@@ -23,7 +23,8 @@ constexpr const char* kTag = "ImMirrorCreature";
  */
 constexpr int32_t kFloatsPerVertex = 6;
 /* 单个立方体 12 个三角形. 每生物最多 6 个立方体, 生物上限取管理器容量 32. */
-constexpr int32_t kBoxesPerCreature = 6;
+/* 每个生物最多 8 个盒子: 躯干, 头, 四肢各一, 再加一对眼睛. */
+constexpr int32_t kBoxesPerCreature = 8;
 constexpr int32_t kTrianglesPerBox = 12;
 constexpr int32_t kVertsPerBox = kTrianglesPerBox * 3;
 constexpr int32_t kMaxCreatures = 32;
@@ -195,6 +196,52 @@ void PushBox(DefVisual& visual, float cx, float cy, float cz,
 }
 
 /*
+ * 独立着色的盒子: 眼睛这类部件不能跟随身体底色, 单独给色.
+ * 与 PushBox 分开是为了让身体配色与部件配色各走各的路径, 互不干扰.
+ */
+void PushColoredBox(DefVisual& visual, float cx, float cy, float cz, float hx, float hy, float hz,
+                    float red, float green, float blue) {
+    if (visual.boxCount >= kBoxesPerCreature) {
+        return;
+    }
+    BoxInstance& box = visual.boxes[visual.boxCount];
+    box.centerX = cx;
+    box.centerY = cy;
+    box.centerZ = cz;
+    box.halfX = hx;
+    box.halfY = hy;
+    box.halfZ = hz;
+    box.red = red;
+    box.green = green;
+    box.blue = blue;
+    visual.boxCount += 1;
+}
+
+/*
+ * 一对眼睛: 贴在头部前表面 (-Z 为前向) 的左右两侧.
+ * 敌对生物用发光的红黄, 其余用深色, 远看也能一眼分出敌我.
+ */
+void PushEyePair(DefVisual& visual, float headX, float headY, float faceZ, float headHalf,
+                 bool hostile) {
+    const float eyeHalf = headHalf * 0.22f;
+    const float offsetX = headHalf * 0.45f;
+    /* faceZ 是头部前表面的 z 坐标, 眼睛再往前贴半个眼厚. */
+    const float eyeZ = faceZ - eyeHalf * 0.5f;
+    float red = 0.10f;
+    float green = 0.10f;
+    float blue = 0.12f;
+    if (hostile) {
+        red = 1.0f;
+        green = 0.35f;
+        blue = 0.15f;
+    }
+    PushColoredBox(visual, headX - offsetX, headY, eyeZ, eyeHalf, eyeHalf, eyeHalf * 0.6f, red,
+                   green, blue);
+    PushColoredBox(visual, headX + offsetX, headY, eyeZ, eyeHalf, eyeHalf, eyeHalf * 0.6f, red,
+                   green, blue);
+}
+
+/*
  * 按类别生成部件组合. 尺寸从 MonsterDef 折算:
  * 身高拆成头 (约四分之一) 与躯干 (约二分之一), 腿补足剩余;
  * 宽厚取 def 的宽度厚度, 部件略收让轮廓有分段感.
@@ -202,6 +249,7 @@ void PushBox(DefVisual& visual, float cx, float cy, float cz,
 void BuildDefVisual(int32_t index, const entity::MonsterDef& def) {
     DefVisual& visual = gDefVisuals[index];
     visual.boxCount = 0;
+    /* 部件数上限按盒子容量收敛, 眼睛等新增部件不能把身体挤出容量. */
     BaseColorOf(def.sourceId, def.type, &visual.baseRed);
 
     const float width = def.width > 0.05f ? def.width : 0.3f;
@@ -219,8 +267,11 @@ void BuildDefVisual(int32_t index, const entity::MonsterDef& def) {
             const float bodyL = thickness * 0.4f;
             PushBox(visual, 0.0f, bodyY, 0.0f, halfW, bodyH * 0.5f, bodyL, 1.0f);
             /* 头: 前端 ( -Z 为前向 ), 略高于躯干. */
-            PushBox(visual, 0.0f, bodyY + bodyH * 0.35f, -bodyL - halfW * 0.5f,
-                    halfW * 0.7f, halfW * 0.7f, halfW * 0.7f, 1.1f);
+            const float headY = bodyY + bodyH * 0.35f;
+            const float headZ = -bodyL - halfW * 0.5f;
+            const float headHalf = halfW * 0.7f;
+            PushBox(visual, 0.0f, headY, headZ, headHalf, headHalf, headHalf, 1.1f);
+            PushEyePair(visual, 0.0f, headY, headZ - headHalf, headHalf, def.hostile);
             /* 四肢: 前后各一对, 短柱. */
             const float legOffX = halfW * 0.6f;
             const float legOffZ = bodyL * 0.6f;
@@ -245,7 +296,9 @@ void BuildDefVisual(int32_t index, const entity::MonsterDef& def) {
         case 8: {
             /* 飞行生物: 小身 + 双翼薄板, 身体整体抬高悬浮. */
             const float bodyY = height * 0.65f;
-            PushBox(visual, 0.0f, bodyY, 0.0f, halfW * 0.7f, halfW * 0.7f, halfT * 0.7f, 1.0f);
+            const float flyHalf = halfW * 0.7f;
+            PushBox(visual, 0.0f, bodyY, 0.0f, flyHalf, flyHalf, halfT * 0.7f, 1.0f);
+            PushEyePair(visual, 0.0f, bodyY, -halfT * 0.7f, flyHalf, def.hostile);
             PushBox(visual, -halfW * 1.6f, bodyY + height * 0.05f, 0.0f,
                     halfW * 0.9f, halfW * 0.08f, halfT * 0.5f, 0.9f);
             PushBox(visual, halfW * 1.6f, bodyY + height * 0.05f, 0.0f,
@@ -261,7 +314,10 @@ void BuildDefVisual(int32_t index, const entity::MonsterDef& def) {
             const float torsoY = legH + torsoH * 0.5f;
             const float headY = legH + torsoH + headH * 0.5f;
             PushBox(visual, 0.0f, torsoY, 0.0f, halfW, torsoH * 0.5f, halfT, 1.0f);
-            PushBox(visual, 0.0f, headY, 0.0f, halfW * 0.85f, headH * 0.5f, halfT * 0.85f, 1.15f);
+            const float faceHalf = halfT * 0.85f;
+            PushBox(visual, 0.0f, headY, 0.0f, halfW * 0.85f, headH * 0.5f, faceHalf, 1.15f);
+            /* 人形的眼睛贴在头部前表面, 前向为 -Z. */
+            PushEyePair(visual, 0.0f, headY, -faceHalf, halfW * 0.85f, def.hostile);
             const float legOffX = halfW * 0.55f;
             PushBox(visual, -legOffX, legY, 0.0f, halfW * 0.35f, legH * 0.5f, halfT * 0.8f, 0.75f);
             PushBox(visual, legOffX, legY, 0.0f, halfW * 0.35f, legH * 0.5f, halfT * 0.8f, 0.75f);
@@ -445,7 +501,6 @@ void Draw(const CreatureView* views, int32_t count, const float* viewProjection1
     if (written == 0) {
         return;
     }
-
     glUseProgram(gProgram);
     glUniformMatrix4fv(gViewProjectionLocation, 1, GL_FALSE, viewProjection16);
     glBindVertexArray(gVao);
