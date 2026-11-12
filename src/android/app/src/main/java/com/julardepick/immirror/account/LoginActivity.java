@@ -332,6 +332,13 @@ public final class LoginActivity extends Activity {
         TextView presetLoopback = AccountTheme.link(this, getString(R.string.account_settings_preset_loopback),
                 AccountTheme.COLOR_ACCENT);
         presetLoopback.setOnClickListener(view -> settingsInput.setText(AccountSettings.LOOPBACK_BASE_URL));
+        /* 两个预设链接要真的挂进这一行, 否则点了看不见也点不到. */
+        presetRow.addView(presetEmulator, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        final LinearLayout.LayoutParams loopbackParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        loopbackParams.leftMargin = AccountTheme.dp(this, 12f);
+        presetRow.addView(presetLoopback, loopbackParams);
         panel.addView(presetRow, AccountTheme.block(this, 4f));
 
         LinearLayout actionRow = new LinearLayout(this);

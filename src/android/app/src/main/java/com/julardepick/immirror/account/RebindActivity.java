@@ -12,11 +12,12 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.julardepick.immirror.R;
+import com.julardepick.immirror.ui.MobilePage;
 
 /*
  * 换绑邮箱界面.
@@ -73,26 +74,20 @@ public final class RebindActivity extends Activity {
     }
 
     private View buildContentView() {
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setBackgroundColor(AccountTheme.COLOR_PAGE);
-        scroll.setClipToPadding(false);
-        /* 底部留出提示条高度, 滚到末尾时按钮不被提示条盖住. */
-        scroll.setPadding(0, 0, 0, AccountTheme.dp(this, 84f));
-
+        /*
+         * 面板内纵向内容: 说明行, 当前邮箱行, 换绑表单卡片与作者页脚.
+         * 标题由面板标题行承担, 内容在面板内部滚动.
+         */
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
         column.setGravity(Gravity.CENTER_HORIZONTAL);
-        int padding = AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP);
-        column.setPadding(padding, AccountTheme.dp(this, 20f), padding, AccountTheme.dp(this, 18f));
-        scroll.addView(column, new ScrollView.LayoutParams(ScrollView.LayoutParams.MATCH_PARENT,
-                ScrollView.LayoutParams.WRAP_CONTENT));
+        /* 底部留出提示条高度, 滚到末尾时按钮不被提示条盖住. */
+        column.setPadding(0, 0, 0, AccountTheme.dp(this, 84f));
 
-        column.addView(AccountTheme.title(this, getString(R.string.rebind_title)));
         column.addView(AccountTheme.subtitle(this, getString(R.string.rebind_subtitle)),
                 AccountTheme.block(this, 4f));
 
-        emailSummary = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_ON_DARK_MUTED, 12f);
+        emailSummary = AccountTheme.body(this, "", AccountTheme.COLOR_TEXT_MUTED, 12f);
         emailSummary.setGravity(Gravity.CENTER);
         column.addView(emailSummary, AccountTheme.block(this, 8f));
 
@@ -104,17 +99,20 @@ public final class RebindActivity extends Activity {
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
 
+        /* 外层: 场景底图 + 遮罩 + 居中面板, 标题与关闭按钮由面板标题行承担. */
+        FrameLayout root = new FrameLayout(this);
+        root.addView(MobilePage.create(this, getString(R.string.rebind_title),
+                MobilePage.scrollable(this, column)), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
+        /* 提示条浮在面板底部, 不参与内容滚动. */
         TextView noticeView = AccountTheme.notice(this);
         noticeBar = new NoticeBar(noticeView);
-        android.widget.FrameLayout root = new android.widget.FrameLayout(this);
-        android.widget.FrameLayout.LayoutParams noticeParams = new android.widget.FrameLayout.LayoutParams(
-                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM);
+        FrameLayout.LayoutParams noticeParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM);
         int margin = AccountTheme.dp(this, 16f);
         noticeParams.setMargins(margin, 0, margin, margin);
-        root.addView(scroll, new android.widget.FrameLayout.LayoutParams(
-                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
         root.addView(noticeView, noticeParams);
         return root;
     }
@@ -186,12 +184,10 @@ public final class RebindActivity extends Activity {
         return card;
     }
 
+    /* 卡片宽度由面板内容区决定, 这里只给与说明行之间的间距. */
     private LinearLayout.LayoutParams cardParams() {
-        int available = AccountTheme.screenWidth(this)
-                - AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP * 2);
-        int width = Math.min(available, AccountTheme.dp(this, AccountTheme.CARD_MAX_WIDTH_DP));
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         params.topMargin = AccountTheme.dp(this, 16f);
         return params;
     }

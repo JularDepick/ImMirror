@@ -18,8 +18,12 @@ import com.julardepick.immirror.lobby.LobbyArt;
  */
 public final class PageBackground {
 
-    /* 蒙版不透明度: 保留底图纹理与层次, 同时把白字对比度提到可读范围. */
-    private static final int SCRIM_ALPHA = 0xC0;
+    /*
+     * 蒙版不透明度: 只压到能看清底图纹理的程度.
+     * 模态页还会在其上叠一层遮罩, 两层叠加后的实际不透明度必须仍能分辨底图,
+     * 因此这里取三成, 由调用方按需再叠.
+     */
+    private static final int SCRIM_ALPHA = 0x50;
 
     private PageBackground() {
     }

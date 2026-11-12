@@ -26,8 +26,11 @@ import com.julardepick.immirror.lobby.LobbyArt;
  */
 public final class MobilePage {
 
-    /* 遮罩不透明度: 让底图仍然可辨, 前景面板对比足够. */
-    private static final int SCRIM_COLOR = 0xC0000000;
+    /*
+     * 模态遮罩不透明度: 与 PageBackground 的底图蒙版叠加后约为六成,
+     * 面板仍然跳出来, 底图纹理也还看得见.
+     */
+    private static final int SCRIM_COLOR = 0x99000000;
     /* 面板与屏幕边缘的最小留白, 窄屏也不会贴边. */
     private static final float PANEL_MARGIN_DP = 16f;
     /* 面板最大宽度, 宽屏上不把内容拉成一行长条. */
@@ -52,7 +55,10 @@ public final class MobilePage {
         final FrameLayout root = new FrameLayout(activity);
         PageBackground.apply(root);
 
-        /* 遮罩: 压暗底图, 同时吃掉面板外的点击, 避免误触到底层界面. */
+        /*
+         * 遮罩: 压暗底图并吃掉面板外的点击.
+         * 只叠这一层, 底图的蒙版由 PageBackground 负责, 两层加起来才不过暗.
+         */
         final View scrim = new View(activity);
         scrim.setBackgroundColor(SCRIM_COLOR);
         scrim.setClickable(true);

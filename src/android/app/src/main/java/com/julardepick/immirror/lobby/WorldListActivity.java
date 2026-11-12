@@ -47,6 +47,9 @@ public final class WorldListActivity extends Activity {
     private static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss+08:00";
 
     private LinearLayout listHost;
+    /* 新建世界的输入区: 内联在列表上方, 默认隐藏, 不走系统弹窗. */
+    private LinearLayout createPanel;
+    private EditText createInput;
     private TextView emptyView;
     private final List<WorldEntry> worlds = new ArrayList<>();
 
@@ -80,6 +83,12 @@ public final class WorldListActivity extends Activity {
         column.addView(buildActionRow());
 
         /* 世界列表: 空态文案与列表行放在同一容器里切换. */
+        /* 输入区先建空容器, 首次点新建时才填内容, 避免每次进页面都构造输入框. */
+        createPanel = new LinearLayout(this);
+        createPanel.setOrientation(LinearLayout.VERTICAL);
+        createPanel.setVisibility(View.GONE);
+        column.addView(createPanel, AccountTheme.block(this, 8f));
+
         listHost = new LinearLayout(this);
         listHost.setOrientation(LinearLayout.VERTICAL);
         column.addView(listHost, AccountTheme.block(this, 12f));
@@ -244,38 +253,63 @@ public final class WorldListActivity extends Activity {
         reload();
     }
 
-    /* 新建世界: 输入框取名字, 空输入回落默认名, 确认后带名字进游戏. */
+    /*
+     * 新建世界: 面板内展开一段输入区, 不走系统弹窗.
+     * 输入框与两个按钮都排在列表上方, 取消后收起, 确认后按名字进游戏.
+     */
     private void showCreateWorld() {
-        final EditText input = new EditText(this);
-        input.setHint(R.string.launcher_world_name_hint);
-        input.setText(getString(R.string.launcher_world_default_name));
-        input.setSelection(input.getText().length());
-        final LinearLayout holder = new LinearLayout(this);
-        holder.setOrientation(LinearLayout.VERTICAL);
-        final int padding = AccountTheme.dp(this, 20f);
-        holder.setPadding(padding, padding, padding, 0);
-        holder.addView(input, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        if (createPanel == null) {
+            return;
+        }
+        if (createInput == null) {
+            createInput = AccountTheme.field(this, getString(R.string.launcher_world_name_hint), 16f);
+            createInput.setText(getString(R.string.launcher_world_default_name));
+            final LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            inputParams.bottomMargin = AccountTheme.dp(this, 8f);
+            createPanel.addView(createInput, inputParams);
 
-        final android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
-                .setTitle(getString(R.string.launcher_world_new))
-                .setView(holder)
-                .setNegativeButton(getString(R.string.settings_back), null)
-                .setPositiveButton(getString(R.string.launcher_world_enter), null)
-                .create();
-        dialog.show();
-        /* 接管确认按钮: 保留输入框语义, 点击后按名字进游戏. */
-        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
-            String name = input.getText().toString().trim();
-            if (name.isEmpty()) {
-                name = getString(R.string.launcher_world_default_name);
-            }
-            dialog.dismiss();
-            final Intent intent = new Intent(this, PlayActivity.class);
-            intent.putExtra(PlayActivity.EXTRA_WORLD, name);
-            startActivity(intent);
-            finish();
-        });
+            final LinearLayout actions = new LinearLayout(this);
+            actions.setOrientation(LinearLayout.HORIZONTAL);
+            final Button cancel = AccountTheme.outlineButton(this,
+                    getString(R.string.settings_back), AccountTheme.COLOR_TEXT_MUTED);
+            cancel.setOnClickListener(view -> hideCreatePanel());
+            final Button confirm = AccountTheme.primaryButton(this,
+                    getString(R.string.launcher_world_enter));
+            confirm.setOnClickListener(view -> commitCreateWorld());
+            final LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+            actions.addView(cancel, actionParams);
+            final LinearLayout.LayoutParams confirmParams = new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+            confirmParams.leftMargin = AccountTheme.dp(this, 8f);
+            actions.addView(confirm, confirmParams);
+            createPanel.addView(actions, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        }
+        createInput.setText(getString(R.string.launcher_world_default_name));
+        createInput.setSelection(createInput.getText().length());
+        createPanel.setVisibility(View.VISIBLE);
+        createInput.requestFocus();
+    }
+
+    /* 收起输入区并把焦点交回列表. */
+    private void hideCreatePanel() {
+        if (createPanel != null) {
+            createPanel.setVisibility(View.GONE);
+        }
+    }
+
+    /* 按输入框里的名字进游戏, 空输入回落默认名. */
+    private void commitCreateWorld() {
+        String name = createInput == null ? "" : createInput.getText().toString().trim();
+        if (name.isEmpty()) {
+            name = getString(R.string.launcher_world_default_name);
+        }
+        final Intent intent = new Intent(this, PlayActivity.class);
+        intent.putExtra(PlayActivity.EXTRA_WORLD, name);
+        startActivity(intent);
+        finish();
     }
 
     private LinearLayout.LayoutParams rowParams() {
