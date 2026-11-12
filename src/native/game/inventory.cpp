@@ -97,6 +97,30 @@ bool Inventory::ConsumeItem(ItemId item, int32_t amount) {
     return true;
 }
 
+bool Inventory::ConsumeDurability(int32_t slot) {
+    if (slot < 0 || slot >= kSlotCount) {
+        return false;
+    }
+    ItemStack& target = slots_[slot];
+    if (target.Empty() || target.durability <= 0) {
+        return false;
+    }
+    target.durability = static_cast<int16_t>(target.durability - 1);
+    if (target.durability > 0) {
+        return false;
+    }
+    /* 耐久耗尽: 整格清空, 工具损坏后不留残格. */
+    target.Clear();
+    return true;
+}
+
+int32_t Inventory::DurabilityAt(int32_t slot) const {
+    if (slot < 0 || slot >= kSlotCount) {
+        return -1;
+    }
+    return slots_[slot].durability;
+}
+
 int32_t Inventory::Add(ItemId item, int32_t amount) {
     if (amount <= 0) {
         return 0;
@@ -129,6 +153,11 @@ int32_t Inventory::Add(ItemId item, int32_t amount) {
         const int32_t moved = remain < maxStack ? remain : maxStack;
         target.item = item;
         target.count = moved;
+        /* 工具进格时按物品表填满耐久, 非工具保持 -1 表示不用耐久. */
+        item::ItemTable::ToolInfo tool;
+        if (item::ItemTable::Instance().ToolOf(item, tool)) {
+            target.durability = static_cast<int16_t>(tool.durability);
+        }
         remain -= moved;
     }
 

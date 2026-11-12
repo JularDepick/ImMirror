@@ -46,12 +46,21 @@ struct ItemInfo {
 struct ItemStack {
     ItemId item = kNone;
     int32_t count = 0;
+    /*
+     * 剩余耐久, 只对工具类物品有意义. -1 表示该物品不用耐久 (方块与材料),
+     * 工具进背包时由物品栏按物品表填满耐久. 工具不堆叠, 一格一把.
+     */
+    int16_t durability = -1;
 
     bool Empty() const { return item == kNone || count <= 0; }
+
+    /* 是否带耐久且已经耗尽. */
+    bool Broken() const { return durability == 0; }
 
     void Clear() {
         item = kNone;
         count = 0;
+        durability = -1;
     }
 };
 

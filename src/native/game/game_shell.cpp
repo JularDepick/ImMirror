@@ -314,6 +314,14 @@ void GameShell::SeedStartingItems() {
     if (stick != item::kNone) {
         inventory_.Add(stick, 16);
     }
+    /* 起步工具的耐久应当已按物品表填满, 这里逐个打印便于核对. */
+    for (int32_t slot = 0; slot < Inventory::kHotbarSlots; ++slot) {
+        const int32_t durability = inventory_.DurabilityAt(slot);
+        if (durability > 0) {
+            IM_LOGI(kTag, "starting tool slot=%d item=%d durability=%d", slot,
+                    static_cast<int32_t>(inventory_.ItemAt(slot)), durability);
+        }
+    }
     IM_LOGI(kTag, "starting items seeded, used=%d slots discarded=%d", inventory_.UsedSlots(),
             inventory_.Discarded());
 }
@@ -1404,6 +1412,16 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
                                      static_cast<float>(tick.blockPos.y) + 0.5f,
                                      static_cast<float>(tick.blockPos.z) + 0.5f);
     CollectDrop(tick.block);
+    /*
+     * 挖掉一格扣一次手持工具耐久, 耗尽时工具消失并提示.
+     * 徒手与方块类手持物不带耐久, 这里会直接返回 false.
+     */
+    if (inventory_.ConsumeDurability(selectedSlot_)) {
+        IM_LOGI(kTag, "tool broken at slot %d", selectedSlot_);
+    } else {
+        IM_LOGD(kTag, "tool durability left=%d slot=%d", inventory_.DurabilityAt(selectedSlot_),
+                selectedSlot_);
+    }
     /* 破坏后手指仍按住时接着挖下一格, 与连续挖掘的手感一致. */
     BeginEditMining();
 }

@@ -49,6 +49,15 @@ public:
     /* 某种物品在物品栏中的总数量. */
     int32_t TotalOf(ItemId item) const;
 
+    /*
+     * 扣一次耐久. 只对带耐久的物品生效: 扣到 0 时整格清空并返回 true,
+     * 表示工具损坏; 其余情况返回 false. 空槽或不用耐久的物品直接返回 false.
+     */
+    bool ConsumeDurability(int32_t slot);
+
+    /* 指定格的剩余耐久, 不用耐久或空槽返回 -1. */
+    int32_t DurabilityAt(int32_t slot) const;
+
     /* 数量是否足够, 供合成与界面判定. */
     bool Has(ItemId item, int32_t amount = 1) const;
 
