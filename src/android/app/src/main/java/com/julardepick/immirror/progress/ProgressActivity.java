@@ -110,9 +110,6 @@ public final class ProgressActivity extends Activity {
 
     /* 按当前标签页, 筛选与数据重建列表; 头部汇总与标签选中态一并刷新. */
     private void render() {
-        summaryView.setText(getString(com.julardepick.immirror.R.string.app_name).isEmpty()
-                ? "" : String.format(ProgressText.SUMMARY_FORMAT, board.completedCount(), board.totalCount(),
-                        board.dailyCompleted(), board.dailyTotal()));
         summaryView.setText(String.format(ProgressText.SUMMARY_FORMAT, board.completedCount(),
                 board.totalCount(), board.dailyCompleted(), board.dailyTotal()));
         balanceView.setText(String.format(ProgressText.BALANCE_FORMAT, board.balance()));

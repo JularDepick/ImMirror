@@ -802,31 +802,6 @@ public final class MainLobbyActivity extends Activity {
         return params;
     }
 
-    /* 卡内竖列参数: 整宽换行, 指定上边距, 文字居中. */
-    private LinearLayout.LayoutParams centerParams(int topMargin) {
-        final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.gravity = Gravity.CENTER_HORIZONTAL;
-        params.topMargin = topMargin;
-        return params;
-    }
-
-    /* 两色线性混合: ratio 取零全为 base, 取一全为 target, 用于压暗强调色得到卡片渐变. */
-    private static int mix(int base, int target, float ratio) {
-        final float t = Math.max(0f, Math.min(1f, ratio));
-        final float keep = 1f - t;
-        final int a = Math.round(((base >>> 24) & 0xFF) * keep + ((target >>> 24) & 0xFF) * t);
-        final int r = Math.round(((base >> 16) & 0xFF) * keep + ((target >> 16) & 0xFF) * t);
-        final int g = Math.round(((base >> 8) & 0xFF) * keep + ((target >> 8) & 0xFF) * t);
-        final int b = Math.round((base & 0xFF) * keep + (target & 0xFF) * t);
-        return (a << 24) | (r << 16) | (g << 8) | b;
-    }
-
-    /* 替换颜色透明度, 保留 RGB. */
-    private static int withAlpha(int color, int alpha) {
-        return (Math.max(0, Math.min(255, alpha)) << 24) | (color & 0x00FFFFFF);
-    }
-
     private LinearLayout.LayoutParams secondaryCellParams() {
         final int gap = AccountTheme.dp(this, 6f);
         final LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,

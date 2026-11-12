@@ -48,6 +48,17 @@ BANDS = [
     ("Forest",   0, 256,   0, 256, "100", "Grass", 180, "森林"),
 ]
 
+# 群系带到树种的折算: (原木客户端 id, 树叶客户端 id).
+# 雪原与针叶林用落叶松, 沼泽用白杨, 草原用桃花木, 森林用果木; 沙漠没有树.
+BAND_TREES = {
+    "Snow":   (265, 687),
+    "Desert": (0, 0),
+    "Swamp":  (266, 688),
+    "Taiga":  (265, 687),
+    "Plains": (272, 693),
+    "Forest": (6, 7),
+}
+
 # 数据表顶层块物品键到客户端方块的折算, 与 block_registry.h 的兼容段一致.
 # 数据表顶层块物品键到客户端方块 id 的折算, 数值与 block_registry.h 兼容段一致.
 CLIENT_BLOCK_ID = {
@@ -241,6 +252,8 @@ def main():
     lines.append("    uint8_t clearWeight;   /* ClearModulus, 相对权重 */")
     lines.append("    uint8_t rainWeight;    /* RainModulus, 相对权重 */")
     lines.append("    uint8_t thunderWeight; /* ThunderModulus, 相对权重 */")
+    lines.append("    uint16_t woodBlock;    /* 该带的原木方块 id, 0 表示不长树 */")
+    lines.append("    uint16_t leavesBlock;  /* 该带的树叶方块 id, 0 表示不长树 */")
     lines.append("    const char* key;       /* 群系带英文键 */")
     lines.append("    const char* nameZh;    /* 群系带中文名 */")
     lines.append("};")
@@ -252,10 +265,12 @@ def main():
         fill_src = "101" if top_src == "100" or top_src == "123" else top_src
         fill_key = TOP_BLOCK_MAP.get(fill_src, "Dirt")
         can_rain, can_snow, clear_w, rain_w, thunder_w = weather_of(band_rows[key], col)
-        lines.append('    {%du, %du, %du, %du, %uu, %uu, %du, %du, %du, %du, %du, %du, "%s", "%s"},'
+        wood_block, leaves_block = BAND_TREES.get(key, (0, 0))
+        lines.append('    {%du, %du, %du, %du, %uu, %uu, %du, %du, %du, %du, %du, %du, %du, %du, "%s", "%s"},'
                  % (heat_min, heat_max, humid_min, humid_max,
                    CLIENT_BLOCK_ID.get(block_key, 1), CLIENT_BLOCK_ID.get(fill_key, 2),
-                   chance, can_rain, can_snow, clear_w, rain_w, thunder_w, key, name_zh))
+                   chance, can_rain, can_snow, clear_w, rain_w, thunder_w,
+                   wood_block, leaves_block, key, name_zh))
     lines.append("};")
     lines.append("")
     decorations, skipped = collect_decorations(rows, col, mapping)

@@ -57,8 +57,9 @@ private:
     int32_t PlantDecorations(ChunkCoord coord, ChunkColumn& column, uint32_t seed) const;
 
     /* 在草地上按世界坐标候选格散布树木, 包含跨越区块边界的树冠. */
-    void PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_t seed,
-                    uint8_t treeShape) const;
+    /* 返回本区块种下的树数, 供生成日志统计. */
+    int32_t PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_t seed,
+                       uint8_t treeShape) const;
 };
 
 }  /* namespace immirror::voxel */

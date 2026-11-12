@@ -47,7 +47,6 @@ public final class RebindActivity extends Activity {
     private EditText passwordInput;
     private Button sendCodeButton;
     private Button rebindButton;
-    private TextView noticeView;
     private NoticeBar noticeBar;
 
     private boolean busy;
@@ -173,10 +172,6 @@ public final class RebindActivity extends Activity {
                 AccountTheme.COLOR_TEXT_FAINT, 11f);
         hint.setLineSpacing(AccountTheme.dp(this, 3f), 1f);
         card.addView(hint, AccountTheme.block(this, 6f));
-
-        noticeView = AccountTheme.notice(this);
-        noticeBar = new NoticeBar(noticeView);
-        card.addView(noticeView, AccountTheme.block(this, 12f));
 
         rebindButton = AccountTheme.primaryButton(this, getString(R.string.rebind_action_submit));
         rebindButton.setOnClickListener(view -> submit());

@@ -29,11 +29,20 @@ import org.json.JSONObject;
  * 列表由原生控件逐行构建, 每行带进度条与领取按钮; 数据统一取服务端,
  * 断网时回落到上一次成功响应的缓存, 因此页面不会出现空白.
  * 所有提示都显示在页面内的提示条里, 不使用 Toast 与系统弹窗.
+ *
+ * 本文件是 ProgressActivity 的早期版本, 未在 AndroidManifest.xml 注册,
+ * 全仓库也没有入口引用它; 当前的成就与任务界面以 ProgressActivity 为准.
  */
 public final class AchievementActivity extends Activity {
 
     private static final int TAB_ACHIEVEMENT = 0;
     private static final int TAB_DAILY = 1;
+
+    /*
+     * 行内领取按钮的文案. ProgressText 里的操作文案只覆盖页面级按钮,
+     * 行内领取语义单独放在这里, 与状态文案 "可领取" 用词一致.
+     */
+    private static final String ACTION_CLAIM = "领取";
 
     private AchievementSync sync;
     private Session session;
@@ -338,7 +347,7 @@ public final class AchievementActivity extends Activity {
                 description = description.isEmpty() ? category : description + " · " + category;
             }
             String state = item.completed ? (item.claimed ? "已领取" : "已完成") : "未完成";
-            String action = item.completed && !item.claimed ? ProgressText.ACTION_REFRESH : "";
+            String action = item.completed && !item.claimed ? ACTION_CLAIM : "";
             ProgressRowView row = new ProgressRowView(this);
             row.bind(item.name, description, item.progress, item.safeTarget(), item.completed, state,
                     action, item.completed && !item.claimed && !busy,
@@ -358,15 +367,19 @@ public final class AchievementActivity extends Activity {
         for (DailyBoard.Task task : daily.tasks) {
             String unit = ProgressText.kindTitle(task.kind);
             String state = task.completed ? (task.claimed ? "已领取" : "可领取") : "进行中";
-            String action = task.completed && !task.claimed ? ProgressText.ACTION_REFRESH : "";
+            /*
+             * 单位后缀先并入状态文案, 再交给行控件绑定;
+             * 绑定之后再拼接只会改局部变量, 界面上看不到后缀.
+             */
+            if (!unit.isEmpty()) {
+                state = state + " · " + unit;
+            }
+            String action = task.completed && !task.claimed ? ACTION_CLAIM : "";
             ProgressRowView row = new ProgressRowView(this);
             row.bind(task.name, String.format(ProgressText.REWARD_FORMAT, task.coinReward), task.progress,
                     task.target, task.completed, state, action,
                     task.completed && !task.claimed && !busy, () -> claimDaily(task));
             listContainer.addView(row);
-            if (!unit.isEmpty()) {
-                state = state + " · " + unit;
-            }
         }
     }
 

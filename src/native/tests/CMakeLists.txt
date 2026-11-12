@@ -24,6 +24,7 @@ add_executable(immirror-editor-tests
     test_editor_command.cpp
     test_light_field.cpp
     test_block_shape.cpp
+    test_biome_tree.cpp
     host_log_stub.cpp
     ../editor/editor_command.cpp
     ../editor/project_format.cpp

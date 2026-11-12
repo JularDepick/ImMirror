@@ -182,8 +182,9 @@ void TerrainGenerator::FillTerrain(ChunkCoord coord, ChunkColumn& column, uint32
     }
 }
 
-void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_t seed,
-                                  uint8_t treeShape) const {
+int32_t TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_t seed,
+                                     uint8_t treeShape) const {
+    int32_t planted = 0;
     const int32_t baseX = coord.x * kChunkSizeX;
     const int32_t baseZ = coord.z * kChunkSizeZ;
     /* 树形档位折算: 0 矮树, 其余按标准树. 档内参数成组取用. */
@@ -224,13 +225,21 @@ void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_
             if (groundY <= kBeachTop + 1) {
                 continue;
             }
+            /* 树种按所在群系带取: 雪原与针叶林是落叶松, 沼泽白杨, 草原桃花木, 森林果木. */
+            const int32_t bandIndex = BiomeAt(seed, trunkWorldX, trunkWorldZ);
+            const BlockId woodBlock = static_cast<BlockId>(kBiomeBands[bandIndex].woodBlock);
+            const BlockId leavesBlock = static_cast<BlockId>(kBiomeBands[bandIndex].leavesBlock);
+            if (woodBlock == 0 || leavesBlock == 0) {
+                continue;
+            }
+            ++planted;
             const int32_t trunkHeight =
                 minTrunk + static_cast<int32_t>((hash >> 19) % static_cast<uint32_t>(trunkVariants));
             const int32_t localTrunkX = trunkWorldX - baseX;
             const int32_t localTrunkZ = trunkWorldZ - baseZ;
 
             for (int32_t y = 1; y <= trunkHeight; ++y) {
-                PutTreeBlock(column, localTrunkX, groundY + y, localTrunkZ, block::Wood, true);
+                PutTreeBlock(column, localTrunkX, groundY + y, localTrunkZ, woodBlock, true);
             }
 
             /* 树冠自下而上三层, 顶层收成一个方块; 矮树各层半径取矮树档. */
@@ -250,12 +259,14 @@ void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_
                         if (radius == 2 && absX == 2 && absZ == 2) {
                             continue;
                         }
-                        PutTreeBlock(column, localTrunkX + dx, topY + dy, localTrunkZ + dz, block::Leaves, false);
+                        PutTreeBlock(column, localTrunkX + dx, topY + dy, localTrunkZ + dz, leavesBlock,
+                                     false);
                     }
                 }
             }
         }
     }
+    return planted;
 }
 
 int32_t TerrainGenerator::CarveCaves(ChunkCoord coord, ChunkColumn& column, uint32_t seed) const {
@@ -421,15 +432,15 @@ void TerrainGenerator::Generate(ChunkCoord coord, ChunkColumn& column, uint32_t 
     /* 先挖洞穴再布矿脉: 洞穴只挖石头, 矿脉只替换石头, 二者不会互相覆盖空腔. */
     const int32_t carved = CarveCaves(coord, column, seed);
     const int32_t ores = PlaceOres(coord, column, seed);
-    PlantTrees(coord, column, seed, treeShape);
+    const int32_t trees = PlantTrees(coord, column, seed, treeShape);
     /* 装饰最后撒: 树冠占掉的格子不再长花草. */
     const int32_t decorations = PlantDecorations(coord, column, seed);
     /*
      * 生成规模按区块输出一条调试日志: 洞穴与矿脉的体量是地形手感的直接指标,
      * 数值异常时不必进游戏就能看出生成器是否失效.
      */
-    IM_LOGD("ImMirrorTerrain", "chunk %d,%d carved=%d ores=%d decor=%d", coord.x, coord.z, carved, ores,
-            decorations);
+    IM_LOGD("ImMirrorTerrain", "chunk %d,%d carved=%d ores=%d trees=%d decor=%d", coord.x, coord.z,
+            carved, ores, trees, decorations);
 }
 
 }  /* namespace immirror::voxel */

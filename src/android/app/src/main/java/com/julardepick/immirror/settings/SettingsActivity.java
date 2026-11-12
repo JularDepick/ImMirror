@@ -11,7 +11,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.julardepick.immirror.R;
@@ -19,7 +18,6 @@ import com.julardepick.immirror.account.AccountTheme;
 import com.julardepick.immirror.account.NoticeBar;
 import com.julardepick.immirror.bridge.NativeBridge;
 import com.julardepick.immirror.ui.MobilePage;
-import com.julardepick.immirror.ui.PageBackground;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

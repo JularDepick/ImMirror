@@ -2,7 +2,6 @@ package com.julardepick.immirror.lobby;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -10,6 +9,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -21,6 +21,7 @@ import com.julardepick.immirror.account.SessionStore;
 import com.julardepick.immirror.generated.UiResources;
 import com.julardepick.immirror.inventory.InventoryActivity;
 import com.julardepick.immirror.progress.ProgressActivity;
+import com.julardepick.immirror.ui.MobilePage;
 import com.julardepick.immirror.ui.UiTextures;
 import com.julardepick.immirror.wallet.WalletActivity;
 import com.julardepick.immirror.wallet.WalletApi;
@@ -29,7 +30,8 @@ import com.julardepick.immirror.wallet.WalletBoard;
 /*
  * 玩家中心.
  *
- * 资料卡与背包, 成就, 钱包入口.
+ * 面板内自上而下是状态提示, 资料卡与背包, 成就, 钱包三个入口, 末尾是作者页脚.
+ * 标题与关闭由面板标题行承担, 内容在面板内部滚动.
  */
 public final class PlayerCenterActivity extends Activity {
 
@@ -52,47 +54,24 @@ public final class PlayerCenterActivity extends Activity {
         refreshBalance();
     }
 
-    /* 页面结构: 标题栏, 资料卡, 功能入口三行按钮, 返回大厅. */
+    /*
+     * 面板内纵向内容: 状态提示, 资料卡, 功能入口与作者页脚.
+     * 头像框与余额的绘制方式不变, 外层由整页换成面板.
+     */
     private View buildPage() {
-        final LinearLayout page = new LinearLayout(this);
-        page.setOrientation(LinearLayout.VERTICAL);
-        page.setBackground(AccountTheme.rounded(this, AccountTheme.COLOR_PAGE, 0f));
-        final int padding = AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP);
-        page.setPadding(padding, padding, padding, padding);
+        final LinearLayout column = new LinearLayout(this);
+        column.setOrientation(LinearLayout.VERTICAL);
 
-        /* 标题栏: 返回按钮 + 玩家中心标题. */
-        final LinearLayout titleBar = new LinearLayout(this);
-        titleBar.setOrientation(LinearLayout.HORIZONTAL);
-        titleBar.setGravity(Gravity.CENTER_VERTICAL);
-        final Button back = AccountTheme.outlineButton(this, getString(R.string.lobby_back),
-                AccountTheme.COLOR_ACCENT);
-        back.setOnClickListener(view -> finish());
-        titleBar.addView(back, new LinearLayout.LayoutParams(
-                AccountTheme.dp(this, 90), AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP)));
-        final TextView title = new TextView(this);
-        title.setText(getString(R.string.playercenter_title));
-        title.setTextColor(AccountTheme.COLOR_TEXT_ON_DARK);
-        title.setTextSize(AccountTheme.tierSize(AccountTheme.TEXT_SIZE_TITLE));
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        final LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        titleParams.leftMargin = AccountTheme.dp(this, 16f);
-        titleBar.addView(title, titleParams);
-        page.addView(titleBar);
-
-        /* 提示条: 未登录等状态提示. */
-        noticeView = new TextView(this);
+        /* 状态提示: 未登录等提示只在需要时出现, 默认隐藏. */
+        noticeView = AccountTheme.notice(this);
         noticeView.setTextColor(AccountTheme.COLOR_NOTICE_ERROR);
-        noticeView.setTextSize(AccountTheme.tierSize(AccountTheme.TEXT_SIZE_SUB));
-        noticeView.setPadding(0, AccountTheme.dp(this, 12f), 0, 0);
         noticeView.setVisibility(View.GONE);
-        page.addView(noticeView);
+        column.addView(noticeView, AccountTheme.block(this, 2f));
 
         /* 资料卡: 头像框, UID, 邮箱与镜币余额. */
         final LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setBackground(AccountTheme.rounded(this, AccountTheme.COLOR_CARD,
-                AccountTheme.CARD_RADIUS_DP));
+        card.setBackground(AccountTheme.panelBackground(this));
         card.setGravity(Gravity.CENTER_HORIZONTAL);
         final int cardPadding = AccountTheme.dp(this, 20f);
         card.setPadding(cardPadding, cardPadding, cardPadding, cardPadding);
@@ -138,16 +117,30 @@ public final class PlayerCenterActivity extends Activity {
         final LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         cardParams.topMargin = AccountTheme.dp(this, 16f);
-        page.addView(card, cardParams);
+        column.addView(card, cardParams);
 
         /* 功能入口: 背包, 成就, 钱包. */
-        page.addView(entryButton(getString(R.string.playercenter_inventory),
+        column.addView(entryButton(getString(R.string.playercenter_inventory),
                 () -> startActivity(new Intent(this, InventoryActivity.class))));
-        page.addView(entryButton(getString(R.string.playercenter_progress),
+        column.addView(entryButton(getString(R.string.playercenter_progress),
                 () -> startActivity(new Intent(this, ProgressActivity.class))));
-        page.addView(entryButton(getString(R.string.playercenter_wallet),
+        column.addView(entryButton(getString(R.string.playercenter_wallet),
                 () -> startActivity(new Intent(this, WalletActivity.class))));
-        return page;
+
+        final TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
+                AccountTheme.COLOR_TEXT_FAINT, 11f);
+        author.setGravity(Gravity.CENTER);
+        column.addView(author, AccountTheme.block(this, 14f));
+
+        /*
+         * 外层: 场景底图 + 遮罩 + 居中面板, 标题与关闭按钮由面板标题行承担,
+         * 内容在面板内部滚动.
+         */
+        final FrameLayout root = new FrameLayout(this);
+        root.addView(MobilePage.create(this, getString(R.string.playercenter_title),
+                MobilePage.scrollable(this, column)), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        return root;
     }
 
     /* 资料卡回填: 会话可用时取 UID 与邮箱, 未登录显示空态提示. */

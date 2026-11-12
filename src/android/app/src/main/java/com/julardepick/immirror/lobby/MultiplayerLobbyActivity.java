@@ -1,15 +1,13 @@
 package com.julardepick.immirror.lobby;
 
 import android.app.Activity;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.julardepick.immirror.R;
@@ -17,15 +15,16 @@ import com.julardepick.immirror.account.AccountTheme;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
 import com.julardepick.immirror.net.LanDiscovery;
+import com.julardepick.immirror.ui.MobilePage;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /*
  * 联机大厅.
  *
- * 房间列表与扫描状态, 无可用房间时显示空态.
+ * 面板内自上而下是状态提示, 扫描状态, 房间列表区与底部按钮行, 末尾是作者页脚.
+ * 标题与关闭由面板标题行承担, 房间列表随面板一起滚动, 列表项全部可见.
  */
 public final class MultiplayerLobbyActivity extends Activity {
 
@@ -58,68 +57,34 @@ public final class MultiplayerLobbyActivity extends Activity {
         super.onDestroy();
     }
 
-    /* 页面结构: 标题栏, 提示条, 扫描状态, 房间列表区, 底部按钮行. */
+    /*
+     * 面板内纵向内容: 状态提示, 扫描状态, 房间列表区, 底部按钮行与作者页脚.
+     * 房间列表不再自带滚动容器, 由面板的滚动承担.
+     */
     private View buildPage() {
-        final LinearLayout page = new LinearLayout(this);
-        page.setOrientation(LinearLayout.VERTICAL);
-        page.setBackground(AccountTheme.rounded(this, AccountTheme.COLOR_PAGE, 0f));
-        final int padding = AccountTheme.dp(this, AccountTheme.PAGE_PADDING_DP);
-        page.setPadding(padding, padding, padding, padding);
-
-        /* 标题栏: 返回按钮 + 联机大厅标题. */
-        final LinearLayout titleBar = new LinearLayout(this);
-        titleBar.setOrientation(LinearLayout.HORIZONTAL);
-        titleBar.setGravity(Gravity.CENTER_VERTICAL);
-        final Button back = AccountTheme.outlineButton(this, getString(R.string.lobby_back),
-                AccountTheme.COLOR_ACCENT);
-        back.setOnClickListener(view -> finish());
-        titleBar.addView(back, new LinearLayout.LayoutParams(
-                AccountTheme.dp(this, 90), AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP)));
-        final TextView title = new TextView(this);
-        title.setText(getString(R.string.lobby_title));
-        title.setTextColor(AccountTheme.COLOR_TEXT_ON_DARK);
-        title.setTextSize(AccountTheme.tierSize(AccountTheme.TEXT_SIZE_TITLE));
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        final LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(0,
-                LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        titleParams.leftMargin = AccountTheme.dp(this, 16f);
-        titleBar.addView(title, titleParams);
-        page.addView(titleBar);
+        final LinearLayout column = new LinearLayout(this);
+        column.setOrientation(LinearLayout.VERTICAL);
 
         /* 提示条与扫描状态. */
-        noticeView = new TextView(this);
-        noticeView.setTextColor(AccountTheme.COLOR_TEXT_ON_DARK_MUTED);
-        noticeView.setTextSize(AccountTheme.tierSize(AccountTheme.TEXT_SIZE_SUB));
-        noticeView.setPadding(0, AccountTheme.dp(this, 12f), 0, 0);
+        noticeView = AccountTheme.notice(this);
+        noticeView.setTextColor(AccountTheme.COLOR_NOTICE_TEXT);
         noticeView.setVisibility(View.GONE);
-        page.addView(noticeView);
+        column.addView(noticeView, AccountTheme.block(this, 2f));
 
-        scanStateView = new TextView(this);
-        scanStateView.setText(getString(R.string.lobby_room_scanning));
-        scanStateView.setTextColor(AccountTheme.COLOR_TEXT_ON_DARK_MUTED);
-        scanStateView.setTextSize(AccountTheme.tierSize(AccountTheme.TEXT_SIZE_SUB));
-        scanStateView.setPadding(0, AccountTheme.dp(this, 10f), 0, 0);
-        page.addView(scanStateView);
+        scanStateView = AccountTheme.body(this, getString(R.string.lobby_room_scanning),
+                AccountTheme.COLOR_TEXT_MUTED, AccountTheme.TEXT_SIZE_SUB);
+        column.addView(scanStateView, AccountTheme.block(this, 6f));
 
         /* 房间列表区: 空态文案与动态房间卡片共用一个容器. */
-        roomEmptyView = new TextView(this);
-        roomEmptyView.setText(getString(R.string.lobby_room_empty));
-        roomEmptyView.setTextColor(AccountTheme.COLOR_TEXT_ON_DARK_MUTED);
-        roomEmptyView.setTextSize(AccountTheme.tierSize(AccountTheme.TEXT_SIZE_BODY));
+        roomEmptyView = AccountTheme.body(this, getString(R.string.lobby_room_empty),
+                AccountTheme.COLOR_TEXT_MUTED, AccountTheme.TEXT_SIZE_BODY);
         roomEmptyView.setGravity(Gravity.CENTER);
         roomEmptyView.setPadding(0, AccountTheme.dp(this, 48f), 0, 0);
 
         roomListHost = new LinearLayout(this);
         roomListHost.setOrientation(LinearLayout.VERTICAL);
         roomListHost.addView(roomEmptyView);
-
-        final ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.addView(roomListHost);
-        final LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
-        scrollParams.topMargin = AccountTheme.dp(this, 12f);
-        page.addView(scroll, scrollParams);
+        column.addView(roomListHost, AccountTheme.block(this, 12f));
 
         /* 底部按钮行: 刷新与创建房间. */
         final LinearLayout actions = new LinearLayout(this);
@@ -138,8 +103,22 @@ public final class MultiplayerLobbyActivity extends Activity {
         final LinearLayout.LayoutParams actionsParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         actionsParams.topMargin = AccountTheme.dp(this, 12f);
-        page.addView(actions, actionsParams);
-        return page;
+        column.addView(actions, actionsParams);
+
+        final TextView author = AccountTheme.body(this, AccountTheme.authorFooter(this),
+                AccountTheme.COLOR_TEXT_FAINT, 11f);
+        author.setGravity(Gravity.CENTER);
+        column.addView(author, AccountTheme.block(this, 14f));
+
+        /*
+         * 外层: 场景底图 + 遮罩 + 居中面板, 标题与关闭按钮由面板标题行承担,
+         * 内容在面板内部滚动.
+         */
+        final FrameLayout root = new FrameLayout(this);
+        root.addView(MobilePage.create(this, getString(R.string.lobby_title),
+                MobilePage.scrollable(this, column)), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        return root;
     }
 
     /* 扫描入口: 局域网发现, 回调在主线程, 空结果直接落空态. */
