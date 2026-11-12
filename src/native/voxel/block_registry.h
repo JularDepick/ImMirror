@@ -59,7 +59,7 @@ constexpr const char* kLegacyNames[LegacyCount] = {
  *   兼容段 0 到 LegacyCount - 1: 手写表, 与旧版逐字段一致, 保证存档兼容;
  *   扩展段 LegacyCount 起: 引用 game/generated/block_data_gen.h 的
  *   kRegistryEntries, 由生成器从原版 blockdef.csv 全量折算生成.
- * 每个方块可以分别指定顶面, 侧面与底面的图集格, 未指定 (0xFF) 的面回落到
+ * 每个方块可以分别指定顶面, 侧面与底面的图集格, 未指定 (0xFFFF) 的面回落到
  * atlasIndex; 扩展段统一回落, 图集格索引后续随图集扩充接入.
  */
 class BlockRegistry {

@@ -8,11 +8,12 @@ namespace {
 
 /*
  * 容器存档格式: 魔数与版本头, 熔炉节, 箱子节, 全部小端.
- * 版本 2: 首个容器版本; 世界存档 kSaveVersion 为 1, 容器节从 2 起记,
- * 读世界存档版本 1 的旧档时容器文件不存在, 按空容器处理, 天然向后兼容.
+ * 版本 2: 首个容器版本, 箱子 27 格.
+ * 版本 3: 箱子按原版 storagebox.lua 扩到 60 格; 读 v2 时按 27 格还原旧档数据.
  */
 constexpr char kContainerMagic[4] = {'I', 'M', 'C', 'F'};
-constexpr uint32_t kContainerVersion = 2;
+constexpr uint32_t kContainerVersion = 3;
+constexpr uint32_t kLegacyChestSlots = 27;
 
 /* 单格堆叠的落盘形式: 物品 id 与数量. */
 struct StackRecord {
@@ -130,11 +131,13 @@ bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& ch
         std::fclose(file);
         return false;
     }
-    if (std::fread(&version, sizeof(version), 1, file) != 1 || version != kContainerVersion) {
+    if (std::fread(&version, sizeof(version), 1, file) != 1 ||
+        (version != 2 && version != kContainerVersion)) {
         /* 未知版本按空容器处理, 保持向后兼容, 不阻断进世界. */
         std::fclose(file);
         return true;
     }
+    const int32_t chestSlots = version == 2 ? kLegacyChestSlots : ChestState::kSlots;
     if (std::fread(&furnaceCount, sizeof(furnaceCount), 1, file) != 1 ||
         std::fread(&chestCount, sizeof(chestCount), 1, file) != 1) {
         std::fclose(file);
@@ -165,7 +168,7 @@ bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& ch
             std::fclose(file);
             return false;
         }
-        for (int32_t index = 0; index < ChestState::kSlots; ++index) {
+        for (int32_t index = 0; index < chestSlots; ++index) {
             if (!ReadStack(file, chest.MutableSlot(index))) {
                 std::fclose(file);
                 return false;

@@ -40,6 +40,12 @@ public:
     virtual bool Ready() const = 0;
 
     /*
+     * 天空底色. 清屏颜色随昼夜变化, 白天是亮蓝, 夜间是深蓝黑,
+     * 由总装按世界时间下发; 不调用时保持后端的默认深蓝.
+     */
+    virtual void SetClearColor(float red, float green, float blue) = 0;
+
+    /*
      * 场景绘制回调: 在清屏之后, 交换缓冲之前调用.
      * 传空指针表示不绘制场景, 仅保留清屏行为.
      */

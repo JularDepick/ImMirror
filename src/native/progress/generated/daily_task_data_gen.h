@@ -4,7 +4,7 @@
 
 /*
  * 生成文件, 请勿手改.
- * 每日任务模板 3 条.
+ * 每日任务模板 3 条; online 目标单位秒.
  */
 namespace immirror::progress::gen {
 

@@ -19,6 +19,7 @@ import com.julardepick.immirror.account.ErrorMessages;
 import com.julardepick.immirror.account.NoticeBar;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
+import com.julardepick.immirror.ui.PageBackground;
 
 import org.json.JSONObject;
 
@@ -72,7 +73,7 @@ public final class AchievementActivity extends Activity {
 
     private View buildContentView() {
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(AccountTheme.COLOR_PAGE);
+        PageBackground.apply(root);
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);

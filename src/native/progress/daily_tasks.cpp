@@ -19,8 +19,8 @@ constexpr DailyTaskDef kDailyCatalog[kDailyCatalogCount] = {
     {StatKind::kItemPick, 30, 80, "采集行家"},
     {StatKind::kWalkDistance, 100, 30, "四处走走"},
     {StatKind::kWalkDistance, 300, 60, "长途跋涉"},
-    {StatKind::kOnlineMinutes, 15, 40, "上线报到"},
-    {StatKind::kOnlineMinutes, 30, 80, "冒险常客"},
+    {StatKind::kOnlineSeconds, 900, 40, "上线报到"},
+    {StatKind::kOnlineSeconds, 1800, 80, "冒险常客"},
     {StatKind::kCheckin, 1, 30, "每日签到"},
     {StatKind::kCraft, 10, 40, "巧手匠心"},
     {StatKind::kSmelt, 5, 40, "炉火纯青"},
@@ -38,19 +38,29 @@ const DailyTaskDef* DailyCatalog() {
 }
 
 const std::vector<int32_t>& DailyTaskBoard::SelectSlots(const std::string& dateKey) {
+    /*
+     * 与服务端 pickDailyTemplates 同源: FNV-1a 播种, 同一 LCG 序列做完整的
+     * Fisher-Yates 洗牌, 再取前 kDailyTaskCount 个. 早前的"逐个抽池删除"与
+     * 服务端的整表洗牌不等价, 同一日期键两端会选出不同任务.
+     */
     static thread_local std::vector<int32_t> slots;
     slots.clear();
-    uint32_t seed = Fnv1a32(dateKey);
-    std::vector<int32_t> pool;
-    pool.reserve(kDailyCatalogCount);
+    std::vector<int32_t> order;
+    order.reserve(kDailyCatalogCount);
     for (int32_t index = 0; index < kDailyCatalogCount; ++index) {
-        pool.push_back(index);
+        order.push_back(index);
     }
-    while (static_cast<int32_t>(slots.size()) < kDailyTaskCount && !pool.empty()) {
+    uint32_t seed = Fnv1a32(dateKey);
+    for (int32_t index = kDailyCatalogCount - 1; index > 0; --index) {
         seed = seed * kLcgMultiplier + kLcgIncrement;
-        const size_t pick = static_cast<size_t>(seed % static_cast<uint32_t>(pool.size()));
-        slots.push_back(pool[pick]);
-        pool.erase(pool.begin() + static_cast<long>(pick));
+        const int32_t swap = static_cast<int32_t>(seed % static_cast<uint32_t>(index + 1));
+        const int32_t left = order[index];
+        const int32_t right = order[swap];
+        order[index] = right;
+        order[swap] = left;
+    }
+    for (int32_t index = 0; index < kDailyCatalogCount && static_cast<int32_t>(slots.size()) < kDailyTaskCount; ++index) {
+        slots.push_back(order[index]);
     }
     return slots;
 }

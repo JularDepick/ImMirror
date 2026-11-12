@@ -107,6 +107,11 @@ fi
 # 群系带只在素材仓库的 biomedef 表维护, 构建前按温度湿度折算成生成表
 "$PYTHON_BIN" "$SCRIPT_DIR/gen_biome_data.py"
 
+# ---------------------------------------------------------------- 矿脉数据表
+# 矿脉的高度区间, 概率与替换方块只在素材仓库的 oredef 表维护;
+# 客户端方块 id 复用 gen_block_data.py 的分配结果, 因此必须在它之后执行
+"$PYTHON_BIN" "$SCRIPT_DIR/gen_ore_data.py"
+
 printf '原生构建配置\n'
 printf '  源码目录     : %s\n' "$NATIVE_DIR"
 printf '  构建根目录   : %s\n' "$BUILD_ROOT"

@@ -31,6 +31,8 @@
 #include "ui/hud_renderer.h"
 #include "ui/hud_slots.h"
 #include "voxel/block_registry.h"
+#include "voxel/generated/biome_data_gen.h"
+#include "voxel/terrain_generator.h"
 #include "world/world.h"
 
 namespace immirror::game {
@@ -306,6 +308,7 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         IM_LOGE(kTag, "chunk renderer initialize failed");
         return;
     }
+    renderer_->SetViewportSize(width_, height_);
     surfaceReady_ = true;
     /* 表面重建后旧的指针快照已经失效, 复位输入状态, 不把退出前的按住带进新画面. */
     ResetInputState();
@@ -486,6 +489,10 @@ void GameShell::SetViewportSize(int32_t width, int32_t height) {
     width_ = width;
     height_ = height;
     hud_.SetViewport(width, height);
+    /* 天空渐变按视口高度归一, 渲染器尚未创建时由 OnSurfaceReady 补一次. */
+    if (renderer_) {
+        renderer_->SetViewportSize(width, height);
+    }
 }
 
 void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input) {
@@ -513,6 +520,21 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
 
     /* 世界时间先行推进, 光照与环境音都取本帧的昼夜状态. */
     worldTime_->Tick(static_cast<float>(deltaSeconds));
+
+    /*
+     * 天气参数按玩家脚下所在的群系带取: 雪原允许下雪, 沙漠只允许雨,
+     * 三档权重直接来自原版 biomedef; 天气本身按现实秒数重抽.
+     */
+    {
+        const voxel::TerrainGenerator generator;
+        const core::Vec3 position = player_->Position();
+        const int32_t bandIndex = generator.BiomeAt(world_->Seed(), static_cast<int32_t>(position.x),
+                                                   static_cast<int32_t>(position.z));
+        const voxel::BiomeBand& band = voxel::kBiomeBands[bandIndex];
+        weather_.Configure(band.canRain != 0, band.canSnow != 0, band.clearWeight, band.rainWeight,
+                           band.thunderWeight);
+        weather_.Tick(static_cast<float>(deltaSeconds));
+    }
     /*
      * 天光混合因子按小时数取目标值后做 10 秒级平滑, 避免晨昏切换跳变;
      * 渲染侧按 mix(0.27, 1.0, factor) 折算天空亮度, 方块光不受影响.
@@ -641,6 +663,21 @@ void GameShell::ApplyControlSettings() {
     }
 }
 
+/*
+ * 新世界的种子: 秒级时间戳与世界名哈希混合, 保证同时新建的两个世界也互不相同.
+ * 返回 0 会让地形噪声退化成纯常量, 因此 0 一律换成 1.
+ */
+uint32_t NewWorldSeed(const std::string& name) {
+    const uint64_t stamp = static_cast<uint64_t>(std::time(nullptr));
+    uint64_t hash = 1469598103934665603ull;
+    for (const char c : name) {
+        hash ^= static_cast<uint64_t>(static_cast<unsigned char>(c));
+        hash *= 1099511628211ull;
+    }
+    const uint32_t seed = static_cast<uint32_t>((stamp * 2654435761ull) ^ hash);
+    return seed == 0u ? 1u : seed;
+}
+
 void GameShell::LoadNamedWorld(const std::string& projectName) {
     /* 编辑器导出的存档与世界存档同目录, 文件名为安全化的工程名. */
     if (savePath_.empty()) {
@@ -704,8 +741,13 @@ bool GameShell::SelectWorld(const std::string& name) {
     furnaces_.clear();
     chests_.clear();
     worldTime_->SetTotalSeconds(world::WorldTime::kDayLengthSeconds * 0.5f);
+    /* 每个新世界分配独立种子: 沿用上一次的种子会让所有新世界地形完全相同. */
+    world_->SetSeed(NewWorldSeed(safe));
+    /* 地形换了种子, 原来的脚点已经没有意义, 按原点重新落到地表. */
+    player_->Spawn(*world_, 0.0f, 0.0f);
     smeltBaseline_ = -1;
-    IM_LOGI(kTag, "world created, name=%s file=%s", safe.c_str(), savePath_.c_str());
+    IM_LOGI(kTag, "world created, name=%s file=%s seed=%u", safe.c_str(), savePath_.c_str(),
+            static_cast<unsigned int>(world_->Seed()));
     return false;
 }
 
@@ -1302,6 +1344,9 @@ void GameShell::UpdateEntities(double deltaSeconds) {
     probe.height = player::PlayerController::kHeight;
     probe.alive = player_->Alive();
 
+    /* 昼夜刷怪口径: 白天只放动物, 夜间才放主动攻击的生物. */
+    entities_.SetHostileSpawnAllowed(!worldTime_->IsDay());
+
     const entity::EntityFrameStats stats = entities_.Update(deltaSeconds, *world_, probe);
 
     /* 生物伤害汇总后一次性施加, 玩家控制器内部完成免伤窗口与死亡判定.
@@ -1530,6 +1575,45 @@ void GameShell::SyncVisualSettings() {
             static_cast<double>(brightness_));
 }
 
+namespace {
+
+/* 原版昼夜口径: 6 点日出, 12 点天顶, 18 点日落, 夜间太阳落到地平线以下. */
+constexpr float kPiForSun = 3.14159265358979323846f;
+
+void SunDirectionOf(const world::WorldTime& time, float* out) {
+    if (out == nullptr) {
+        return;
+    }
+    const float hour = time.GetHour();
+    const float angle = (hour - 6.0f) / 12.0f * kPiForSun;
+    /* x 向东, y 向上, z 恒定南偏: 太阳沿东升西落, 影子方向随之改变. */
+    out[0] = std::cos(angle) * 0.94f;
+    out[1] = std::sin(angle);
+    out[2] = 0.34f;
+}
+
+}  /* namespace */
+
+void GameShell::SkyColor(float* out) const {
+    if (out == nullptr) {
+        return;
+    }
+    /*
+     * 昼夜两端的天空色: 白天是亮蓝, 夜间是深蓝黑; 中间按天光因子线性混合.
+     * 三个分量都取归一化值, 与渲染后端的 glClearColor 口径一致.
+     */
+    constexpr float kDayRed = 0.48f;
+    constexpr float kDayGreen = 0.70f;
+    constexpr float kDayBlue = 0.93f;
+    constexpr float kNightRed = 0.04f;
+    constexpr float kNightGreen = 0.06f;
+    constexpr float kNightBlue = 0.13f;
+    const float factor = skyBlend_;
+    out[0] = kNightRed + (kDayRed - kNightRed) * factor;
+    out[1] = kNightGreen + (kDayGreen - kNightGreen) * factor;
+    out[2] = kNightBlue + (kDayBlue - kNightBlue) * factor;
+}
+
 void GameShell::RenderScene() {
     if (!surfaceReady_ || !renderer_->Ready()) {
         return;
@@ -1576,6 +1660,21 @@ void GameShell::RenderScene() {
 
     /* 雾, 亮度与天光因子分别下发: 天光由 shader 的 mix(0.27, 1.0) 承担月夜下限. */
     renderer_->SetAtmosphere(fogDensity_, brightness_, skyBlend_);
+    /* 天气: 降水强度压暗天空并叠加雨雪层, 状态变化写一条日志便于实机核对. */
+    if (weather_.Kind() != lastWeatherKind_) {
+        lastWeatherKind_ = weather_.Kind();
+        IM_LOGI(kTag, "weather changed to %s intensity=%.2f", weather_.KindName(),
+                static_cast<double>(weather_.Intensity()));
+    }
+    renderer_->SetWeather(static_cast<int32_t>(weather_.Kind()), weather_.Intensity(),
+                          static_cast<float>(elapsedSeconds_));
+
+    /* 天体方向与云层漂移时间: 太阳按世界时间走, 云层按现实秒数缓慢平移. */
+    {
+        float sunDirection[3] = {0.0f, 1.0f, 0.0f};
+        SunDirectionOf(*worldTime_, sunDirection);
+        renderer_->SetSkySun(sunDirection, static_cast<float>(elapsedSeconds_));
+    }
     renderer_->SetViewProjection(viewProjection, camera);
     renderer_->Sync(*world_);
     renderer_->Draw();

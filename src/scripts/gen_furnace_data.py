@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """从原版熔炼定义表生成客户端 C++ 熔炉数据头文件.
 
-输入: single-branch/assets/project/csvdef/furnace.csv (双表头, 97 条)
+输入: single-branch/assets/project/csvdef/furnace.csv (双表头, 96 条逻辑记录)
 输出: single-branch/client/src/native/game/generated/furnace_data_gen.h
 
 原版表的行分两类, 与列结构对齐:
@@ -85,8 +85,10 @@ def main():
 
         material_source = int(row[col["MaterialID"]].strip() or 0)
         result_text = row[col["Result"]].strip()
-        combustion_text = row[col["Combustion"]].strip()
+        heat_text = row[col["Heat"]].strip()
+        result_text = row[col["Result"]].strip()
 
+        result_text = row[col["Result"]].strip()
         if result_text and result_text != "0":
             # 配方行: 材料与产出都要在客户端物品表内
             material_item = mapping.get(material_source)
@@ -105,16 +107,16 @@ def main():
                 "nameZh": row[col["Name"]].strip(),
                 "furnaceType": int(row[col["Type"]].strip() or 0),
             })
-        elif combustion_text and combustion_text != "0":
-            # 燃料行: 燃烧值以原版 0-1000 的整数记录, 折算成 0-1 的比例保留两位
+        elif heat_text and heat_text != "0":
+            # 燃料行: 原版 furnace.lua 按 Heat>0 判定, 不用 Combustion
             material_item = mapping.get(material_source)
             if material_item is None:
                 skipped_fuel_material += 1
                 continue
-            combustion = int(combustion_text)
             fuels.append({
                 "item": material_item,
-                "combustion": combustion,
+                "heat": int(heat_text),
+                "furnaceType": int(row[col["Type"]].strip() or 0),
             })
 
         else:
@@ -146,7 +148,7 @@ def main():
     lines.append("/* 一条燃料定义: 燃烧物与燃烧值, 燃烧值是原版 0-1000 的整数. */")
     lines.append("struct FuelEntry {")
     lines.append("    uint16_t item;      /* 可燃烧物的客户端物品 id */")
-    lines.append("    uint16_t combustion; /* 原版燃烧值, 越大烧得越久 */")
+    lines.append("    uint32_t heat;      /* 原版热量, 越大烧得越久 */")
     lines.append("};")
     lines.append("")
     lines.append("constexpr int32_t kFurnaceEntryCount = %d;" % len(recipes))
@@ -161,7 +163,7 @@ def main():
     lines.append("")
     lines.append("constexpr FuelEntry kFuelEntries[kFuelEntryCount] = {")
     for fuel in fuels:
-        lines.append("    {%uu, %uu}," % (fuel["item"], fuel["combustion"]))
+        lines.append("    {%uu, %uu}," % (fuel["item"], fuel["heat"]))
     lines.append("};")
     lines.append("")
     lines.append("}  /* namespace immirror::game::gen */")

@@ -68,6 +68,9 @@ public final class MainLobbyActivity extends Activity {
     private static final float TEXT_NOTE = 14f;
     private static final float TEXT_FOOTER = 12f;
 
+    /* 原版大厅顶部图标的设计尺寸 (像素), main_lobby_ex.xml 里 icon_halltop_* 都是 56x56. */
+    private static final float SETTINGS_ICON_PX = 56f;
+
     /*
      * 素材底图上的文字色: RoleInfoBkgTemplate 与 TemplateBigBkg2 都是浅色底
      * (玩家条实测 109,194,211, 白卡片 243,243,243), 白字不可读, 统一改深色;
@@ -453,6 +456,14 @@ public final class MainLobbyActivity extends Activity {
 
         final Button settings = button(false, getString(R.string.lobby_settings),
                 COLOR_ART_TEXT, TEXT_SECONDARY);
+        /* 原版顶部设置按钮是 56x56 的齿轮图标, 有素材时贴在文字左侧, 与大厅同一套视觉. */
+        final Drawable settingsIcon = LobbyArt.image(this, LobbyArt.ICON_HALLTOP_SET);
+        if (settingsIcon != null) {
+            final int iconSize = LobbyArt.designSize(this, SETTINGS_ICON_PX);
+            settingsIcon.setBounds(0, 0, iconSize, iconSize);
+            settings.setCompoundDrawables(settingsIcon, null, null, null);
+            settings.setCompoundDrawablePadding(AccountTheme.dp(this, 4f));
+        }
         settings.setOnClickListener(view ->
                 startActivity(new Intent(this, SettingsActivity.class)));
         final LinearLayout.LayoutParams settingsParams = new LinearLayout.LayoutParams(

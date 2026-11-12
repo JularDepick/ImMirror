@@ -222,7 +222,24 @@ public final class PlayActivity extends NativeActivity {
                         @Override
                         public void onSuccess(java.util.List<com.julardepick.immirror.net.PresenceApi.Snapshot> others,
                                               long serverTime) {
-                            Log.d(TAG, "presence ok, others=" + others.size());
+                            try {
+                                org.json.JSONArray array = new org.json.JSONArray();
+                                for (com.julardepick.immirror.net.PresenceApi.Snapshot other : others) {
+                                    org.json.JSONObject item = new org.json.JSONObject();
+                                    item.put("uid", other.uid);
+                                    item.put("x", other.x);
+                                    item.put("y", other.y);
+                                    item.put("z", other.z);
+                                    item.put("yaw", other.yaw);
+                                    item.put("pitch", other.pitch);
+                                    array.put(item);
+                                }
+                                org.json.JSONObject payload = new org.json.JSONObject();
+                                payload.put("others", array);
+                                NativeBridge.applyRemotePlayers(payload.toString());
+                            } catch (org.json.JSONException | RuntimeException error) {
+                                Log.w(TAG, "presence apply failed: " + error);
+                            }
                         }
 
                         @Override

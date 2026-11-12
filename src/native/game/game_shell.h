@@ -13,6 +13,7 @@
 #include "game/inventory.h"
 #include "game/item/inventory_screen.h"
 #include "platform/input_state.h"
+#include "world/weather.h"
 #include "world/world_time.h"
 #include "ui/hud_renderer.h"
 #include "voxel/block_registry.h"
@@ -82,6 +83,12 @@ public:
 
     /* 在图形上下文中绘制一帧场景; 由渲染设备在清屏后回调. */
     void RenderScene();
+
+    /*
+     * 当前天空底色, 按昼夜混合后写入 out 的三个分量.
+     * 供渲染后端清屏使用, 与雾色分开: 雾只影响远景方块, 天空不参与雾.
+     */
+    void SkyColor(float* out) const;
 
     /* 供 JNI 桥读取背包与选中格; 装配前调用无副作用. */
     Inventory& InventoryRef() { return inventory_; }
@@ -244,6 +251,9 @@ private:
 
     std::unique_ptr<world::World> world_;
     std::unique_ptr<world::WorldTime> worldTime_;
+    /* 天气状态机: 按玩家所在群系的权重周期重抽, 结果下发给渲染侧. */
+    world::Weather weather_;
+    world::WeatherKind lastWeatherKind_ = world::WeatherKind::kClear;
     std::unique_ptr<player::PlayerController> player_;
     std::unique_ptr<render::ChunkRenderer> renderer_;
     ui::HudRenderer hud_;

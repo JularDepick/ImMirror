@@ -444,12 +444,19 @@ bool World::LoadFromFile(const char* path, SaveState& state) {
             return false;
         }
         /*
-         * 世界时间是 v3 的后扩字段: 早期 v3 档没有这一段, 读失败不致命,
-         * 回落 0 秒, 游戏侧把 0 折算成 0 点, 面板侧再按需回落正午.
+         * 世界时间是 v3 的后扩字段: 早期 v3 档没有这一段. 试探读取前先记下
+         * 文件位置, 读失败时回退, 否则会吞掉紧随其后的 ChunkRecord.x 四个字节,
+         * 导致后续所有区块记录错位.
          */
         uint32_t timeOfDay = 0;
+        const long timeFieldPos = std::ftell(file);
         if (std::fread(&timeOfDay, sizeof(timeOfDay), 1, file) == 1) {
             state.timeOfDaySeconds = static_cast<float>(timeOfDay);
+        } else {
+            if (timeFieldPos >= 0) {
+                std::fseek(file, timeFieldPos, SEEK_SET);
+            }
+            state.timeOfDaySeconds = 0.0f;
         }
     }
 

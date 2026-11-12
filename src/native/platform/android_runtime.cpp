@@ -276,17 +276,27 @@ void Runtime::OnWindowCreated(ANativeWindow* window) {
             dataPath = bridge_.Handle()->activity->internalDataPath;
         }
         shell_->OnSurfaceReady(assets, dataPath);
-        device_->SetSceneCallback(&Runtime::SceneCallbackThunk, shell_.get());
+        device_->SetSceneCallback(&Runtime::SceneCallbackThunk, this);
     }
     IM_LOGI(kTag, "render surface ready, %s %dx%d", device_->BackendName(), device_->Width(),
             device_->Height());
 }
 
 void Runtime::SceneCallbackThunk(void* user) {
-    auto* shell = static_cast<game::GameShell*>(user);
-    if (shell != nullptr) {
-        shell->RenderScene();
+    /*
+     * user 是 Runtime 自身: 清屏颜色要先于场景绘制下发, 而昼夜状态在场景侧,
+     * 因此这里同时持有两端, 不把渲染后端下沉到玩法层.
+     */
+    auto* runtime = static_cast<Runtime*>(user);
+    if (runtime == nullptr || runtime->shell_ == nullptr) {
+        return;
     }
+    if (runtime->device_ != nullptr) {
+        float sky[3] = {0.07f, 0.12f, 0.20f};
+        runtime->shell_->SkyColor(sky);
+        runtime->device_->SetClearColor(sky[0], sky[1], sky[2]);
+    }
+    runtime->shell_->RenderScene();
 }
 
 void Runtime::OnWindowDestroyed() {

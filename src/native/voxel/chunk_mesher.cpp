@@ -1,5 +1,7 @@
 #include "voxel/chunk_mesher.h"
 
+#include <cstring>
+
 #include "voxel/block_registry.h"
 #include "voxel/chunk_column.h"
 
@@ -21,22 +23,49 @@ constexpr int32_t kTileGridSize = 64;
 constexpr float kTileExtent = 1.0f / static_cast<float>(kTileGridSize);
 
 /* 面未指定图集格时的回落标记, 与 BlockInfo 的约定一致. */
-constexpr uint8_t kAtlasFallback = 0xFF;
+constexpr uint16_t kAtlasFallback = 0xFFFF;
 
 /* 同一方块顶面, 侧面, 底面的图集格, 已把回落解析成具体格号. */
 struct FaceTiles {
-    uint8_t top = 0;
-    uint8_t side = 0;
-    uint8_t bottom = 0;
+    uint16_t top = 0;
+    uint16_t side = 0;
+    uint16_t bottom = 0;
 };
 
-/* 未指定 (0xFF) 时回落到方块默认图集格. */
-uint8_t ResolveTile(uint8_t specific, uint8_t fallback) {
+/* 未指定 (0xFFFF) 时回落到方块默认图集格. */
+uint16_t ResolveTile(uint16_t specific, uint16_t fallback) {
     return specific == kAtlasFallback ? fallback : specific;
 }
 
 /* 方块属性缓存规模, 足以覆盖注册表全部基础方块, 避免逐面查表. */
 constexpr size_t kCachedBlockLimit = 32;
+
+/*
+ * 液体判定按名字: 客户端把液体方块建成非实心且非遮挡, 花草树木也有同样的属性,
+ * 只看属性会把水与花混为一谈. 原版液体键都含 water/lava 或带 _flow/_still 后缀.
+ */
+bool IsLiquidName(const char* name) {
+    if (name == nullptr) {
+        return false;
+    }
+    if (std::strstr(name, "water") != nullptr || std::strstr(name, "lava") != nullptr) {
+        return true;
+    }
+    const size_t length = std::strlen(name);
+    const char* flowSuffix = "_flow";
+    const char* stillSuffix = "_still";
+    const size_t flowLength = std::strlen(flowSuffix);
+    const size_t stillLength = std::strlen(stillSuffix);
+    if (length > flowLength && std::strcmp(name + length - flowLength, flowSuffix) == 0) {
+        return true;
+    }
+    return length > stillLength && std::strcmp(name + length - stillLength, stillSuffix) == 0;
+}
+
+/* 花草类: 非实心, 非遮挡, 也不是液体; 这类方块按两片交叉面绘制, 不画立方体. */
+bool IsPlantLike(const BlockInfo& info) {
+    return !info.solid && !info.opaque && !IsLiquidName(info.name);
+}
 
 /* 一层方块在一维数组中的步长 (16x16), 相邻层相差这个值. */
 constexpr size_t kLayerStride = static_cast<size_t>(kChunkSizeX) * static_cast<size_t>(kChunkSizeZ);
@@ -99,12 +128,15 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
     const size_t cachedCount = blockCount < kCachedBlockLimit ? blockCount : kCachedBlockLimit;
     FaceTiles cachedTiles[kCachedBlockLimit];
     bool cachedOpaque[kCachedBlockLimit];
+    bool cachedLiquid[kCachedBlockLimit];
     for (size_t i = 0; i < cachedCount; ++i) {
         const BlockInfo& info = registry.Info(static_cast<BlockId>(i));
         cachedTiles[i].top = ResolveTile(info.atlasTop, info.atlasIndex);
         cachedTiles[i].side = ResolveTile(info.atlasSide, info.atlasIndex);
         cachedTiles[i].bottom = ResolveTile(info.atlasBottom, info.atlasIndex);
         cachedOpaque[i] = info.opaque;
+        /* 液体判定: 既不实心也不遮挡, 且名字属于水或岩浆系. */
+        cachedLiquid[i] = !info.solid && !info.opaque && IsLiquidName(info.name);
     }
     /* 取某方块三个朝向的图集格, 缓存未覆盖的方块直接查注册表. */
     const auto tilesOf = [&registry, &cachedTiles, cachedCount](BlockId id) {
@@ -162,9 +194,23 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
         return 0.25f + 0.75f * static_cast<float>(level) / static_cast<float>(kMaxLightLevel);
     };
 
+    /* 液体面单独收集, 网格末尾拼接到实心面之后, 渲染侧据此分两趟绘制. */
+    const auto isLiquid = [&registry, &cachedLiquid, cachedCount](BlockId id) {
+        const size_t index = static_cast<size_t>(id);
+        if (index < cachedCount) {
+            return cachedLiquid[index];
+        }
+        const BlockInfo& info = registry.Info(id);
+        return !info.solid && !info.opaque && IsLiquidName(info.name);
+    };
+    /* 花草类按交叉双面绘制, 与原版花草的平面片一致. */
+    const auto isPlant = [&registry](BlockId id) { return IsPlantLike(registry.Info(id)); };
+    std::vector<uint32_t> liquidIndices;
+
     const std::vector<BlockId>& blocks = column.Blocks();
     out.vertices.reserve(kInitialVertexReserve);
     out.indices.reserve(kInitialIndexReserve);
+    liquidIndices.reserve(512);
     /* 下面按 y 层, z 行, x 列的顺序线性遍历方块数组, 索引自增, 不做乘法. */
 
     for (int32_t y = 0; y <= topY; ++y) {
@@ -214,6 +260,60 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                 const float originY = static_cast<float>(y);
                 const float originZ = static_cast<float>(z);
 
+                /*
+                 * 花草: 两片沿对角线交叉的竖直面, 正反各一遍, 因此不受背面剔除影响.
+                 * 贴图取侧面格, 明暗取该格的天光与方块光, 比整方块更接近原版观感.
+                 */
+                if (isPlant(id)) {
+                    const uint16_t tile = tiles.side == kAtlasFallback ? tiles.top : tiles.side;
+                    if (tile == kAtlasFallback) {
+                        continue;
+                    }
+                    const float tileU = static_cast<float>(static_cast<int32_t>(tile) % kTileGridSize) * kTileExtent;
+                    const float tileV = static_cast<float>(static_cast<int32_t>(tile) / kTileGridSize) * kTileExtent;
+                    const float light = lightAt(x, y, z, 2);
+                    const float shade = 0.92f * light;
+                    const float inset = 0.12f;
+                    const float low = inset;
+                    const float high = 1.0f - inset;
+                    /* 两条对角线的四个角点 (水平面内). */
+                    const float diagonalX0 = originX + low;
+                    const float diagonalZ0 = originZ + low;
+                    const float diagonalX1 = originX + high;
+                    const float diagonalZ1 = originZ + high;
+                    const float topY = originY + 1.0f;
+                    const float corners[2][4][3] = {
+                        {{diagonalX0, originY, diagonalZ0}, {diagonalX1, originY, diagonalZ1},
+                         {diagonalX1, topY, diagonalZ1}, {diagonalX0, topY, diagonalZ0}},
+                        {{diagonalX0, originY, diagonalZ1}, {diagonalX1, originY, diagonalZ0},
+                         {diagonalX1, topY, diagonalZ0}, {diagonalX0, topY, diagonalZ1}},
+                    };
+                    for (int32_t plane = 0; plane < 2; ++plane) {
+                        for (int32_t side = 0; side < 2; ++side) {
+                            const uint32_t base = static_cast<uint32_t>(out.vertices.size());
+                            for (int32_t corner = 0; corner < 4; ++corner) {
+                                /* 反面按逆序绕行, 保证两面都能通过背面剔除. */
+                                const int32_t source = side == 0 ? corner : (corner == 0 ? 0 : 4 - corner);
+                                Vertex vertex;
+                                vertex.px = corners[plane][source][0];
+                                vertex.py = corners[plane][source][1];
+                                vertex.pz = corners[plane][source][2];
+                                vertex.u = tileU + ((source == 1 || source == 2) ? kTileExtent : 0.0f);
+                                vertex.v = tileV + (source >= 2 ? kTileExtent : 0.0f);
+                                vertex.shade = shade;
+                                out.vertices.push_back(vertex);
+                            }
+                            out.indices.push_back(base);
+                            out.indices.push_back(base + 1);
+                            out.indices.push_back(base + 2);
+                            out.indices.push_back(base);
+                            out.indices.push_back(base + 2);
+                            out.indices.push_back(base + 3);
+                        }
+                    }
+                    continue;
+                }
+
                 for (int32_t face = 0; face < kFaceCount; ++face) {
                     if (!needFace[face]) {
                         continue;
@@ -222,7 +322,8 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                     /* 面外侧邻格的光照系数与朝向底色相乘, 写入 shade 通道. */
                     const float lightFactor = lightAt(x, y, z, face);
                     /* 朝向决定用哪一格: +Y 顶面, -Y 底面, 其余四个侧面. */
-                    const uint8_t tile = (face == 2) ? tiles.top : ((face == 3) ? tiles.bottom : tiles.side);
+                    /* 格位是 16 位: 全量图集 64x64 共 4096 格, 8 位会在 256 格处截断. */
+                    const uint16_t tile = (face == 2) ? tiles.top : ((face == 3) ? tiles.bottom : tiles.side);
                     const float tileU =
                         static_cast<float>(static_cast<int32_t>(tile) % kTileGridSize) * kTileExtent;
                     const float tileV =
@@ -238,16 +339,22 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                         vertex.shade = layout.shade * lightFactor;
                         out.vertices.push_back(vertex);
                     }
-                    out.indices.push_back(baseVertex);
-                    out.indices.push_back(baseVertex + 1);
-                    out.indices.push_back(baseVertex + 2);
-                    out.indices.push_back(baseVertex);
-                    out.indices.push_back(baseVertex + 2);
-                    out.indices.push_back(baseVertex + 3);
+                    std::vector<uint32_t>& target = isLiquid(id) ? liquidIndices : out.indices;
+                    target.push_back(baseVertex);
+                    target.push_back(baseVertex + 1);
+                    target.push_back(baseVertex + 2);
+                    target.push_back(baseVertex);
+                    target.push_back(baseVertex + 2);
+                    target.push_back(baseVertex + 3);
                 }
             }
         }
     }
+
+    /* 半透明段接在实心面之后: 起点与长度记在网格上, 顶点仍是同一份. */
+    out.waterIndexBegin = out.indices.size();
+    out.waterIndexCount = liquidIndices.size();
+    out.indices.insert(out.indices.end(), liquidIndices.begin(), liquidIndices.end());
 }
 
 }  /* namespace immirror::voxel */

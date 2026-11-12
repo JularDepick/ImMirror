@@ -97,7 +97,7 @@ int32_t ItemTable::AtlasCellOf(ItemId id) const {
         return -1;
     }
     const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(block);
-    constexpr uint8_t kAtlasFallback = 0xFF;
+    constexpr uint16_t kAtlasFallback = 0xFFFF;
     return info.atlasTop == kAtlasFallback ? static_cast<int32_t>(info.atlasIndex)
                                            : static_cast<int32_t>(info.atlasTop);
 }

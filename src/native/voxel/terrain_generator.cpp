@@ -2,8 +2,10 @@
 
 #include <cmath>
 
+#include "core/log.h"
 #include "voxel/block_registry.h"
 #include "voxel/generated/biome_data_gen.h"
+#include "voxel/generated/ore_data_gen.h"
 #include "voxel/chunk_column.h"
 #include "voxel/voxel_noise.h"
 
@@ -47,6 +49,19 @@ constexpr int32_t kTreeTrunkVariants = 3;
 constexpr int32_t kTreeShortMinTrunk = 3;
 constexpr int32_t kTreeShortTrunkVariants = 2;
 constexpr int32_t kTreeShortCanopyRadius = 1;
+
+/*
+ * 洞穴参数. 两组三维噪声取 |noise| < 阈值 的等值面, 二者相交处才是空腔,
+ * 因此洞穴是隧洞状而不是成片的空层. 频率是每方块的格点增量, 洞穴横向尺度
+ * 约 20 格, 纵向因接近球形格点而略高, 与常见体素洞穴的手感一致.
+ */
+constexpr int32_t kCaveMinY = 5;         /* 洞穴最低高度, 保留世界底部基岩层 */
+constexpr int32_t kCaveRoofDepth = 3;    /* 地表以下的顶板厚度, 防止挖穿地表 */
+constexpr float kCaveFreqXZ = 0.045f;
+constexpr float kCaveFreqY = 0.075f;
+constexpr float kCaveThreshold = 0.075f;
+constexpr uint32_t kCaveSeedA = 0x51ed270bu;
+constexpr uint32_t kCaveSeedB = 0x2545f491u;
 
 /* 向下取整的整数除法, 保证负坐标附近与正坐标行为对称. */
 int32_t FloorDiv(int32_t value, int32_t divisor) {
@@ -243,10 +258,178 @@ void TerrainGenerator::PlantTrees(ChunkCoord coord, ChunkColumn& column, uint32_
     }
 }
 
+int32_t TerrainGenerator::CarveCaves(ChunkCoord coord, ChunkColumn& column, uint32_t seed) const {
+    int32_t carved = 0;
+    const int32_t baseX = coord.x * kChunkSizeX;
+    const int32_t baseZ = coord.z * kChunkSizeZ;
+    for (int32_t localZ = 0; localZ < kChunkSizeZ; ++localZ) {
+        const int32_t worldZ = baseZ + localZ;
+        for (int32_t localX = 0; localX < kChunkSizeX; ++localX) {
+            const int32_t worldX = baseX + localX;
+            const int32_t height = SurfaceHeight(seed, worldX, worldZ);
+            const int32_t topY = height - kCaveRoofDepth;
+            if (topY <= kCaveMinY) {
+                continue;
+            }
+            const float sampleX = static_cast<float>(worldX) * kCaveFreqXZ;
+            const float sampleZ = static_cast<float>(worldZ) * kCaveFreqXZ;
+            for (int32_t y = kCaveMinY; y <= topY; ++y) {
+                if (column.Get(localX, y, localZ) != block::Stone) {
+                    continue;
+                }
+                const float sampleY = static_cast<float>(y) * kCaveFreqY;
+                const float first = detail::ValueNoise3D(seed ^ kCaveSeedA, sampleX, sampleY, sampleZ);
+                if (first < -kCaveThreshold || first > kCaveThreshold) {
+                    continue;
+                }
+                const float second = detail::ValueNoise3D(seed ^ kCaveSeedB, sampleX, sampleY, sampleZ);
+                if (second < -kCaveThreshold || second > kCaveThreshold) {
+                    continue;
+                }
+                column.Set(localX, y, localZ, block::Air);
+                ++carved;
+            }
+        }
+    }
+    return carved;
+}
+
+int32_t TerrainGenerator::PlaceOres(ChunkCoord coord, ChunkColumn& column, uint32_t seed) const {
+    int32_t total = 0;
+    if (gen::kOreEntryCount <= 0) {
+        return total;
+    }
+    /* 每区块的随机序列由种子与区块坐标共同决定, 同一区块反复生成结果一致. */
+    uint32_t state = detail::HashLattice(seed ^ 0x9e3779b9u, coord.x, coord.z) | 1u;
+    const auto next = [&state]() {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        return state;
+    };
+    const auto unit = [&next]() {
+        return static_cast<float>(next() & 0x00ffffffu) / 16777216.0f;
+    };
+
+    for (int32_t index = 0; index < gen::kOreEntryCount; ++index) {
+        const gen::OreEntry& ore = gen::kOreEntries[index];
+        const int32_t wantBlocks = ore.maxBlocks > 0 ? ore.maxBlocks : 1;
+        for (int32_t attempt = 0; attempt < ore.lodes; ++attempt) {
+            if ((next() % 10000u) >= ore.odds) {
+                continue;
+            }
+            /*
+             * 布种点取区块内的随机格: 高度按原版矿脉区间取, 横向限定在本区块,
+             * 因此矿脉不跨区块边界, 相邻区块各自独立布种.
+             */
+            int32_t x = static_cast<int32_t>(unit() * static_cast<float>(kChunkSizeX));
+            int32_t z = static_cast<int32_t>(unit() * static_cast<float>(kChunkSizeZ));
+            if (x >= kChunkSizeX) {
+                x = kChunkSizeX - 1;
+            }
+            if (z >= kChunkSizeZ) {
+                z = kChunkSizeZ - 1;
+            }
+            const int32_t span = ore.maxY > ore.minY ? ore.maxY - ore.minY : 0;
+            int32_t y = ore.minY + static_cast<int32_t>(unit() * static_cast<float>(span + 1));
+            if (y > ore.maxY) {
+                y = ore.maxY;
+            }
+
+            /* 随机游走生长: 步数上限取目标块数的三倍, 允许走出区块后放弃该步. */
+            int32_t placed = 0;
+            for (int32_t step = 0; step < wantBlocks * 3 && placed < wantBlocks; ++step) {
+                if (x >= 0 && x < kChunkSizeX && z >= 0 && z < kChunkSizeZ && y >= 0 && y < kWorldHeight) {
+                    if (column.Get(x, y, z) == static_cast<BlockId>(ore.replace)) {
+                        column.Set(x, y, z, static_cast<BlockId>(ore.block));
+                        ++placed;
+                        ++total;
+                    }
+                }
+                switch (next() % 6u) {
+                    case 0: ++x; break;
+                    case 1: --x; break;
+                    case 2: ++y; break;
+                    case 3: --y; break;
+                    case 4: ++z; break;
+                    default: --z; break;
+                }
+            }
+        }
+    }
+    return total;
+}
+
+int32_t TerrainGenerator::PlantDecorations(ChunkCoord coord, ChunkColumn& column, uint32_t seed) const {
+    int32_t planted = 0;
+    if (kBiomeDecorationCount <= 0) {
+        return planted;
+    }
+    /*
+     * 装饰按区块中心所属群系带取表: 群系带噪声的特征尺度约三百格, 一个 16x16 区块
+     * 绝大多数情况落在同一带内, 逐列判定会让同一簇花草被切碎.
+     */
+    const int32_t baseX = coord.x * kChunkSizeX;
+    const int32_t baseZ = coord.z * kChunkSizeZ;
+    const int32_t band = BiomeAt(seed, baseX + kChunkSizeX / 2, baseZ + kChunkSizeZ / 2);
+    const uint16_t topBlock = kBiomeBands[band].topBlock;
+
+    uint32_t state = detail::HashLattice(seed ^ 0x7f4a7c15u, coord.x, coord.z) | 1u;
+    const auto next = [&state]() {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        return state;
+    };
+
+    for (int32_t index = 0; index < kBiomeDecorationCount; ++index) {
+        const BiomeDecoration& decoration = kBiomeDecorations[index];
+        if (decoration.band != static_cast<uint8_t>(band)) {
+            continue;
+        }
+        for (int32_t attempt = 0; attempt < decoration.attempts; ++attempt) {
+            const int32_t localX = static_cast<int32_t>(next() % static_cast<uint32_t>(kChunkSizeX));
+            const int32_t localZ = static_cast<int32_t>(next() % static_cast<uint32_t>(kChunkSizeZ));
+            const int32_t height = SurfaceHeight(seed, baseX + localX, baseZ + localZ);
+            int32_t targetY = 0;
+            if (height <= kSeaLevel) {
+                /* 水下与水面: 水草, 珊瑚与浮叶都落在海平面那一格的水面上. */
+                if (column.Get(localX, kSeaLevel, localZ) != block::Water) {
+                    continue;
+                }
+                targetY = kSeaLevel;
+            } else {
+                const int32_t above = height + 1;
+                if (above >= kWorldHeight || column.Get(localX, height, localZ) != topBlock) {
+                    continue;
+                }
+                if (column.Get(localX, above, localZ) != block::Air) {
+                    continue;
+                }
+                targetY = above;
+            }
+            column.Set(localX, targetY, localZ, static_cast<BlockId>(decoration.block));
+            ++planted;
+        }
+    }
+    return planted;
+}
+
 void TerrainGenerator::Generate(ChunkCoord coord, ChunkColumn& column, uint32_t seed,
                                 uint8_t treeShape) const {
     FillTerrain(coord, column, seed);
+    /* 先挖洞穴再布矿脉: 洞穴只挖石头, 矿脉只替换石头, 二者不会互相覆盖空腔. */
+    const int32_t carved = CarveCaves(coord, column, seed);
+    const int32_t ores = PlaceOres(coord, column, seed);
     PlantTrees(coord, column, seed, treeShape);
+    /* 装饰最后撒: 树冠占掉的格子不再长花草. */
+    const int32_t decorations = PlantDecorations(coord, column, seed);
+    /*
+     * 生成规模按区块输出一条调试日志: 洞穴与矿脉的体量是地形手感的直接指标,
+     * 数值异常时不必进游戏就能看出生成器是否失效.
+     */
+    IM_LOGD("ImMirrorTerrain", "chunk %d,%d carved=%d ores=%d decor=%d", coord.x, coord.z, carved, ores,
+            decorations);
 }
 
 }  /* namespace immirror::voxel */

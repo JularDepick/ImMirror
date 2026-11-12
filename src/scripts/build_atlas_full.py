@@ -66,39 +66,63 @@ def collect_names():
     return sorted(names)
 
 
+def paint_missing_tile(atlas, slot):
+    """缺图占位格: 64 像素一格的品红与深灰棋盘, 与任何原版贴图都不混淆."""
+    col, row = slot % GRID, slot // GRID
+    tile = Image.new("RGBA", (CELL, CELL), (255, 0, 255, 255))
+    step = CELL // 4
+    pixels = tile.load()
+    for y in range(CELL):
+        for x in range(CELL):
+            if ((x // step) + (y // step)) % 2 == 1:
+                pixels[x, y] = (32, 32, 32, 255)
+    atlas.paste(tile, (col * CELL, row * CELL))
+
+
 def main():
     names = collect_names()
     pngs = {name[:-4] for name in os.listdir(TEX_SOURCE) if name.endswith(".png")}
 
+    """
+    格位分配分三类: 自绘名, 别名, 缺图名.
+    自绘名独占一个格位并写入自己的贴图; 别名只借用源贴图的格位, 自身不绘制,
+    否则别名贴图会覆盖掉源贴图所在的格位 (此前 lavastill 覆盖 stone 即是此因);
+    缺图名统一落到一个专用占位格, 实机上一眼可辨.
+    """
     slot_of = {}
+    drawn_slot_of = {}
     for name, slot in LEGACY_SLOTS.items():
         slot_of[name] = slot
+        drawn_slot_of[slot] = name
     next_slot = 16
     missing_source = []
     for name in names:
         if name in slot_of:
             continue
         if name in FALLBACK:
-            slot_of[name] = slot_of[FALLBACK[name]]
+            source_name = FALLBACK[name]
+            if source_name == name or source_name not in slot_of:
+                missing_source.append(name)
+                continue
+            slot_of[name] = slot_of[source_name]
             continue
         if name in pngs:
-            if next_slot >= GRID * GRID:
+            if next_slot >= GRID * GRID - 1:
                 print("图集格位不足", file=sys.stderr)
                 break
             slot_of[name] = next_slot
+            drawn_slot_of[next_slot] = name
             next_slot += 1
         else:
             missing_source.append(name)
 
+    missing_slot = next_slot
     for name in missing_source:
-        if name in FALLBACK:
-            slot_of[name] = slot_of.get(FALLBACK[name], 0)
-        else:
-            slot_of[name] = 3
+        slot_of[name] = missing_slot
 
     atlas = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     drawn = 0
-    for name, slot in sorted(slot_of.items(), key=lambda kv: kv[1]):
+    for slot, name in sorted(drawn_slot_of.items()):
         source = os.path.join(TEX_SOURCE, name + ".png")
         if not os.path.exists(source):
             continue
@@ -109,6 +133,8 @@ def main():
         image = image.resize((CELL, CELL), Image.LANCZOS)
         atlas.paste(image, (col * CELL, row * CELL))
         drawn += 1
+
+    paint_missing_tile(atlas, missing_slot)
 
     os.makedirs(OUT_DIR, exist_ok=True)
     atlas.save(os.path.join(OUT_DIR, "atlas.png"))
@@ -132,7 +158,7 @@ def main():
     gen_lines.append("")
     gen_lines.append("#include <cstdint>")
     gen_lines.append("")
-    gen_lines.append("namespace immirror::voxel::gen {")
+    gen_lines.append("namespace immirror::voxel::atlas {")
     gen_lines.append("")
     gen_lines.append("constexpr int32_t kAtlasGrid = %d;" % GRID)
     gen_lines.append("constexpr int32_t kAtlasCell = %d;" % CELL)
@@ -150,7 +176,7 @@ def main():
     gen_lines.append("")
     gen_lines.append("constexpr int32_t kAtlasSlotCount = %d;" % len(slot_of))
     gen_lines.append("")
-    gen_lines.append("}  /* namespace immirror::voxel::gen */")
+    gen_lines.append("}  /* namespace immirror::voxel::atlas */")
 
     with open(GEN_HEADER, "w", encoding="utf-8") as handle:
         for line in gen_lines:

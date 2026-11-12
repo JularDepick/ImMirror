@@ -16,7 +16,7 @@ namespace {
 namespace gen = immirror::game::gen;
 
 /* 图集格未指定时的回落标记, 与 BlockInfo 的约定一致. */
-constexpr uint8_t kAtlasFallback = 0xFF;
+constexpr uint16_t kAtlasFallback = 0xFFFF;
 
 /*
  * 兼容段条目, 条目顺序即方块 id 0 到 14. 图集格编号与渲染侧从原版资源合成的

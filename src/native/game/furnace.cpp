@@ -44,7 +44,7 @@ int32_t FurnaceTable::CombustionOf(ItemId item) const {
     }
     for (int32_t index = 0; index < gen::kFuelEntryCount; ++index) {
         if (gen::kFuelEntries[index].item == item) {
-            return gen::kFuelEntries[index].combustion;
+            return gen::kFuelEntries[index].heat;
         }
     }
     return 0;

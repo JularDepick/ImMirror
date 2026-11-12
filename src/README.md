@@ -218,8 +218,9 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 
 ### 5.1 资源与图集
 
-方块贴图来自 `src/assets/blocks/`, 由 `scripts/build_atlas.py` 合成为
-`android/app/src/main/assets/generated/atlas.rgba` (1024x1024 RGBA8, 16x16 格, 每格 64 像素)。
+方块贴图来自素材仓库的 `assets/project/blocks/`, 由 `scripts/build_atlas_full.py` 合成为
+`android/app/src/main/assets/generated/atlas.rgba` (4096x4096 RGBA8, 64x64 格, 每格 64 像素)。
+旧入口 `scripts/build_atlas.py` 只做转发, 保证文档与快捷命令里的旧路径不会产出错误规格的资产。
 音效位于 `src/assets/sounds/`, 由 `scripts/pack_assets.py` 复制到安装包。
 两类产物都不进入版本库, 构建前先执行脚本。
 

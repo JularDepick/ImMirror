@@ -53,6 +53,12 @@ public:
      */
     void SetSpawnExtent(float maxRadius);
 
+    /*
+     * 是否允许主动攻击的生物自然生成. 总装按世界时间下发: 白天只放动物,
+     * 夜间才放怪物, 与原版昼夜刷怪口径一致.
+     */
+    void SetHostileSpawnAllowed(bool allowed) { hostileSpawnAllowed_ = allowed; }
+
     /* 推进全部生物并补充生成, 返回本帧统计. */
     EntityFrameStats Update(double dt, const world::World& world, const PlayerProbe& player);
 
@@ -92,6 +98,7 @@ private:
     int32_t awake_ = 0;
     int32_t deathsPending_ = 0;
     float spawnMaxRadius_ = tuning::kSpawnMaxRadius;
+    bool hostileSpawnAllowed_ = true;
 };
 
 }  /* namespace immirror::entity */

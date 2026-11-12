@@ -212,6 +212,10 @@ void EntityManager::TrySpawn(const world::World& world, const PlayerProbe& playe
     const float scaled = NextUnit() * table.TotalSpawnWeight();
     const uint32_t pick = static_cast<uint32_t>(scaled);
     const MonsterDef& def = table.PickByWeight(pick);
+    /* 白天不生成主动攻击的生物: 抽到怪物直接放弃本次尝试, 不重新抽取. */
+    if (def.hostile && !hostileSpawnAllowed_) {
+        return;
+    }
 
     const core::Vec3 spawn{static_cast<float>(x) + 0.5f, static_cast<float>(surface),
                            static_cast<float>(z) + 0.5f};

@@ -264,7 +264,7 @@ def render_daily_header(templates):
         "",
         "/*",
         " * " + NOTICE + ".",
-        " * 每日任务模板 %d 条." % DAILY_TASK_COUNT,
+        " * 每日任务模板 %d 条; online 目标单位秒." % DAILY_TASK_COUNT,
         " */",
         "namespace immirror::progress::gen {",
         "",

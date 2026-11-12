@@ -275,7 +275,7 @@ void PushBoxOutline(float* out, int32_t& offset, const float* vp, float scale,
 /* 方块图标使用的图集格: 优先顶面, 未指定时回落到默认格. */
 int32_t AtlasCellOf(voxel::BlockId id) {
     const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(id);
-    return info.atlasTop != 0xFF ? static_cast<int32_t>(info.atlasTop)
+    return info.atlasTop != 0xFFFF ? static_cast<int32_t>(info.atlasTop)
                                  : static_cast<int32_t>(info.atlasIndex);
 }
 

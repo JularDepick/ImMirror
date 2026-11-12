@@ -33,11 +33,29 @@ public:
     void SetViewProjection(const float* matrix16, const float* cameraPosition3);
 
     /*
+     * 天空天体: direction3 是指向太阳的单位向量 (世界空间), skyTimeSeconds 用于云层漂移.
+     * 两者都由总装按世界时间折算后下发, 渲染层不读时间也不读存档.
+     */
+    void SetSkySun(const float* direction3, float skyTimeSeconds);
+
+    /*
+     * 天气: kind 与 world::WeatherKind 同值 (0 晴, 1 雨, 2 雪, 3 雷暴),
+     * intensity 0 到 1. 只影响天空压暗与降水叠加层, 不改变地形绘制.
+     */
+    void SetWeather(int32_t kind, float intensity, float seconds);
+
+    /*
      * 设置距离雾密度, 输出亮度与天光混合因子, 每帧由场景组装方折算后下发.
      * density 为 0 表示关闭雾; brightness 为输出颜色的线性系数;
      * skyFactor 夜 0 昼 1, 渲染端按 mix(0.27, 1.0, factor) 压顶点明暗.
      */
     void SetAtmosphere(float fogDensity, float brightness, float skyFactor);
+
+    /*
+     * 视口高度, 天空渐变按它把片元纵坐标归一: 分辨率变化后渐变比例不变.
+     * 缺省 720, 未下发时按固定高度折算, 只影响渐变曲线的稀疏程度.
+     */
+    void SetViewportSize(int32_t width, int32_t height);
 
     /* 按世界版本增量上传脏区块的网格. */
     void Sync(const world::World& world);
@@ -54,7 +72,35 @@ public:
 private:
     struct ChunkBuffer;
 
+    /* 天空渐变: 全屏竖直两色过渡, 在区块之前绘制, 不写深度. */
+    void DrawSky();
+
+    /* 降水叠加层: 雨天斜线, 雪天飘点, 雷暴更密; 在区块之后绘制. */
+    void DrawPrecipitation();
+
     /* 以下成员为本实现的内部状态, 不改变公共接口约定. */
+    uint32_t weatherProgram_ = 0;
+    int32_t uniformWeatherIntensity_ = -1;
+    int32_t uniformWeatherKind_ = -1;
+    int32_t uniformWeatherTime_ = -1;
+    int32_t uniformWeatherViewport_ = -1;
+    int32_t uniformWeatherAspect_ = -1;
+    int32_t weatherKind_ = 0;
+    float weatherIntensity_ = 0.0f;
+    float weatherSeconds_ = 0.0f;
+    uint32_t skyProgram_ = 0;
+    int32_t uniformSkyBlend_ = -1;
+    int32_t uniformSkyInvViewProjection_ = -1;
+    int32_t uniformSkySun_ = -1;
+    int32_t uniformSkyCamera_ = -1;
+    int32_t uniformSkyTime_ = -1;
+    int32_t uniformSkyWeather_ = -1;
+    float inverseViewProjection_[16] = {0.0f};
+    float sunDirection_[3] = {0.0f, 1.0f, 0.0f};
+    float skyTimeSeconds_ = 0.0f;
+    int32_t uniformSkyViewHeight_ = -1;
+    int32_t skyViewportHeight_ = 720;
+    int32_t skyViewportWidth_ = 1280;
     int32_t uniformViewProjection_ = -1;
     int32_t uniformAtlas_ = -1;
     int32_t uniformChunkOrigin_ = -1;

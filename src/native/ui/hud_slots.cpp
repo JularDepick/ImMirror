@@ -4,7 +4,7 @@ namespace immirror::ui {
 namespace {
 
 /* 图集格未指定时的回落标记, 与 BlockInfo 的约定一致. */
-constexpr uint8_t kAtlasFallback = 0xFF;
+constexpr uint16_t kAtlasFallback = 0xFFFF;
 
 /*
  * 槽位顺序即方块栏从左到右的顺序. 新增槽位只需在这张表里追加,

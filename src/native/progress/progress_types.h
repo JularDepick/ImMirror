@@ -15,7 +15,8 @@ enum class StatKind : int32_t {
     kBlockPlace = 1,
     kItemPick = 2,
     kWalkDistance = 3,
-    kOnlineMinutes = 4,
+    kOnlineSeconds = 4,   /* 在线秒数, 与服务端 ONLINE_SECONDS 同域 */
+    kOnlineMinutes = kOnlineSeconds,  /* 旧名, 保留兼容落盘与调用点 */
     kCheckin = 5,
     kOnlineDays = 6,
     kCraft = 7,

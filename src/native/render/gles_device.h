@@ -28,6 +28,7 @@ public:
     void SetFrameLimit(int32_t fps) override;
 
     bool Ready() const override;
+    void SetClearColor(float red, float green, float blue) override;
     void SetSceneCallback(SceneCallback callback, void* user) override;
     const char* BackendName() const override;
     const char* DriverName() const override;
@@ -51,6 +52,10 @@ private:
     int32_t width_ = 0;
     int32_t height_ = 0;
     int32_t clientVersion_ = 0;
+    /* 清屏颜色, 由总装按昼夜下发, 默认值与旧版的深蓝一致. */
+    float clearRed_ = 0.07f;
+    float clearGreen_ = 0.12f;
+    float clearBlue_ = 0.20f;
     bool ready_ = false;
     bool swapFailureLogged_ = false;
     SceneCallback sceneCallback_ = nullptr;

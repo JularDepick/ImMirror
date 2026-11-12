@@ -15,10 +15,7 @@ namespace {
 
 constexpr const char* kTag = "ImMirrorRender";
 
-/* 清屏底色: 深海蓝, 与黑色屏幕可明显区分, 便于人工确认渲染确实生效. */
-constexpr float kClearRed = 0.07f;
-constexpr float kClearGreen = 0.12f;
-constexpr float kClearBlue = 0.20f;
+/* 清屏底色的不透明度; 三个颜色分量由总装按昼夜下发, 见 SetClearColor. */
 constexpr float kClearAlpha = 1.0f;
 
 /* 取图形 API 上报的字符串, 空指针统一转成空串, 避免日志出现 (null). */
@@ -217,7 +214,7 @@ bool GlesDevice::RenderFrame(double frameDeltaSeconds) {
         }
     }
     glViewport(0, 0, width_, height_);
-    glClearColor(kClearRed, kClearGreen, kClearBlue, kClearAlpha);
+    glClearColor(clearRed_, clearGreen_, clearBlue_, kClearAlpha);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if (sceneCallback_ != nullptr) {
         sceneCallback_(sceneUser_);
@@ -234,6 +231,13 @@ bool GlesDevice::RenderFrame(double frameDeltaSeconds) {
 
 bool GlesDevice::Ready() const {
     return ready_;
+}
+
+void GlesDevice::SetClearColor(float red, float green, float blue) {
+    /* 颜色只做范围裁剪, 不做伽马处理: 总装给的就是线性归一化值. */
+    clearRed_ = red < 0.0f ? 0.0f : (red > 1.0f ? 1.0f : red);
+    clearGreen_ = green < 0.0f ? 0.0f : (green > 1.0f ? 1.0f : green);
+    clearBlue_ = blue < 0.0f ? 0.0f : (blue > 1.0f ? 1.0f : blue);
 }
 
 void GlesDevice::SetSceneCallback(SceneCallback callback, void* user) {

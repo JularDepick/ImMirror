@@ -34,6 +34,9 @@ public:
 
     void SetSeed(uint32_t seed);
 
+    /* 当前世界种子, 落盘与新建世界时用来核对地形来源. */
+    uint32_t Seed() const { return seed_; }
+
     /*
      * 以给定世界坐标为圆心维护视距内的区块; 每帧调用开销应当很小.
      * treeShape 只作用于本次调用中新生成的列, 已加载列不回改;

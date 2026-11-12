@@ -17,6 +17,7 @@ import com.julardepick.immirror.account.AccountTheme;
 
 import java.util.Locale;
 import com.julardepick.immirror.account.NoticeBar;
+import com.julardepick.immirror.ui.PageBackground;
 
 /*
  * 背包界面.
@@ -95,7 +96,7 @@ public final class InventoryActivity extends Activity implements InventoryGridVi
     private View buildPage() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(AccountTheme.COLOR_PAGE);
+        PageBackground.apply(root);
         int paddingH = AccountTheme.dp(this, 18f);
         root.setPadding(paddingH, AccountTheme.dp(this, 12f), paddingH, AccountTheme.dp(this, 10f));
 

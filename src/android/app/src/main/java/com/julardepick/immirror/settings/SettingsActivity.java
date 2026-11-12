@@ -18,6 +18,7 @@ import com.julardepick.immirror.R;
 import com.julardepick.immirror.account.AccountTheme;
 import com.julardepick.immirror.account.NoticeBar;
 import com.julardepick.immirror.bridge.NativeBridge;
+import com.julardepick.immirror.ui.PageBackground;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -279,7 +280,7 @@ public final class SettingsActivity extends Activity implements SettingControl.L
 
     private View buildPage() {
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(AccountTheme.COLOR_PAGE);
+        PageBackground.apply(root);
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);

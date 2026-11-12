@@ -14,9 +14,7 @@ using item::ItemId;
 using item::ItemStack;
 
 /*
- * 储物箱实例. 27 格储物空间, 按 9 列 3 行排布, 与原版大箱子的格数一致.
- * chestdef.csv 的战利品表本期不消费: 世界里放置的箱子一律开成空箱,
- * 战利品随机掉落等接入 chestdef 时再补.
+ * 储物箱实例. 格数取 tuning::kChestSlots.
  */
 class ChestState {
 public:

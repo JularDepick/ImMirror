@@ -45,9 +45,18 @@ struct MeshData {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
+    /*
+     * 半透明段在 indices 里的起点与长度. 水面等液体方块的面排在实心面之后,
+     * 渲染侧先画 [0, waterIndexBegin), 再按由远到近画 [waterIndexBegin, 末尾).
+     */
+    size_t waterIndexBegin = 0;
+    size_t waterIndexCount = 0;
+
     void Clear() {
         vertices.clear();
         indices.clear();
+        waterIndexBegin = 0;
+        waterIndexCount = 0;
     }
     bool Empty() const { return vertices.empty(); }
     size_t TriangleCount() const { return indices.size() / 3; }
@@ -89,10 +98,10 @@ struct BlockInfo {
     const char* name = "air";
     bool solid = false;      /* 参与碰撞 */
     bool opaque = false;     /* 遮挡邻面 */
-    uint8_t atlasIndex = 0;  /* 图集格索引, 作为未指定面时的默认值 */
-    uint8_t atlasTop = 0xFF;    /* 顶面图集格, 0xFF 表示回落到 atlasIndex */
-    uint8_t atlasSide = 0xFF;   /* 侧面图集格, 0xFF 表示回落到 atlasIndex */
-    uint8_t atlasBottom = 0xFF; /* 底面图集格, 0xFF 表示回落到 atlasIndex */
+    uint16_t atlasIndex = 0;      /* 图集格索引, 作为未指定面时的默认值 */
+    uint16_t atlasTop = 0xFFFF;    /* 顶面图集格, 0xFFFF 表示回落到 atlasIndex */
+    uint16_t atlasSide = 0xFFFF;   /* 侧面图集格, 0xFFFF 表示回落到 atlasIndex */
+    uint16_t atlasBottom = 0xFFFF; /* 底面图集格, 0xFFFF 表示回落到 atlasIndex */
     /*
      * 原版硬度, 合法范围 -1 到 200, 步长 0.5.
      * -1 表示不可破坏 (空气, 水, 基岩), 既不累计挖掘进度也不响应破坏.

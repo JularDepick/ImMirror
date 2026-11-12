@@ -71,6 +71,1616 @@
    "template": ""
   },
   {
+   "path": "button/common_ani_bg.png",
+   "width": 51,
+   "height": 100,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg78 的 ani_bg",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "ani_bg",
+   "source_rect": [
+    84,
+    833,
+    51,
+    100
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg78"
+  },
+  {
+   "path": "button/common_board_blue_r.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg8 的 board_blue_r",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_blue_r",
+   "source_rect": [
+    739,
+    835,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg8"
+  },
+  {
+   "path": "button/common_board_bottom_blue.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg1 的 board_bottom_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_blue",
+   "source_rect": [
+    737,
+    771,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg1"
+  },
+  {
+   "path": "button/common_board_bottom_blue_big.png",
+   "width": 60,
+   "height": 60,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg1Big 的 board_bottom_blue_big",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_blue_big",
+   "source_rect": [
+    355,
+    832,
+    60,
+    60
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 40,
+    "bottom": 40
+   },
+   "template": "TemplateBigBkg1Big"
+  },
+  {
+   "path": "button/common_board_bottom_blue_r.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg23 的 board_bottom_blue_r",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_bottom_blue_r",
+   "source_rect": [
+    736,
+    803,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg23"
+  },
+  {
+   "path": "button/common_board_check.png",
+   "width": 24,
+   "height": 24,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg8 的 board_check",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_check",
+   "source_rect": [
+    313,
+    637,
+    24,
+    24
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 16,
+    "bottom": 16
+   },
+   "template": "TemplateBkg8"
+  },
+  {
+   "path": "button/common_board_check_circle.png",
+   "width": 24,
+   "height": 24,
+   "category": "button",
+   "purpose": "原版模板 $parentBkg 的 board_check_circle",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_check_circle",
+   "source_rect": [
+    287,
+    637,
+    24,
+    24
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "$parentBkg"
+  },
+  {
+   "path": "button/common_board_check_select.png",
+   "width": 24,
+   "height": 24,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg28 的 board_check_select_",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_check_select_",
+   "source_rect": [
+    261,
+    637,
+    24,
+    24
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 16,
+    "bottom": 16
+   },
+   "template": "TemplateBkg28"
+  },
+  {
+   "path": "button/common_board_map_info_d.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg12 的 board_map_info_d",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_map_info_d",
+   "source_rect": [
+    705,
+    771,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg12"
+  },
+  {
+   "path": "button/common_board_map_pic.png",
+   "width": 15,
+   "height": 15,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg12 的 board_map_pic",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_map_pic",
+   "source_rect": [
+    102,
+    816,
+    15,
+    15
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg12"
+  },
+  {
+   "path": "button/common_board_placeholder_ad.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateGrayFrameBkg 的 board_placeholder_ad",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_placeholder_ad",
+   "source_rect": [
+    704,
+    819,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateGrayFrameBkg"
+  },
+  {
+   "path": "button/common_board_placeholder_map.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateGrayBkg 的 board_placeholder_map",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_placeholder_map",
+   "source_rect": [
+    675,
+    868,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateGrayBkg"
+  },
+  {
+   "path": "button/common_board_recharge_num.png",
+   "width": 15,
+   "height": 15,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg10 的 board_recharge_num",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_recharge_num",
+   "source_rect": [
+    85,
+    816,
+    15,
+    15
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg10"
+  },
+  {
+   "path": "button/common_board_sink.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg5 的 board_sink",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_sink",
+   "source_rect": [
+    643,
+    870,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg5"
+  },
+  {
+   "path": "button/common_board_sink_d.png",
+   "width": 36,
+   "height": 36,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg24 的 board_sink_d",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_sink_d",
+   "source_rect": [
+    30,
+    985,
+    36,
+    36
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 25,
+    "bottom": 25
+   },
+   "template": "TemplateBigBkg24"
+  },
+  {
+   "path": "button/common_board_sink_d2.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg29 的 board_sink_d2",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_sink_d2",
+   "source_rect": [
+    736,
+    803,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg29"
+  },
+  {
+   "path": "button/common_board_tab_blue.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg3 的 board_tab_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_tab_blue",
+   "source_rect": [
+    611,
+    870,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg3"
+  },
+  {
+   "path": "button/common_board_white.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg2 的 board_white",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "board_white",
+   "source_rect": [
+    579,
+    875,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg2"
+  },
+  {
+   "path": "button/common_btn_big_blue.png",
+   "width": 96,
+   "height": 61,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg2 的 btn_big_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_blue",
+   "source_rect": [
+    66,
+    65,
+    96,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg2"
+  },
+  {
+   "path": "button/common_btn_big_empty.png",
+   "width": 96,
+   "height": 61,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg27 的 btn_big_empty",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_empty",
+   "source_rect": [
+    66,
+    2,
+    96,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg27"
+  },
+  {
+   "path": "button/common_btn_big_orange.png",
+   "width": 158,
+   "height": 61,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg4 的 btn_big_orange",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_orange",
+   "source_rect": [
+    183,
+    574,
+    158,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg4"
+  },
+  {
+   "path": "button/common_btn_big_red.png",
+   "width": 182,
+   "height": 61,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg3_1 的 btn_big_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_red",
+   "source_rect": [
+    195,
+    392,
+    182,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg3_1"
+  },
+  {
+   "path": "button/common_btn_big_yellow.png",
+   "width": 182,
+   "height": 61,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg3 的 btn_big_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_big_yellow",
+   "source_rect": [
+    144,
+    511,
+    182,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg3"
+  },
+  {
+   "path": "button/common_btn_long_red.png",
+   "width": 30,
+   "height": 41,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg43 的 btn_long_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_long_red",
+   "source_rect": [
+    160,
+    137,
+    30,
+    41
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg43"
+  },
+  {
+   "path": "button/common_btn_middle_blue.png",
+   "width": 130,
+   "height": 50,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg24 的 btn_middle_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_blue",
+   "source_rect": [
+    506,
+    915,
+    130,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg24"
+  },
+  {
+   "path": "button/common_btn_middle_empty.png",
+   "width": 130,
+   "height": 50,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg18 的 btn_middle_empty",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_empty",
+   "source_rect": [
+    417,
+    831,
+    130,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg18"
+  },
+  {
+   "path": "button/common_btn_middle_red.png",
+   "width": 130,
+   "height": 50,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg40 的 btn_middle_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_red",
+   "source_rect": [
+    374,
+    926,
+    130,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg40"
+  },
+  {
+   "path": "button/common_btn_middle_yellow.png",
+   "width": 130,
+   "height": 50,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg23 的 btn_middle_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_middle_yellow",
+   "source_rect": [
+    335,
+    455,
+    130,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg23"
+  },
+  {
+   "path": "button/common_btn_mini_blue.png",
+   "width": 40,
+   "height": 43,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg15 的 btn_mini_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_blue",
+   "source_rect": [
+    466,
+    785,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg15"
+  },
+  {
+   "path": "button/common_btn_mini_empty.png",
+   "width": 40,
+   "height": 43,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg88 的 btn_mini_empty",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_empty",
+   "source_rect": [
+    467,
+    978,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg88"
+  },
+  {
+   "path": "button/common_btn_mini_gray.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg7 的 btn_mini_gray",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray",
+   "source_rect": [
+    508,
+    785,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBkg7"
+  },
+  {
+   "path": "button/common_btn_mini_gray_b.png",
+   "width": 40,
+   "height": 43,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg84 的 btn_mini_gray_b",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_b",
+   "source_rect": [
+    374,
+    787,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg84"
+  },
+  {
+   "path": "button/common_btn_mini_gray_d.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateMiniGray_DBkg 的 btn_mini_gray_d",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_d",
+   "source_rect": [
+    547,
+    883,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateMiniGray_DBkg"
+  },
+  {
+   "path": "button/common_btn_mini_gray_n.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg6 的 btn_mini_gray_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_n",
+   "source_rect": [
+    515,
+    883,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBkg6"
+  },
+  {
+   "path": "button/common_btn_mini_gray_n_flat.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg6_1 的 btn_mini_gray_n_flat",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_n_flat",
+   "source_rect": [
+    483,
+    883,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBkg6_1"
+  },
+  {
+   "path": "button/common_btn_mini_gray_p.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg75 的 btn_mini_gray_p",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_p",
+   "source_rect": [
+    451,
+    883,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBkg75"
+  },
+  {
+   "path": "button/common_btn_mini_gray_r.png",
+   "width": 72,
+   "height": 47,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg74 的 btn_mini_gray_r",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_gray_r",
+   "source_rect": [
+    590,
+    821,
+    72,
+    47
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg74"
+  },
+  {
+   "path": "button/common_btn_mini_green_n.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg76 的 btn_mini_green_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_green_n",
+   "source_rect": [
+    419,
+    883,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBkg76"
+  },
+  {
+   "path": "button/common_btn_mini_lightblue.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg85 的 btn_mini_lightblue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_lightblue",
+   "source_rect": [
+    387,
+    894,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg85"
+  },
+  {
+   "path": "button/common_btn_mini_orange.png",
+   "width": 40,
+   "height": 43,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg5 的 btn_mini_orange",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_orange",
+   "source_rect": [
+    176,
+    92,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg5"
+  },
+  {
+   "path": "button/common_btn_mini_red.png",
+   "width": 40,
+   "height": 43,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg21 的 btn_mini_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_red",
+   "source_rect": [
+    176,
+    47,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg21"
+  },
+  {
+   "path": "button/common_btn_mini_red_n.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg77 的 btn_mini_red_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_red_n",
+   "source_rect": [
+    355,
+    894,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBkg77"
+  },
+  {
+   "path": "button/common_btn_mini_yellow.png",
+   "width": 40,
+   "height": 43,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg9 的 btn_mini_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_mini_yellow",
+   "source_rect": [
+    176,
+    2,
+    40,
+    43
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg9"
+  },
+  {
+   "path": "button/common_btn_oversized_blue.png",
+   "width": 70,
+   "height": 81,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg56_1 的 btn_oversized_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_oversized_blue",
+   "source_rect": [
+    66,
+    429,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg56_1"
+  },
+  {
+   "path": "button/common_btn_square_yellow.png",
+   "width": 47,
+   "height": 50,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg53 的 btn_square_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_square_yellow",
+   "source_rect": [
+    531,
+    720,
+    47,
+    50
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg53"
+  },
+  {
+   "path": "button/common_btn_superbig_blue.png",
+   "width": 70,
+   "height": 81,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg56 的 btn_superbig_blue",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_blue",
+   "source_rect": [
+    66,
+    429,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg56"
+  },
+  {
+   "path": "button/common_btn_superbig_orange.png",
+   "width": 70,
+   "height": 81,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg86 的 btn_superbig_orange",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_orange",
+   "source_rect": [
+    66,
+    263,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg86"
+  },
+  {
+   "path": "button/common_btn_superbig_red.png",
+   "width": 70,
+   "height": 81,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg26 的 btn_superbig_red",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_red",
+   "source_rect": [
+    66,
+    180,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBigBkg26"
+  },
+  {
+   "path": "button/common_btn_superbig_yellow.png",
+   "width": 70,
+   "height": 81,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg57 的 btn_superbig_yellow",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "btn_superbig_yellow",
+   "source_rect": [
+    302,
+    929,
+    70,
+    81
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg57"
+  },
+  {
+   "path": "button/common_frame_commend.png",
+   "width": 30,
+   "height": 30,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg30 的 frame_commend",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "frame_commend",
+   "source_rect": [
+    218,
+    99,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBkg30"
+  },
+  {
+   "path": "button/common_frame_title_board.png",
+   "width": 30,
+   "height": 36,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg25 的 frame_title_board",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "frame_title_board",
+   "source_rect": [
+    68,
+    985,
+    30,
+    36
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 24
+   },
+   "template": "TemplateBkg25"
+  },
+  {
+   "path": "button/common_icon_add_green.png",
+   "width": 48,
+   "height": 48,
+   "category": "button",
+   "purpose": "原版模板 $parentAddIcon 的 icon_add_green",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_add_green",
+   "source_rect": [
+    589,
+    771,
+    48,
+    48
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "$parentAddIcon"
+  },
+  {
+   "path": "button/common_icon_pull.png",
+   "width": 26,
+   "height": 47,
+   "category": "button",
+   "purpose": "原版模板 $parentIcon 的 icon_pull",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_pull",
+   "source_rect": [
+    639,
+    771,
+    26,
+    47
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "$parentIcon"
+  },
+  {
+   "path": "button/common_icon_tick_multi.png",
+   "width": 20,
+   "height": 20,
+   "category": "button",
+   "purpose": "原版模板 $parentTick 的 icon_tick_multi",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "icon_tick_multi",
+   "source_rect": [
+    339,
+    637,
+    20,
+    20
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "$parentTick"
+  },
+  {
+   "path": "button/common_img_bar_photo.png",
+   "width": 15,
+   "height": 15,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg44 的 img_bar_photo",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_bar_photo",
+   "source_rect": [
+    68,
+    816,
+    15,
+    15
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 10,
+    "bottom": 10
+   },
+   "template": "TemplateBkg44"
+  },
+  {
+   "path": "button/common_img_board_select.png",
+   "width": 15,
+   "height": 15,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg80 的 img_board_select",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_board_select",
+   "source_rect": [
+    34,
+    816,
+    15,
+    15
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 13,
+    "bottom": 13
+   },
+   "template": "TemplateBkg80"
+  },
+  {
+   "path": "button/common_img_close_bd.png",
+   "width": 84,
+   "height": 56,
+   "category": "button",
+   "purpose": "原版模板 TemplateCloseDd 的 img_close_bd",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_close_bd",
+   "source_rect": [
+    439,
+    662,
+    84,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateCloseDd"
+  },
+  {
+   "path": "button/common_img_doubt.png",
+   "width": 70,
+   "height": 56,
+   "category": "button",
+   "purpose": "原版模板 TemplateHelpDd 的 img_doubt",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_doubt",
+   "source_rect": [
+    525,
+    662,
+    70,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateHelpDd"
+  },
+  {
+   "path": "button/common_img_icon_lignt.png",
+   "width": 78,
+   "height": 78,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg15 的 img_icon_lignt",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_icon_lignt",
+   "source_rect": [
+    138,
+    180,
+    78,
+    78
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 52,
+    "bottom": 52
+   },
+   "template": "TemplateBigBkg15"
+  },
+  {
+   "path": "button/common_img_icon_shortcut.png",
+   "width": 92,
+   "height": 92,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg38 的 img_icon_shortcut",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_icon_shortcut",
+   "source_rect": [
+    208,
+    929,
+    92,
+    92
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg38"
+  },
+  {
+   "path": "button/common_img_line_drak.png",
+   "width": 6,
+   "height": 1,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg36 的 img_line_drak",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_line_drak",
+   "source_rect": [
+    159,
+    929,
+    6,
+    1
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg36"
+  },
+  {
+   "path": "button/common_img_line_sink.png",
+   "width": 6,
+   "height": 3,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg20 的 img_line_sink",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_line_sink",
+   "source_rect": [
+    137,
+    929,
+    6,
+    3
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg20"
+  },
+  {
+   "path": "button/common_img_title.png",
+   "width": 303,
+   "height": 56,
+   "category": "button",
+   "purpose": "原版模板 TemplateTitleLeftBkg 的 img_title",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_title",
+   "source_rect": [
+    679,
+    2,
+    303,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateTitleLeftBkg"
+  },
+  {
+   "path": "button/common_img_title_bd.png",
+   "width": 30,
+   "height": 61,
+   "category": "button",
+   "purpose": "原版模板 TemplateBigBkg4 的 img_title_bd",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_title_bd",
+   "source_rect": [
+    328,
+    508,
+    30,
+    61
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBigBkg4"
+  },
+  {
+   "path": "button/common_img_title_gather.png",
+   "width": 303,
+   "height": 56,
+   "category": "button",
+   "purpose": "原版模板 $parentBkgLeft 的 img_title_gather",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "img_title_gather",
+   "source_rect": [
+    374,
+    2,
+    303,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "$parentBkgLeft"
+  },
+  {
+   "path": "button/common_tab_clip_left_h.png",
+   "width": 154,
+   "height": 67,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg93 的 tab_clip_left_h",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_clip_left_h",
+   "source_rect": [
+    176,
+    745,
+    154,
+    67
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg93"
+  },
+  {
+   "path": "button/common_tab_clip_left_n.png",
+   "width": 113,
+   "height": 60,
+   "category": "button",
+   "purpose": "原版模板 TemplateBkg92 的 tab_clip_left_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_clip_left_n",
+   "source_rect": [
+    360,
+    507,
+    113,
+    60
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBkg92"
+  },
+  {
+   "path": "button/common_tab_fullpage_left_h.png",
+   "width": 183,
+   "height": 60,
+   "category": "button",
+   "purpose": "原版模板 TemplateTabFullpageH 的 tab_fullpage_left_h",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_fullpage_left_h",
+   "source_rect": [
+    254,
+    663,
+    183,
+    60
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateTabFullpageH"
+  },
+  {
+   "path": "button/common_tab_fullpage_left_n.png",
+   "width": 175,
+   "height": 60,
+   "category": "button",
+   "purpose": "原版模板 TemplateTabFullpageN 的 tab_fullpage_left_n",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_fullpage_left_n",
+   "source_rect": [
+    343,
+    571,
+    175,
+    60
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateTabFullpageN"
+  },
+  {
+   "path": "button/common_tab_up_h.png",
+   "width": 160,
+   "height": 49,
+   "category": "button",
+   "purpose": "原版模板 $parentChecked 的 tab_up_h",
+   "source_page": "texture2/common.ktx",
+   "source_sprite": "tab_up_h",
+   "source_rect": [
+    580,
+    720,
+    160,
+    49
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "$parentChecked"
+  },
+  {
    "path": "button/compact_blue.png",
    "width": 40,
    "height": 43,
@@ -1060,6 +2670,236 @@
    "template": ""
   },
   {
+   "path": "lobby/main_lobby_board_enter_workshop.png",
+   "width": 99,
+   "height": 98,
+   "category": "lobby",
+   "purpose": "原版大厅素材 board_enter_workshop",
+   "source_page": "texture0/main_lobby.ktx",
+   "source_sprite": "board_enter_workshop",
+   "source_rect": [
+    291,
+    252,
+    99,
+    98
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "lobby/main_lobby_board_workshop.png",
+   "width": 207,
+   "height": 48,
+   "category": "lobby",
+   "purpose": "原版大厅素材 board_workshop",
+   "source_page": "texture0/main_lobby.ktx",
+   "source_sprite": "board_workshop",
+   "source_rect": [
+    302,
+    2,
+    207,
+    48
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "lobby/main_lobby_btn_blue_hall.png",
+   "width": 221,
+   "height": 88,
+   "category": "lobby",
+   "purpose": "原版大厅素材 btn_blue_hall",
+   "source_page": "texture0/main_lobby.ktx",
+   "source_sprite": "btn_blue_hall",
+   "source_rect": [
+    2,
+    191,
+    221,
+    88
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "lobby/main_lobby_btn_dgreen_hall.png",
+   "width": 160,
+   "height": 54,
+   "category": "lobby",
+   "purpose": "原版大厅素材 btn_dgreen_hall",
+   "source_page": "texture0/main_lobby.ktx",
+   "source_sprite": "btn_dgreen_hall",
+   "source_rect": [
+    291,
+    190,
+    160,
+    54
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "lobby/main_lobby_btn_lgreen_hall.png",
+   "width": 221,
+   "height": 88,
+   "category": "lobby",
+   "purpose": "原版大厅素材 btn_lgreen_hall",
+   "source_page": "texture0/main_lobby.ktx",
+   "source_sprite": "btn_lgreen_hall",
+   "source_rect": [
+    2,
+    101,
+    221,
+    88
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "lobby/main_lobby_btn_orange_hall.png",
+   "width": 298,
+   "height": 97,
+   "category": "lobby",
+   "purpose": "原版大厅素材 btn_orange_hall",
+   "source_page": "texture0/main_lobby.ktx",
+   "source_sprite": "btn_orange_hall",
+   "source_rect": [
+    2,
+    2,
+    298,
+    97
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "lobby/main_lobby_icon_halltop_friend.png",
+   "width": 56,
+   "height": 56,
+   "category": "lobby",
+   "purpose": "原版大厅素材 icon_halltop_friend",
+   "source_page": "texture2/main_lobby.ktx",
+   "source_sprite": "icon_halltop_friend",
+   "source_rect": [
+    60,
+    118,
+    56,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "lobby/main_lobby_icon_halltop_letter.png",
+   "width": 56,
+   "height": 56,
+   "category": "lobby",
+   "purpose": "原版大厅素材 icon_halltop_letter",
+   "source_page": "texture2/main_lobby.ktx",
+   "source_sprite": "icon_halltop_letter",
+   "source_rect": [
+    2,
+    118,
+    56,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "lobby/main_lobby_icon_halltop_pack.png",
+   "width": 56,
+   "height": 56,
+   "category": "lobby",
+   "purpose": "原版大厅素材 icon_halltop_pack",
+   "source_page": "texture2/main_lobby.ktx",
+   "source_sprite": "icon_halltop_pack",
+   "source_rect": [
+    408,
+    208,
+    56,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
+   "path": "lobby/main_lobby_icon_halltop_set.png",
+   "width": 56,
+   "height": 56,
+   "category": "lobby",
+   "purpose": "原版大厅素材 icon_halltop_set",
+   "source_page": "texture2/main_lobby.ktx",
+   "source_sprite": "icon_halltop_set",
+   "source_rect": [
+    410,
+    150,
+    56,
+    56
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": ""
+  },
+  {
    "path": "misc/bar_fill_green.png",
    "width": 3,
    "height": 3,
@@ -1334,6 +3174,98 @@
     "bottom": 0
    },
    "template": ""
+  },
+  {
+   "path": "panel/messagebox_board_clip.png",
+   "width": 300,
+   "height": 90,
+   "category": "panel",
+   "purpose": "原版模板 TemplateBkg1 的 board_clip",
+   "source_page": "texture2/messagebox.ktx",
+   "source_sprite": "board_clip",
+   "source_rect": [
+    2,
+    71,
+    300,
+    90
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 200,
+    "bottom": 60
+   },
+   "template": "TemplateBkg1"
+  },
+  {
+   "path": "panel/messagebox_board_clip_title.png",
+   "width": 330,
+   "height": 67,
+   "category": "panel",
+   "purpose": "原版模板 TemplateBigBkg31 的 board_clip_title",
+   "source_page": "texture2/messagebox.ktx",
+   "source_sprite": "board_clip_title",
+   "source_rect": [
+    2,
+    2,
+    330,
+    67
+   ],
+   "draw": "stretch",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 0,
+    "bottom": 0
+   },
+   "template": "TemplateBigBkg31"
+  },
+  {
+   "path": "panel/messagebox_board_tips_explain.png",
+   "width": 30,
+   "height": 30,
+   "category": "panel",
+   "purpose": "原版模板 TemplateBigBkg20 的 board_tips_explain",
+   "source_page": "texture2/messagebox.ktx",
+   "source_sprite": "board_tips_explain",
+   "source_rect": [
+    366,
+    2,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg20"
+  },
+  {
+   "path": "panel/messagebox_board_tips_icon.png",
+   "width": 30,
+   "height": 30,
+   "category": "panel",
+   "purpose": "原版模板 TemplateBigBkg19 的 board_tips_icon",
+   "source_page": "texture2/messagebox.ktx",
+   "source_sprite": "board_tips_icon",
+   "source_rect": [
+    334,
+    2,
+    30,
+    30
+   ],
+   "draw": "nine_slice",
+   "insets": {
+    "left": 0,
+    "top": 0,
+    "right": 20,
+    "bottom": 20
+   },
+   "template": "TemplateBigBkg19"
   },
   {
    "path": "panel/surface_blue.png",

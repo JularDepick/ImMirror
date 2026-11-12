@@ -30,17 +30,17 @@ constexpr float kBlockedJumpCooldown = 0.8f;
  * 生成与存活. 生物只在地表按概率生成, 生成环避开玩家脚下近处;
  * 超出休眠半径的生物暂停 AI, 超出移除半径的直接回收.
  */
-constexpr int32_t kMaxCreatures = 16;  /* 观感平衡: 同时在场生物上限 */
+constexpr int32_t kMaxCreatures = 10;  /* 观感平衡: 同时在场生物上限 */
 /* 玩家生命上限与生成密度. 生命上限取原版玩家数值; 密度按观感可调. */
 constexpr float kPlayerMaxHealth = 100.0f;
 constexpr float kPlayerRegenPerSecond = 1.0f;    /* 脱战回血 */
 constexpr float kPlayerRespawnSeconds = 3.0f;    /* 死亡后重生延迟 */
-constexpr int32_t kSpawnCapPerPlayer = 12;       /* 存活生物上限 */
-constexpr double kSpawnIntervalSeconds = 2.5;
-constexpr int32_t kSpawnAttemptsPerTick = 6;
-constexpr float kSpawnMinRadius = 10.0f;
+constexpr int32_t kSpawnCapPerPlayer = 8;        /* 存活生物上限 */
+constexpr double kSpawnIntervalSeconds = 6.0;    /* 生成间隔: 首夜不会一次围满 */
+constexpr int32_t kSpawnAttemptsPerTick = 4;
+constexpr float kSpawnMinRadius = 12.0f;
 constexpr float kSpawnMaxRadius = 34.0f;
-constexpr float kSpawnChancePerAttempt = 0.55f;
+constexpr float kSpawnChancePerAttempt = 0.35f;
 constexpr float kSleepRadius = 40.0f;
 constexpr float kDespawnRadius = 80.0f;
 
@@ -59,7 +59,7 @@ constexpr float kTurnSpeed = 9.0f;         /* 朝向插值速度, 弧度每秒 *
 constexpr float kPlayerReach = 4.5f;        /* 攻击生物的视线长度 */
 constexpr float kAttackHoldInterval = 0.45f; /* 按住连续攻击的间隔 */
 /* 生物伤害按原表 attack 值折算的比例, 原表数值面向原版血量体系. */
-constexpr float kDamageScale = 0.08f;
+constexpr float kDamageScale = 0.5f;
 constexpr float kFistDamage = 5.0f;          /* 空手单次伤害 */
 constexpr float kHeldBlockBaseDamage = 3.0f; /* 手持方块的基础伤害 */
 constexpr float kHeldBlockHardnessScale = 1.5f;

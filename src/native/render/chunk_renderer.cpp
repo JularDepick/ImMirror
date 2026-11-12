@@ -1,7 +1,10 @@
 #include "render/chunk_renderer.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <string>
+#include <vector>
 
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
@@ -114,6 +117,234 @@ void main() {
     outColor = vec4(color * uBrightness, texel.a);
 }
 )glsl";
+
+/*
+ * 天空渐变着色器. 顶点由 gl_VertexID 直接生成全屏三角带, 不需要缓冲对象;
+ * 片元按屏幕竖直位置在天顶与地平线两色之间过渡, 再按天光因子在昼夜两套配色间混合.
+ * 天空只提供背景, 因此不写深度也不做雾混合, 区块与生物随后覆盖其上.
+ */
+const char* const kSkyVertexShaderSource = R"glsl(#version 300 es
+uniform mat4 uInvViewProjection;
+
+out vec3 vFarPoint;
+
+void main() {
+    /*
+     * 全屏三角带的四个顶点, 每点反投影到远平面得到世界坐标.
+     * 远平面点在屏幕空间是线性插值的, 片元里减去相机位置就得到视线方向,
+     * 因此太阳与云层都按真实方向计算, 不受视口比例影响.
+     */
+    vec2 corner = vec2((gl_VertexID == 1 || gl_VertexID == 3) ? 1.0 : -1.0,
+                       (gl_VertexID >= 2) ? 1.0 : -1.0);
+    vec4 farPoint = uInvViewProjection * vec4(corner, 1.0, 1.0);
+    vFarPoint = farPoint.xyz / farPoint.w;
+    gl_Position = vec4(corner, 0.0, 1.0);
+}
+)glsl";
+
+const char* const kSkyFragmentShaderSource = R"glsl(#version 300 es
+precision mediump float;
+
+/* 昼夜两套天空配色: 天顶与地平线各一组, 由 uSkyFactor 线性混合. */
+const vec3 kDayTop = vec3(0.38, 0.62, 0.92);
+const vec3 kDayHorizon = vec3(0.72, 0.87, 0.98);
+const vec3 kNightTop = vec3(0.03, 0.05, 0.12);
+const vec3 kNightHorizon = vec3(0.09, 0.12, 0.22);
+
+uniform float uSkyFactor;
+uniform float uViewportHeight;
+uniform vec3 uSunDirection;
+uniform vec3 uCameraPosition;
+uniform float uSkyTime;
+/* 降水强度 0 到 1: 天色压暗并压掉太阳, 云的覆盖度不变. */
+uniform float uWeatherIntensity;
+
+in vec3 vFarPoint;
+
+out vec4 outColor;
+
+/* 二维值噪声与四层叠加, 云层用; 采样完全由坐标决定, 不依赖纹理. */
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float valueNoise(vec2 p) {
+    vec2 cell = floor(p);
+    vec2 weight = fract(p);
+    weight = weight * weight * (3.0 - 2.0 * weight);
+    float v00 = hash(cell);
+    float v10 = hash(cell + vec2(1.0, 0.0));
+    float v01 = hash(cell + vec2(0.0, 1.0));
+    float v11 = hash(cell + vec2(1.0, 1.0));
+    return mix(mix(v00, v10, weight.x), mix(v01, v11, weight.x), weight.y);
+}
+
+float cloudDensity(vec2 p) {
+    float sum = 0.0;
+    float amplitude = 0.55;
+    float frequency = 1.0;
+    for (int octave = 0; octave < 4; ++octave) {
+        sum += valueNoise(p * frequency) * amplitude;
+        frequency *= 2.03;
+        amplitude *= 0.5;
+    }
+    return sum;
+}
+
+void main() {
+    /*
+     * 天空底色: gl_FragCoord 原点在左下, y 越大越接近天顶; 开平方让地平线附近
+     * 的色彩变化更慢. 昼夜两套配色按天光因子混合.
+     */
+    float height = clamp(gl_FragCoord.y / max(uViewportHeight, 1.0), 0.0, 1.0);
+    float curve = sqrt(height);
+    float factor = clamp(uSkyFactor, 0.0, 1.0);
+    vec3 top = mix(kNightTop, kDayTop, factor);
+    vec3 horizon = mix(kNightHorizon, kDayHorizon, factor);
+    vec3 color = mix(horizon, top, curve);
+
+    /* 视线方向: 远平面点减去相机位置; 地平线以下不再画天体. */
+    vec3 direction = normalize(vFarPoint - uCameraPosition);
+    float up = direction.y;
+
+    /*
+     * 云层: 视线与云平面相交后取二维噪声, 按时间平移形成缓慢漂移;
+     * 只在地平线以上绘制, 靠近地平线时淡出, 避免出现硬边.
+     */
+    if (up > 0.015) {
+        float planeDistance = (1200.0 - uCameraPosition.y) / max(up, 0.015);
+        vec2 cloudPoint = (uCameraPosition.xz + direction.xz * planeDistance) * 0.0045;
+        cloudPoint += vec2(uSkyTime * 0.006, uSkyTime * 0.0035);
+        float density = cloudDensity(cloudPoint);
+        float coverage = smoothstep(0.42, 0.72, density);
+        float fade = smoothstep(0.015, 0.18, up);
+        vec3 cloudColor = mix(vec3(0.62, 0.66, 0.72), vec3(1.0, 0.99, 0.96), factor);
+        color = mix(color, cloudColor, coverage * fade * 0.85);
+    }
+
+    /* 太阳: 实心盘面加热晕, 夜间由天光因子压掉, 落到地平线以下不画. */
+    float sunDot = dot(direction, normalize(uSunDirection));
+    float sunDisc = smoothstep(0.9985, 0.9995, sunDot);
+    float sunHalo = pow(max(sunDot, 0.0), 64.0) * 0.35;
+    float sunVisible = clamp(uSunDirection.y * 4.0 + 0.25, 0.0, 1.0) * factor;
+    color += vec3(1.0, 0.94, 0.78) * (sunDisc * 1.0 + sunHalo) * sunVisible;
+
+    /* 雨雪天压暗并去饱和: 阴天没有蓝天, 太阳也被云挡住. */
+    float storm = clamp(uWeatherIntensity, 0.0, 1.0);
+    float grey = dot(color, vec3(0.299, 0.587, 0.114));
+    color = mix(color, vec3(grey) * 0.72, storm * 0.85);
+
+    outColor = vec4(color, 1.0);
+}
+)glsl";
+
+/*
+ * 降水叠加层着色器.
+ * 顶点由 gl_VertexID 生成全屏三角带; 片元在屏幕空间画斜向雨线或飘雪点.
+ * 雨与雪都按强度放大密度, 颜色偏冷白, 混合在半透明通道里完成.
+ */
+const char* const kWeatherVertexShaderSource = R"glsl(#version 300 es
+void main() {
+    vec2 corner = vec2((gl_VertexID == 1 || gl_VertexID == 3) ? 1.0 : -1.0,
+                       (gl_VertexID >= 2) ? 1.0 : -1.0);
+    gl_Position = vec4(corner, 0.0, 1.0);
+}
+)glsl";
+
+const char* const kWeatherFragmentShaderSource = R"glsl(#version 300 es
+precision mediump float;
+
+uniform vec2 uViewportSize;
+uniform float uAspect;
+uniform float uTime;
+uniform float uIntensity;
+/* 0 雨, 1 雪; 雷暴与雨同一形态, 只提高密度. */
+uniform float uSnow;
+
+out vec4 outColor;
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+void main() {
+    vec2 screen = gl_FragCoord.xy / max(uViewportSize, vec2(1.0));
+    vec2 p = vec2(screen.x * uAspect, screen.y);
+    float storm = clamp(uIntensity, 0.0, 1.0);
+    if (storm <= 0.001) {
+        discard;
+    }
+    float alpha = 0.0;
+    if (uSnow < 0.5) {
+        /* 雨: 斜向细线, 每条线按列哈希决定是否出现, 随时间向下滚动. */
+        float column = floor((p.x * 90.0 + p.y * 26.0));
+        float phase = fract((p.y + uTime * 1.9) * 9.0 + hash(vec2(column, 3.0)) * 5.0);
+        float present = step(0.72, hash(vec2(column, 7.0)));
+        alpha = present * smoothstep(0.0, 0.10, phase) * smoothstep(0.55, 0.15, phase);
+    } else {
+        /* 雪: 稀疏漂点, 横向按正弦摆动, 下落更慢. */
+        vec2 cell = floor(vec2(p.x * 70.0 + sin(uTime * 0.7 + p.y * 12.0) * 0.6,
+                               p.y * 45.0 + uTime * 0.35));
+        float present = step(0.86, hash(cell));
+        float phase = fract(p.y * 45.0 + uTime * 0.35);
+        alpha = present * smoothstep(0.0, 0.2, phase) * smoothstep(1.0, 0.6, phase);
+    }
+    if (alpha <= 0.001) {
+        discard;
+    }
+    vec3 tint = uSnow < 0.5 ? vec3(0.72, 0.80, 0.92) : vec3(0.96, 0.98, 1.0);
+    outColor = vec4(tint, alpha * storm * (uSnow < 0.5 ? 0.42 : 0.55));
+}
+)glsl";
+
+/*
+ * 列主序 4x4 矩阵求逆, 供天空通道把片元反投影成世界视线.
+ * 视投影矩阵在场景里恒可逆 (近远平面有效且相机不退化), 不可逆时返回 false,
+ * 调用方保留上一帧的逆矩阵, 天空退化为不随视角变化, 不影响地形绘制.
+ */
+bool InvertMatrix4(const float* source, float* out) {
+    const float a00 = source[0], a01 = source[1], a02 = source[2], a03 = source[3];
+    const float a10 = source[4], a11 = source[5], a12 = source[6], a13 = source[7];
+    const float a20 = source[8], a21 = source[9], a22 = source[10], a23 = source[11];
+    const float a30 = source[12], a31 = source[13], a32 = source[14], a33 = source[15];
+
+    const float b00 = a00 * a11 - a01 * a10;
+    const float b01 = a00 * a12 - a02 * a10;
+    const float b02 = a00 * a13 - a03 * a10;
+    const float b03 = a01 * a12 - a02 * a11;
+    const float b04 = a01 * a13 - a03 * a11;
+    const float b05 = a02 * a13 - a03 * a12;
+    const float b06 = a20 * a31 - a21 * a30;
+    const float b07 = a20 * a32 - a22 * a30;
+    const float b08 = a20 * a33 - a23 * a30;
+    const float b09 = a21 * a32 - a22 * a31;
+    const float b10 = a21 * a33 - a23 * a31;
+    const float b11 = a22 * a33 - a23 * a32;
+
+    const float determinant = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+    if (determinant > -1.0e-12f && determinant < 1.0e-12f) {
+        return false;
+    }
+    const float inverse = 1.0f / determinant;
+
+    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * inverse;
+    out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * inverse;
+    out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * inverse;
+    out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * inverse;
+    out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * inverse;
+    out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * inverse;
+    out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * inverse;
+    out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * inverse;
+    out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * inverse;
+    out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * inverse;
+    out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * inverse;
+    out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * inverse;
+    out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * inverse;
+    out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * inverse;
+    out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * inverse;
+    out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * inverse;
+    return true;
+}
 
 /*
  * 当前线程是否有可用的图形上下文.
@@ -346,8 +577,10 @@ bool EnsureBufferObjects(GLuint* vao, GLuint* vbo, GLuint* ibo) {
  * 差量合并需要额外的映射表, 得不偿失.
  */
 bool UploadMeshData(GLuint vao, GLuint vbo, GLuint ibo, const voxel::MeshData& mesh,
-                    GLsizei* outIndexCount) {
+                    GLsizei* outIndexCount, GLsizei* outWaterBegin, GLsizei* outWaterCount) {
     *outIndexCount = 0;
+    *outWaterBegin = 0;
+    *outWaterCount = 0;
     if (mesh.vertices.empty() || mesh.indices.empty()) {
         /* 空网格只保留缓冲对象, 绘制时按索引数 0 跳过. */
         return true;
@@ -367,6 +600,8 @@ bool UploadMeshData(GLuint vao, GLuint vbo, GLuint ibo, const voxel::MeshData& m
         return false;
     }
     *outIndexCount = static_cast<GLsizei>(mesh.indices.size());
+    *outWaterBegin = static_cast<GLsizei>(mesh.waterIndexBegin);
+    *outWaterCount = static_cast<GLsizei>(mesh.waterIndexCount);
     return true;
 }
 
@@ -381,6 +616,8 @@ struct ChunkRenderer::ChunkBuffer {
     GLuint vbo = 0;
     GLuint ibo = 0;
     GLsizei indexCount = 0;
+    GLsizei waterIndexBegin = 0; /* 半透明段起点, 与 indexCount 同单位 (索引个数) */
+    GLsizei waterIndexCount = 0; /* 半透明段索引个数, 0 表示该区块没有液体面 */
     float originX = 0.0f;       /* 区块原点, 绘制时叠加到局部坐标上 */
     float originZ = 0.0f;
     uint64_t revision = 0;      /* 已上传网格对应的区块修订号 */
@@ -418,6 +655,85 @@ bool ChunkRenderer::Initialize(AAssetManager* assets) {
         IM_LOGE(kTag, "chunk shader program unavailable (needs GLES 3.0), chunk rendering disabled");
         Shutdown();
         return false;
+    }
+
+    /* 天空渐变是可选通道: 编译失败只丢背景, 不影响地形绘制. */
+    {
+        const GLuint skyVertex = CompileShader(GL_VERTEX_SHADER, kSkyVertexShaderSource, "sky vertex shader");
+        const GLuint skyFragment =
+            skyVertex != 0 ? CompileShader(GL_FRAGMENT_SHADER, kSkyFragmentShaderSource, "sky fragment shader") : 0;
+        if (skyVertex != 0 && skyFragment != 0) {
+            const GLuint skyProgram = glCreateProgram();
+            if (skyProgram != 0) {
+                glAttachShader(skyProgram, skyVertex);
+                glAttachShader(skyProgram, skyFragment);
+                glLinkProgram(skyProgram);
+                GLint skyLinked = GL_FALSE;
+                glGetProgramiv(skyProgram, GL_LINK_STATUS, &skyLinked);
+                if (skyLinked == GL_TRUE) {
+                    skyProgram_ = skyProgram;
+                    uniformSkyBlend_ = glGetUniformLocation(skyProgram_, "uSkyFactor");
+                    uniformSkyViewHeight_ = glGetUniformLocation(skyProgram_, "uViewportHeight");
+                    uniformSkyInvViewProjection_ = glGetUniformLocation(skyProgram_, "uInvViewProjection");
+                    uniformSkySun_ = glGetUniformLocation(skyProgram_, "uSunDirection");
+                    uniformSkyCamera_ = glGetUniformLocation(skyProgram_, "uCameraPosition");
+                    uniformSkyTime_ = glGetUniformLocation(skyProgram_, "uSkyTime");
+                    uniformSkyWeather_ = glGetUniformLocation(skyProgram_, "uWeatherIntensity");
+                } else {
+                    LogObjectInfo("sky program link", skyProgram, true);
+                    glDeleteProgram(skyProgram);
+                }
+            }
+        }
+        if (skyVertex != 0) {
+            glDeleteShader(skyVertex);
+        }
+        if (skyFragment != 0) {
+            glDeleteShader(skyFragment);
+        }
+        if (skyProgram_ == 0) {
+            IM_LOGE(kTag, "sky gradient unavailable, background stays a flat clear color");
+        }
+    }
+
+    /* 降水叠加层同样可选: 失败时只丢雨雪特效, 天气状态仍然推进. */
+    {
+        const GLuint weatherVertex =
+            CompileShader(GL_VERTEX_SHADER, kWeatherVertexShaderSource, "weather vertex shader");
+        const GLuint weatherFragment =
+            weatherVertex != 0
+                ? CompileShader(GL_FRAGMENT_SHADER, kWeatherFragmentShaderSource, "weather fragment shader")
+                : 0;
+        if (weatherVertex != 0 && weatherFragment != 0) {
+            const GLuint weatherProgram = glCreateProgram();
+            if (weatherProgram != 0) {
+                glAttachShader(weatherProgram, weatherVertex);
+                glAttachShader(weatherProgram, weatherFragment);
+                glLinkProgram(weatherProgram);
+                GLint linked = GL_FALSE;
+                glGetProgramiv(weatherProgram, GL_LINK_STATUS, &linked);
+                if (linked == GL_TRUE) {
+                    weatherProgram_ = weatherProgram;
+                    uniformWeatherIntensity_ = glGetUniformLocation(weatherProgram_, "uIntensity");
+                    uniformWeatherKind_ = glGetUniformLocation(weatherProgram_, "uSnow");
+                    uniformWeatherTime_ = glGetUniformLocation(weatherProgram_, "uTime");
+                    uniformWeatherViewport_ = glGetUniformLocation(weatherProgram_, "uViewportSize");
+                    uniformWeatherAspect_ = glGetUniformLocation(weatherProgram_, "uAspect");
+                } else {
+                    LogObjectInfo("weather program link", weatherProgram, true);
+                    glDeleteProgram(weatherProgram);
+                }
+            }
+        }
+        if (weatherVertex != 0) {
+            glDeleteShader(weatherVertex);
+        }
+        if (weatherFragment != 0) {
+            glDeleteShader(weatherFragment);
+        }
+        if (weatherProgram_ == 0) {
+            IM_LOGE(kTag, "precipitation layer unavailable, weather will not be visible");
+        }
     }
 
     uniformViewProjection_ = glGetUniformLocation(program_, "uViewProjection");
@@ -471,13 +787,19 @@ void ChunkRenderer::Shutdown() {
     }
     buffers_.clear();
     if (hasContext) {
+        if (weatherProgram_ != 0) {
+            glDeleteProgram(weatherProgram_);
+        }
+        if (skyProgram_ != 0) {
+            glDeleteProgram(skyProgram_);
+        }
         if (program_ != 0) {
             glDeleteProgram(program_);
         }
         if (atlasTexture_ != 0) {
             glDeleteTextures(1, &atlasTexture_);
         }
-    } else if (program_ != 0 || atlasTexture_ != 0) {
+    } else if (program_ != 0 || skyProgram_ != 0 || atlasTexture_ != 0) {
         /* 上下文先于渲染器销毁时只能放弃显存资源, 由驱动回收. */
         IM_LOGW(kTag, "shutdown without current context, gpu objects dropped");
     }
@@ -485,6 +807,15 @@ void ChunkRenderer::Shutdown() {
         IM_LOGI(kTag, "chunk renderer released");
     }
     program_ = 0;
+    weatherProgram_ = 0;
+    uniformWeatherIntensity_ = -1;
+    uniformWeatherKind_ = -1;
+    uniformWeatherTime_ = -1;
+    uniformWeatherViewport_ = -1;
+    uniformWeatherAspect_ = -1;
+    skyProgram_ = 0;
+    uniformSkyBlend_ = -1;
+    uniformSkyViewHeight_ = -1;
     atlasTexture_ = 0;
     uniformViewProjection_ = -1;
     uniformAtlas_ = -1;
@@ -507,6 +838,24 @@ bool ChunkRenderer::Ready() const {
     return ready_;
 }
 
+void ChunkRenderer::SetSkySun(const float* direction3, float skyTimeSeconds) {
+    if (direction3 != nullptr) {
+        /* 方向只做归一化, 退化向量回落到天顶, 避免除零后整片天空变黑. */
+        const float length = std::sqrt(direction3[0] * direction3[0] + direction3[1] * direction3[1] +
+                                       direction3[2] * direction3[2]);
+        if (length > 1.0e-4f) {
+            sunDirection_[0] = direction3[0] / length;
+            sunDirection_[1] = direction3[1] / length;
+            sunDirection_[2] = direction3[2] / length;
+        } else {
+            sunDirection_[0] = 0.0f;
+            sunDirection_[1] = 1.0f;
+            sunDirection_[2] = 0.0f;
+        }
+    }
+    skyTimeSeconds_ = skyTimeSeconds;
+}
+
 void ChunkRenderer::SetViewProjection(const float* matrix16, const float* cameraPosition3) {
     if (matrix16 != nullptr) {
         std::memcpy(viewProjection_, matrix16, sizeof(viewProjection_));
@@ -517,6 +866,8 @@ void ChunkRenderer::SetViewProjection(const float* matrix16, const float* camera
         cameraPosition_[1] = cameraPosition3[1];
         cameraPosition_[2] = cameraPosition3[2];
     }
+    /* 天空通道逐片元反投影求视线, 需要视图投影矩阵的逆; 求逆失败时保留上一帧. */
+    InvertMatrix4(viewProjection_, inverseViewProjection_);
 }
 
 void ChunkRenderer::SetAtmosphere(float fogDensity, float brightness, float skyFactor) {
@@ -576,12 +927,18 @@ void ChunkRenderer::Sync(const world::World& world) {
             continue;
         }
         GLsizei indexCount = 0;
-        if (!UploadMeshData(buffer.vao, buffer.vbo, buffer.ibo, *mesh, &indexCount)) {
+        GLsizei waterBegin = 0;
+        GLsizei waterCount = 0;
+        if (!UploadMeshData(buffer.vao, buffer.vbo, buffer.ibo, *mesh, &indexCount, &waterBegin,
+                            &waterCount)) {
             buffer.indexCount = 0;
+            buffer.waterIndexCount = 0;
             buffer.hasRevision = false;
             continue;
         }
         buffer.indexCount = indexCount;
+        buffer.waterIndexBegin = waterBegin;
+        buffer.waterIndexCount = waterCount;
         buffer.revision = view.revision;
         buffer.hasRevision = true;
         ++uploaded;
@@ -601,9 +958,89 @@ void ChunkRenderer::Sync(const world::World& world) {
     }
 
     if (uploaded > 0 || released > 0) {
-        IM_LOGD(kTag, "sync uploaded=%d released=%d alive=%zu worldVersion=%llu", uploaded, released,
-                buffers_.size(), static_cast<unsigned long long>(syncedVersion_));
+        /* 半透明索引量单独统计: 水面渲染是否走到第二趟, 看这个数就够了. */
+        size_t waterIndices = 0;
+        for (const auto& entry : buffers_) {
+            waterIndices += static_cast<size_t>(entry.second->waterIndexCount);
+        }
+        IM_LOGD(kTag, "sync uploaded=%d released=%d alive=%zu waterIndices=%zu worldVersion=%llu",
+                uploaded, released, buffers_.size(), waterIndices,
+                static_cast<unsigned long long>(syncedVersion_));
     }
+}
+
+void ChunkRenderer::SetWeather(int32_t kind, float intensity, float seconds) {
+    weatherKind_ = kind;
+    weatherIntensity_ = intensity < 0.0f ? 0.0f : (intensity > 1.0f ? 1.0f : intensity);
+    weatherSeconds_ = seconds;
+}
+
+/*
+ * 降水叠加层: 关深度测试与背面剔除, 开混合, 全屏一次绘制.
+ * 必须在全部世界几何之后提交, 否则会挡住地形; HUD 由上层在此之后绘制.
+ */
+void ChunkRenderer::DrawPrecipitation() {
+    if (weatherProgram_ == 0 || weatherIntensity_ <= 0.002f || !HasCurrentContext()) {
+        return;
+    }
+    if (weatherKind_ <= 0) {
+        return;
+    }
+    glUseProgram(weatherProgram_);
+    glUniform2f(uniformWeatherViewport_, static_cast<float>(skyViewportWidth_),
+                static_cast<float>(skyViewportHeight_));
+    glUniform1f(uniformWeatherAspect_, skyViewportHeight_ > 0
+                                           ? static_cast<float>(skyViewportWidth_) /
+                                                 static_cast<float>(skyViewportHeight_)
+                                           : 1.0f);
+    glUniform1f(uniformWeatherTime_, weatherSeconds_);
+    glUniform1f(uniformWeatherIntensity_, weatherIntensity_);
+    glUniform1f(uniformWeatherKind_, weatherKind_ == 2 ? 1.0f : 0.0f);
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBindVertexArray(0);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+}
+
+void ChunkRenderer::SetViewportSize(int32_t width, int32_t height) {
+    skyViewportWidth_ = width > 0 ? width : 1280;
+    skyViewportHeight_ = height > 0 ? height : 720;
+}
+
+/*
+ * 天空渐变: 全屏三角带, 关闭深度测试与写入, 也不参与雾与光照.
+ * 必须在区块之前绘制, 后续地形与生物按深度覆盖它.
+ */
+void ChunkRenderer::DrawSky() {
+    if (skyProgram_ == 0 || !HasCurrentContext()) {
+        return;
+    }
+    glUseProgram(skyProgram_);
+    glUniform1f(uniformSkyBlend_, skyFactor_);
+    glUniform1f(uniformSkyViewHeight_, static_cast<float>(skyViewportHeight_));
+    glUniformMatrix4fv(uniformSkyInvViewProjection_, 1, GL_FALSE, inverseViewProjection_);
+    glUniform3f(uniformSkySun_, sunDirection_[0], sunDirection_[1], sunDirection_[2]);
+    glUniform3f(uniformSkyCamera_, cameraPosition_[0], cameraPosition_[1], cameraPosition_[2]);
+    glUniform1f(uniformSkyTime_, skyTimeSeconds_);
+    glUniform1f(uniformSkyWeather_, weatherIntensity_);
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+    glBindVertexArray(0);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    /* 恢复区块绘制依赖的状态, 避免调用方关心本通道改过什么. */
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 }
 
 void ChunkRenderer::Draw() {
@@ -615,6 +1052,9 @@ void ChunkRenderer::Draw() {
     if (!HasCurrentContext()) {
         return;
     }
+
+    /* 先铺天空, 再画地形; 天空不写深度, 因此不会遮挡任何方块. */
+    DrawSky();
 
     glUseProgram(program_);
     /* 列主序矩阵直接交给 glUniformMatrix4fv, 不需要转置. */
@@ -629,7 +1069,10 @@ void ChunkRenderer::Draw() {
     glUniform1f(uniformSkyFactor_, skyFactor_);
     glUniform3f(uniformCameraPosition_, cameraPosition_[0], cameraPosition_[1], cameraPosition_[2]);
 
-    /* 深度测试与背面剔除常开; 本版本不做透明排序, 因此关闭混合. */
+    /*
+     * 实心面与液体面分两趟: 第一趟开深度写入画实心面, 第二趟关深度写入并开混合画液体面.
+     * 液体面不再排序到像素级, 但按区块由远到近提交, 同一格水面之间不会互相遮挡错误.
+     */
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glDepthMask(GL_TRUE);
@@ -638,15 +1081,47 @@ void ChunkRenderer::Draw() {
     glCullFace(GL_BACK);
     glFrontFace(kFrontFace);
 
-    const auto submit = [this](const ChunkBuffer& buffer) {
-        if (buffer.indexCount == 0) {
+    const auto submitOpaque = [this](const ChunkBuffer& buffer) {
+        const GLsizei solidCount = buffer.indexCount - buffer.waterIndexCount;
+        if (solidCount <= 0) {
             return;
         }
         glUniform3f(uniformChunkOrigin_, buffer.originX, 0.0f, buffer.originZ);
         glBindVertexArray(buffer.vao);
-        glDrawElements(GL_TRIANGLES, buffer.indexCount, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, solidCount, GL_UNSIGNED_INT, nullptr);
         ++drawnChunks_;
-        drawnTriangles_ += static_cast<int32_t>(buffer.indexCount) / 3;
+        drawnTriangles_ += static_cast<int32_t>(solidCount) / 3;
+    };
+
+    const auto submitLiquid = [this](const ChunkBuffer& buffer) {
+        if (buffer.waterIndexCount <= 0) {
+            return;
+        }
+        glUniform3f(uniformChunkOrigin_, buffer.originX, 0.0f, buffer.originZ);
+        glBindVertexArray(buffer.vao);
+        const void* offset = reinterpret_cast<const void*>(
+            static_cast<uintptr_t>(buffer.waterIndexBegin) * sizeof(uint32_t));
+        glDrawElements(GL_TRIANGLES, buffer.waterIndexCount, GL_UNSIGNED_INT, offset);
+        drawnTriangles_ += static_cast<int32_t>(buffer.waterIndexCount) / 3;
+    };
+
+    /* 液体区块按相机距离由远到近排列, 近处水面后画, 混合结果才正确. */
+    struct LiquidDraw {
+        const ChunkBuffer* buffer;
+        float distanceSquared;
+    };
+    static std::vector<LiquidDraw> liquidDraws;
+    liquidDraws.clear();
+
+    const auto collect = [this, &submitOpaque](const ChunkBuffer& buffer, bool haveView, float centerX,
+                                              float centerZ) {
+        submitOpaque(buffer);
+        if (buffer.waterIndexCount <= 0) {
+            return;
+        }
+        const float dx = (haveView ? centerX : buffer.originX) - cameraPosition_[0];
+        const float dz = (haveView ? centerZ : buffer.originZ) - cameraPosition_[2];
+        liquidDraws.push_back(LiquidDraw{&buffer, dx * dx + dz * dz});
     };
 
     if (syncedWorld_ != nullptr) {
@@ -655,15 +1130,36 @@ void ChunkRenderer::Draw() {
             if (found == buffers_.end()) {
                 continue;
             }
-            submit(*found->second);
+            collect(*found->second, true, view.originX + 8.0f, view.originZ + 8.0f);
         }
     } else {
         /* 没有同步过世界时退化为按映射表遍历, 便于单独调试渲染路径. */
         for (const auto& entry : buffers_) {
-            submit(*entry.second);
+            collect(*entry.second, false, 0.0f, 0.0f);
         }
     }
+
+    if (!liquidDraws.empty()) {
+        std::sort(liquidDraws.begin(), liquidDraws.end(),
+                  [](const LiquidDraw& left, const LiquidDraw& right) {
+                      return left.distanceSquared > right.distanceSquared;
+                  });
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
+        /* 水面多是单层面片, 双面都画才能从水下看到水面; 代价是该趟没有背面剔除. */
+        glDisable(GL_CULL_FACE);
+        for (const LiquidDraw& draw : liquidDraws) {
+            submitLiquid(*draw.buffer);
+        }
+        glEnable(GL_CULL_FACE);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+    }
     glBindVertexArray(0);
+
+    /* 雨雪叠加在世界几何之后, HUD 之前. */
+    DrawPrecipitation();
 }
 
 int32_t ChunkRenderer::DrawnChunks() const {
