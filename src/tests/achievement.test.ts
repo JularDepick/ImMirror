@@ -101,7 +101,16 @@ describe("成就查询", () => {
     const categories = new Set(data.achievements.map((item) => item.categoryName));
     expect(categories.size).toBeGreaterThan(1);
     for (const item of data.achievements) {
-      expect(["break_block", "place_block", "pick_item", "walk_distance", "online_days"]).toContain(item.kind);
+      expect([
+        "break_block",
+        "place_block",
+        "pick_item",
+        "walk_distance",
+        "online_days",
+        "craft_item",
+        "smelt_item",
+        "kill_creature",
+      ]).toContain(item.kind);
       expect(item.category).toBeGreaterThanOrEqual(1);
       expect(item.category).toBeLessThanOrEqual(6);
       expect(item.coinReward).toBeGreaterThan(0);
@@ -268,5 +277,63 @@ describe("上报参数校验", () => {
     expectFail(missing, "BAD_REQUEST");
     const array = await app.post("/api/v1/achievements/report", { stats: [] }, user.token);
     expectFail(array, "BAD_REQUEST");
+  });
+});
+
+
+describe("合成熔炼击败事件", () => {
+  it("craft_item 上报推进合成类成就并发放镜币", async () => {
+    const user = await registerUser(app);
+    const ids = targetOneIds("craft_item");
+    expect(ids.length).toBeGreaterThan(0);
+
+    const data = expectOk<ReportResult>(
+      await app.post("/api/v1/achievements/report", { stats: { craft_item: 1 } }, user.token),
+    );
+    const grantedIds = data.granted.filter((item) => item.source === "achievement").map((item) => item.id);
+    expect(grantedIds.sort()).toEqual([...ids].sort());
+    expect(data.balance).toBe(coinsOf(ids));
+  });
+
+  it("smelt_item 键被接受且不影响其他统计", async () => {
+    const user = await registerUser(app);
+    /* 原版成就表没有熔炼目标的条目, 熔炼只出现在每日任务模板, 这里验证键合法可上报. */
+    const data = expectOk<ReportResult>(
+      await app.post("/api/v1/achievements/report", { stats: { smelt_item: 1, break_block: 1 } }, user.token),
+    );
+    expect(data.achievements.length).toBe(ACHIEVEMENT_CATALOG.length);
+  });
+
+  it("kill_creature 上报推进击败类成就", async () => {
+    const user = await registerUser(app);
+    const ids = targetOneIds("kill_creature");
+    expect(ids.length).toBeGreaterThan(0);
+
+    const data = expectOk<ReportResult>(
+      await app.post("/api/v1/achievements/report", { stats: { kill_creature: 1 } }, user.token),
+    );
+    const grantedIds = data.granted.filter((item) => item.source === "achievement").map((item) => item.id);
+    expect(grantedIds.sort()).toEqual([...ids].sort());
+  });
+
+  it("三类新键的进度按增量累积", async () => {
+    const user = await registerUser(app);
+    const definition = ACHIEVEMENT_CATALOG.find((item) => item.kind === "kill_creature" && item.target > 1);
+    expect(definition).toBeDefined();
+    const target = definition?.target ?? 0;
+    const id = definition?.id ?? 0;
+
+    const partial = expectOk<ReportResult>(
+      await app.post("/api/v1/achievements/report", { stats: { kill_creature: target - 1 } }, user.token),
+    );
+    const partialItem = partial.achievements.find((item) => item.id === id);
+    expect(partialItem?.completed).toBe(false);
+
+    const done = expectOk<ReportResult>(
+      await app.post("/api/v1/achievements/report", { stats: { kill_creature: 1 } }, user.token),
+    );
+    const doneItem = done.achievements.find((item) => item.id === id);
+    expect(doneItem?.completed).toBe(true);
+    expect(doneItem?.value).toBe(target);
   });
 });
