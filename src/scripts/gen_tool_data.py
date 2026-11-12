@@ -83,20 +83,32 @@ def load_tools():
 
 
 def load_items():
-    """从已生成的物品表里取出 客户端 id 与中文名."""
+    """从已生成的物品表里取出 客户端 id 与中文名.
+
+    物品表的条目按客户端 id 升序排列, 数组下标就是客户端 id;
+    行首的数字是原版物品 ID, 不能当作客户端 id 用.
+    """
     if not os.path.isfile(ITEM_HEADER):
         raise SystemExit("物品表未生成, 请先运行 gen_item_data.py: %s" % ITEM_HEADER)
     items = []
     with open(ITEM_HEADER, "r", encoding="utf-8") as handle:
+        inside = False
         for line in handle:
-            match = ITEM_ROW.search(line)
+            stripped = line.strip()
+            if "kItemInfos[" in stripped and "constexpr" in stripped:
+                inside = True
+                continue
+            if not inside:
+                continue
+            if stripped.startswith("};"):
+                break
+            match = ITEM_ROW.search(stripped)
             if match is None:
                 continue
-            client_id = int(match.group(1))
             name = match.group(3).strip()
-            if client_id <= 0 or not name:
+            if not name:
                 continue
-            items.append((client_id, name))
+            items.append((len(items), name))
     return items
 
 

@@ -821,8 +821,28 @@ bool PlayerController::AabbHitsBlock(const core::Vec3& feet, const voxel::BlockP
 
 bool PlayerController::CastRay(const world::World& world, RayHit& hit) const {
     hit = RayHit{};
-    const core::Vec3 origin = EyePosition();
+    core::Vec3 origin = EyePosition();
     const core::Vec3 dir = ForwardDirection();
+
+    /*
+     * 视点恰好落在格子边界上时, 竖直向下的射线会贴着边界跨到相邻格,
+     * 正下方的方块反而打不到: 玩家站在整数坐标上低头挖脚下方块必然失手.
+     * 这里把落在边界上的水平分量向格心方向推一点点, 让射线落进格子内部.
+     * 偏移量取千分之一格, 远小于方块尺寸, 不影响正常拾取精度.
+     */
+    constexpr float kBoundaryEpsilon = 1.0e-2f;
+    const float fracX = origin.x - std::floor(origin.x);
+    const float fracZ = origin.z - std::floor(origin.z);
+    if (fracX <= kBoundaryEpsilon) {
+        origin.x += kBoundaryEpsilon;
+    } else if (fracX >= 1.0f - kBoundaryEpsilon) {
+        origin.x -= kBoundaryEpsilon;
+    }
+    if (fracZ <= kBoundaryEpsilon) {
+        origin.z += kBoundaryEpsilon;
+    } else if (fracZ >= 1.0f - kBoundaryEpsilon) {
+        origin.z -= kBoundaryEpsilon;
+    }
 
     int32_t x = FloorToInt(origin.x);
     int32_t y = FloorToInt(origin.y);
@@ -832,9 +852,16 @@ bool PlayerController::CastRay(const world::World& world, RayHit& hit) const {
         return false;
     }
 
-    const int32_t stepX = dir.x > 0.0f ? 1 : (dir.x < 0.0f ? -1 : 0);
-    const int32_t stepY = dir.y > 0.0f ? 1 : (dir.y < 0.0f ? -1 : 0);
-    const int32_t stepZ = dir.z > 0.0f ? 1 : (dir.z < 0.0f ? -1 : 0);
+    /*
+     * 方向分量接近零的轴直接跳过. 低头挖脚下方块时俯仰角最多到 89 度,
+     * 水平分量仍有约百分之一点七, 这点偏移会让射线在六米内擦着格子边界
+     * 跨到相邻列, 正下方的方块反而打不到. 低于百分之五的分量视为零,
+     * 射线落在正下方的格子里.
+     */
+    constexpr float kAxisDeadZone = 0.05f;
+    const int32_t stepX = dir.x > kAxisDeadZone ? 1 : (dir.x < -kAxisDeadZone ? -1 : 0);
+    const int32_t stepY = dir.y > kAxisDeadZone ? 1 : (dir.y < -kAxisDeadZone ? -1 : 0);
+    const int32_t stepZ = dir.z > kAxisDeadZone ? 1 : (dir.z < -kAxisDeadZone ? -1 : 0);
 
     constexpr float kInfinity = 1.0e30f;
     /* 每跨越一个方块所需的射线参数增量, 与到下一界面的初值. */

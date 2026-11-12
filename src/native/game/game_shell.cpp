@@ -1239,6 +1239,8 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
             editLastX_ = pointer.x;
             editLastY_ = pointer.y;
             editDownSeconds_ = elapsedSeconds_;
+            IM_LOGD(kTag, "edit pointer claimed id=%d at %.3f,%.3f", pointer.id,
+                    static_cast<double>(pointer.x), static_cast<double>(pointer.y));
             attackAccumulator_ = 0.0;
             editAttacked_ = false;
             /*
@@ -1349,6 +1351,20 @@ float GameShell::MiningSpeedAgainst(voxel::BlockId block) const {
 
 bool GameShell::BeginEditMining() {
     if (!player_->BeginMining(*world_)) {
+        /* 起手失败要区分原因: 射线没命中, 还是命中的方块不可破坏. */
+        const core::Vec3 feet = player_->Position();
+        const int32_t fx = static_cast<int32_t>(std::floor(feet.x));
+        const int32_t fy = static_cast<int32_t>(std::floor(feet.y));
+        const int32_t fz = static_cast<int32_t>(std::floor(feet.z));
+        IM_LOGD(kTag,
+                "mine begin rejected feet=%.2f,%.2f,%.2f below=%u foot=%u above=%u "
+                "yawDeg=%.1f pitchDeg=%.1f",
+                static_cast<double>(feet.x), static_cast<double>(feet.y), static_cast<double>(feet.z),
+                static_cast<unsigned>(world_->GetBlock(fx, fy - 1, fz)),
+                static_cast<unsigned>(world_->GetBlock(fx, fy, fz)),
+                static_cast<unsigned>(world_->GetBlock(fx, fy + 1, fz)),
+                static_cast<double>(player_->Yaw() * 57.2957795),
+                static_cast<double>(player_->Pitch() * 57.2957795));
         return false;
     }
     /*
