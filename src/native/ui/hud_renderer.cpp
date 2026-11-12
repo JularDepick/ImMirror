@@ -213,6 +213,12 @@ constexpr float kToneColors[6][4] = {
 constexpr float kSlotTintColor[4] = {1.0f, 1.0f, 1.0f, 0.92f};
 constexpr float kSlotBorderColor[4] = {1.0f, 0.92f, 0.55f, 1.0f};
 
+/* 耐久条配色: 底槽半透明黑, 前景按剩余量由绿转黄再转红. */
+constexpr float kDurabilityTrack[4] = {0.0f, 0.0f, 0.0f, 0.55f};
+constexpr float kDurabilityGood[4] = {0.35f, 0.85f, 0.35f, 1.0f};
+constexpr float kDurabilityWarn[4] = {0.95f, 0.80f, 0.25f, 1.0f};
+constexpr float kDurabilityLow[4] = {0.92f, 0.28f, 0.24f, 1.0f};
+
 /* 文案配色: 标题与按钮文字用亮白, 提示条用略暗的白. */
 constexpr float kPanelTextColor[4] = {1.0f, 1.0f, 1.0f, 0.96f};
 constexpr float kPanelHintColor[4] = {1.0f, 1.0f, 1.0f, 0.72f};
@@ -895,6 +901,28 @@ void PushInventorySlot(float* out, int32_t& offset, float centerX, float centerY
             const float pixel = half * 0.18f;
             char label[2] = {view.initial == '\0' ? '?' : view.initial, '\0'};
             PushCenteredText(out, offset, centerX, centerY, pixel, label, scale, kPanelTextColor);
+        }
+    }
+    /*
+     * 耐久条: 带耐久的工具在格子底部画一条细条, 长度按剩余比例,
+     * 颜色随剩余量由绿转黄再转红, 玩家不打开背包也能看出工具快坏了.
+     */
+    if (view.hasItem && view.maxDurability > 0 && view.durability >= 0) {
+        const float barHalf = half * 0.78f;
+        const float barY = centerY - half * 0.78f;
+        const float barThickness = half * 0.09f;
+        const float ratio = static_cast<float>(view.durability) /
+                            static_cast<float>(view.maxDurability);
+        const float clamped = ratio < 0.0f ? 0.0f : (ratio > 1.0f ? 1.0f : ratio);
+        /* 底槽先铺满, 再按比例压一条彩色前景, 空槽部分也能看出满长. */
+        PushRect(out, offset, centerX, barY, barHalf, barThickness, scale, kDurabilityTrack);
+        if (clamped > 0.0f) {
+            const float filledHalf = barHalf * clamped;
+            const float left = centerX - barHalf + filledHalf;
+            const float* color = clamped > 0.5f
+                                     ? kDurabilityGood
+                                     : (clamped > 0.25f ? kDurabilityWarn : kDurabilityLow);
+            PushRect(out, offset, left, barY, filledHalf, barThickness, scale, color);
         }
     }
     if (view.hasItem && view.count > 1) {
@@ -1604,6 +1632,30 @@ void HudRenderer::Render(const HudFrame& frame) {
                      slotBorder);
             PushRect(vertices, offset, centerX + slotHalf, slotCenterY, edge, slotHalf, scale,
                      slotBorder);
+        }
+
+        /*
+         * 耐久条画在图标与选中框之后: 图标会盖住格子中间, 条必须最后画才看得见.
+         * 长度按剩余比例, 颜色随剩余量由绿转黄再转红.
+         */
+        const int32_t maxDurability = frame.slotMaxDurability[slot];
+        if (maxDurability > 0 && frame.slotDurability[slot] >= 0) {
+            const float barHalf = slotHalf * 0.78f;
+            const float barY = slotCenterY - slotHalf * 0.78f;
+            const float barThickness = slotHalf * 0.10f;
+            const float ratio = static_cast<float>(frame.slotDurability[slot]) /
+                                static_cast<float>(maxDurability);
+            const float clamped = ratio < 0.0f ? 0.0f : (ratio > 1.0f ? 1.0f : ratio);
+            PushRect(vertices, offset, centerX, barY, barHalf, barThickness, scale,
+                     kDurabilityTrack);
+            if (clamped > 0.0f) {
+                const float filledHalf = barHalf * clamped;
+                const float filledX = centerX - barHalf + filledHalf;
+                const float* color = clamped > 0.5f
+                                         ? kDurabilityGood
+                                         : (clamped > 0.25f ? kDurabilityWarn : kDurabilityLow);
+                PushRect(vertices, offset, filledX, barY, filledHalf, barThickness, scale, color);
+            }
         }
 
         /* 数量贴齐槽位右下角并右对齐, 0 也照常绘出, 与压暗的图标一起说明该格已耗尽. */
