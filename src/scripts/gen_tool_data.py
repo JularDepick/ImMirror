@@ -39,7 +39,12 @@ ITEM_ROW = re.compile(r'\{(\d+)u, "([^"]*)", "([^"]*)",')
 
 
 def load_tools():
-    """读取工具表, 返回 中文名 -> (类型, 等级, 效率, 耐久)."""
+    """读取工具表, 返回 工具 ID -> (类型, 等级, 效率, 耐久).
+
+    工具表的 ID 与物品表的原版物品 ID 同域, 因此按 ID 关联,
+    不按名称: 两边对同一件工具的取名并不一致 (工具表叫"木镐",
+    物品表叫"木矿镐"), 按名称会漏掉大部分工具.
+    """
     import csv
     import io
 
@@ -56,8 +61,11 @@ def load_tools():
         if not name:
             continue
         try:
+            tool_id = int((row[index["ID"]] or "0").strip() or 0)
             tool_type = int((row[index["Type"]] or "0").strip() or 0)
         except ValueError:
+            continue
+        if tool_id <= 0:
             continue
         if tool_type not in DIG_TYPES:
             continue
@@ -75,10 +83,10 @@ def load_tools():
             efficiency = 50
         if durability <= 0:
             durability = 1
-        # 同名工具以先出现的为准
-        if name in tools:
+        # 同一工具 ID 以先出现的为准
+        if tool_id in tools:
             continue
-        tools[name] = (tool_type, level, efficiency, durability)
+        tools[tool_id] = (tool_type, level, efficiency, durability)
     return tools
 
 
@@ -105,10 +113,11 @@ def load_items():
             match = ITEM_ROW.search(stripped)
             if match is None:
                 continue
+            source_id = int(match.group(1))
             name = match.group(3).strip()
             if not name:
                 continue
-            items.append((len(items), name))
+            items.append((len(items), source_id, name))
     return items
 
 
@@ -165,16 +174,17 @@ def main():
     tools = load_tools()
     items = load_items()
     entries = []
-    for client_id, name in items:
-        if name not in tools:
+    for client_id, source_id, name in items:
+        if source_id not in tools:
             continue
-        tool_type, level, efficiency, durability = tools[name]
+        tool_type, level, efficiency, durability = tools[source_id]
         entries.append((client_id, TYPE_TO_HARVEST.get(tool_type, 0), level, efficiency, durability))
     entries.sort()
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     with open(OUT_PATH, "w", encoding="utf-8", newline="\n") as handle:
         handle.write(render(entries))
-    print("工具表: 原表 %d 条, 物品 %d 条, 挂到物品 %d 条" % (len(tools), len(items), len(entries)))
+    print("工具表: 原表 %d 条, 物品 %d 条, 挂到物品 %d 条"
+          % (len(tools), len(items), len(entries)))
     return 0
 
 

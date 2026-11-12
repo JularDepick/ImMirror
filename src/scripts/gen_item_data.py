@@ -219,6 +219,20 @@ def main():
         if not item_usable(items_by_id.get(source, {}), source):
             continue
         selected.append(source)
+    # 工具类物品全部纳入. 可合成闭包只覆盖"能靠配方做出来"的物品, 而工具
+    # 大多没有配方或依赖未收录的材料, 结果就是物品表里几乎没有工具,
+    # 挖掘效率按工具折算时挂不上条目. 工具追加在闭包之后, 已有物品的 id 不变,
+    # 旧存档仍然可用.
+    tool_added = 0
+    for source in sorted(items_by_id):
+        row = items_by_id[source]
+        if (row.get("FilterType") or "").strip() != "2":
+            continue
+        if source in selected or not item_usable(row, source):
+            continue
+        selected.append(source)
+        tool_added += 1
+    emit("工具类追加 %d 种" % tool_added)
     emit("可合成闭包 %d 种, 展开 %d 层; 物品表共 %d 种"
          % (len(closure), len(rounds), len(selected)))
 

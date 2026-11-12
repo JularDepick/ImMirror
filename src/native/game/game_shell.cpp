@@ -283,7 +283,7 @@ void GameShell::SeedStartingItems() {
      * 起步工具先进快捷栏: 第一格放石铲, 第二格放木铲.
      * 铲子对应土与沙, 新建世界的第一件事就是挖土, 拿在手上能直接感受到效率差异.
      */
-    const char* startingTools[] = {"StoneShovel", "WoodenShovel"};
+    const char* startingTools[] = {"StonePickaxe", "StoneShovel"};
     for (const char* key : startingTools) {
         const item::ItemId tool = items.FindByKey(key);
         if (tool != item::kNone) {
