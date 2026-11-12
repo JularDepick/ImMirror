@@ -13,6 +13,7 @@ import { registerRegisterRoutes } from "./auth/register";
 import { registerMeRoutes } from "./me";
 import { registerMetaRoutes } from "./meta";
 import { registerAchievementRoutes } from "./achievements";
+import { registerBlockSyncRoutes } from "./blocks";
 import { registerPresenceRoutes } from "./presence";
 import { registerWalletRoutes } from "./wallet";
 
@@ -27,4 +28,5 @@ export function registerApiRoutes(app: FastifyInstance, ctx: AppContext): void {
   registerWalletRoutes(app, ctx);
   registerAchievementRoutes(app, ctx);
   registerPresenceRoutes(app, ctx);
+  registerBlockSyncRoutes(app, ctx);
 }
