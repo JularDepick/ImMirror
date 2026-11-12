@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""把运行时需要的资源子集复制到 Android assets 目录.
+"""把运行时需要的资源复制到 Android assets 目录.
 
-完整资源保存在素材管线仓库 (single-branch/assets) 的工程树里, 客户端仓库只保留
-运行时直接消费的二进制文件, APK 再从中挑选实际用到的部分, 避免安装包过大.
-新增资源时在 MANIFEST 里登记一行即可.
+两类来源:
+  1. 工程树 single-branch/assets/project 下的音效与物品图标, 由本脚本直接扫描并扁平化;
+  2. 客户端仓库 src/assets/ui 下的界面素材, 由素材导入脚本登记后随包下发.
+
+工程树是唯一权威来源: 客户端 src/assets 只保留界面素材的裁剪结果,
+音效不再经中转目录, 避免中转层与工程树脱节.
+新增界面素材时在 ui_manifest.json 里登记, 新增音效只需放进工程树的分类子目录.
 """
 
 import os

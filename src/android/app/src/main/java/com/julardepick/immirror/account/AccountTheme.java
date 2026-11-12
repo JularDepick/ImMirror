@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import com.julardepick.immirror.R;
 import com.julardepick.immirror.generated.UiResources;
+import com.julardepick.immirror.ui.UiSound;
 import com.julardepick.immirror.ui.NineSliceDrawable;
 import com.julardepick.immirror.ui.UiTextures;
 
@@ -225,6 +226,10 @@ public final class AccountTheme {
      * 按下缩放: 规范第七章要求按下即换成零点九倍的同图, 没有过渡时长.
      * 这里直接改控件缩放, 并返回假把触摸事件交回原有点击监听, 不吞掉点击.
      */
+    /*
+     * 统一的按压反馈: 按下缩放, 抬起回弹, 抬起瞬间播一次界面点击音.
+     * 只对真正落在控件内部的抬起播声音, 滑出后取消不发声.
+     */
     private static void attachPressScale(View view) {
         view.setOnTouchListener((target, event) -> {
             switch (event.getActionMasked()) {
@@ -233,6 +238,12 @@ public final class AccountTheme {
                     target.setScaleY(BUTTON_PRESS_SCALE);
                     break;
                 case MotionEvent.ACTION_UP:
+                    target.setScaleX(1f);
+                    target.setScaleY(1f);
+                    if (target.isClickable() && target.isEnabled()) {
+                        UiSound.click(target.getContext());
+                    }
+                    break;
                 case MotionEvent.ACTION_CANCEL:
                     target.setScaleX(1f);
                     target.setScaleY(1f);
