@@ -95,6 +95,24 @@ int main(int argc, char** argv) {
     check("共享数据能读回", host.Vm().GetGlobal("Back").number == 42.0);
     check("未写入的键为空", host.Vm().GetGlobal("AbsentOk").number == 1.0);
 
+    /* 按模板复制控件: 新控件出现在树里, 模板本身不变. */
+    const int32_t before = host.Tree().WidgetCount();
+    const char* cloneScript =
+        "local mgr = GetInst(\"UIFrameMgr\") "
+        "local made = mgr:CreateFrameByTemplate(\"DropdownBox\", \"\", \"CopyA\") "
+        "MadeOk = (made ~= nil) and 1 or 0 "
+        "local again = mgr:CreateFrameByTemplate(\"DropdownBox\", \"\", \"CopyA\") "
+        "DuplicateOk = (again == nil) and 1 or 0 "
+        "local missing = mgr:CreateFrameByTemplate(\"NoSuchWidget\", \"\", \"CopyB\") "
+        "MissingOk = (missing == nil) and 1 or 0 ";
+    check("执行复制脚本", host.RunScript(cloneScript, std::strlen(cloneScript), screen));
+    check("复制成功", host.Vm().GetGlobal("MadeOk").number == 1.0);
+    check("重名被拒", host.Vm().GetGlobal("DuplicateOk").number == 1.0);
+    check("模板不存在返回空", host.Vm().GetGlobal("MissingOk").number == 1.0);
+    check("控件数增加", host.Tree().WidgetCount() > before);
+    check("新控件可按名字取到", host.Tree().Find("CopyA") != nullptr);
+    check("模板仍在", host.Tree().Find("DropdownBox") != nullptr);
+
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;
 }

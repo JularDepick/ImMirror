@@ -155,6 +155,10 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
      * 只接有确定语义的方法 (平台判定, 版本, 字符串表查询, 播放音效);
      * 其余方法取到空值即可, 脚本的判空写法本来就会跳过它们.
      */
+    /*
+     * 界面管理器: 目前只接按模板复制控件.
+     * 模板就是布局里已有的一棵子树 (通常是隐藏的), 复制到指定父控件下.
+     */
     vm_.RegisterNative("GetInst", [this](const std::vector<Value>& args) {
         const std::string name = PlainArgAt(args, 0).ToText();
         std::shared_ptr<Table> table(new Table());
@@ -205,6 +209,26 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
                 }
                 return std::vector<Value>();
             }));
+        } else if (name == "UIFrameMgr") {
+            table->Set(Value::Str("CreateFrameByTemplate"),
+                       MakeNative([this](const std::vector<Value>& call) {
+                           const std::string templateName = ArgAt(call, 0).ToText();
+                           const std::string parentName = ArgAt(call, 1).ToText();
+                           const std::string newName = ArgAt(call, 2).ToText();
+                           Widget* source = tree_.Find(templateName.c_str());
+                           if (source == nullptr) {
+                               return std::vector<Value>{Value()};
+                           }
+                           /* 未指定父控件时挂在模板自己的父控件下. */
+                           Widget* parent = nullptr;
+                           if (!parentName.empty()) {
+                               parent = tree_.Find(parentName.c_str());
+                           } else if (source->frame != nullptr && source->frame->parent != nullptr) {
+                               parent = tree_.Find(source->frame->parent->name);
+                           }
+                           Widget* created = tree_.Clone(source, parent, newName.c_str());
+                           return std::vector<Value>{created == nullptr ? Value() : TableOf(created)};
+                       }));
         } else if (name == "DefMgr") {
             /*
              * 物品定义查询: 返回表里放脚本实际读取的字段.

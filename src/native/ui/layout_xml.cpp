@@ -190,6 +190,14 @@ LayoutFrame* LayoutDocument::Find(const char* name) const {
     return nullptr;
 }
 
+LayoutFrame* LayoutDocument::CreateFrame(const std::string& name) {
+    names_.push_back(name);
+    pool_.push_back(std::unique_ptr<LayoutFrame>(new LayoutFrame()));
+    LayoutFrame* frame = pool_.back().get();
+    frame->name = names_.back().c_str();
+    return frame;
+}
+
 bool LayoutDocument::Parse(const char* text, size_t length) {
     names_.clear();
     textures_.clear();

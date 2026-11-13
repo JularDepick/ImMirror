@@ -51,6 +51,13 @@ public:
     /* 按屏幕矩形解算; 运行时的尺寸与锚点覆盖会在这里生效. */
     void Resolve(const LayoutRect& screen);
 
+    /*
+     * 按模板复制控件: 把模板控件的整棵子树复制到指定父控件下.
+     * 新根用 newName 命名, 子孙名字为 "新根名/原子名", 因此按名字仍能取到.
+     * 返回新根控件, 参数非法或名字已被占用时返回空.
+     */
+    Widget* Clone(Widget* source, Widget* parent, const char* newName);
+
     Widget* Find(const char* name) const {
         const auto found = byName_.find(name == nullptr ? std::string() : std::string(name));
         return found == byName_.end() ? nullptr : found->second;

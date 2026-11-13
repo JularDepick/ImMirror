@@ -19,6 +19,83 @@ void CollectFrames(LayoutFrame* frame, std::vector<LayoutFrame*>& out) {
 
 }  /* namespace */
 
+namespace {
+
+/* 递归复制一棵子树; map 记录源帧到新帧的对应, 供锚点重定向. */
+void CloneSubtree(LayoutDocument& document, const LayoutFrame& source, LayoutFrame* parent,
+                  const std::string& name,
+                  std::unordered_map<const LayoutFrame*, LayoutFrame*>& map) {
+    LayoutFrame* copy = document.CreateFrame(name);
+    copy->width = source.width;
+    copy->height = source.height;
+    copy->hasColor = source.hasColor;
+    copy->red = source.red;
+    copy->green = source.green;
+    copy->blue = source.blue;
+    copy->alpha = source.alpha;
+    copy->texture = source.texture;
+    copy->layer = source.layer;
+    if (parent != nullptr) {
+        parent->AddChild(copy);
+    }
+    map[&source] = copy;
+    for (const LayoutFrame* child : source.children) {
+        if (child == nullptr) {
+            continue;
+        }
+        /* 子控件名字保持原样, 由调用方在最外层加前缀. */
+        CloneSubtree(document, *child, copy, child->name == nullptr ? "" : child->name, map);
+    }
+    /* 锚点单独补: 相对帧可能指向子树内部, 需要换成新帧. */
+    for (const LayoutAnchor& anchor : source.anchors) {
+        LayoutAnchor copyAnchor = anchor;
+        const auto found = anchor.relativeTo == nullptr ? map.end() : map.find(anchor.relativeTo);
+        if (found != map.end()) {
+            copyAnchor.relativeTo = found->second;
+        }
+        copy->anchors.push_back(copyAnchor);
+    }
+}
+
+}  /* namespace */
+
+Widget* WidgetTree::Clone(Widget* source, Widget* parent, const char* newName) {
+    if (source == nullptr || source->frame == nullptr || newName == nullptr || newName[0] == '\0') {
+        return nullptr;
+    }
+    if (Find(newName) != nullptr) {
+        return nullptr;
+    }
+    std::unordered_map<const LayoutFrame*, LayoutFrame*> map;
+    CloneSubtree(document_, *source->frame, parent == nullptr ? nullptr : parent->frame, newName, map);
+    if (map.empty()) {
+        return nullptr;
+    }
+    /* 根帧按源帧查回来, 不能依赖容器遍历顺序. */
+    const auto rootFound = map.find(source->frame);
+    if (rootFound == map.end()) {
+        return nullptr;
+    }
+    LayoutFrame* rootFrame = rootFound->second;
+    Widget* root = nullptr;
+    /* 为新帧建控件: 名字用新帧自己的名字, 子孙再补上前缀. */
+    for (const auto& entry : map) {
+        LayoutFrame* frame = entry.second;
+        widgets_.push_back(std::unique_ptr<Widget>(new Widget()));
+        Widget* widget = widgets_.back().get();
+        widget->frame = frame;
+        std::string fullName = frame->name == nullptr ? std::string() : std::string(frame->name);
+        if (frame != rootFrame && !fullName.empty()) {
+            fullName = std::string(newName) + "/" + fullName;
+        }
+        byName_[fullName] = widget;
+        if (frame == rootFrame) {
+            root = widget;
+        }
+    }
+    return root;
+}
+
 bool WidgetTree::Load(const char* text, size_t length) {
     widgets_.clear();
     byName_.clear();

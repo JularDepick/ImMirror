@@ -34,6 +34,12 @@ public:
     /* 按展开后的名字查帧, 找不到返回空指针. */
     LayoutFrame* Find(const char* name) const;
 
+    /*
+     * 运行时新增一个空帧, 名字与贴图都复制进文档容器, 保证指针长期有效.
+     * 供界面脚本按模板复制控件时使用.
+     */
+    LayoutFrame* CreateFrame(const std::string& name);
+
 private:
     /* 帧与名字都放在容器里, 保证节点地址与名字指针在整个文档生命周期内稳定. */
     std::deque<std::string> names_;
