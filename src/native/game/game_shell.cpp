@@ -3268,7 +3268,15 @@ void GameShell::RenderScene() {
         if (battleTarget != nullptr && !battleTarget->Removed()) {
             frame.targetVisible = true;
             frame.targetHealth = battleTarget->HealthRatio();
-            frame.targetName = nullptr;
+            /*
+             * 血量数值: 点阵字只有 ASCII, 中文名画不出来, 但"当前/上限"
+             * 是纯数字, 因此战斗框上给出确切血量而不是只有一条比例条.
+             */
+            const float maxLife = battleTarget->Definition().life;
+            std::snprintf(battleTargetLabel_, sizeof(battleTargetLabel_), "%d/%d",
+                          static_cast<int32_t>(battleTarget->Health() + 0.5f),
+                          static_cast<int32_t>(maxLife + 0.5f));
+            frame.targetName = battleTargetLabel_;
         }
     }
     /* 伤害飘字: 开关打开且未过显示期时填充, 进度用于上飘与淡出. */
