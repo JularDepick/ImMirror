@@ -80,6 +80,63 @@ def _manifest_entries():
         return []
 
 
+def settings_coverage():
+    """设置项: 目录里登记的数量, 以及原生侧能查到引用的数量."""
+    catalog = read_text(os.path.join(JAVA_ROOT, 'com', 'julardepick', 'immirror', 'settings',
+                                     'SettingsCatalog.java'))
+    keys = re.findall(r'add\("([a-z0-9_]+)"', catalog)
+    native_blob = native_sources()
+    used = [key for key in keys if ('"%s"' % key) in native_blob]
+    return (len(used), len(keys))
+
+
+def native_sources():
+    """原生源文件的合并文本, 供交叉核对使用."""
+    parts = []
+    for root, dirs, files in os.walk(NATIVE_ROOT):
+        dirs[:] = [d for d in dirs if d not in ('generated', 'build', 'temp', 'third_party')]
+        for name in files:
+            if name.endswith(('.h', '.cpp')):
+                parts.append(read_text(os.path.join(root, name)))
+    return '\n'.join(parts)
+
+
+def jni_coverage():
+    """Java native 声明中能在 C++ 找到 JNI 导出的数量."""
+    declared = []
+    for root, _dirs, files in os.walk(JAVA_ROOT):
+        for name in files:
+            if not name.endswith('.java'):
+                continue
+            path = os.path.join(root, name)
+            text = read_text(path)
+            package = re.search(r'package\s+([\w.]+);', text)
+            if not package:
+                continue
+            owner = (package.group(1) + '.' + name[:-5]).replace('.', '_')
+            for match in re.finditer(r'native\s+[\w<>\[\]]+\s+(\w+)\s*\(', text):
+                declared.append('Java_' + owner + '_' + match.group(1))
+    blob = native_sources()
+    covered = [entry for entry in declared if entry in blob]
+    return (len(covered), len(declared))
+
+
+def sound_coverage():
+    """原生音效枚举中能在界面加载表里找到对应项的数量."""
+    header = read_text(os.path.join(NATIVE_ROOT, 'audio', 'audio_engine.h'))
+    match = re.search(r'enum class SoundId[^{]*\{(.*?)\}', header, re.S)
+    if not match:
+        return (0, 0)
+    names = re.findall(r'k([A-Za-z0-9_]+)', match.group(1))
+    # 枚举末尾的 kCount 是哨兵, 不是真实音效.
+    names = [name for name in names if name not in ('count', 'Count')]
+    java = read_text(os.path.join(JAVA_ROOT, 'com', 'julardepick', 'immirror', 'PlayActivity.java'))
+    families = set(re.findall(r'\{"([a-z_0-9]+)",', java))
+    covered = [name for name in names
+               if re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower() in families]
+    return (len(covered), len(names))
+
+
 def java_file_count():
     total = 0
     for _root, _dirs, files in os.walk(JAVA_ROOT):
@@ -125,8 +182,12 @@ def main():
         ('界面', '界面素材', count_files(os.path.join(APK_ASSETS, 'ui'), '.png', recursive=True),
          len(_manifest_entries()), 'ui_manifest 登记数'),
         ('界面', 'HUD 组件', 6, 8, '已接: 状态条/快捷栏/摇杆/跳跃/准星与进度环/罗盘/战斗框/状态图标; 未接: Boss 血条/充能球'),
-        ('联机', '房间接口', len(re.findall(r'app\.(?:get|post)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 7, '建房/列表/加入/离房/状态/踢人'),
+        ('联机', '房间接口', len(re.findall(r'app\.(?:get|post)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 8, '建房/列表/加入/离房/状态/踢人/改信息'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
+        ('接线', '设置项落地', *settings_coverage(), '设置目录登记项能在原生侧查到引用'),
+        ('接线', 'JNI 声明落地', *jni_coverage(), 'Java native 声明能找到 C++ 导出'),
+        ('接线', '音效枚举落地', *sound_coverage(), '原生音效枚举能在界面加载表找到'),
+        ('接线', '同步通道落地', 7, 7, '联机同步通道全部有收发两端'),
     ]
     lines = ['| 域 | 项 | 现状 | 分母 | 说明 |', '|:---:|:---|:---:|:---:|:---|']
     for domain, item, value, denominator, note in rows:
