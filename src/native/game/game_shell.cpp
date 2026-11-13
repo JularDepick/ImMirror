@@ -2147,6 +2147,140 @@ void GameShell::ApplyRemoteChests(const std::string& json) {
 }
 
 /*
+ * 熔炉内容快照: 三格 (0 输入, 1 燃料, 2 产出), 只带非空格, 单次最多 8 个熔炉.
+ */
+std::string GameShell::TakeFurnaceSnapshot() const {
+    std::string out = "[";
+    bool firstFurnace = true;
+    int32_t furnaces = 0;
+    for (const auto& entry : furnaces_) {
+        if (furnaces >= 8) {
+            break;
+        }
+        const item::ItemStack* stacks[3] = {&entry.second.input, &entry.second.fuel,
+                                            &entry.second.output};
+        std::string slots;
+        bool firstSlot = true;
+        for (int32_t index = 0; index < 3; ++index) {
+            if (stacks[index] == nullptr || stacks[index]->Empty()) {
+                continue;
+            }
+            char buffer[128];
+            std::snprintf(buffer, sizeof(buffer), "%s{\"i\":%d,\"item\":%u,\"c\":%d}",
+                          firstSlot ? "" : ",", index,
+                          static_cast<unsigned>(stacks[index]->item), stacks[index]->count);
+            slots += buffer;
+            firstSlot = false;
+        }
+        if (firstSlot) {
+            continue;
+        }
+        char head[96];
+        std::snprintf(head, sizeof(head), "%s{\"key\":\"%llu\",\"slots\":[",
+                      firstFurnace ? "" : ",", static_cast<unsigned long long>(entry.first));
+        out += head;
+        out += slots;
+        out += "]}";
+        firstFurnace = false;
+        ++furnaces;
+    }
+    out += "]";
+    return out;
+}
+
+/* 应用房主下发的熔炉内容: 整表替换, 三格按索引写回. */
+void GameShell::ApplyRemoteFurnaces(const std::string& json) {
+    furnaces_.clear();
+    size_t cursor = json.find('[');
+    if (cursor == std::string::npos) {
+        return;
+    }
+    cursor += 1;
+    int32_t applied = 0;
+    while (applied < 8) {
+        const size_t open = json.find('{', cursor);
+        if (open == std::string::npos) {
+            break;
+        }
+        const size_t close = json.find('}', open);
+        if (close == std::string::npos) {
+            break;
+        }
+        const std::string obj = json.substr(open, close - open + 1);
+        cursor = close + 1;
+        const size_t keyPos = obj.find("\"key\":\"");
+        if (keyPos == std::string::npos) {
+            continue;
+        }
+        const size_t keyStart = keyPos + 7;
+        const size_t keyEnd = obj.find('"', keyStart);
+        if (keyEnd == std::string::npos) {
+            continue;
+        }
+        const uint64_t key =
+            std::strtoull(obj.substr(keyStart, keyEnd - keyStart).c_str(), nullptr, 10);
+        FurnaceState& furnace = furnaces_[key];
+        const size_t slotsPos = obj.find("\"slots\":[");
+        if (slotsPos == std::string::npos) {
+            ++applied;
+            continue;
+        }
+        const size_t slotsBegin = slotsPos + 9;
+        const size_t slotsEnd = obj.rfind(']');
+        if (slotsEnd == std::string::npos || slotsEnd <= slotsBegin) {
+            ++applied;
+            continue;
+        }
+        const std::string slots = obj.substr(slotsBegin, slotsEnd - slotsBegin);
+        size_t slotCursor = 0;
+        while (true) {
+            const size_t slotOpen = slots.find('{', slotCursor);
+            if (slotOpen == std::string::npos) {
+                break;
+            }
+            const size_t slotClose = slots.find('}', slotOpen);
+            if (slotClose == std::string::npos) {
+                break;
+            }
+            const std::string slot = slots.substr(slotOpen, slotClose - slotOpen + 1);
+            slotCursor = slotClose + 1;
+            const size_t indexPos = slot.find("\"i\":");
+            const size_t itemPos = slot.find("\"item\":");
+            const size_t countPos = slot.find("\"c\":");
+            if (indexPos == std::string::npos || itemPos == std::string::npos ||
+                countPos == std::string::npos) {
+                continue;
+            }
+            const int32_t index =
+                static_cast<int32_t>(std::strtol(slot.c_str() + indexPos + 4, nullptr, 10));
+            const uint32_t itemId =
+                static_cast<uint32_t>(std::strtoul(slot.c_str() + itemPos + 7, nullptr, 10));
+            const int32_t count =
+                static_cast<int32_t>(std::strtol(slot.c_str() + countPos + 4, nullptr, 10));
+            if (count <= 0 || itemId == 0) {
+                continue;
+            }
+            item::ItemStack* target = nullptr;
+            if (index == 0) {
+                target = &furnace.input;
+            } else if (index == 1) {
+                target = &furnace.fuel;
+            } else if (index == 2) {
+                target = &furnace.output;
+            }
+            if (target == nullptr) {
+                continue;
+            }
+            target->item = static_cast<item::ItemId>(itemId);
+            target->count = count;
+            target->durability = -1;
+        }
+        ++applied;
+    }
+    IM_LOGI(kTag, "remote furnaces applied=%d", applied);
+}
+
+/*
  * 掉落物推进: 重力下落, 落到实心方块表面停住; 玩家靠近且物品栏放得下就拾取.
  * 超过保留时长自动消失, 避免长期堆积占内存与顶点.
  */

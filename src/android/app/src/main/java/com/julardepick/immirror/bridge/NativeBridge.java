@@ -195,6 +195,22 @@ public final class NativeBridge {
         return nativeTakeUiEvents();
     }
 
+    /* 熔炉内容快照: 房主侧每轮上报前调用, 返回 JSON 数组文本. */
+    public static String takeFurnaceSnapshot() {
+        if (!ensureLoaded()) {
+            return "[]";
+        }
+        return nativeTakeFurnaceSnapshot();
+    }
+
+    /* 远端熔炉内容: 客人侧收到房主下发的列表后调用. */
+    public static void applyRemoteFurnaces(String json) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeApplyRemoteFurnaces(json == null ? "[]" : json);
+    }
+
     /* 储物箱内容快照: 房主侧每轮上报前调用, 返回 JSON 数组文本. */
     public static String takeChestSnapshot() {
         if (!ensureLoaded()) {
@@ -325,6 +341,10 @@ public final class NativeBridge {
     private static native void nativeChooseWorldSeed(String worldName, int seed);
 
     private static native String nativeTakeUiEvents();
+
+    private static native String nativeTakeFurnaceSnapshot();
+
+    private static native void nativeApplyRemoteFurnaces(String json);
 
     private static native String nativeTakeChestSnapshot();
 

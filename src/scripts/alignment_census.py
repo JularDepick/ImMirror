@@ -115,7 +115,7 @@ def main():
         ('界面', '界面素材', count_files(os.path.join(APK_ASSETS, 'ui'), '.png', recursive=True), 391, 'ui_manifest 登记数'),
         ('界面', 'HUD 组件', 6, 8, '已接: 状态条/快捷栏/摇杆/跳跃/准星与进度环/罗盘/战斗框/状态图标; 未接: Boss 血条/充能球'),
         ('联机', '房间接口', len(re.findall(r'app\.(?:get|post)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 7, '建房/列表/加入/离房/状态/踢人'),
-        ('联机', '同步通道', 6, 6, '位置/方块改动/生物/掉落物/储物箱/房间元信息'),
+        ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
     ]
     lines = ['| 域 | 项 | 现状 | 分母 | 说明 |', '|:---:|:---|:---:|:---:|:---|']
     for domain, item, value, denominator, note in rows:

@@ -221,6 +221,13 @@ public:
      */
     std::string TakeChestSnapshot() const;
     void ApplyRemoteChests(const std::string& json);
+
+    /*
+     * 熔炉内容快照: 与箱子同口径, 只同步输入/燃料/产出三个格,
+     * 燃烧计时与进度仍由房主自己推进, 客人只看到静态内容.
+     */
+    std::string TakeFurnaceSnapshot() const;
+    void ApplyRemoteFurnaces(const std::string& json);
     /* 当前显示的远端掉落物标识, 用于下一轮差集删除. */
     std::vector<int32_t> remoteDropIds_;
     void UpdateDrops(double deltaSeconds);

@@ -380,8 +380,9 @@ public final class PlayActivity extends NativeActivity {
         final String creatures = roomOwner ? NativeBridge.takeCreatureSnapshot() : "[]";
         final String drops = roomOwner ? NativeBridge.takeDropSnapshot() : "[]";
         final String chests = roomOwner ? NativeBridge.takeChestSnapshot() : "[]";
+        final String furnaces = roomOwner ? NativeBridge.takeFurnaceSnapshot() : "[]";
         roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, creatures, drops, chests,
-                roomSeq,
+                furnaces, roomSeq,
                 new RoomApi.StateCallback() {
                     @Override
                     public void onSuccess(RoomApi.State state) {
@@ -410,6 +411,7 @@ public final class PlayActivity extends NativeActivity {
                             NativeBridge.applyRemoteCreatures(state.creaturesJson);
                             NativeBridge.applyRemoteDrops(state.dropsJson);
                             NativeBridge.applyRemoteChests(state.chestsJson);
+                            NativeBridge.applyRemoteFurnaces(state.furnacesJson);
                         }
                         if (state.creatureSeq != roomCreatureSeq) {
                             roomCreatureSeq = state.creatureSeq;
