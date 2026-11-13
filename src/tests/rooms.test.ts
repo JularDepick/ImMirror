@@ -411,6 +411,42 @@ describe("房间通道", () => {
     expect(rejected.rejectedFurnaces).toBe(1);
   });
 
+  it("房主可以改房间名与人数上限, 客人不能改, 人数不得少于在线人数", async () => {
+    const owner = await registerCasePlayer("patch", 1);
+    const guest = await registerCasePlayer("patch", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    const patched = expectOk<{ room: RoomSummary }>(
+      await app.request({
+        method: "PATCH",
+        url: `/api/v1/rooms/${room.id}`,
+        payload: { name: "改名后的房间", maxPlayers: 6 },
+        headers: { authorization: `Bearer ${owner.token}` },
+      }),
+    );
+    expect(patched.room.name).toBe("改名后的房间");
+    expect(patched.room.maxPlayers).toBe(6);
+
+    /* 客人不能改. */
+    const denied = await app.request({
+      method: "PATCH",
+      url: `/api/v1/rooms/${room.id}`,
+      payload: { name: "客人改的" },
+      headers: { authorization: `Bearer ${guest.token}` },
+    });
+    expect(denied.status).toBe(403);
+
+    /* 人数不得少于在线人数 (当前 2 人). */
+    const tooFew = await app.request({
+      method: "PATCH",
+      url: `/api/v1/rooms/${room.id}`,
+      payload: { maxPlayers: 2 - 1 },
+      headers: { authorization: `Bearer ${owner.token}` },
+    });
+    expect(tooFew.status).toBe(400);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);

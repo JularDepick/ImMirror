@@ -518,6 +518,51 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     return ok({ left: true, room: rooms.has(id) ? summarize(room) : null });
   });
 
+  /** 改房间信息: 只有房主可以改房间名与人数上限, 人数不得少于当前在线人数. */
+  app.patch("/api/v1/rooms/:id", { preHandler: guard }, async (request) => {
+    const auth = request.auth;
+    if (!auth) {
+      throw new AppError("AUTH_UNAUTHORIZED");
+    }
+    const params = request.params as Record<string, unknown>;
+    const id = typeof params.id === "string" ? params.id : "";
+    const body = requireObjectBody(request.body);
+    const now = ctx.now();
+    sweepRooms(now);
+    const room = requireRoom(id);
+    requireMember(room, auth.user.id);
+    if (room.ownerUserId !== auth.user.id) {
+      throw new AppError("ROOM_FORBIDDEN", "只有房主可以修改房间信息");
+    }
+    const rawName = body.name;
+    if (rawName !== undefined) {
+      if (typeof rawName !== "string" || rawName.trim() === "") {
+        throw new AppError("BAD_REQUEST", "房间名不合法");
+      }
+      const name = rawName.trim();
+      if (name.length > NAME_MAX) {
+        throw new AppError("BAD_REQUEST", `房间名不得超过 ${NAME_MAX} 个字符`);
+      }
+      room.name = name;
+    }
+    const rawPlayers = body.maxPlayers;
+    if (rawPlayers !== undefined) {
+      if (typeof rawPlayers !== "number" || !Number.isFinite(rawPlayers)) {
+        throw new AppError("BAD_REQUEST", "人数上限必须为数值");
+      }
+      const maxPlayers = Math.trunc(rawPlayers);
+      if (maxPlayers < MIN_PLAYERS || maxPlayers > MAX_PLAYERS) {
+        throw new AppError("BAD_REQUEST", `房间人数必须在 ${MIN_PLAYERS} 到 ${MAX_PLAYERS} 之间`);
+      }
+      if (maxPlayers < room.members.size) {
+        throw new AppError("BAD_REQUEST", "人数上限不得少于当前在线人数");
+      }
+      room.maxPlayers = maxPlayers;
+    }
+    room.updatedAt = now;
+    return ok({ room: summarize(room) });
+  });
+
   /** 踢人: 只有房主可以踢, 被踢成员立即移出房间, 房主自己不能被踢. */
   app.post("/api/v1/rooms/:id/kick", { preHandler: guard }, async (request) => {
     const auth = request.auth;
