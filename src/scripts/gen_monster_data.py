@@ -154,6 +154,10 @@ def build_entries(rows):
         attack_ticks = to_int(row.get("AttackAnimTicks"))
         attack_interval = clamp(attack_ticks / TICKS_PER_SECOND if attack_ticks > 0 else 1.0,
                                 ATTACK_INTERVAL_MIN, ATTACK_INTERVAL_MAX)
+        # 护甲按伤害类型分别给出, 单位是百分比减伤; 空值与 0 都按无减伤处理.
+        armor_punch = clamp(float(to_int(row.get("ArmorPunch"))), 0.0, 95.0)
+        armor_range = clamp(float(to_int(row.get("ArmorRange"))), 0.0, 95.0)
+        armor_magic = clamp(float(to_int(row.get("ArmorMagic"))), 0.0, 95.0)
         loot_block, loot_count = LOOT_BY_TYPE.get(kind, (2, 1))
 
         seen.add(source_id)
@@ -170,6 +174,9 @@ def build_entries(rows):
             "attack_distance": attack_distance,
             "attack_interval": attack_interval,
             "attack_type": clamp(to_int(row.get("AttackType")), 0, 2),
+            "armor_punch": armor_punch,
+            "armor_range": armor_range,
+            "armor_magic": armor_magic,
             "type": kind,
             "hostile": 1 if kind in (0, 6) else 0,
             "weight": SPAWN_WEIGHT_BY_TYPE.get(kind, 0.0),
@@ -212,6 +219,10 @@ def render_header(entries):
         "    float attackDistance;    /* 攻击距离, 米 */",
         "    float attackInterval;    /* 攻击间隔, 秒 */",
         "    uint8_t attackType;      /* 0 近程, 1 远程, 2 爆炸 */",
+        "    /* 按伤害类型的百分比减伤, 取值 0 到 95. */",
+        "    float armorPunch;",
+        "    float armorRange;",
+        "    float armorMagic;",
         "    uint8_t type;            /* 生物类别, 取值见文件头注释 */",
         "    uint8_t hostile;         /* 1 主动攻击玩家, 0 遇人躲避 */",
         "    float spawnWeight;       /* 生成权重, 0 表示不参与生成 */",
@@ -226,11 +237,12 @@ def render_header(entries):
     ]
     for entry in entries:
         lines.append('    {%du, "%s", %.1ff, %.1ff, %.2ff, %.2ff, %.2ff, %.2ff, %.1ff, %.1ff, '
-                     '%.2ff, %d, %d, %d, %.2ff, %du, %du},'
+                     '%.2ff, %d, %.1ff, %.1ff, %.1ff, %d, %d, %.2ff, %du, %du},'
                      % (entry["source_id"], escape(entry["name"]), entry["life"], entry["attack"],
                         entry["speed"], entry["height"], entry["width"], entry["thickness"],
                         entry["view"], entry["attack_distance"], entry["attack_interval"],
-                        entry["attack_type"], entry["type"], entry["hostile"], entry["weight"],
+                        entry["attack_type"], entry["armor_punch"], entry["armor_range"],
+                        entry["armor_magic"], entry["type"], entry["hostile"], entry["weight"],
                         entry["loot_block"], entry["loot_count"]))
     lines += [
         "};",

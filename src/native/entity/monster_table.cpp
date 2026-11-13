@@ -25,6 +25,9 @@ MonsterDef ToDef(const gen::MonsterData& data) {
     def.attackDistance = data.attackDistance;
     def.attackInterval = data.attackInterval;
     def.attackType = data.attackType;
+    def.armorPunch = data.armorPunch;
+    def.armorRange = data.armorRange;
+    def.armorMagic = data.armorMagic;
     def.type = data.type;
     def.hostile = data.hostile != 0;
     def.spawnWeight = data.spawnWeight;

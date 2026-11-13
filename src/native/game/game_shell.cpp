@@ -1999,7 +1999,18 @@ bool GameShell::TryAttackCreature() {
     /* 飘字锚点: 命中生物胸口稍上方, 与目标血条一起落在同一只生物身上. */
     const core::Vec3 hitPos = target->Position();
     damageAnchor_ = core::Vec3{hitPos.x, hitPos.y + target->BoundsHeight() * 0.85f, hitPos.z};
-    const bool killed = entities_.Damage(target->Id(), damage);
+    /*
+     * 护甲减伤: 生物表按伤害类型给出百分比减伤, 玩家近战走"打击"一档.
+     * 减伤后至少保留百分之五, 避免高护甲目标完全免疫.
+     */
+    const entity::CreatureEntity* armored = entities_.FindById(target->Id());
+    const float armorPercent = armored != nullptr ? armored->Definition().armorPunch : 0.0f;
+    float finalDamage = damage;
+    if (armorPercent > 0.0f) {
+        const float scale = 1.0f - (armorPercent > 95.0f ? 95.0f : armorPercent) / 100.0f;
+        finalDamage *= scale < 0.05f ? 0.05f : scale;
+    }
+    const bool killed = entities_.Damage(target->Id(), finalDamage);
     if (killed) {
         /* 击败特效: 在尸体位置撒一组暗红碎块, 与碎屑共用同一粒子通道. */
         const core::Vec3 deathPos = target->Position();

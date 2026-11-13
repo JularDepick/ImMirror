@@ -25,6 +25,10 @@ struct MonsterDef {
     float attackDistance = 2.0f;
     float attackInterval = 1.0f;
     uint8_t attackType = 0;     /* 0 近程, 1 远程, 2 爆炸 */
+    /* 按伤害类型的百分比减伤, 取值 0 到 95. */
+    float armorPunch = 0.0f;
+    float armorRange = 0.0f;
+    float armorMagic = 0.0f;
     uint8_t type = 0;           /* 生物类别, 取值见生成表注释 */
     bool hostile = false;       /* true 主动攻击玩家, false 遇人躲避 */
     float spawnWeight = 0.0f;   /* 生成权重, 0 表示不参与生成 */
