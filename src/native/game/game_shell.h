@@ -505,8 +505,13 @@ private:
     AAssetManager* assets_ = nullptr;
     /* 当前世界名, 界面显示与数据源都用它. */
     std::string worldName_ = "default";
-    /* 待申报的掉落物标识, 由客人侧在走到掉落物上时填入. */
+    /* 待申报的掉落物标识, 由客人侧在走到远端掉落物上时填入. */
     std::vector<int32_t> pendingPickups_;
+    /*
+     * 远端掉落物的渲染标识偏移: 房主上报的掉落物用 偏移 + 服务端编号,
+     * 本地自己挖出来的掉落物编号从 1 起, 因此两者不会撞号, 也能区分来源.
+     */
+    static constexpr int32_t kRemoteDropIdBase = 1000000;
     /* 天气状态机: 按玩家所在群系的权重周期重抽, 结果下发给渲染侧. */
     world::Weather weather_;
     world::WeatherKind lastWeatherKind_ = world::WeatherKind::kClear;

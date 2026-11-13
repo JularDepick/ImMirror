@@ -1442,7 +1442,8 @@ void GameShell::ApplyPickupResult(int32_t dropId, int32_t blockId) {
      * 裁定成功: 物品进背包, 本地掉落物视图移除.
      * 裁定失败 (blockId 为 0) 时只移除本地视图, 因为已经被别人捡走.
      */
-    render::particle::RemoveDrop(static_cast<uint32_t>(dropId));
+    /* 申报用的是服务端编号, 本地渲染标识要加回偏移. */
+    render::particle::RemoveDrop(static_cast<uint32_t>(kRemoteDropIdBase + dropId));
     if (blockId == 0) {
         IM_LOGI(kTag, "pickup rejected by server, drop=%d", dropId);
         return;
@@ -2942,7 +2943,7 @@ void GameShell::ApplyRemoteDrops(const std::string& json) {
             if (localId < 0) {
                 continue;
             }
-            const int32_t renderId = 1000000 + localId;
+            const int32_t renderId = kRemoteDropIdBase + localId;
             const voxel::BlockId block = static_cast<voxel::BlockId>(readNumber("\"block\":", 0.0f));
             const float x = readNumber("\"x\":", 0.0f);
             const float y = readNumber("\"y\":", 0.0f);
@@ -3287,11 +3288,12 @@ void GameShell::UpdateDrops(double deltaSeconds) {
             }
         }
         /*
-         * 客人侧: 掉落物由房主维护, 本地不直接拾取, 而是记一条申报请求,
-         * 由服务端裁定归属后再入背包, 避免两人同时捡到同一件.
+         * 远端掉落物 (房主上报的) 由服务端裁定归属: 客人只申报, 不本地拾取,
+         * 避免两人同时捡到同一件. 本地自己挖出来的掉落物照常本地拾取,
+         * 否则客人挖了方块却拿不到东西.
          */
-        if (near && !isHost_) {
-            pendingPickups_.push_back(static_cast<int32_t>(drop.id));
+        if (near && static_cast<int32_t>(drop.id) >= kRemoteDropIdBase) {
+            pendingPickups_.push_back(static_cast<int32_t>(drop.id) - kRemoteDropIdBase);
             continue;
         }
         if (near && inventory_.RoomFor(drop.item) > 0) {
