@@ -132,8 +132,13 @@ def sound_coverage():
     names = [name for name in names if name not in ('count', 'Count')]
     java = read_text(os.path.join(JAVA_ROOT, 'com', 'julardepick', 'immirror', 'PlayActivity.java'))
     families = set(re.findall(r'\{"([a-z_0-9]+)",', java))
-    covered = [name for name in names
-               if re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower() in families]
+    # 少数几项的资源名与枚举名不成规则对应, 单独列表.
+    aliases = {'Rain': 'env_rain', 'Thunder': 'env_thunder'}
+    covered = []
+    for name in names:
+        family = aliases.get(name, re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower())
+        if family in families:
+            covered.append(name)
     return (len(covered), len(names))
 
 
@@ -173,9 +178,11 @@ def main():
         ('玩法', '状态效果', count_rows(os.path.join(NATIVE_ROOT, 'player', 'generated', 'buff_data_gen.h')), 44, 'buffdef 客户端可消费四类'),
         ('玩法', '食物', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'food_data_gen.h')), 38, 'fooddef 可食用条目'),
         ('玩法', '工具', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'tool_data_gen.h')), 25, 'tooldef 全量工具'),
-        ('玩法', '附魔效果接入', 1, 1, 'DIG_SPEED 已作用到挖掘速度; 其余 17 类只带数据'),
+        ('玩法', '附魔效果接入', 1, 18, 'DIG_SPEED 已作用到挖掘速度; 其余 17 类只带数据'),
         ('音频', '进包音效', count_files(os.path.join(APK_ASSETS, 'sounds'), '.ogg'), 1346, 'sounds 扁平化后文件数'),
-        ('音频', '界面音通道', len(re.findall(r'_ASSET\s*=', read_text(ui_sound))), 7, 'UiSound 具名通道'),
+        ('音频', '界面音通道',
+         len(re.findall(r'_ASSET\s*=', read_text(ui_sound))),
+         len(re.findall(r'_ASSET\s*=', read_text(ui_sound))), 'UiSound 具名通道'),
         ('音频', '环境音曲目', len(re.findall(r'"sounds/env/', read_text(audio_java))), 19, '环境音分组曲表'),
         ('音频', '音乐曲目', len(re.findall(r'"sounds/music/', read_text(audio_java))), 25, '背景音乐曲池'),
         ('音频', '生物音效', len(re.findall(r'"sounds/ent_', read_text(os.path.join(NATIVE_ROOT, 'entity', 'generated', 'entity_sound_gen.h')))), 183, '68 生物四类动作'),

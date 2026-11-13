@@ -742,7 +742,16 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     if (onGround_) {
         const float drop = fallPeakY_ - position_.y;
         if (drop > kFallSafeDistance) {
-            const float damage = (drop - kFallSafeDistance) * kFallDamagePerBlock;
+            float damage = (drop - kFallSafeDistance) * kFallDamagePerBlock;
+            /*
+             * 摔落防护附魔: 数值按百分比减伤解释, 与采集速度, 耐久两类的百分比口径一致,
+             * 超过百分之百按完全免疫处理.
+             */
+            const int32_t protect = armor_.EnchantValue("FALL_PROTECT");
+            if (protect > 0) {
+                const float percent = protect > 100 ? 100.0f : static_cast<float>(protect);
+                damage *= 1.0f - percent / 100.0f;
+            }
             ApplyDamage(damage);
             IM_LOGI(kTag, "fall damage=%.1f drop=%.2f", static_cast<double>(damage),
                     static_cast<double>(drop));

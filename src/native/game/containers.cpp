@@ -12,9 +12,11 @@ namespace {
  * 版本 3: 箱子扩到 60 格; 读 v2 时按 27 格还原旧档数据.
  * 版本 4: 末尾追加物品栏节 (45 格), 每格多记耐久与附魔; 读 v2 与 v3 时不读该节,
  * 物品栏保持初始状态, 旧档照样能进世界.
+ * 版本 5: 追加四个护甲部位, 只记物品编号.
+ * 版本 6: 护甲部位改记整份堆叠, 附魔与耐久一并保留.
  */
 constexpr char kContainerMagic[4] = {'I', 'M', 'C', 'F'};
-constexpr uint32_t kContainerVersion = 5;
+constexpr uint32_t kContainerVersion = 6;
 constexpr uint32_t kLegacyChestSlots = 27;
 
 /* 物品栏单格的落盘形式: 数量之外还要记耐久与附魔, 否则读档会丢工具状态. */
@@ -163,10 +165,12 @@ bool SaveContainersToFile(const char* path, const FurnaceMap& furnaces, const Ch
         }
     }
 
-    /* 护甲四个部位: 只记物品 id, 0 表示空. */
+    /*
+     * 护甲四个部位: 记物品编号, 数量, 耐久与附魔.
+     * 与物品栏同一口径, 否则穿上身的附魔装备读档后会变回白板.
+     */
     for (int32_t slot = 0; slot < ArmorSet::kSlotCount; ++slot) {
-        const uint16_t worn = static_cast<uint16_t>(armor.Worn(slot));
-        if (std::fwrite(&worn, sizeof(worn), 1, file) != 1) {
+        if (!WriteInventoryStack(file, armor.WornStack(slot))) {
             std::fclose(file);
             return false;
         }
@@ -256,8 +260,22 @@ bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& ch
         }
     }
 
-    /* 护甲部位只在版本 5 起存在, 读更早的文件时保留调用方给的初值. */
-    if (version >= 5) {
+    /*
+     * 护甲部位在版本 5 起存在. 版本 5 只记物品编号, 版本 6 起改记整份堆叠;
+     * 读更早的文件时保留调用方给的初值.
+     */
+    if (version >= 6) {
+        for (int32_t slot = 0; slot < ArmorSet::kSlotCount; ++slot) {
+            ItemStack stack;
+            if (!ReadInventoryStack(file, stack)) {
+                std::fclose(file);
+                return false;
+            }
+            if (!stack.Empty()) {
+                armor.Equip(stack);
+            }
+        }
+    } else if (version == 5) {
         for (int32_t slot = 0; slot < ArmorSet::kSlotCount; ++slot) {
             uint16_t worn = 0;
             if (std::fread(&worn, sizeof(worn), 1, file) != 1) {

@@ -23,8 +23,9 @@ constexpr int32_t kDamageTypeCount = 8;
 /*
  * 护甲套装: 头盔, 胸甲, 护腿, 靴子四个部位.
  *
- * 每个部位记一件物品 id, 合计时按伤害类型把各部位百分比减伤相加,
- * 总减伤封顶 80%, 避免全身极品装备完全免疫.
+ * 每个部位记一整份堆叠而不是单个物品编号: 附魔与耐久都挂在堆叠上,
+ * 只记编号会让穿上身的装备丢掉附魔. 合计时按伤害类型把各部位
+ * 百分比减伤相加, 总减伤封顶 80%, 避免全身极品装备完全免疫.
  */
 class ArmorSet {
 public:
@@ -34,12 +35,17 @@ public:
     /* 部位序号: 0 头盔, 1 胸甲, 2 护腿, 3 靴子. 非护甲返回 -1. */
     static int32_t SlotOf(item::ItemId id);
 
-    /* 穿上并返回被替换下来的物品; 部位不匹配时原样返回 id 表示未穿上. */
+    /* 穿上并返回被替换下来的堆叠; 部位不匹配时把入参原样返回. */
+    item::ItemStack Equip(const item::ItemStack& stack);
+
+    /* 便捷重载: 只给编号时按无附魔无耐久的整份物品处理. */
     item::ItemId Equip(item::ItemId id);
 
     item::ItemId Worn(int32_t slot) const {
-        return slot < 0 || slot >= kSlotCount ? item::kNone : slots_[slot];
+        return slot < 0 || slot >= kSlotCount ? item::kNone : slots_[slot].item;
     }
+
+    const item::ItemStack& WornStack(int32_t slot) const;
 
     /* 指定伤害类型的百分比减伤, 已按上限钳制. */
     float ReductionPercent(DamageType type) const;
@@ -47,10 +53,16 @@ public:
     /* 应用减伤; 至少保留 20% 伤害. */
     float Apply(DamageType type, float damage) const;
 
+    /*
+     * 把四个部位上指定类型的附魔数值相加. 只认效果类型字符串,
+     * 不关心是哪个部位, 因此头盔与靴子上的同类附魔都能叠加.
+     */
+    int32_t EnchantValue(const char* type) const;
+
     void Clear();
 
 private:
-    item::ItemId slots_[kSlotCount] = {item::kNone, item::kNone, item::kNone, item::kNone};
+    item::ItemStack slots_[kSlotCount];
 };
 
 }  /* namespace immirror::game */

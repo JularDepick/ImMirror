@@ -1999,6 +1999,18 @@ bool GameShell::TryAttackCreature() {
     float damage = 0.0f;
     if (item::ToolTable::Instance().Find(heldItem, tool) && tool.attackPunch > 0.0f) {
         damage = tool.attackPunch;
+        /*
+         * 锐利一类附魔: 表里的数值是直接加到近战伤害上的点数, 与描述里的 "+N" 一致.
+         * 只对手持物生效, 因此放在取到手持堆叠之后再算.
+         */
+        const item::ItemStack& heldStack = inventory_.Slot(selectedSlot_);
+        if (heldStack.enchantId != 0) {
+            const game::gen::EnchantEntry* enchant =
+                item::EnchantTable::Instance().Find(heldStack.enchantId, heldStack.enchantLevel);
+            if (enchant != nullptr && item::EnchantTable::IsType(*enchant, "SHARP")) {
+                damage += static_cast<float>(enchant->value1);
+            }
+        }
     } else {
         const voxel::BlockId heldBlock = item::ItemTable::Instance().BlockOf(heldItem);
         const float hardness = voxel::BlockRegistry::Instance().Info(heldBlock).hardness;
