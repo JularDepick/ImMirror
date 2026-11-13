@@ -298,6 +298,30 @@ void main() {
 )glsl";
 
 /*
+ * 水下滤镜着色器: 全屏三角带加一个纯色片元, 由 uColor 决定颜色与强度.
+ * 顶点与降水层同一套写法, 不需要缓冲对象.
+ */
+const char* const kTintVertexShaderSource = R"glsl(#version 300 es
+void main() {
+    vec2 corner = vec2((gl_VertexID == 1 || gl_VertexID == 3) ? 1.0 : -1.0,
+                       (gl_VertexID >= 2) ? 1.0 : -1.0);
+    gl_Position = vec4(corner, 0.0, 1.0);
+}
+)glsl";
+
+const char* const kTintFragmentShaderSource = R"glsl(#version 300 es
+precision mediump float;
+
+uniform vec4 uColor;
+
+out vec4 outColor;
+
+void main() {
+    outColor = uColor;
+}
+)glsl";
+
+/*
  * 列主序 4x4 矩阵求逆, 供天空通道把片元反投影成世界视线.
  * 视投影矩阵在场景里恒可逆 (近远平面有效且相机不退化), 不可逆时返回 false,
  * 调用方保留上一帧的逆矩阵, 天空退化为不随视角变化, 不影响地形绘制.
@@ -736,6 +760,39 @@ bool ChunkRenderer::Initialize(AAssetManager* assets) {
         }
     }
 
+    /* 水下滤镜同样可选: 失败时只丢滤镜, 水下仍然能玩. */
+    {
+        const GLuint tintVertex =
+            CompileShader(GL_VERTEX_SHADER, kTintVertexShaderSource, "tint vertex shader");
+        const GLuint tintFragment =
+            tintVertex != 0
+                ? CompileShader(GL_FRAGMENT_SHADER, kTintFragmentShaderSource, "tint fragment shader")
+                : 0;
+        if (tintVertex != 0 && tintFragment != 0) {
+            const GLuint tintProgram = glCreateProgram();
+            if (tintProgram != 0) {
+                glAttachShader(tintProgram, tintVertex);
+                glAttachShader(tintProgram, tintFragment);
+                glLinkProgram(tintProgram);
+                GLint linked = GL_FALSE;
+                glGetProgramiv(tintProgram, GL_LINK_STATUS, &linked);
+                if (linked == GL_TRUE) {
+                    tintProgram_ = tintProgram;
+                    uniformTintColor_ = glGetUniformLocation(tintProgram_, "uColor");
+                } else {
+                    LogObjectInfo("tint program link", tintProgram, true);
+                    glDeleteProgram(tintProgram);
+                }
+            }
+        }
+        if (tintVertex != 0) {
+            glDeleteShader(tintVertex);
+        }
+        if (tintFragment != 0) {
+            glDeleteShader(tintFragment);
+        }
+    }
+
     uniformViewProjection_ = glGetUniformLocation(program_, "uViewProjection");
     uniformAtlas_ = glGetUniformLocation(program_, "uAtlas");
     uniformChunkOrigin_ = glGetUniformLocation(program_, "uChunkOrigin");
@@ -790,6 +847,9 @@ void ChunkRenderer::Shutdown() {
         if (weatherProgram_ != 0) {
             glDeleteProgram(weatherProgram_);
         }
+        if (tintProgram_ != 0) {
+            glDeleteProgram(tintProgram_);
+        }
         if (skyProgram_ != 0) {
             glDeleteProgram(skyProgram_);
         }
@@ -808,6 +868,9 @@ void ChunkRenderer::Shutdown() {
     }
     program_ = 0;
     weatherProgram_ = 0;
+    tintProgram_ = 0;
+    uniformTintColor_ = -1;
+    underwaterTint_ = 0.0f;
     uniformWeatherIntensity_ = -1;
     uniformWeatherKind_ = -1;
     uniformWeatherTime_ = -1;
@@ -1010,6 +1073,34 @@ void ChunkRenderer::DrawPrecipitation() {
     glDepthMask(GL_TRUE);
 }
 
+/*
+ * 水下滤镜: 整屏叠一层冷色, 关深度测试与背面剔除, 开混合.
+ * 必须在全部世界几何与降水之后提交, HUD 由上层在此之后绘制.
+ */
+void ChunkRenderer::DrawUnderwaterTint() {
+    if (tintProgram_ == 0 || underwaterTint_ <= 0.002f || !HasCurrentContext()) {
+        return;
+    }
+    glUseProgram(tintProgram_);
+    /* 冷蓝偏青: 与水体色接近, 但更暗更压, 避免整屏发白. */
+    glUniform4f(uniformTintColor_, 0.10f, 0.30f, 0.45f, underwaterTint_);
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBindVertexArray(0);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+}
+
+void ChunkRenderer::SetUnderwaterTint(float alpha) {
+    underwaterTint_ = alpha < 0.0f ? 0.0f : (alpha > 1.0f ? 1.0f : alpha);
+}
+
 void ChunkRenderer::SetViewportSize(int32_t width, int32_t height) {
     skyViewportWidth_ = width > 0 ? width : 1280;
     skyViewportHeight_ = height > 0 ? height : 720;
@@ -1160,6 +1251,8 @@ void ChunkRenderer::Draw() {
 
     /* 雨雪叠加在世界几何之后, HUD 之前. */
     DrawPrecipitation();
+    /* 水下滤镜在最后: 相机在水里时整屏压一层冷色. */
+    DrawUnderwaterTint();
 }
 
 int32_t ChunkRenderer::DrawnChunks() const {

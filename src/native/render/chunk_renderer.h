@@ -57,6 +57,12 @@ public:
      */
     void SetViewportSize(int32_t width, int32_t height);
 
+    /*
+     * 水下滤镜强度 0 到 1: 0 表示相机不在水里.
+     * 由总装按相机所在方块判定, 渲染层只负责整屏叠加.
+     */
+    void SetUnderwaterTint(float alpha);
+
     /* 按世界版本增量上传脏区块的网格. */
     void Sync(const world::World& world);
 
@@ -78,7 +84,13 @@ private:
     /* 降水叠加层: 雨天斜线, 雪天飘点, 雷暴更密; 在区块之后绘制. */
     void DrawPrecipitation();
 
+    /* 水下滤镜: 全屏纯色叠加, 在降水之后绘制. */
+    void DrawUnderwaterTint();
+
     /* 以下成员为本实现的内部状态, 不改变公共接口约定. */
+    uint32_t tintProgram_ = 0;
+    int32_t uniformTintColor_ = -1;
+    float underwaterTint_ = 0.0f;
     uint32_t weatherProgram_ = 0;
     int32_t uniformWeatherIntensity_ = -1;
     int32_t uniformWeatherKind_ = -1;

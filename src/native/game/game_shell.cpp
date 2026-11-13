@@ -2238,6 +2238,20 @@ void GameShell::RenderScene() {
 
     /* 雾, 亮度与天光因子分别下发: 天光由 shader 的 mix(0.27, 1.0) 承担月夜下限. */
     renderer_->SetAtmosphere(fogDensity_, brightness_, skyBlend_);
+    /*
+     * 水下滤镜: 相机所在方块是水时整屏压一层冷色.
+     * 判定与水下环境音的判定同源, 都取相机所在方块.
+     */
+    {
+        const int32_t cameraX = static_cast<int32_t>(std::floor(camera[0]));
+        const int32_t cameraY = static_cast<int32_t>(std::floor(camera[1]));
+        const int32_t cameraZ = static_cast<int32_t>(std::floor(camera[2]));
+        const voxel::BlockId atCamera = world_->GetBlock(cameraX, cameraY, cameraZ);
+        const char* cameraBlockName = voxel::BlockRegistry::Instance().Info(atCamera).name;
+        const bool underwater = atCamera != voxel::block::Air && cameraBlockName != nullptr &&
+                                std::strstr(cameraBlockName, "water") != nullptr;
+        renderer_->SetUnderwaterTint(underwater ? 0.45f : 0.0f);
+    }
     /* 天气: 降水强度压暗天空并叠加雨雪层, 状态变化写一条日志便于实机核对. */
     if (weather_.Kind() != lastWeatherKind_) {
         lastWeatherKind_ = weather_.Kind();
