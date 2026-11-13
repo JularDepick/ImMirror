@@ -121,6 +121,8 @@ public final class PlayActivity extends NativeActivity {
     private boolean roomOwner;
     /* 改动裁剪提示只弹一次. */
     private boolean roomTrimWarned;
+    /* 掉出房间后只自动重进一次, 避免反复失败. */
+    private boolean roomRejoinAttempted;
     /* 上一拍未送达的方块改动, 与下一拍的改动合并后重发. */
     private String pendingRoomEdits;
     /* 全局世界同步用的同一份待发改动. */
@@ -528,6 +530,37 @@ public final class PlayActivity extends NativeActivity {
                          * 房间已被关闭或自己已不在房内: 没有恢复可能, 直接结束本局.
                          * 其余错误 (网络抖动, 服务重启) 累加失败次数, 到阈值后提示重连.
                          */
+                        /*
+                         * 自己已被移出房间 (例如应用切后台超过服务端的成员存活时间):
+                         * 房间还在, 只是本端不再是成员, 此时直接重进一次即可恢复,
+                         * 不必结束本局. 重进只尝试一次, 失败再按不可恢复处理.
+                         */
+                        if ("ROOM_FORBIDDEN".equals(error.code()) && !roomRejoinAttempted
+                                && roomCode != null && !roomCode.isEmpty()) {
+                            roomRejoinAttempted = true;
+                            NativeBridge.showTip("REJOINING");
+                            roomApi.join(session, roomCode, "", new RoomApi.JoinCallback() {
+                                @Override
+                                public void onSuccess(RoomApi.Room joined, long seq) {
+                                    /* 重新成为成员后从零拉取, 拿到完整增量. */
+                                    roomSeq = 0L;
+                                    roomContentSeq = 0L;
+                                    roomSyncFailures = 0;
+                                    roomReconnecting = false;
+                                    NativeBridge.showTip("REJOINED");
+                                    Log.i(TAG, "rejoined room " + roomId);
+                                }
+
+                                @Override
+                                public void onFailure(com.julardepick.immirror.account.ApiException
+                                                              rejoinError) {
+                                    Log.w(TAG, "rejoin failed: " + rejoinError.code());
+                                    NativeBridge.showTip("ROOM CLOSED");
+                                    finish();
+                                }
+                            });
+                            return;
+                        }
                         if ("ROOM_NOT_FOUND".equals(error.code())
                                 || "AUTH_UNAUTHORIZED".equals(error.code())) {
                             NativeBridge.showTip("ROOM CLOSED");
