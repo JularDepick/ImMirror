@@ -50,8 +50,23 @@ struct ToolCombatData {
     /* 修理配方: 六组材料与数量, 物品编号 0 表示该组不用. */
     uint16_t repairItem[6];
     uint16_t repairAmount[6];
+    /* 音效路径: 攻击, 发射与使用; 空串表示没有. */
+    const char* atkSound;
+    const char* fireSound;
+    const char* useSound;
 };
 """
+
+
+def sound_asset(row, index, column):
+    """音效名转资源路径: 点分名扁平化成下划线, 与打包后的命名一致."""
+    position = index.get(column)
+    if position is None or position >= len(row):
+        return ""
+    value = (row[position] or "").strip()
+    if not value:
+        return ""
+    return "sounds/" + value.replace(".", "_") + ".ogg"
 
 
 def to_int(text):
@@ -70,7 +85,8 @@ def main():
     header = rows[1]
     index = {name: position for position, name in enumerate(header)}
     needed = ["ID", "Type", "Level", "AttackPunch", "Enchant", "MoveSpeed", "AttackRange",
-              "AttackExplosion", "AttackChaos", "AttackBurn", "AttackToxin"] + \
+              "AttackExplosion", "AttackChaos", "AttackBurn", "AttackToxin",
+              "AtkSound", "FireSound", "UseSound"] + \
              ["RepairID%d" % i for i in range(1, 7)] + \
              ["RepairAmount%d" % i for i in range(1, 7)] + [c for _f, c in ARMOR_COLUMNS]
     missing = [name for name in needed if name not in index]
@@ -102,6 +118,9 @@ def main():
             "attackChaos": cell("AttackChaos"),
             "attackBurn": cell("AttackBurn"),
             "attackToxin": cell("AttackToxin"),
+            "atkSound": sound_asset(row, index, "AtkSound"),
+            "fireSound": sound_asset(row, index, "FireSound"),
+            "useSound": sound_asset(row, index, "UseSound"),
         }
         for field, column in ARMOR_COLUMNS:
             entry[field] = cell(column)
@@ -117,7 +136,8 @@ def main():
     for e in entries:
         out.append(
             "    {%du, %du, %du, %du, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, "
-            "%.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du},"
+            "%.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du, "
+            '"%s", "%s", "%s"},'
             % (e["id"], e["type"], e["level"], e["enchant"], e["attack"], e["armorPhysics"],
                e["armorPunch"], e["armorRange"], e["armorExplosion"], e["armorMagic"],
                e["armorChaos"], e["armorBurn"], e["armorToxin"], e["moveSpeed"],
@@ -125,7 +145,8 @@ def main():
                e["attackToxin"],
                e["repairItem0"], e["repairAmount0"], e["repairItem1"], e["repairAmount1"],
                e["repairItem2"], e["repairAmount2"], e["repairItem3"], e["repairAmount3"],
-               e["repairItem4"], e["repairAmount4"], e["repairItem5"], e["repairAmount5"]))
+               e["repairItem4"], e["repairAmount4"], e["repairItem5"], e["repairAmount5"],
+               e["atkSound"], e["fireSound"], e["useSound"]))
     out.append("};")
     out.append("")
     out.append("}  // namespace immirror::game::gen")

@@ -24,6 +24,10 @@ struct ToolCombat {
     /* 修理配方: 六组材料与数量, 编号 0 表示该组不用. */
     ItemId repairItem[6] = {};
     int32_t repairAmount[6] = {};
+    /* 音效路径: 攻击, 发射与使用; 空串表示没有. */
+    const char* atkSound = "";
+    const char* fireSound = "";
+    const char* useSound = "";
 };
 
 /*

@@ -317,8 +317,17 @@ bool GameShell::TryAutoEat() {
             continue;
         }
         player_->Eat(static_cast<float>(food->food), static_cast<float>(food->heal));
-        /* 进食音: 事件编码 7, 由 Java 侧取走后播放. */
-        uiEvents_.push_back(7);
+        /* 使用音: 食物物品若配了使用音则播它, 否则交给界面事件走通用进食音. */
+        {
+            item::ToolCombat foodTool;
+            if (item::ToolTable::Instance().Find(stack.item, foodTool) &&
+                foodTool.useSound != nullptr && foodTool.useSound[0] != '\0') {
+                audio::AudioEngine::Instance().PlayCreatureAsset(foodTool.useSound);
+            } else {
+                /* 进食音: 事件编码 7, 由 Java 侧取走后播放. */
+                uiEvents_.push_back(7);
+            }
+        }
         /* 进食特效: 在嘴部高度撒几块暖绿碎块, 与击败碎块同一通道. */
         const core::Vec3 mouth = player_->Position();
         render::particle::EmitColored(0.42f, 0.78f, 0.32f, mouth.x, mouth.y + 1.3f, mouth.z, 4);
@@ -1504,7 +1513,12 @@ bool GameShell::TryShootArrow() {
     if (explosive) {
         ShowTip("EXPLOSIVE ARROW");
     }
-    audio::AudioEngine::Instance().Play(audio::SoundId::kDigWood);
+    /* 发射音: 优先用装备表里配的音效, 没配时回落到木头材质音. */
+    if (combat.fireSound != nullptr && combat.fireSound[0] != '\0') {
+        audio::AudioEngine::Instance().PlayCreatureAsset(combat.fireSound);
+    } else {
+        audio::AudioEngine::Instance().Play(audio::SoundId::kDigWood);
+    }
     IM_LOGI(kTag, "shoot arrow damage=%.1f free=%d", static_cast<double>(damage), freeShot ? 1 : 0);
     return true;
 }
@@ -2372,6 +2386,10 @@ bool GameShell::TryAttackCreature() {
                 }
             }
         }
+    }
+    /* 攻击音: 优先用装备表里配的音效, 没配时回落到材质挖掘音. */
+    if (tool.atkSound != nullptr && tool.atkSound[0] != '\0') {
+        audio::AudioEngine::Instance().PlayCreatureAsset(tool.atkSound);
     }
     const bool killed = entities_.Damage(target->Id(), finalDamage);
     if (killed) {

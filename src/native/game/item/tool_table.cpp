@@ -42,6 +42,9 @@ bool ToolTable::Find(ItemId id, ToolCombat& out) const {
             out.attack[2] = data.attackChaos;
             out.attack[3] = data.attackBurn;
             out.attack[4] = data.attackToxin;
+            out.atkSound = data.atkSound;
+            out.fireSound = data.fireSound;
+            out.useSound = data.useSound;
             for (int32_t slot = 0; slot < 6; ++slot) {
                 out.repairItem[slot] = static_cast<ItemId>(data.repairItem[slot]);
                 out.repairAmount[slot] = static_cast<int32_t>(data.repairAmount[slot]);
