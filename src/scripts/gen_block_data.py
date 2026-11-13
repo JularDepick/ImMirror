@@ -359,7 +359,9 @@ def build_extension_entry(client_id, source_id, row, used_keys):
         "material": material,
         "solid": solid,
         "opaque": opaque,
+        "texture_top": (row.get("Texture2") or "").strip(),
         "texture": texture,
+        "texture_top": (row.get("Texture2") or "").strip(),
         "drop_source": drop_source,
         "drop_field": drop_field,
         "drop_prob": drop_prob,
@@ -422,8 +424,8 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
         prob2 = 0
     elif prob2 > 10000:
         prob2 = 10000
-    return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du, '
-            '%.2ff, %du, %du, %du, %du},'
+    return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", "%s", '
+            '%du, %du, %.2ff, %du, %du, %du, %du},'
             "  /* %s */"
             % (source_id, client_id, escape(name),
                escape(data.get("Name", "").strip()),
@@ -433,6 +435,7 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
                escape(data.get("PlaceSound", "").strip()),
                escape(data.get("WalkSound", "").strip()),
                escape(data.get("Texture1", "").strip()),
+               escape(data.get("Texture2", "").strip()),
                drop_source, gravity, slipperiness, replaceable, drop_prob, drop2, prob2,
                comment))
 
@@ -497,7 +500,8 @@ def render_header(entries, legacy_rows, segments):
         "    const char* digSound;    /* 挖掘音名, 空串表示没有 */",
         "    const char* placeSound;  /* 放置音名, 空串表示没有 */",
         "    const char* walkSound;   /* 行走音名, 空串表示没有 */",
-        "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
+        "    const char* texture;     /* 侧面贴图名, 空串表示没有 */",
+        "    const char* textureTop;  /* 顶面贴图名, 空串表示与侧面相同 */",
         "    uint32_t dropSourceId;   /* 掉落物物品 id, 0 表示无掉落 */",
         "    uint8_t gravity;         /* 重力方式: 0 不影响, 1 下坠 */",
         "    float slipperiness;      /* 摩擦系数, 大于 1 表示打滑 */",
@@ -521,7 +525,8 @@ def render_header(entries, legacy_rows, segments):
     for entry in entries:
         comment = "%s, 掉落字段 %s" % (entry["category"] or "无类别",
                                      entry["drop_field"] or "无")
-        lines.append('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du, %du},'
+        lines.append('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", "%s", '
+                     '%du, %du, %.2ff, %du, %du, %du, %du},'
                      "  /* %s */"
                      % (entry["source_id"], entry["client_id"], escape(entry["key"]),
                         escape(entry["display_name"]), escape(entry["category"]),
@@ -529,7 +534,10 @@ def render_header(entries, legacy_rows, segments):
                         entry["tool"], entry["tool_level"],
                         escape(entry["dig_sound"]), escape(entry["place_sound"]),
                         escape(entry["walk_sound"]), escape(entry["texture"]),
-                        entry["drop_source"], entry["gravity"], entry["drop_prob"], comment))
+                        escape(entry["texture_top"]),
+                        entry["drop_source"], entry["gravity"], entry["slipperiness"],
+                        entry["replaceable"], entry["drop_prob"],
+                        entry.get("drop2", 0), entry.get("drop2_prob", 0), comment))
     lines += [
         "};",
         "",
@@ -627,7 +635,8 @@ def render_header(entries, legacy_rows, segments):
         "    const char* digSound;    /* 挖掘音名, 空串表示没有 */",
         "    const char* placeSound;  /* 放置音名, 空串表示没有 */",
         "    const char* walkSound;   /* 行走音名, 空串表示没有 */",
-        "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
+        "    const char* texture;     /* 侧面贴图名, 空串表示没有 */",
+        "    const char* textureTop;  /* 顶面贴图名, 空串表示与侧面相同 */",
         "    uint8_t shape;           /* 渲染形状, 与 voxel::BlockShape 对齐 */",
         "    uint8_t gravity;         /* 重力方式: 0 不影响, 1 下坠 */",
         "    float slipperiness;      /* 摩擦系数, 大于 1 表示打滑 */",
@@ -642,15 +651,18 @@ def render_header(entries, legacy_rows, segments):
         "constexpr RegistryEntry kRegistryEntries[kRegistryEntryCount] = {",
     ]
     for entry in entries:
-        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, %du, "%s", "%s", "%s", "%s", %du, %du, %du},'
+        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, %du, "%s", "%s", "%s", "%s", "%s", '
+                     '%du, %du, %.2ff, %du, %du, %du, %du},'
                      % (entry["client_id"], escape(entry["key"]),
                         "true" if entry["solid"] else "false",
                         "true" if entry["opaque"] else "false",
                         format_float(entry["hardness"]), entry["tool"],
                         entry["material"], entry["tool_level"], escape(entry["dig_sound"]),
                         escape(entry["place_sound"]), escape(entry["walk_sound"]),
-                        escape(entry["texture"]),
-                        SHAPE_INDEX.get(entry["shape"], 0), entry["gravity"], entry["drop_prob"]))
+                        escape(entry["texture"]), escape(entry["texture_top"]),
+                        SHAPE_INDEX.get(entry["shape"], 0), entry["gravity"],
+                        entry["slipperiness"], entry["replaceable"], entry["drop_prob"],
+                        0, 0))
     lines += [
         "};",
         "",

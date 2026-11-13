@@ -52,10 +52,12 @@ def collect_names():
     with open(BLOCKDEF, "rb") as handle:
         rows = list(csv.reader(handle.read().decode("utf-8-sig").splitlines()))
     tex_index = -1
+    top_index = -1
     for index, cell in enumerate(rows[0]):
         if "贴图1" in cell:
             tex_index = index
-            break
+        if "贴图2" in cell:
+            top_index = index
     if tex_index < 0:
         print("blockdef 缺贴图 1 列", file=sys.stderr)
         sys.exit(1)
@@ -64,6 +66,29 @@ def collect_names():
         if len(row) > tex_index and row[tex_index].strip():
             names.add(row[tex_index].strip())
     return sorted(names)
+
+
+def collect_top_only_names():
+    """只在顶面列出现的贴图名: 用于过滤掉找不到源图的那些."""
+    with open(BLOCKDEF, "rb") as handle:
+        rows = list(csv.reader(handle.read().decode("utf-8-sig").splitlines()))
+    tex_index = -1
+    top_index = -1
+    for index, cell in enumerate(rows[0]):
+        if "贴图1" in cell:
+            tex_index = index
+        if "贴图2" in cell:
+            top_index = index
+    if tex_index < 0 or top_index < 0:
+        return set()
+    side = set()
+    top = set()
+    for row in rows[2:]:
+        if len(row) > tex_index and row[tex_index].strip():
+            side.add(row[tex_index].strip())
+        if len(row) > top_index and row[top_index].strip():
+            top.add(row[top_index].strip())
+    return top - side
 
 
 # 贴图名与源文件名语义不同但确实是同一件东西的显式对照.
@@ -124,10 +149,15 @@ def paint_missing_tile(atlas, slot):
 
 
 def main():
+    top_only = collect_top_only_names()
     names = collect_names()
     pngs = {name[:-4] for name in os.listdir(TEX_SOURCE) if name.endswith(".png")}
     lower = {stem.lower(): stem for stem in pngs}
     resolved = {name: resolve_source(name, pngs, lower) for name in names}
+    # 顶面贴图名只保留能在素材目录里找到源图的: 找不到的不占格位,
+    # 渲染侧自动沿用侧面, 既不会撑大图集也不会出现空白格.
+    names = [name for name in names if name not in top_only or resolved.get(name)]
+    resolved = {name: resolved[name] for name in names}
 
     """
  格位分配分三类: 自绘名, 别名, 缺图名.

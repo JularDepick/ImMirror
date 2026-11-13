@@ -308,6 +308,13 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.replaceable = entry.replaceable != 0;
         info.dropItem2 = static_cast<uint16_t>(entry.dropSourceId2);
         info.dropChance2 = entry.dropChance2;
+        /*
+         * 顶面贴图: 布局里给了独立的顶面名时单独查图集格,
+         * 查不到就保持回落值, 渲染侧会自动沿用侧面, 不会出现空洞.
+         */
+        if (entry.textureTop != nullptr && entry.textureTop[0] != '\0') {
+            info.atlasTop = AtlasSlotOf(entry.textureTop);
+        }
         filled[index] = true;
     }
     return info;

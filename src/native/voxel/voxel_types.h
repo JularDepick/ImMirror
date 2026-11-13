@@ -158,6 +158,7 @@ struct BlockInfo {
     /* 二次掉落: 与主掉落独立判定的附加物品与概率 (万分比). */
     uint16_t dropItem2 = 0;
     uint16_t dropChance2 = 0;
+
 };
 
 }  /* namespace immirror::voxel */
