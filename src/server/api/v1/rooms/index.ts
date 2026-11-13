@@ -68,6 +68,8 @@ interface Room {
   chests: RoomChest[];
   /* 熔炉内容: 与箱子同口径, 只同步三个格, 燃烧计时仍由房主自己推进. */
   furnaces: RoomFurnace[];
+  /* 内容版本: 生物, 掉落物, 储物箱与熔炉任一变化时递增, 客人据此判断是否需要整份内容. */
+  contentSeq: number;
   /* 世界时间总秒数: 房主上行, 客人据此对齐昼夜, 0 表示尚未上报. */
   timeOfDay: number;
   /* 天气编号与强度: 房主上行, 客人据此对齐降水与天色. */
@@ -426,6 +428,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       drops: [],
       chests: [],
       furnaces: [],
+      contentSeq: 1,
       timeOfDay: 0,
       weatherKind: 0,
       weatherIntensity: 0,
@@ -729,6 +732,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
         }
         room.creatures = next;
         room.creatureSeq += 1;
+        room.contentSeq += 1;
       }
     }
 
@@ -764,6 +768,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
           });
         }
         room.drops = next;
+        room.contentSeq += 1;
       }
     }
 
@@ -807,6 +812,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
           next.push({ key, slots });
         }
         room.chests = next;
+        room.contentSeq += 1;
       }
     }
 
@@ -852,6 +858,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
           next.push({ key, slots });
         }
         room.furnaces = next;
+        room.contentSeq += 1;
       }
     }
 
@@ -875,15 +882,22 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
 
     const rawSince = body.since;
     const since = typeof rawSince === "number" && Number.isFinite(rawSince) ? Math.trunc(rawSince) : 0;
+    /* 内容增量: 与读取接口同一口径, 版本没变就不重复下发四份数组. */
+    const rawContent = body.content;
+    const contentBase =
+      typeof rawContent === "number" && Number.isFinite(rawContent) ? Math.trunc(rawContent) : 0;
+    const contentChanged = contentBase !== room.contentSeq;
     return ok({
       seq: room.nextSeq - 1,
       players: othersOf(room, auth.user.id),
       edits: editsSince(room, since > 0 ? since : 0),
-      creatures: room.creatures,
+      contentSeq: room.contentSeq,
+      contentChanged,
+      creatures: contentChanged ? room.creatures : undefined,
       creatureSeq: room.creatureSeq,
-      drops: room.drops,
-      chests: room.chests,
-      furnaces: room.furnaces,
+      drops: contentChanged ? room.drops : undefined,
+      chests: contentChanged ? room.chests : undefined,
+      furnaces: contentChanged ? room.furnaces : undefined,
       timeOfDay: room.timeOfDay,
       weatherKind: room.weatherKind,
       weatherIntensity: room.weatherIntensity,
@@ -912,15 +926,26 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     const rawSince = query.since;
     const since = typeof rawSince === "string" ? Number.parseInt(rawSince, 10) : 0;
     const base = Number.isFinite(since) && since > 0 ? since : 0;
+    /*
+     * 内容按版本号增量下发: 客人带上上次看到的内容版本, 版本没变就不重复传
+     * 生物, 掉落物, 储物箱与熔炉四份数组, 只回一个内容版本号.
+     */
+    const rawContent = query.content;
+    const contentSince =
+      typeof rawContent === "string" ? Number.parseInt(rawContent, 10) : 0;
+    const contentBase = Number.isFinite(contentSince) && contentSince > 0 ? contentSince : 0;
+    const contentChanged = contentBase !== room.contentSeq;
     return ok({
       seq: room.nextSeq - 1,
       players: othersOf(room, auth.user.id),
       edits: editsSince(room, base),
-      creatures: room.creatures,
+      contentSeq: room.contentSeq,
+      contentChanged,
+      creatures: contentChanged ? room.creatures : undefined,
       creatureSeq: room.creatureSeq,
-      drops: room.drops,
-      chests: room.chests,
-      furnaces: room.furnaces,
+      drops: contentChanged ? room.drops : undefined,
+      chests: contentChanged ? room.chests : undefined,
+      furnaces: contentChanged ? room.furnaces : undefined,
       timeOfDay: room.timeOfDay,
       weatherKind: room.weatherKind,
       weatherIntensity: room.weatherIntensity,

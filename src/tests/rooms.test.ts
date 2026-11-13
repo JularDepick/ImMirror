@@ -518,6 +518,38 @@ describe("房间通道", () => {
     expect(denied.status).toBe(403);
   });
 
+  it("内容版本未变时不下发内容数组, 变化后重新下发", async () => {
+    const owner = await registerCasePlayer("content", 1);
+    const guest = await registerCasePlayer("content", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    /* 第一次带上 0 版本, 服务端返回内容与当前版本. */
+    const first = expectOk<{ contentSeq: number; contentChanged: boolean; creatures: unknown[] }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { content: 0 }, guest.token),
+    );
+    expect(first.contentChanged).toBe(true);
+    expect(Array.isArray(first.creatures)).toBe(true);
+
+    /* 用同一版本再取, 内容不变. */
+    const again = expectOk<{ contentChanged: boolean; creatures?: unknown }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { content: first.contentSeq }, guest.token),
+    );
+    expect(again.contentChanged).toBe(false);
+    expect(again.creatures).toBeUndefined();
+
+    /*
+     * 房主改内容后版本递增, 内容重新下发.
+     * 生物条目的字段校验较严, 这里用储物箱内容驱动变化即可验证版本机制.
+     */
+    const changed = expectOk<{ contentChanged: boolean; contentSeq: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`,
+        { content: first.contentSeq, chests: [{ key: "1,2,3", slots: [] }] }, owner.token),
+    );
+    expect(changed.contentChanged).toBe(true);
+    expect(changed.contentSeq).toBeGreaterThan(first.contentSeq);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);
