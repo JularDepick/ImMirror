@@ -195,6 +195,22 @@ public final class NativeBridge {
         return nativeTakeUiEvents();
     }
 
+    /* 地面掉落物快照: 房主侧每轮上报前调用, 返回 JSON 数组文本. */
+    public static String takeDropSnapshot() {
+        if (!ensureLoaded()) {
+            return "[]";
+        }
+        return nativeTakeDropSnapshot();
+    }
+
+    /* 远端掉落物: 客人侧收到房主下发的列表后调用. */
+    public static void applyRemoteDrops(String json) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeApplyRemoteDrops(json == null ? "[]" : json);
+    }
+
     /* 生物快照导出: 房主侧每轮上报前调用, 返回 JSON 数组文本. */
     public static String takeCreatureSnapshot() {
         if (!ensureLoaded()) {
@@ -293,6 +309,10 @@ public final class NativeBridge {
     private static native void nativeChooseWorldSeed(String worldName, int seed);
 
     private static native String nativeTakeUiEvents();
+
+    private static native String nativeTakeDropSnapshot();
+
+    private static native void nativeApplyRemoteDrops(String json);
 
     private static native String nativeTakeCreatureSnapshot();
 

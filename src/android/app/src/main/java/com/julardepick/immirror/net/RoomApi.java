@@ -71,9 +71,11 @@ public final class RoomApi {
         public final String creaturesJson;
         public final long creatureSeq;
         public final int rejectedCreatures;
+        /* 房主上报的地面掉落物; 客人只做展示. */
+        public final String dropsJson;
 
         State(long seq, int rejectedEdits, String playersJson, String editsJson,
-              String creaturesJson, long creatureSeq, int rejectedCreatures) {
+              String creaturesJson, long creatureSeq, int rejectedCreatures, String dropsJson) {
             this.seq = seq;
             this.rejectedEdits = rejectedEdits;
             this.playersJson = playersJson;
@@ -81,6 +83,7 @@ public final class RoomApi {
             this.creaturesJson = creaturesJson;
             this.creatureSeq = creatureSeq;
             this.rejectedCreatures = rejectedCreatures;
+            this.dropsJson = dropsJson;
         }
     }
 
@@ -254,7 +257,8 @@ public final class RoomApi {
      */
     public void sync(final Session session, final String roomId, final float x, final float y,
                      final float z, final float yaw, final float pitch, final String localEditsJson,
-                     final String creaturesJson, final long sinceSeq, final StateCallback callback) {
+                     final String creaturesJson, final String dropsJson, final long sinceSeq,
+                     final StateCallback callback) {
         if (!usable(session) || roomId == null || roomId.isEmpty()) {
             callback.onFailure(new ApiException("AUTH_UNAUTHORIZED", "no session"));
             return;
@@ -275,6 +279,9 @@ public final class RoomApi {
                 if (creaturesJson != null && creaturesJson.length() > 2) {
                     body.put("creatures", new JSONArray(creaturesJson));
                 }
+                if (dropsJson != null && dropsJson.length() > 2) {
+                    body.put("drops", new JSONArray(dropsJson));
+                }
                 final JSONObject data = request("POST", "/rooms/" + roomId + "/state", session, body);
                 final State state = new State(data.optLong("seq", 0L),
                         data.optInt("rejectedEdits", 0),
@@ -282,7 +289,8 @@ public final class RoomApi {
                         arrayText(data, "edits"),
                         arrayText(data, "creatures"),
                         data.optLong("creatureSeq", 0L),
-                        data.optInt("rejectedCreatures", 0));
+                        data.optInt("rejectedCreatures", 0),
+                        arrayText(data, "drops"));
                 mainHandler.post(() -> callback.onSuccess(state));
             } catch (ApiException error) {
                 mainHandler.post(() -> callback.onFailure(error));

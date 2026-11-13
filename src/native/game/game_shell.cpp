@@ -1925,6 +1925,82 @@ void GameShell::SpawnDrop(item::ItemId item, int32_t count, voxel::BlockId block
 }
 
 /*
+ * 掉落物快照: 只带渲染需要的最少字段.
+ * 掉落物本身不参与联机逻辑, 客人看到的是房主世界的镜像.
+ */
+std::string GameShell::TakeDropSnapshot() const {
+    std::string out = "[";
+    bool first = true;
+    for (const DroppedItem& drop : droppedItems_) {
+        char buffer[160];
+        std::snprintf(buffer, sizeof(buffer),
+                      "%s{\"id\":%d,\"block\":%u,\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}",
+                      first ? "" : ",", drop.id, static_cast<unsigned>(drop.block),
+                      static_cast<double>(drop.position.x), static_cast<double>(drop.position.y),
+                      static_cast<double>(drop.position.z));
+        out += buffer;
+        first = false;
+    }
+    out += "]";
+    return out;
+}
+
+/*
+ * 应用房主下发的掉落物快照.
+ * 远端掉落物用 1000000 起的合成标识, 与本地的掉落物标识隔开, 不会互相顶替;
+ * 新一轮里消失的条目从渲染队列删掉, 拾取仍由房主权威决定.
+ */
+void GameShell::ApplyRemoteDrops(const std::string& json) {
+    std::vector<int32_t> next;
+    const size_t begin = json.find('[');
+    if (begin != std::string::npos) {
+        size_t cursor = begin + 1;
+        while (next.size() < 64) {
+            const size_t open = json.find('{', cursor);
+            if (open == std::string::npos) {
+                break;
+            }
+            const size_t close = json.find('}', open);
+            if (close == std::string::npos) {
+                break;
+            }
+            const std::string obj = json.substr(open, close - open + 1);
+            cursor = close + 1;
+            const auto readNumber = [&obj](const char* key, float fallback) -> float {
+                const size_t pos = obj.find(key);
+                if (pos == std::string::npos) {
+                    return fallback;
+                }
+                return std::strtof(obj.c_str() + pos + std::strlen(key), nullptr);
+            };
+            const int32_t localId = static_cast<int32_t>(readNumber("\"id\":", -1.0f));
+            if (localId < 0) {
+                continue;
+            }
+            const int32_t renderId = 1000000 + localId;
+            const voxel::BlockId block = static_cast<voxel::BlockId>(readNumber("\"block\":", 0.0f));
+            const float x = readNumber("\"x\":", 0.0f);
+            const float y = readNumber("\"y\":", 0.0f);
+            const float z = readNumber("\"z\":", 0.0f);
+            /* 已存在就只更新位置, 不存在才新建, 避免每轮重建顶点. */
+            if (std::find(remoteDropIds_.begin(), remoteDropIds_.end(), renderId) ==
+                remoteDropIds_.end()) {
+                render::particle::AddDrop(renderId, block, x, y, z);
+            } else {
+                render::particle::MoveDrop(renderId, x, y, z);
+            }
+            next.push_back(renderId);
+        }
+    }
+    for (const int32_t id : remoteDropIds_) {
+        if (std::find(next.begin(), next.end(), id) == next.end()) {
+            render::particle::RemoveDrop(id);
+        }
+    }
+    remoteDropIds_ = std::move(next);
+}
+
+/*
  * 掉落物推进: 重力下落, 落到实心方块表面停住; 玩家靠近且物品栏放得下就拾取.
  * 超过保留时长自动消失, 避免长期堆积占内存与顶点.
  */

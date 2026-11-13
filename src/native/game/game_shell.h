@@ -207,6 +207,15 @@ public:
     };
     void SpawnDrop(item::ItemId item, int32_t count, voxel::BlockId block, float x, float y,
                    float z);
+
+    /*
+     * 掉落物快照: 房主上行给房间, 客人据此在本地画一份"别人的掉落物".
+     * 客人侧只做展示, 不参与拾取, 拾取仍由房主权威决定.
+     */
+    std::string TakeDropSnapshot() const;
+    void ApplyRemoteDrops(const std::string& json);
+    /* 当前显示的远端掉落物标识, 用于下一轮差集删除. */
+    std::vector<int32_t> remoteDropIds_;
     void UpdateDrops(double deltaSeconds);
     std::vector<DroppedItem> droppedItems_;
     int32_t nextDropId_ = 1;

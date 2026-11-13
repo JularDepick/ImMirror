@@ -385,6 +385,16 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                     const float tileV = static_cast<float>(static_cast<int32_t>(tile) / kTileGridSize) * kTileExtent;
                     const float light = lightAt(x, y, z, 2);
                     const float shade = 0.92f * light;
+                    /*
+                     * 草类植物叠群系草色, 花类保持原色 (花有自己的颜色);
+                     * 所有植物都吃方块光暖色, 火把旁边的花不会发蓝.
+                     */
+                    const char* plantName = registry.Info(id).name;
+                    const bool tintPlant =
+                        plantName != nullptr && std::strstr(plantName, "grass") != nullptr;
+                    uint8_t plantSky = kMaxLightLevel;
+                    uint8_t plantBlock = 0;
+                    sampleLight(x, y, z, 2, &plantSky, &plantBlock);
                     const float inset = 0.12f;
                     const float low = inset;
                     const float high = 1.0f - inset;
@@ -413,6 +423,18 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                                 vertex.u = tileU + ((source == 1 || source == 2) ? kTileExtent : 0.0f);
                                 vertex.v = tileV + (source >= 2 ? kTileExtent : 0.0f);
                                 vertex.shade = shade;
+                                if (tintPlant) {
+                                    vertex.red = tintR;
+                                    vertex.green = tintG;
+                                    vertex.blue = tintB;
+                                }
+                                if (plantBlock > 0) {
+                                    const float warm = static_cast<float>(plantBlock) /
+                                                       static_cast<float>(kMaxLightLevel);
+                                    vertex.red *= 1.0f + 0.18f * warm;
+                                    vertex.green *= 1.0f + 0.04f * warm;
+                                    vertex.blue *= 1.0f - 0.25f * warm;
+                                }
                                 out.vertices.push_back(vertex);
                             }
                             out.indices.push_back(base);

@@ -166,6 +166,35 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeUiEvents(JNIEnv* env
     return env->NewStringUTF(shell->TakeUiEvents().c_str());
 }
 
+/* Java 侧低频入口: 导出当前地面掉落物快照, 供房主上行到房间. */
+JNIEXPORT jstring JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeDropSnapshot(JNIEnv* env,
+                                                                        jclass clazz) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return env->NewStringUTF("[]");
+    }
+    return env->NewStringUTF(shell->TakeDropSnapshot().c_str());
+}
+
+/* Java 侧低频入口: 应用房主下发的掉落物快照. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeApplyRemoteDrops(JNIEnv* env, jclass clazz,
+                                                                       jstring json) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr || json == nullptr) {
+        return;
+    }
+    const char* chars = env->GetStringUTFChars(json, nullptr);
+    const std::string text = chars != nullptr ? chars : "[]";
+    if (chars != nullptr) {
+        env->ReleaseStringUTFChars(json, chars);
+    }
+    shell->ApplyRemoteDrops(text);
+}
+
 /* Java 侧低频入口: 导出当前生物快照, 供房主上行到房间. */
 JNIEXPORT jstring JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeCreatureSnapshot(JNIEnv* env,

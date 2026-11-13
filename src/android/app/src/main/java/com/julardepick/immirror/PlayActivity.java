@@ -378,7 +378,8 @@ public final class PlayActivity extends NativeActivity {
         }
         /* 房主每轮导出本地生物, 客人传空数组只拉取. */
         final String creatures = roomOwner ? NativeBridge.takeCreatureSnapshot() : "[]";
-        roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, creatures, roomSeq,
+        final String drops = roomOwner ? NativeBridge.takeDropSnapshot() : "[]";
+        roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, creatures, drops, roomSeq,
                 new RoomApi.StateCallback() {
                     @Override
                     public void onSuccess(RoomApi.State state) {
@@ -405,6 +406,7 @@ public final class PlayActivity extends NativeActivity {
                         /* 客人应用房主下发的生物快照; 版本号变化时打一条便于核对. */
                         if (!roomOwner) {
                             NativeBridge.applyRemoteCreatures(state.creaturesJson);
+                            NativeBridge.applyRemoteDrops(state.dropsJson);
                         }
                         if (state.creatureSeq != roomCreatureSeq) {
                             roomCreatureSeq = state.creatureSeq;
