@@ -45,27 +45,55 @@ def count_rows(path):
     return len(re.findall(r'^\s*\{\d+u,', read_text(path), re.MULTILINE))
 
 
+def struct_fields(text, struct_name):
+    """按结构定义取字段顺序: 字段名列表, 供按下标取初值."""
+    start = text.find('struct %s {' % struct_name)
+    if start < 0:
+        return []
+    end = text.find('};', start)
+    if end < 0:
+        return []
+    names = []
+    for line in text[start:end].splitlines():
+        line = line.strip()
+        if not line or line.startswith('/*') or line.startswith('*') or line.startswith('//'):
+            continue
+        if line.startswith('struct') or line == '{':
+            continue
+        # 形如 "uint16_t clientId;   /* 注释 */"
+        match = re.match(r'[A-Za-z_][\w:<>\s\*]*?\s(\w+)\s*;', line)
+        if match:
+            names.append(match.group(1))
+    return names
+
+
 def block_stats():
+    """方块统计: 字段下标按结构定义取, 不写死序号, 加列后不会算错."""
     text = read_text(os.path.join(NATIVE_ROOT, 'game', 'generated', 'block_data_gen.h'))
     start = text.find('constexpr RegistryEntry kRegistryEntries')
     if start < 0:
         return {}
+    fields = struct_fields(text, 'RegistryEntry')
+    if not fields:
+        return {}
+    index = {name: position for position, name in enumerate(fields)}
     rows = drop = gravity = tool_level = shape = 0
     for line in text[start:].splitlines():
         s = line.strip()
         if not s.startswith('{'):
             continue
         parts = [p.strip() for p in s.strip(',').strip('{}').split(',')]
-        if len(parts) < 15:
+        if len(parts) < len(fields):
             continue
         rows += 1
-        if parts[11] not in ('""', ''):
+        # RegistryEntry 不带掉落物品编号 (那在 BlockEntry 上), 这里按掉落概率判断是否配置掉落.
+        if parts[index['dropChance']].rstrip('u') not in ('0', ''):
             drop += 1
-        if parts[13].rstrip('u') not in ('0', ''):
+        if parts[index['gravity']].rstrip('u') not in ('0', ''):
             gravity += 1
-        if parts[7].rstrip('u') not in ('0', ''):
+        if parts[index['toolLevel']].rstrip('u') not in ('0', ''):
             tool_level += 1
-        if parts[12].rstrip('u') not in ('0', ''):
+        if parts[index['shape']].rstrip('u') not in ('0', ''):
             shape += 1
     return {'blocks': rows, 'drop': drop, 'gravity': gravity, 'toolLevel': tool_level, 'shape': shape}
 
@@ -195,7 +223,7 @@ def main():
     ui_sound = os.path.join(JAVA_ROOT, 'com', 'julardepick', 'immirror', 'ui', 'UiSound.java')
     rows = [
         ('世界', '方块条目', blocks.get('blocks', 0), blocks.get('blocks', 0), 'blockdef 收录并分配到客户端 id'),
-        ('世界', '有掉落', blocks.get('drop', 0), blocks.get('blocks', 1), '掉落字段非空'),
+        ('世界', '有掉落概率', blocks.get('drop', 0), blocks.get('blocks', 1), '掉落概率非 0'),
         ('世界', '方块行为列', *block_behaviors(), '重力/可替换/打滑/主掉落概率/二次掉落概率/工具等级'),
         ('世界', '有重力方式', blocks.get('gravity', 0), blocks.get('blocks', 1), 'GravityEffect 非 0'),
         ('世界', '有工具等级要求', blocks.get('toolLevel', 0), blocks.get('blocks', 1), 'ToolLevel 非 0'),
@@ -225,8 +253,8 @@ def main():
         ('界面', 'Java 类', java_file_count(), 81, 'Java 侧 .java 总数'),
         ('界面', '界面素材', count_files(os.path.join(APK_ASSETS, 'ui'), '.png', recursive=True),
          len(_manifest_entries()), 'ui_manifest 登记数'),
-        ('界面', 'HUD 组件', *hud_components(), '绘制函数数; 未接: Boss 血条/充能球'),
-        ('联机', '房间接口', len(re.findall(r'app\.(?:get|post)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 8, '建房/列表/加入/离房/状态/踢人/改信息'),
+        ('界面', 'HUD 组件', *hud_components(), '绘制函数数, 含 Boss 血条与充能球'),
+        ('联机', '房间接口', len(re.findall(r'app\.(?:get|post|patch)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 9, '建房/列表/加入/离房/状态/踢人/改信息/拾取'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
         ('接线', '设置项落地', *settings_coverage(), '设置目录登记项能在原生侧查到引用'),
         ('接线', 'JNI 声明落地', *jni_coverage(), 'Java native 声明能找到 C++ 导出'),
