@@ -2182,6 +2182,12 @@ bool GameShell::AdvanceContainerProbe(double deltaSeconds) {
         return true;
     }
     const uint64_t key = ContainerKeyOf(containerProbeX_, containerProbeY_, containerProbeZ_);
+    /*
+     * 客人侧只读: 箱子与熔炉内容由房主上报, 服务端只认房主的写入.
+     * 客人若在本地搬动物品, 下一次同步会把内容覆盖回去, 物品反而凭空多出.
+     */
+    furnaceScreen_.SetReadOnly(!isHost_);
+    chestScreen_.SetReadOnly(!isHost_);
     if (IsFurnaceBlock(containerProbeBlock_)) {
         furnaceScreen_.OpenFurnace(furnaces_[key], inventory_);
         IM_LOGI(kTag, "furnace panel opened at %d,%d,%d", containerProbeX_, containerProbeY_,

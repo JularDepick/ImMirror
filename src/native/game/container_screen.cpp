@@ -138,6 +138,10 @@ void FurnaceScreen::CollectOutput(Inventory& inventory) {
 }
 
 bool FurnaceScreen::HandlePress(const ui::InventoryHit& hit, Inventory& inventory) {
+    /* 只读: 客人侧不搬动房主的熔炉内容, 避免本地改动被覆盖后物品凭空多出. */
+    if (readOnly_) {
+        return false;
+    }
     if (furnace_ == nullptr) {
         return false;
     }
@@ -270,6 +274,9 @@ void ChestScreen::ActOnStack(ItemStack& slot) {
 }
 
 bool ChestScreen::HandlePress(const ui::InventoryHit& hit, Inventory& inventory) {
+    if (readOnly_) {
+        return false;
+    }
     if (chest_ == nullptr) {
         return false;
     }

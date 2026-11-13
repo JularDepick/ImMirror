@@ -21,6 +21,9 @@ public:
     void Reset();
 
     bool Open() const { return open_; }
+    /* 只读模式下不响应搬动, 客人看房主的箱子与熔炉用. */
+    void SetReadOnly(bool readOnly) { readOnly_ = readOnly; }
+    bool ReadOnly() const { return readOnly_; }
 
     /* 打开指定熔炉; close 把携带物与格子退回物品栏. */
     void SetOpen(bool open, Inventory& inventory);
@@ -52,6 +55,8 @@ private:
     float carryX_ = 0.5f;
     float carryY_ = 0.5f;
     bool open_ = false;
+    /* 只读: 客人侧打开房主的箱子与熔炉时不允许搬动物品, 否则本地改动会被下一次同步覆盖, 物品反而多出来. */
+    bool readOnly_ = false;
 };
 
 /*
@@ -63,6 +68,9 @@ public:
     void Reset();
 
     bool Open() const { return open_; }
+    /* 只读模式下不响应搬动, 客人看房主的箱子与熔炉用. */
+    void SetReadOnly(bool readOnly) { readOnly_ = readOnly; }
+    bool ReadOnly() const { return readOnly_; }
 
     void SetOpen(bool open, Inventory& inventory);
     void OpenChest(ChestState& state, Inventory& inventory);
@@ -85,6 +93,8 @@ private:
     float carryX_ = 0.5f;
     float carryY_ = 0.5f;
     bool open_ = false;
+    /* 只读: 客人侧打开房主的箱子与熔炉时不允许搬动物品, 否则本地改动会被下一次同步覆盖, 物品反而多出来. */
+    bool readOnly_ = false;
 };
 
 }  /* namespace immirror::game */
