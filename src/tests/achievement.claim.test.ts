@@ -101,6 +101,35 @@ describe("成就领取", () => {
     expect(bad.status).toBe(400);
   });
 
+  it("批量领取一次领完已完成未领取的条目, 再调为空", async () => {
+    const user = await registerUser(app);
+    const board = expectOk<{ tasks: { slot: number; kind: string; target: number; coinReward: number }[] }>(
+      await app.get("/api/v1/achievements/daily", user.token),
+    );
+    const task = board.tasks[0];
+    expect(task).toBeDefined();
+    if (!task) {
+      return;
+    }
+    /* 一次上报同时推进成就与当日任务. */
+    await app.post("/api/v1/achievements/report", { stats: { break_block: 1, [task.kind]: task.target } }, user.token);
+
+    const first = expectOk<{ granted: { source: string }[]; balance: number; summary: { claimed: number } }>(
+      await app.post("/api/v1/achievements/claim-all", {}, user.token),
+    );
+    expect(first.granted.length).toBeGreaterThan(0);
+    expect(first.granted.some((item) => item.source === "daily_task")).toBe(true);
+    expect(first.summary.claimed).toBeGreaterThan(0);
+    expect(first.balance).toBeGreaterThan(0);
+
+    /* 再调一次: 没有可领的了, 余额不变. */
+    const second = expectOk<{ granted: unknown[]; balance: number }>(
+      await app.post("/api/v1/achievements/claim-all", {}, user.token),
+    );
+    expect(second.granted).toEqual([]);
+    expect(second.balance).toBe(first.balance);
+  });
+
   it("每日任务领取覆盖未完成, 未知槽位与重复领取", async () => {
     const user = await registerUser(app);
     const board = expectOk<{ date: string; tasks: { slot: number; kind: string; target: number; coinReward: number }[] }>(

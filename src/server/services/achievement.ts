@@ -477,6 +477,65 @@ export class AchievementService {
   }
 
   /**
+   * 批量领取: 把所有已完成未领取的成就与当日任务一次领完.
+   * 逐条复用单条领取的入账路径, 因此与逐条点击的结果完全一致;
+   * 整批在一个事务里完成, 中途失败不会只落一半.
+   */
+  claimAll(userId: number): ClaimResult {
+    const now = this.now();
+    const date = this.todayKey();
+    const granted: GrantRecord[] = [];
+    const run = this.db.transaction((): number => {
+      this.ensureDailyTasks(userId, date);
+      let balance = ensureWallet(this.db, userId, now).balance;
+      for (const definition of ACHIEVEMENT_CATALOG) {
+        const row = findUserAchievement(this.db, userId, definition.id);
+        if (!row || row.completed_at === null || row.claimed_at !== null) {
+          continue;
+        }
+        if (claimUserAchievement(this.db, userId, definition.id, now) === 0) {
+          continue;
+        }
+        balance = this.grantCoins(userId, definition.coinReward, REASON_ACHIEVEMENT,
+          String(definition.id), now, balance);
+        granted.push({
+          source: "achievement",
+          id: definition.id,
+          name: definition.name,
+          coins: definition.coinReward,
+        });
+      }
+      for (const task of listDailyTasks(this.db, userId, date)) {
+        if (task.completed_at === null || task.claimed_at !== null) {
+          continue;
+        }
+        if (claimDailyTask(this.db, userId, date, task.slot, now) === 0) {
+          continue;
+        }
+        const template = DAILY_TEMPLATE_BY_ID.get(task.template_id);
+        balance = this.grantCoins(userId, task.reward, REASON_DAILY_TASK,
+          `${date}#${task.slot}`, now, balance);
+        granted.push({
+          source: "daily_task",
+          id: task.template_id,
+          name: template ? template.name : `任务 ${task.template_id}`,
+          coins: task.reward,
+        });
+      }
+      return balance;
+    });
+    const balance = run();
+    const achievements = this.listAchievements(userId);
+    return {
+      balance,
+      granted,
+      achievements,
+      summary: AchievementService.summarize(achievements),
+      daily: this.dailyBoard(userId, date),
+    };
+  }
+
+  /**
    * 领取一条每日任务奖励.
    * 日期缺省为今天, 与每日任务板的生成口径一致.
    */

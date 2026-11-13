@@ -57,6 +57,12 @@ export function registerAchievementRoutes(app: FastifyInstance, ctx: AppContext)
     return ok(service.claimAchievement(user.id, id));
   });
 
+  /* 批量领取: 一次领完所有已完成未领取的成就与当日任务. */
+  app.post("/api/v1/achievements/claim-all", { preHandler: guard }, async (request) => {
+    const user = requireAuth(request);
+    return ok(service.claimAll(user.id));
+  });
+
   /* 领取单条每日任务奖励: 槽位取当日任务板, 日期按服务端时区当天. */
   app.post("/api/v1/achievements/daily/claim", { preHandler: guard }, async (request) => {
     const user = requireAuth(request);
