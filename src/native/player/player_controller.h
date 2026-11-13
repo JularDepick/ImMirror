@@ -270,7 +270,8 @@ public:
      */
     void Eat(float food, float heal);
 
-    void ApplyBuff(uint32_t buffId) { buffs_.Apply(buffId); }
+    /* 挂状态效果, 返回该效果的音效路径供调用方播放. */
+    const char* ApplyBuff(uint32_t buffId) { return buffs_.Apply(buffId); }
     void ClearBuffs() { buffs_.Clear(); }
     const BuffState& Buffs() const { return buffs_; }
 

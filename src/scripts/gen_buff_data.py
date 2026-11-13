@@ -98,8 +98,14 @@ def load_buffs():
         value = parse_value(kind, row[index["Default1"]])
         if value == 0.0:
             continue
+        # 音效: 效果表只给音效编号, 具体路径在音效表里, 按编号查一次.
+        sound_path = ""
+        raw_sound = (row[index["SoundID"]] or "").strip() if "SoundID" in index else ""
+        if raw_sound and raw_sound not in ("0", ""):
+            sound_path = sound_asset_path(raw_sound)
         entries.append({
             "id": buff_id,
+            "sound": sound_path,
             "name": (row[index["Name"]] or "").strip(),
             "kind": kind,
             "level": max(1, to_int(row[index["Level"]], 1)),
@@ -108,6 +114,33 @@ def load_buffs():
         })
     entries.sort(key=lambda item: item["id"])
     return entries
+
+
+SOUND_CSV = os.path.normpath(os.path.join(os.path.dirname(BUFF_PATH), "..", "sound.csv"))
+_sound_cache = {}
+
+
+def sound_asset_path(sound_id):
+    """音效编号转资源路径: 音效表的 SoundPath 形如 buff.buff_speed_1, 扁平化成 sounds/buff_buff_speed_1.ogg."""
+    global _sound_cache
+    if not _sound_cache:
+        try:
+            raw = open(SOUND_CSV, "rb").read().decode("utf-8-sig")
+        except OSError:
+            _sound_cache[""] = ""
+            return ""
+        rows = list(csv.reader(io.StringIO(raw)))
+        header = rows[1]
+        id_index = header.index("ID")
+        path_index = header.index("SoundPath")
+        for row in rows[2:]:
+            if len(row) <= path_index:
+                continue
+            key = row[id_index].strip()
+            value = row[path_index].strip()
+            if key and value:
+                _sound_cache[key] = "sounds/" + value.replace(".", "_") + ".ogg"
+    return _sound_cache.get(str(sound_id), "")
 
 
 def render(entries):
@@ -131,6 +164,7 @@ def render(entries):
         "    float duration; /* 持续秒数 */",
         "    float value;    /* 效果数值, 口径见文件头 */",
         "    const char* name;",
+        "    const char* sound; /* 施加时播放的音效路径, 空串表示没有 */",
         "};",
         "",
         "constexpr int32_t kBuffEntryCount = %d;" % len(entries),
@@ -138,11 +172,11 @@ def render(entries):
         "constexpr BuffEntry kBuffEntries[kBuffEntryCount == 0 ? 1 : kBuffEntryCount] = {",
     ]
     for entry in entries:
-        lines.append('    {%du, %du, %du, %.1ff, %.2ff, "%s"},'
+        lines.append('    {%du, %du, %du, %.1ff, %.2ff, "%s", "%s"},'
                      % (entry["id"], entry["kind"], entry["level"], entry["duration"],
-                        entry["value"], entry["name"]))
+                        entry["value"], entry["name"], entry["sound"]))
     if not entries:
-        lines.append('    {0u, 0u, 0u, 0.0f, 0.0f, ""},')
+        lines.append('    {0u, 0u, 0u, 0.0f, 0.0f, "", ""},')
     lines.extend([
         "};",
         "",

@@ -27,10 +27,10 @@ void BuffState::Clear() {
     count_ = 0;
 }
 
-void BuffState::Apply(uint32_t buffId) {
+const char* BuffState::Apply(uint32_t buffId) {
     const gen::BuffEntry* entry = gen::BuffOf(buffId);
     if (entry == nullptr || entry->duration <= 0.0f) {
-        return;
+        return nullptr;
     }
     /* 已挂着同一编号时刷新持续时间, 不占新槽位. */
     for (int32_t index = 0; index < count_; ++index) {
@@ -38,15 +38,17 @@ void BuffState::Apply(uint32_t buffId) {
             if (entries_[index].remaining < entry->duration) {
                 entries_[index].remaining = entry->duration;
             }
-            return;
+            /* 刷新时长同样给一次音效, 玩家能听出"又中了一次". */
+            return entry->sound;
         }
     }
     if (count_ >= kMaxActive) {
-        return;
+        return nullptr;
     }
     entries_[count_].id = buffId;
     entries_[count_].remaining = entry->duration;
     ++count_;
+    return entry->sound;
 }
 
 void BuffState::Tick(float deltaSeconds) {

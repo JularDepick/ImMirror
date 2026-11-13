@@ -332,7 +332,13 @@ bool GameShell::TryAutoEat() {
             }
             const uint32_t roll = nextRandom() % 10000u;
             if (roll < pair[1]) {
-                player_->ApplyBuff(pair[0]);
+                {
+                    /* 状态效果音: 效果表按编号查到音效路径, 交给音频引擎播一次. */
+                    const char* buffSound = player_->ApplyBuff(pair[0]);
+                    if (buffSound != nullptr && buffSound[0] != '\0') {
+                        audio::AudioEngine::Instance().PlayCreatureAsset(buffSound);
+                    }
+                }
                 IM_LOGI(kTag, "food buff applied id=%u", pair[0]);
             }
         }
@@ -2600,7 +2606,12 @@ void GameShell::UpdateEntities(double deltaSeconds) {
         }
         /* 攻击附带状态效果: 命中时挂上, 重复命中由效果集合自己刷新时长. */
         if (striker != nullptr && striker->Definition().buffId != 0) {
-            player_->ApplyBuff(striker->Definition().buffId);
+            {
+                const char* attackSound = player_->ApplyBuff(striker->Definition().buffId);
+                if (attackSound != nullptr && attackSound[0] != '\0') {
+                    audio::AudioEngine::Instance().PlayCreatureAsset(attackSound);
+                }
+            }
             IM_LOGI(kTag, "attack applied buff=%u",
                     static_cast<unsigned>(striker->Definition().buffId));
         }

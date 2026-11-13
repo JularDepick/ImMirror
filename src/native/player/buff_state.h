@@ -19,8 +19,11 @@ public:
     /* 清空全部效果, 进入新世界或死亡重生时调用. */
     void Clear();
 
-    /* 挂上一个效果, 重复挂同一编号时刷新持续时间并取较高等级. */
-    void Apply(uint32_t buffId);
+    /*
+     * 挂上一个效果, 重复挂同一编号时刷新持续时间并取较高等级.
+     * 成功挂上时返回该效果的音效路径 (可能为空), 由调用方决定播放.
+     */
+    const char* Apply(uint32_t buffId);
 
     /* 推进剩余时间, 到期的效果自动移除. */
     void Tick(float deltaSeconds);
