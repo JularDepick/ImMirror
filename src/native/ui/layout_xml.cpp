@@ -33,6 +33,9 @@ struct Attributes {
     std::string level;
     /* hidden="true": 布局载入时默认不显示, 由脚本按需打开. */
     std::string hidden;
+    /* 直接写在元素上的宽高 (像素): 一部分元素用这两个属性代替 Size 子元素. */
+    std::string w;
+    std::string h;
 };
 
 /* 图层名转枚举; 未知名按 artwork 处理. */
@@ -150,6 +153,10 @@ Attributes ParseAttributes(const std::string& body) {
             attributes.level = value;
         } else if (key == "hidden") {
             attributes.hidden = value;
+        } else if (key == "w") {
+            attributes.w = value;
+        } else if (key == "h") {
+            attributes.h = value;
         }
     }
     return attributes;
@@ -364,6 +371,14 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
         frame->layer = layerStack.empty() ? LayerLevel::kArtwork : layerStack.back();
         /* hidden="true" 的帧载入时不显示, 与脚本里的 Show/Hide 配合. */
         frame->hidden = attributes.hidden == "true";
+        /*
+         * 宽高有两种写法: Size 子元素里的 AbsDimension, 或元素上的 w/h 属性.
+         * 这里先按属性给值; 若后面读到 Size 子元素, 会覆盖成子元素的值.
+         */
+        if (!attributes.w.empty() && !attributes.h.empty()) {
+            frame->width = ToFloat(attributes.w);
+            frame->height = ToFloat(attributes.h);
+        }
         if (!attributes.file.empty()) {
             textures_.push_back(attributes.file);
             frame->texture = textures_.back().c_str();
