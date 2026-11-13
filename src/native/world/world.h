@@ -98,6 +98,9 @@ private:
     struct Chunk;
     Chunk* FindChunk(voxel::ChunkCoord coord) const;
     Chunk* EnsureChunk(voxel::ChunkCoord coord, uint8_t treeShape);
+    /* 重算一列光场, 并把四个方向的相邻列作为跨列播种来源. */
+    void RecomputeLight(Chunk& chunk);
+
     void RebuildMesh(Chunk& chunk);
     void RebuildVisibleList();
 

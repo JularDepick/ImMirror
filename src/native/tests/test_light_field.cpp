@@ -21,7 +21,9 @@ using immirror::voxel::MeshData;
 /* 全量重算一列光场的简写, 计算器复用同一个实例与队列缓冲. */
 void Recompute(ChunkColumn& column) {
     static LightField field;
-    field.Recompute(column, BlockRegistry::Instance());
+    /* 单列用例不传邻列: 四个方向都按没有外部光源处理. */
+    const ChunkColumn* neighbors[4] = {nullptr, nullptr, nullptr, nullptr};
+    field.Recompute(column, neighbors, BlockRegistry::Instance());
 }
 
 /* 把一整层 y 全部设为同一方块. */
@@ -186,6 +188,54 @@ TEST_CASE(MesherShadeFollowsLightField) {
         }
     }
     CHECK(coveredTopDark);
+}
+
+/*
+ * 跨列播种. 东列贴着西边界的火把, 重算西列时把东列边界格的方块光
+ * 按同一套扣减规则播进西列, 因此跨区块边界不出现硬断层.
+ */
+TEST_CASE(LightFieldSeedsFromNeighborColumn) {
+    const BlockRegistry& registry = BlockRegistry::Instance();
+    BlockId sourceId = 0;
+    int32_t bestSource = 0;
+    for (uint32_t id = 0; id < registry.Count(); ++id) {
+        const int32_t level = registry.Info(static_cast<BlockId>(id)).lightSource;
+        if (level > bestSource) {
+            bestSource = level;
+            sourceId = static_cast<BlockId>(id);
+        }
+    }
+    CHECK(sourceId != 0);
+
+    /* 东列: 石地板加贴着西边界的火把. */
+    ChunkColumn east;
+    for (int32_t y = 0; y <= 5; ++y) {
+        FillLayer(east, y, immirror::voxel::block::Stone);
+    }
+    east.Set(0, 6, 8, sourceId);
+    Recompute(east);
+    const int32_t boundary = east.BlockLightAt(0, 6, 8);
+    CHECK_INT(boundary, bestSource);
+
+    /* 西列: 同样的石地板, 重算时把东列当作东侧邻列. */
+    ChunkColumn west;
+    for (int32_t y = 0; y <= 5; ++y) {
+        FillLayer(west, y, immirror::voxel::block::Stone);
+    }
+    static LightField field;
+    const ChunkColumn* neighbors[4] = {&east, nullptr, nullptr, nullptr};
+    field.Recompute(west, neighbors, registry);
+    /* 空气代价为零, 边界格比源值低一档. */
+    CHECK_INT(west.BlockLightAt(15, 6, 8), bestSource >= 1 ? bestSource - 1 : 0);
+    /* 再向内一格继续递减. */
+    CHECK_INT(west.BlockLightAt(14, 6, 8), bestSource >= 2 ? bestSource - 2 : 0);
+    /* 没有邻列时同一格保持为零, 说明来源确实是邻列. */
+    ChunkColumn isolated;
+    for (int32_t y = 0; y <= 5; ++y) {
+        FillLayer(isolated, y, immirror::voxel::block::Stone);
+    }
+    Recompute(isolated);
+    CHECK_INT(isolated.BlockLightAt(15, 6, 8), 0);
 }
 
 /* 世界集成冒烟: 建列即带光场, 编辑后重算不破坏既有接口. */

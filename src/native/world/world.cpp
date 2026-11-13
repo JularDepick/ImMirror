@@ -129,7 +129,7 @@ World::Chunk* World::EnsureChunk(voxel::ChunkCoord coord, uint8_t treeShape) {
     chunk->coord = coord;
     voxel::TerrainGenerator{}.Generate(coord, chunk->column, seed_, treeShape);
     /* 生成后全量重算本列光场, 网格构建按光照采样顶点明暗. */
-    ColumnLightField().Recompute(chunk->column, voxel::BlockRegistry::Instance());
+    RecomputeLight(*chunk);
     chunk->meshDirty = true;
     Chunk* raw = chunk.get();
     chunks_.emplace(ChunkKey(coord.x, coord.z), std::move(chunk));
@@ -140,24 +140,39 @@ World::Chunk* World::EnsureChunk(voxel::ChunkCoord coord, uint8_t treeShape) {
      * 需要先重算相邻列光场再重建网格.
      */
     if (Chunk* n = FindChunk({coord.x + 1, coord.z})) {
-        ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+        RecomputeLight(*n);
         RebuildMesh(*n);
     }
     if (Chunk* n = FindChunk({coord.x - 1, coord.z})) {
-        ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+        RecomputeLight(*n);
         RebuildMesh(*n);
     }
     if (Chunk* n = FindChunk({coord.x, coord.z + 1})) {
-        ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+        RecomputeLight(*n);
         RebuildMesh(*n);
     }
     if (Chunk* n = FindChunk({coord.x, coord.z - 1})) {
-        ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+        RecomputeLight(*n);
         RebuildMesh(*n);
     }
 
     version_ += 1;
     return raw;
+}
+
+/*
+ * 光场重算入口.
+ * 四个方向的相邻列作为跨列播种来源传给光照场: 边界面的亮度由邻列按同一套
+ * 扣减规则折算后参与本列扩散, 跨区块的火把与洞口因此亮度连续.
+ * 缺失方向的邻列传空指针, 该方向按没有外部光源处理.
+ */
+void World::RecomputeLight(Chunk& chunk) {
+    const voxel::ChunkColumn* neighbors[4] = {nullptr, nullptr, nullptr, nullptr};
+    if (Chunk* n = FindChunk({chunk.coord.x + 1, chunk.coord.z})) neighbors[0] = &n->column;
+    if (Chunk* n = FindChunk({chunk.coord.x - 1, chunk.coord.z})) neighbors[1] = &n->column;
+    if (Chunk* n = FindChunk({chunk.coord.x, chunk.coord.z + 1})) neighbors[2] = &n->column;
+    if (Chunk* n = FindChunk({chunk.coord.x, chunk.coord.z - 1})) neighbors[3] = &n->column;
+    ColumnLightField().Recompute(chunk.column, neighbors, voxel::BlockRegistry::Instance());
 }
 
 void World::RebuildMesh(Chunk& chunk) {
@@ -201,7 +216,7 @@ bool World::SetBlock(int32_t x, int32_t y, int32_t z, voxel::BlockId id) {
     }
     chunk->column.Set(localX, y, localZ, id);
     /* 方块增删改变遮光与光源分布, 全列重算光场后再重建网格. */
-    ColumnLightField().Recompute(chunk->column, voxel::BlockRegistry::Instance());
+    RecomputeLight(*chunk);
     RebuildMesh(*chunk);
 
     /*
@@ -210,25 +225,25 @@ bool World::SetBlock(int32_t x, int32_t y, int32_t z, voxel::BlockId id) {
      */
     if (localX == 0) {
         if (Chunk* n = FindChunk({coord.x - 1, coord.z})) {
-            ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+            RecomputeLight(*n);
             RebuildMesh(*n);
         }
     }
     if (localX == voxel::kChunkSizeX - 1) {
         if (Chunk* n = FindChunk({coord.x + 1, coord.z})) {
-            ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+            RecomputeLight(*n);
             RebuildMesh(*n);
         }
     }
     if (localZ == 0) {
         if (Chunk* n = FindChunk({coord.x, coord.z - 1})) {
-            ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+            RecomputeLight(*n);
             RebuildMesh(*n);
         }
     }
     if (localZ == voxel::kChunkSizeZ - 1) {
         if (Chunk* n = FindChunk({coord.x, coord.z + 1})) {
-            ColumnLightField().Recompute(n->column, voxel::BlockRegistry::Instance());
+            RecomputeLight(*n);
             RebuildMesh(*n);
         }
     }
@@ -487,7 +502,7 @@ bool World::LoadFromFile(const char* path, SaveState& state) {
 
     /* 相邻列的边界面按加载后的完整数据重新计算一次光照与网格. */
     for (auto& entry : chunks_) {
-        ColumnLightField().Recompute(entry.second->column, voxel::BlockRegistry::Instance());
+        RecomputeLight(*entry.second);
         RebuildMesh(*entry.second);
     }
     version_ += 1;

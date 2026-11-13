@@ -44,7 +44,8 @@ uint8_t LightField::StepCostOf(const BlockInfo& info) {
     }
 }
 
-void LightField::Recompute(ChunkColumn& column, const BlockRegistry& registry) {
+void LightField::Recompute(ChunkColumn& column, const ChunkColumn* const neighbors[4],
+                          const BlockRegistry& registry) {
     std::vector<uint8_t>& sky = column.SkyLightData();
     std::vector<uint8_t>& block = column.BlockLightData();
     /* 容量守卫: 正常构造与批量赋值后两条向量都是全列长度, 异常时按全亮回落. */
@@ -108,7 +109,66 @@ void LightField::Recompute(ChunkColumn& column, const BlockRegistry& registry) {
     }
 
     /*
-     * 第三段: 广度优先扩散. 每步候选值为源值减一再减目标格代价,
+     * 第三段: 跨列播种.
+     * 相邻列边界格的亮度按同一套规则 (源值减一再减本格代价) 播种进本列边界面,
+     * 只抬高不降低, 因此不会把本列自己的直射光算丢. 写入只发生在本列,
+     * 相邻列由世界侧按改动点触发各自重算, 两侧最终收敛到同一结果.
+     */
+    for (int32_t dir = 0; dir < 4; ++dir) {
+        const ChunkColumn* neighbor = neighbors[dir];
+        if (neighbor == nullptr) {
+            continue;
+        }
+        for (int32_t y = 0; y < kWorldHeight; ++y) {
+            for (int32_t lateral = 0; lateral < kChunkSizeX; ++lateral) {
+                int32_t x = 0;
+                int32_t z = 0;
+                int32_t nx = 0;
+                int32_t nz = 0;
+                if (dir == 0) {
+                    x = kChunkSizeX - 1;
+                    z = lateral;
+                    nx = 0;
+                    nz = lateral;
+                } else if (dir == 1) {
+                    x = 0;
+                    z = lateral;
+                    nx = kChunkSizeX - 1;
+                    nz = lateral;
+                } else if (dir == 2) {
+                    x = lateral;
+                    z = kChunkSizeZ - 1;
+                    nx = lateral;
+                    nz = 0;
+                } else {
+                    x = lateral;
+                    z = 0;
+                    nx = lateral;
+                    nz = kChunkSizeZ - 1;
+                }
+                const size_t here = ChunkColumn::Index(x, y, z);
+                const uint8_t cost = StepCostOf(registry.Info(blocks[here]));
+                if (cost >= kMaxLightLevel) {
+                    continue;
+                }
+                const int32_t skyCandidate =
+                    static_cast<int32_t>(neighbor->SkyLightAt(nx, y, nz)) - 1 - cost;
+                if (skyCandidate > static_cast<int32_t>(sky[here])) {
+                    sky[here] = static_cast<uint8_t>(skyCandidate);
+                    skyQueue_.push_back(here);
+                }
+                const int32_t blockCandidate =
+                    static_cast<int32_t>(neighbor->BlockLightAt(nx, y, nz)) - 1 - cost;
+                if (blockCandidate > static_cast<int32_t>(block[here])) {
+                    block[here] = static_cast<uint8_t>(blockCandidate);
+                    blockQueue_.push_back(here);
+                }
+            }
+        }
+    }
+
+    /*
+     * 第四段: 广度优先扩散. 每步候选值为源值减一再减目标格代价,
      * 只有能抬高目标亮度时才写入并续排; 封死方块的代价让扩散自然止步.
      * 天光与方块光两个通道独立成队, 互不干扰.
      */
