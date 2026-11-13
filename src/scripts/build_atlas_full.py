@@ -66,6 +66,29 @@ def collect_names():
     return sorted(names)
 
 
+# 贴图文件名到实际源文件的回落后缀.
+# 多方块贴图在源目录里按状态或部件拆分存放: 铁砧是 anvil_s0/s1/s2,
+# 门是 door_birch_lower/upper, 花是 agave_middle, 台阶类取 _s0 即可.
+SUFFIX_CANDIDATES = ("", "_s0", "_lower", "_middle", "_bottom", "_top")
+
+
+def resolve_source(name, pngs, lower):
+    """把贴图名解析成源文件名; 找不到返回 None.
+
+    先按原样匹配, 再按部件后缀匹配, 最后统一转小写重试一次,
+    源目录里大小写并不统一 (Air_wall 与 air_wall 都存在).
+    """
+    for suffix in SUFFIX_CANDIDATES:
+        candidate = name + suffix
+        if candidate in pngs:
+            return candidate
+    for suffix in SUFFIX_CANDIDATES:
+        candidate = (name + suffix).lower()
+        if candidate in lower:
+            return lower[candidate]
+    return None
+
+
 def paint_missing_tile(atlas, slot):
     """缺图占位格: 64 像素一格的品红与深灰棋盘, 与任何贴图都不混淆."""
     col, row = slot % GRID, slot // GRID
@@ -82,6 +105,8 @@ def paint_missing_tile(atlas, slot):
 def main():
     names = collect_names()
     pngs = {name[:-4] for name in os.listdir(TEX_SOURCE) if name.endswith(".png")}
+    lower = {stem.lower(): stem for stem in pngs}
+    resolved = {name: resolve_source(name, pngs, lower) for name in names}
 
     """
  格位分配分三类: 自绘名, 别名, 缺图名.
@@ -106,12 +131,13 @@ def main():
                 continue
             slot_of[name] = slot_of[source_name]
             continue
-        if name in pngs:
+        source_stem = resolved.get(name)
+        if source_stem is not None:
             if next_slot >= GRID * GRID - 1:
                 print("图集格位不足", file=sys.stderr)
                 break
             slot_of[name] = next_slot
-            drawn_slot_of[next_slot] = name
+            drawn_slot_of[next_slot] = source_stem
             next_slot += 1
         else:
             missing_source.append(name)
