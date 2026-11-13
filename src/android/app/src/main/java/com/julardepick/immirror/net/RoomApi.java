@@ -83,11 +83,13 @@ public final class RoomApi {
         /* 内容版本与是否变化: 没变化时四份内容数组为 null, 调用方跳过应用. */
         public final long contentSeq;
         public final boolean contentChanged;
+        /* 当前请求者是否房主: 房主移交后据此切换上报身份. */
+        public final boolean owner;
 
         State(long seq, int rejectedEdits, String playersJson, String editsJson,
               String creaturesJson, long creatureSeq, int rejectedCreatures, String dropsJson,
               String chestsJson, String furnacesJson, float timeOfDay, int weatherKind,
-              float weatherIntensity, long contentSeq, boolean contentChanged) {
+              float weatherIntensity, long contentSeq, boolean contentChanged, boolean owner) {
             this.seq = seq;
             this.rejectedEdits = rejectedEdits;
             this.playersJson = playersJson;
@@ -103,6 +105,7 @@ public final class RoomApi {
             this.weatherIntensity = weatherIntensity;
             this.contentSeq = contentSeq;
             this.contentChanged = contentChanged;
+            this.owner = owner;
         }
     }
 
@@ -367,7 +370,8 @@ public final class RoomApi {
                         data.optInt("weatherKind", 0),
                         (float) data.optDouble("weatherIntensity", 0.0),
                         data.optLong("contentSeq", 0L),
-                        data.optBoolean("contentChanged", true));
+                        data.optBoolean("contentChanged", true),
+                        data.optBoolean("owner", false));
                 mainHandler.post(() -> callback.onSuccess(state));
             } catch (ApiException error) {
                 mainHandler.post(() -> callback.onFailure(error));

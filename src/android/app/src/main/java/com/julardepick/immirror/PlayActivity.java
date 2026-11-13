@@ -429,6 +429,17 @@ public final class PlayActivity extends NativeActivity {
                     public void onSuccess(RoomApi.State state) {
                         roomSeq = state.seq;
                         roomContentSeq = state.contentSeq;
+                        /*
+                         * 房主移交: 原房主离开后由服务端把身份交给最早的在线成员.
+                         * 接管方要立刻切换成可改动世界的房主身份, 否则新房主
+                         * 既不能改方块也不会继续上报内容, 房间就此停摆.
+                         */
+                        if (state.owner != roomOwner) {
+                            roomOwner = state.owner;
+                            NativeBridge.setGuestMode(!roomOwner);
+                            NativeBridge.showTip(roomOwner ? "YOU ARE HOST" : "HOST CHANGED");
+                            Log.i(TAG, "room owner changed to " + roomOwner);
+                        }
                         /* 任何一次成功都视为链路恢复, 清掉失败计数与提示. */
                         roomSyncFailures = 0;
                         if (roomReconnecting) {
