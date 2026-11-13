@@ -1808,6 +1808,18 @@ void GameShell::SetGuestMode(bool guest) {
      */
     blocksEditable_ = true;
     isHost_ = !guest;
+    /*
+     * 接管房主后不再接收远端内容: 已缓存的远端生物与掉落物会一直画在原地,
+     * 与自己新生成的重叠成两套. 因此接手时清掉远端缓存.
+     */
+    if (!guest) {
+        remoteCreatureIds_.clear();
+        remoteCreatureStates_.clear();
+        for (const int32_t id : remoteDropIds_) {
+            render::particle::RemoveDrop(static_cast<uint32_t>(id));
+        }
+        remoteDropIds_.clear();
+    }
     entities_.SetSpawnEnabled(!guest);
     if (guest) {
         entities_.DespawnAll();
