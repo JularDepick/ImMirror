@@ -209,7 +209,8 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
      * 取对侧边界格, 相邻列缺失才回落, 天光按全亮, 方块光按 0,
      * 避免边缘黑缝; 相邻列就位后随网格重建自然修正.
      */
-    const auto lightAt = [&column, neighbors](int32_t lx, int32_t ly, int32_t lz, int32_t face) {
+    const auto sampleLight = [&column, neighbors](int32_t lx, int32_t ly, int32_t lz, int32_t face,
+                                                  uint8_t* outSky, uint8_t* outBlock) {
         int32_t x = lx + kDirX[face];
         int32_t y = ly + kDirY[face];
         int32_t z = lz + kDirZ[face];
@@ -235,6 +236,13 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
         } else if (y < 0) {
             sky = 0;
         }
+        *outSky = sky;
+        *outBlock = blockLight;
+    };
+    const auto lightAt = [&sampleLight](int32_t lx, int32_t ly, int32_t lz, int32_t face) {
+        uint8_t sky = kMaxLightLevel;
+        uint8_t blockLight = 0;
+        sampleLight(lx, ly, lz, face, &sky, &blockLight);
         const uint8_t level = sky > blockLight ? sky : blockLight;
         return 0.25f + 0.75f * static_cast<float>(level) / static_cast<float>(kMaxLightLevel);
     };
@@ -456,6 +464,20 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                             vertex.red = tintR;
                             vertex.green = tintG;
                             vertex.blue = tintB;
+                        }
+                        /*
+                         * 方块光暖色调制: 火把一类光源附近的方块往暖色偏,
+                         * 越亮越明显, 上限约三成; 天光照明的露天方块不受影响.
+                         */
+                        uint8_t skyLevel = kMaxLightLevel;
+                        uint8_t blockLevel = 0;
+                        sampleLight(x, y, z, face, &skyLevel, &blockLevel);
+                        if (blockLevel > 0) {
+                            const float warm = static_cast<float>(blockLevel) /
+                                               static_cast<float>(kMaxLightLevel);
+                            vertex.red *= 1.0f + 0.18f * warm;
+                            vertex.green *= 1.0f + 0.04f * warm;
+                            vertex.blue *= 1.0f - 0.25f * warm;
                         }
                         out.vertices.push_back(vertex);
                     }
