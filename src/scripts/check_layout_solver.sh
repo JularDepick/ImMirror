@@ -208,6 +208,15 @@ g++ -std=c++17 -I "$ROOT/native" \
 echo "== 全量布局解析"
 "$OUT_DIR/layout_xml_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 
+echo "== 界面精灵索引"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/ui_sprite_index_test.cpp" \
+    "$ROOT/native/ui/layout_render.cpp" \
+    "$ROOT/native/ui/layout_draw.cpp" \
+    "$ROOT/native/ui/layout_frame.cpp" \
+    -o "$OUT_DIR/sprite_test.exe" || exit 1
+"$OUT_DIR/sprite_test.exe" || STATUS=1
+
 echo "== 界面纹理容器"
 g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/scripts/tests/ui_texture_ktx_test.cpp" \

@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
     int producedNothing = 0;
     int onLoadCalled = 0;
     int texturedCommands = 0;
+    int spriteCommands = 0;
     int resolvedCommands = 0;
     int withSubscriptions = 0;
     int subscriptions = 0;
@@ -144,11 +145,17 @@ int main(int argc, char** argv) {
                 continue;
             }
             texturedCommands += 1;
+            if (command.sprite != nullptr && command.sprite[0] != '\0') {
+                spriteCommands += 1;
+            }
             float u0 = 0.0f;
             float v0 = 0.0f;
             float u1 = 0.0f;
             float v1 = 0.0f;
-            if (UiSpriteUv(command.texture, &u0, &v0, &u1, &v1)) {
+            const bool hit = command.sprite != nullptr && command.sprite[0] != '\0'
+                                 ? UiSpriteRectUv(command.sprite, &u0, &v0, &u1, &v1)
+                                 : UiSpriteUv(command.texture, &u0, &v0, &u1, &v1);
+            if (hit) {
                 resolvedCommands += 1;
             }
         }
@@ -164,7 +171,8 @@ int main(int argc, char** argv) {
     std::printf("调用入口函数 %d 个, 入口执行失败 %d 个\n", onLoadCalled,
                 static_cast<int>(onLoadFailures.size()));
     std::printf("订阅事件的界面 %d 个, 订阅条目合计 %d\n", withSubscriptions, subscriptions);
-    std::printf("带贴图命令 %d, 能在图集查到 %d\n", texturedCommands, resolvedCommands);
+    std::printf("带贴图命令 %d, 其中带精灵名 %d, 能查到矩形 %d\n", texturedCommands,
+                spriteCommands, resolvedCommands);
     for (size_t index = 0; index < onLoadFailures.size() && index < 8; ++index) {
         std::printf("  入口失败 %s\n", onLoadFailures[index].c_str());
     }

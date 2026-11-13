@@ -24,6 +24,9 @@ constexpr float kLayoutSolidUv = -1.0f;
  */
 bool UiSpriteUv(const char* texturePath, float* u0, float* v0, float* u1, float* v1);
 
+/* 按子图集里的精灵名取归一化矩形; 名字带扩展名时自动去掉. */
+bool UiSpriteRectUv(const char* spriteName, float* u0, float* v0, float* u1, float* v1);
+
 struct LayoutRenderStats {
     int32_t quads = 0;
     int32_t vertices = 0;

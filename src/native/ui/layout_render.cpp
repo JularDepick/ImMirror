@@ -4,6 +4,7 @@
 #include <string>
 
 #include "ui/generated/ui_atlas_gen.h"
+#include "ui/generated/ui_sprite_index_gen.h"
 
 namespace immirror::ui {
 namespace {
@@ -21,6 +22,48 @@ std::string StemOf(const char* path) {
 }
 
 }  /* namespace */
+
+bool UiSpriteRectUv(const char* spriteName, float* u0, float* v0, float* u1, float* v1) {
+    if (spriteName == nullptr || spriteName[0] == '\0') {
+        return false;
+    }
+    /*
+     * 子图集索引按名字排序, 用二分查找.
+     * 名字带扩展名时去掉再比对, 索引里存的是不带扩展名的精灵名.
+     */
+    std::string key(spriteName);
+    if (key.size() > 4 && key.compare(key.size() - 4, 4, ".png") == 0) {
+        key.resize(key.size() - 4);
+    }
+    int32_t low = 0;
+    int32_t high = gen::kUiSpriteRectCount - 1;
+    while (low <= high) {
+        const int32_t middle = low + (high - low) / 2;
+        const int32_t order = key.compare(gen::kUiSpriteRects[middle].name);
+        if (order == 0) {
+            const gen::UiSpriteRect& rect = gen::kUiSpriteRects[middle];
+            if (u0 != nullptr) {
+                *u0 = rect.u0;
+            }
+            if (v0 != nullptr) {
+                *v0 = rect.v0;
+            }
+            if (u1 != nullptr) {
+                *u1 = rect.u1;
+            }
+            if (v1 != nullptr) {
+                *v1 = rect.v1;
+            }
+            return true;
+        }
+        if (order < 0) {
+            high = middle - 1;
+        } else {
+            low = middle + 1;
+        }
+    }
+    return false;
+}
 
 bool UiSpriteUv(const char* texturePath, float* u0, float* v0, float* u1, float* v1) {
     const std::string stem = StemOf(texturePath);
@@ -79,7 +122,10 @@ int32_t EmitLayoutCommands(const std::vector<LayoutDrawCommand>& commands, float
         float v1 = kLayoutSolidUv;
         bool textured = false;
         if (command.texture != nullptr) {
-            textured = UiSpriteUv(command.texture, &u0, &v0, &u1, &v1);
+            /* 带精灵名时按名字取子图集矩形, 否则按整图名去查. */
+            textured = command.sprite != nullptr && command.sprite[0] != '\0'
+                           ? UiSpriteRectUv(command.sprite, &u0, &v0, &u1, &v1)
+                           : UiSpriteUv(command.texture, &u0, &v0, &u1, &v1);
         }
         /*
          * uv 朝向与 HUD 的四边形一致: 左下角取 (u0, v0), 右上角取 (u1, v1).
