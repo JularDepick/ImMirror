@@ -25,6 +25,8 @@ struct RemotePlayer {
     float targetY = 0.0f;
     float targetZ = 0.0f;
     float targetYaw = 0.0f;
+    /* 血量比例, 供头顶血条; 缺省 1 表示满血. */
+    float hp = 1.0f;
     /* 快照年龄, 秒; 由管理器按帧累计, 供过期判断与淡出使用. */
     double ageSeconds = 0.0;
 };
@@ -49,8 +51,9 @@ public:
      * 输入是三平行数组 (uid 与坐标), 长度以 count 为准, 超长部分截断.
      * 替换而非合并: 服务端返回的列表就是当前在线全集, 直接覆盖最简单且不会积累脏数据.
      */
+    /* hps 可为空, 为空时按满血处理, 与旧版客户端兼容. */
     void ReplaceAll(const std::string* uids, const float* xs, const float* ys, const float* zs,
-                    const float* yaws, const float* pitches, int32_t count);
+                    const float* yaws, const float* pitches, const float* hps, int32_t count);
 
     /* 逐帧老化: 累计快照年龄并剔除超期条目. deltaSeconds 为本帧时长. */
     void Update(double deltaSeconds);

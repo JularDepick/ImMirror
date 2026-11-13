@@ -322,8 +322,10 @@ struct RemoteMarkerView {
     int32_t count;           /* 条目数量, 负数按零处理 */
 };
 
-void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, int32_t count,
-                         const float* viewProjection, int32_t width, int32_t height);
+/* hps 可为空, 为空时不画血条. */
+void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, const float* hps,
+                         int32_t count, const float* viewProjection, int32_t width,
+                         int32_t height);
 
 /*
  * 从安装包资产加载界面图集 (ui/generated/atlas_ui.rgba) 并上传为纹理.

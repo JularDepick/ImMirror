@@ -2200,8 +2200,9 @@ void HudRenderer::Render(const HudFrame& frame) {
  * 复用 HUD 的共享着色程序与顶点格式, 独立顶点缓冲, 不触碰 HudRenderer 的实例状态;
  * 投影换算与编辑器覆盖层同一套约定: 列主序矩阵, 设计坐标长度取屏高的一半.
  */
-void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, int32_t count,
-                         const float* viewProjection, int32_t width, int32_t height) {
+void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, const float* hps,
+                         int32_t count, const float* viewProjection, int32_t width,
+                         int32_t height) {
     if (viewProjection == nullptr || width <= 0 || height <= 0) {
         return;
     }
@@ -2266,6 +2267,25 @@ void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, int3
 
         PushLine(vertices, offset, x0, y0, x1, y1, halfWidth * 2.0f, scale, kRemoteMarkerColor);
         PushRect(vertices, offset, midX, midY, capHalf, capHalf, scale, kRemoteMarkerColor);
+
+        /*
+         * 血条: 画在标记顶端一小段横条上, 底槽常驻, 前景按血量比例回缩.
+         * hps 为空时不画, 与旧版对端兼容.
+         */
+        if (hps != nullptr) {
+            float ratio = hps[index];
+            ratio = ratio < 0.0f ? 0.0f : (ratio > 1.0f ? 1.0f : ratio);
+            const float barHalf = halfWidth * 6.0f;
+            const float barHalfHeight = halfWidth * 0.8f;
+            const float barY = y1 + barHalfHeight * 3.0f;
+            const float trackColor[4] = {0.0f, 0.0f, 0.0f, 0.55f};
+            PushRect(vertices, offset, x1, barY, barHalf, barHalfHeight, scale, trackColor);
+            if (ratio > 0.0f) {
+                const float fillColor[4] = {0.35f + 0.55f * ratio, 0.75f * ratio + 0.1f, 0.25f, 0.95f};
+                PushRect(vertices, offset, x1 - barHalf + barHalf * ratio, barY, barHalf * ratio,
+                         barHalfHeight, scale, fillColor);
+            }
+        }
     }
 
     if (offset == 0) {
