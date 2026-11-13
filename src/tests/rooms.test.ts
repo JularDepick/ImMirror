@@ -134,7 +134,7 @@ describe("房间通道", () => {
     expectFail(rejected, "ROOM_FULL");
   });
 
-  it("房主上报的方块改动生效, 客人上报的被拒绝", async () => {
+  it("方块改动房主与客人都生效, 协作建造", async () => {
     const owner = await registerCasePlayer("authority", 1);
     const guest = await registerCasePlayer("authority", 2);
     const room = await createRoom(owner.token);
@@ -147,8 +147,8 @@ describe("房间通道", () => {
         guest.token,
       ),
     );
-    expect(guestReport.rejectedEdits).toBe(1);
-    expect(guestReport.edits).toEqual([]);
+    /* 协作建造: 客人的方块改动同样生效, 不再计入拒绝. */
+    expect(guestReport.rejectedEdits).toBe(0);
 
     const ownerReport = expectOk<{ rejectedEdits: number }>(
       await app.post(
@@ -159,11 +159,12 @@ describe("房间通道", () => {
     );
     expect(ownerReport.rejectedEdits).toBe(0);
 
+    /* 两条改动都应被房间接收: 客人一条, 房主一条. */
     const guestView = expectOk<{ edits: RoomEditSnapshot[] }>(
       await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
     );
-    expect(guestView.edits).toHaveLength(1);
-    expect(guestView.edits[0]?.block).toBe(3);
+    expect(guestView.edits).toHaveLength(2);
+    expect(guestView.edits.map((edit) => edit.block).sort()).toEqual([3, 5]);
   });
 
   it("增量拉取按序号过滤, 同一格只保留最新改动", async () => {

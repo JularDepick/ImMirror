@@ -658,8 +658,9 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
   });
 
   /**
-   * 上报自身状态并拉取增量: 位置人人可报, 方块改动只有房主上报的生效.
-   * 客人的改动被计入 rejectedEdits, 由客户端提示无权修改.
+   * 上报自身状态并拉取增量.
+   * 位置与方块改动人人可报: 房间是协作建造, 客人也能放拆方块;
+   * 生物, 掉落物, 储物箱与熔炉属于模拟状态, 仍只认房主上报.
    */
   app.post("/api/v1/rooms/:id/state", { preHandler: guard }, async (request) => {
     const auth = request.auth;
@@ -692,6 +693,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     member.updatedAt = now;
     room.updatedAt = now;
 
+    /* 改动现在人人可报, 该计数保留给格式不合法的条目. */
     let rejectedEdits = 0;
     const rawEdits = body.edits;
     if (rawEdits !== undefined) {
@@ -701,7 +703,6 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       if (rawEdits.length > MAX_BATCH) {
         throw new AppError("BAD_REQUEST", "单次改动过多");
       }
-      const isOwner = room.ownerUserId === auth.user.id;
       for (const raw of rawEdits) {
         if (typeof raw !== "object" || raw === null) {
           continue;
@@ -717,10 +718,6 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
           typeof z !== "number" || !Number.isFinite(z) ||
           typeof block !== "number" || !Number.isFinite(block)
         ) {
-          continue;
-        }
-        if (!isOwner) {
-          rejectedEdits += 1;
           continue;
         }
         appendEdit(room, Math.trunc(x), Math.trunc(y), Math.trunc(z), Math.trunc(block), auth.user.uid);
