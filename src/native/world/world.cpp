@@ -191,14 +191,19 @@ void World::RebuildMesh(Chunk& chunk) {
     const int32_t band = voxel::TerrainGenerator{}.BiomeAt(
         seed_, chunk.coord.x * voxel::kChunkSizeX + voxel::kChunkSizeX / 2,
         chunk.coord.z * voxel::kChunkSizeZ + voxel::kChunkSizeZ / 2);
+    float waterTint[3] = {1.0f, 1.0f, 1.0f};
     if (band >= 0 && band < voxel::kBiomeBandCount) {
         const voxel::BiomeBand& info = voxel::kBiomeBands[band];
         tint[0] = static_cast<float>(info.grassR) / 255.0f;
         tint[1] = static_cast<float>(info.grassG) / 255.0f;
         tint[2] = static_cast<float>(info.grassB) / 255.0f;
+        /* 群系水色: 与草色同一来源, 液体面按它着色. */
+        waterTint[0] = static_cast<float>(info.waterR) / 255.0f;
+        waterTint[1] = static_cast<float>(info.waterG) / 255.0f;
+        waterTint[2] = static_cast<float>(info.waterB) / 255.0f;
     }
     voxel::ChunkMesher{}.Build(chunk.column, chunk.coord, voxel::BlockRegistry::Instance(), neighbors,
-                               chunk.mesh, tint);
+                               chunk.mesh, tint, waterTint);
     chunk.meshDirty = false;
     chunk.revision += 1;
 }

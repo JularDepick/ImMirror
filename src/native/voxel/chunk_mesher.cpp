@@ -140,27 +140,32 @@ const FaceLayout kFaceLayouts[kFaceCount] = {
 }  /* namespace */
 
 void ChunkMesher::Build(const ChunkColumn& column, ChunkCoord coord, const BlockRegistry& registry,
-                        MeshData& out, const float* tint) const {
+                        MeshData& out, const float* tint, const float* waterTint) const {
     const ChunkColumn* neighbors[4] = {nullptr, nullptr, nullptr, nullptr};
-    BuildWithNeighbors(column, coord, registry, neighbors, out, tint);
+    BuildWithNeighbors(column, coord, registry, neighbors, out, tint, waterTint);
 }
 
 void ChunkMesher::Build(const ChunkColumn& column, ChunkCoord coord, const BlockRegistry& registry,
                         const NeighborColumns& neighbors, MeshData& out,
-                        const float* tint) const {
+                        const float* tint, const float* waterTint) const {
     const ChunkColumn* list[4] = {neighbors.east, neighbors.west, neighbors.south, neighbors.north};
-    BuildWithNeighbors(column, coord, registry, list, out, tint);
+    BuildWithNeighbors(column, coord, registry, list, out, tint, waterTint);
 }
 
 void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord,
                                      const BlockRegistry& registry, const ChunkColumn* const* neighbors,
-                                     MeshData& out, const float* tint) const {
+                                     MeshData& out, const float* tint,
+                                     const float* waterTint) const {
     /* 顶点使用区块局部坐标, 列坐标只标注调用方来源, 不参与计算. */
     (void)coord;
     /* 群系草色: 缺省白色即不染色; 染色只作用于草方块顶面与树叶. */
     const float tintR = tint != nullptr ? tint[0] : 1.0f;
     const float tintG = tint != nullptr ? tint[1] : 1.0f;
     const float tintB = tint != nullptr ? tint[2] : 1.0f;
+    /* 群系水色: 缺省白色即不染色, 染色只作用于液体面. */
+    const float waterR = waterTint != nullptr ? waterTint[0] : 1.0f;
+    const float waterG = waterTint != nullptr ? waterTint[1] : 1.0f;
+    const float waterB = waterTint != nullptr ? waterTint[2] : 1.0f;
     out.Clear();
 
     const int32_t topY = column.TopBlockY();
@@ -496,6 +501,11 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                             vertex.red = tintR;
                             vertex.green = tintG;
                             vertex.blue = tintB;
+                        } else if (isLiquid(id)) {
+                            /* 液体面按群系水色着色, 不同群系的水呈现不同色调. */
+                            vertex.red = waterR;
+                            vertex.green = waterG;
+                            vertex.blue = waterB;
                         }
                         /*
                          * 方块光暖色调制: 火把一类光源附近的方块往暖色偏,
