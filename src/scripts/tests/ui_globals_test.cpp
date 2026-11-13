@@ -84,6 +84,17 @@ int main(int argc, char** argv) {
     check("字符串查询可用", host.Vm().GetGlobal("Str").text.size() > 0);
     check("未知管理器也非空", host.Vm().GetGlobal("OtherOk").number == 1.0);
 
+    /* 共享键值: 一个界面写入, 另一个界面能读到同一个值. */
+    const char* dataScript =
+        "local mgr = GetInst(\"ClientMgr\") "
+        "mgr:setGameData(\"picked\", 42) "
+        "Back = mgr:getGameData(\"picked\") "
+        "Nothing = mgr:getGameData(\"absent\") "
+        "AbsentOk = (Nothing == nil) and 1 or 0 ";
+    check("执行共享数据脚本", host.RunScript(dataScript, std::strlen(dataScript), screen));
+    check("共享数据能读回", host.Vm().GetGlobal("Back").number == 42.0);
+    check("未写入的键为空", host.Vm().GetGlobal("AbsentOk").number == 1.0);
+
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;
 }

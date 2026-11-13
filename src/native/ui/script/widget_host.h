@@ -84,6 +84,8 @@ private:
     /* 事件名到订阅控件的列表; 同一控件重复订阅同一事件只记一次. */
     /* 数据源指针, 供管理器方法查询定义; 由 BindDataSource 设置. */
     UiDataSource* dataSource_ = nullptr;
+    /* 界面脚本之间共享的键值表: 一个界面写入, 另一个界面读取. */
+    std::map<std::string, Value> gameData_;
     /* 脚本提示与音效的出口, 未设置时只写日志. */
     std::function<void(const std::string&)> tipSink_;
     std::function<void(const std::string&)> soundSink_;

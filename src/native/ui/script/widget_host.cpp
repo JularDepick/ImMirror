@@ -175,6 +175,23 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
             table->Set(Value::Str("clientVersionFromStr"), MakeNative([](const std::vector<Value>&) {
                 return std::vector<Value>{Value::Number(0.0)};
             }));
+            /*
+             * 共享键值: 界面脚本用它把数据从一个界面带到另一个界面
+             * (例如列表页把选中的编号交给详情页). 值原样保存, 不做类型转换.
+             */
+            table->Set(Value::Str("getGameData"), MakeNative([this](const std::vector<Value>& call) {
+                const std::string key = ArgAt(call, 0).ToText();
+                const auto found = gameData_.find(key);
+                return std::vector<Value>{found == gameData_.end() ? Value() : found->second};
+            }));
+            table->Set(Value::Str("setGameData"), MakeNative([this](const std::vector<Value>& call) {
+                const std::string key = ArgAt(call, 0).ToText();
+                if (key.empty()) {
+                    return std::vector<Value>();
+                }
+                gameData_[key] = ArgAt(call, 1);
+                return std::vector<Value>();
+            }));
             /* 二维音效: 界面点击音一类, 直接交给音频引擎. */
             table->Set(Value::Str("playSound2D"), MakeNative([this](const std::vector<Value>& call) {
                 const std::string path = ArgAt(call, 0).ToText();
