@@ -407,8 +407,10 @@ public final class PlayActivity extends NativeActivity {
         final String drops = roomOwner ? NativeBridge.takeDropSnapshot() : "[]";
         final String chests = roomOwner ? NativeBridge.takeChestSnapshot() : "[]";
         final String furnaces = roomOwner ? NativeBridge.takeFurnaceSnapshot() : "[]";
+        /* 房主上报世界时间, 客人不报, 由服务端把房主的时间下发回来. */
+        final float worldTime = roomOwner ? NativeBridge.worldTimeSeconds() : 0.0f;
         roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, creatures, drops, chests,
-                furnaces, roomSeq,
+                furnaces, worldTime, roomSeq,
                 new RoomApi.StateCallback() {
                     @Override
                     public void onSuccess(RoomApi.State state) {
@@ -438,6 +440,10 @@ public final class PlayActivity extends NativeActivity {
                             NativeBridge.applyRemoteDrops(state.dropsJson);
                             NativeBridge.applyRemoteChests(state.chestsJson);
                             NativeBridge.applyRemoteFurnaces(state.furnacesJson);
+                            /* 客人跟房主的昼夜走, 两边看到的天色一致. */
+                            if (state.timeOfDay > 0.0f) {
+                                NativeBridge.setWorldTimeSeconds(state.timeOfDay);
+                            }
                         }
                         if (state.creatureSeq != roomCreatureSeq) {
                             roomCreatureSeq = state.creatureSeq;

@@ -251,6 +251,10 @@ public:
      */
     void SetGuestMode(bool guest);
 
+    /* 世界时间: 总秒数, 供房间同步昼夜; 客人侧写入房主的时间. */
+    float WorldTimeSeconds() const;
+    void SetWorldTimeSeconds(float seconds);
+
     /* 本端是否允许改动方块; 房间客人没有改方块权限, 世界内容以房主为准. */
     bool BlocksEditable() const { return blocksEditable_; }
     bool blocksEditable_ = true;

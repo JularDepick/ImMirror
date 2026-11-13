@@ -1363,6 +1363,18 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
  * 命中面板交给背包界面处理, 点在面板以外则关闭面板并把合成材料退回物品栏;
  * 无论哪种情况都标记认领, 避免同一次点击又落到挖掘或放置上.
  */
+float GameShell::WorldTimeSeconds() const {
+    return worldTime_ != nullptr ? worldTime_->TotalSeconds() : 0.0f;
+  }
+
+void GameShell::SetWorldTimeSeconds(float seconds) {
+    if (worldTime_ == nullptr || !(seconds > 0.0f)) {
+        return;
+    }
+    /* 客人按房主的时间对齐昼夜, 只改时间不动天气与光照缓存. */
+    worldTime_->SetTotalSeconds(seconds);
+}
+
 void GameShell::SetGuestMode(bool guest) {
     /* 客人的方块改动服务端会拒绝, 本地也就不要再改, 否则画面与世界不一致. */
     blocksEditable_ = !guest;

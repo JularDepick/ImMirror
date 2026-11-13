@@ -155,6 +155,32 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeChooseWorldSeed(JNIEnv* 
     }
 }
 
+/* Java 侧低频入口: 取当前世界时间总秒数, 供房主同步给房间. */
+JNIEXPORT jfloat JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeWorldTimeSeconds(JNIEnv* env, jclass clazz) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return 0.0f;
+    }
+    return static_cast<jfloat>(shell->WorldTimeSeconds());
+}
+
+/* Java 侧低频入口: 按房主时间对齐昼夜, 客人侧使用. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetWorldTimeSeconds(JNIEnv* env,
+                                                                          jclass clazz,
+                                                                          jfloat seconds) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return;
+    }
+    shell->SetWorldTimeSeconds(static_cast<float>(seconds));
+}
+
 /* Java 侧低频入口: 设置房间客人模式, 关闭本地自然生成. */
 JNIEXPORT void JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetGuestMode(JNIEnv* env, jclass clazz,

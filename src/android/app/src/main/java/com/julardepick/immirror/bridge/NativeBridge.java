@@ -187,6 +187,22 @@ public final class NativeBridge {
         nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
     }
 
+    /* 当前世界时间总秒数, 房主每轮上报给房间. */
+    public static float worldTimeSeconds() {
+        if (!ensureLoaded()) {
+            return 0.0f;
+        }
+        return nativeWorldTimeSeconds();
+    }
+
+    /* 按房主时间对齐昼夜, 客人侧使用. */
+    public static void setWorldTimeSeconds(float seconds) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeSetWorldTimeSeconds(seconds);
+    }
+
     /* 设置房间客人模式: 客人侧不再本地生成生物, 生物由房主上报驱动. */
     public static void setGuestMode(boolean guest) {
         if (!ensureLoaded()) {
@@ -355,6 +371,10 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native float nativeWorldTimeSeconds();
+
+    private static native void nativeSetWorldTimeSeconds(float seconds);
 
     private static native void nativeSetGuestMode(boolean guest);
 
