@@ -99,6 +99,8 @@ public final class PlayActivity extends NativeActivity {
     private String roomId;
     private String roomCode;
     private long roomSeq;
+    /* 已应用的生物快照版本号, 与位置通道的序号分开记. */
+    private long roomCreatureSeq = -1L;
     private AmbientAudioManager ambientManager;
     private Handler presenceHandler;
     private Runnable presenceRunnable;
@@ -338,6 +340,15 @@ public final class PlayActivity extends NativeActivity {
                         }
                         if (state.rejectedEdits > 0) {
                             Log.w(TAG, "room rejected local edits=" + state.rejectedEdits);
+                        }
+                        if (state.rejectedCreatures > 0) {
+                            Log.w(TAG, "room rejected local creatures=" + state.rejectedCreatures);
+                        }
+                        /* 生物快照版本号变化时打一条, 供后续接入远端生物绘制时核对. */
+                        if (state.creatureSeq != roomCreatureSeq) {
+                            roomCreatureSeq = state.creatureSeq;
+                            Log.i(TAG, "room creatures seq=" + state.creatureSeq + " count="
+                                    + countPlayers(state.creaturesJson));
                         }
                     }
 

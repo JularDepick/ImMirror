@@ -67,12 +67,20 @@ public final class RoomApi {
         public final int rejectedEdits;
         public final String playersJson;
         public final String editsJson;
+        /* 房主上报的生物快照与版本号; 客人据此重绘远端生物. */
+        public final String creaturesJson;
+        public final long creatureSeq;
+        public final int rejectedCreatures;
 
-        State(long seq, int rejectedEdits, String playersJson, String editsJson) {
+        State(long seq, int rejectedEdits, String playersJson, String editsJson,
+              String creaturesJson, long creatureSeq, int rejectedCreatures) {
             this.seq = seq;
             this.rejectedEdits = rejectedEdits;
             this.playersJson = playersJson;
             this.editsJson = editsJson;
+            this.creaturesJson = creaturesJson;
+            this.creatureSeq = creatureSeq;
+            this.rejectedCreatures = rejectedCreatures;
         }
     }
 
@@ -267,7 +275,10 @@ public final class RoomApi {
                 final State state = new State(data.optLong("seq", 0L),
                         data.optInt("rejectedEdits", 0),
                         arrayText(data, "players"),
-                        arrayText(data, "edits"));
+                        arrayText(data, "edits"),
+                        arrayText(data, "creatures"),
+                        data.optLong("creatureSeq", 0L),
+                        data.optInt("rejectedCreatures", 0));
                 mainHandler.post(() -> callback.onSuccess(state));
             } catch (ApiException error) {
                 mainHandler.post(() -> callback.onFailure(error));
