@@ -1,5 +1,7 @@
 #include "game/item/enchant_table.h"
 
+#include <cstring>
+
 namespace immirror::game::item {
 
 const EnchantTable& EnchantTable::Instance() {
@@ -33,24 +35,31 @@ const gen::EnchantEntry* EnchantTable::Find(uint32_t sourceId, uint16_t level) c
     return best;
 }
 
-bool EnchantTable::AllowsTool(const gen::EnchantEntry& entry, uint16_t toolType) {
-    if (entry.toolMask == 0) {
-        return true;
-    }
-    if (toolType == 0 || toolType > 12) {
+bool EnchantTable::IsType(const gen::EnchantEntry& entry, const char* type) {
+    if (entry.type == nullptr || type == nullptr) {
         return false;
     }
-    return (entry.toolMask & (1u << (toolType - 1))) != 0;
+    return std::strcmp(entry.type, type) == 0;
 }
 
-int32_t EnchantTable::CountForTool(uint16_t toolType) const {
+int32_t EnchantTable::CountOfType(const char* type) const {
     int32_t total = 0;
     for (int32_t index = 0; index < gen::kEnchantEntryCount; ++index) {
-        if (AllowsTool(gen::kEnchantEntries[index], toolType)) {
+        if (IsType(gen::kEnchantEntries[index], type)) {
             total += 1;
         }
     }
     return total;
+}
+
+bool EnchantTable::AllowsToolType(const gen::EnchantEntry& entry, uint8_t toolType) {
+    if (entry.toolMask == 0) {
+        return true;
+    }
+    if (toolType == 0 || toolType > 32) {
+        return false;
+    }
+    return (entry.toolMask & (1u << (toolType - 1))) != 0;
 }
 
 }  /* namespace immirror::game::item */

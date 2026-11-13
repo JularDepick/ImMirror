@@ -68,15 +68,21 @@ def main():
         if source_id <= 0 or key in seen:
             continue
         seen.add(key)
+        # 工具类型列存的是"适用工具类型编号", 不是标志位:
+        # 把编号折成位掩码 (编号 1 对应第 0 位), 编号超过 32 的忽略.
         mask = 0
         for index in range(1, TOOL_TYPE_COUNT + 1):
             column = "ToolType%d" % index
-            if column in col and col[column] < len(row) and row[col[column]].strip() not in ("", "0"):
-                mask |= 1 << (index - 1)
+            if column not in col or col[column] >= len(row):
+                continue
+            tool_type = to_int(row[col[column]])
+            if 1 <= tool_type <= 32:
+                mask |= 1 << (tool_type - 1)
         entries.append({
             "sourceId": source_id,
             "name": row[col["Name"]].strip(),
-            "type": to_int(row[col["EnchantType"]]),
+            # 效果类型是枚举字符串 (SHARP, DIG_SPEED, DURABLE 一类), 不是数字.
+            "type": row[col["EnchantType"]].strip(),
             "level": level,
             "value1": to_int(row[col["EnchantValue1"]]),
             "value2": to_int(row[col["EnchantValue2"]]),
@@ -103,12 +109,12 @@ def main():
         "struct EnchantEntry {",
         "    uint32_t sourceId;   /* 附魔表 ID */",
         "    const char* name;    /* 中文名, UTF-8 编码 */",
-        "    uint16_t type;       /* 效果类型 */",
+        "    const char* type;    /* 效果类型枚举名, 如 SHARP / DIG_SPEED / DURABLE */",
         "    uint16_t level;      /* 附魔等级 */",
         "    int32_t value1;      /* 效果数值 1 */",
         "    int32_t value2;      /* 效果数值 2 */",
         "    uint32_t conflict;   /* 冲突编号, 0 表示不冲突 */",
-        "    uint16_t toolMask;   /* 适用工具类型位掩码 */",
+        "    uint32_t toolMask;   /* 适用工具类型位掩码, 第 n 位对应类型 n+1 */",
         "    const char* desc;    /* 属性描述, 供界面展示 */",
         "};",
         "",
@@ -118,8 +124,8 @@ def main():
     ]
     for entry in entries:
         lines.append(
-            '    {%du, %s, %du, %du, %d, %d, %du, %du, %s},'
-            % (entry["sourceId"], c_string(entry["name"]), entry["type"], entry["level"],
+            '    {%du, %s, %s, %du, %d, %d, %du, %du, %s},'
+            % (entry["sourceId"], c_string(entry["name"]), c_string(entry["type"]), entry["level"],
                entry["value1"], entry["value2"], entry["conflict"], entry["toolMask"],
                c_string(entry["desc"])))
     lines += [

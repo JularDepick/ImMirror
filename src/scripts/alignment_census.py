@@ -100,6 +100,8 @@ def main():
         ('玩法', '合成配方', header_constant(os.path.join(NATIVE_ROOT, 'game', 'generated', 'recipe_data_gen.h'), 'kRecipeInfoCount'), 630, 'crafting.csv 可折算条目'),
         ('玩法', '熔炉配方', header_constant(os.path.join(NATIVE_ROOT, 'game', 'generated', 'furnace_data_gen.h'), 'kFurnaceEntryCount'), 34, 'furnace.csv 配方行'),
         ('玩法', '附魔条目', header_constant(os.path.join(NATIVE_ROOT, 'game', 'generated', 'enchant_data_gen.h'), 'kEnchantEntryCount'), 120, 'enchant.csv 按等级分行'),
+        ('玩法', '附魔效果类型', len(set(re.findall(r'\{\d+u, "[^"]*", "([A-Za-z_]+)"',
+                                              read_text(os.path.join(NATIVE_ROOT, 'game', 'generated', 'enchant_data_gen.h'))))), 18, '数据表出现的效果类型种类'),
         ('玩法', '状态效果', count_rows(os.path.join(NATIVE_ROOT, 'player', 'generated', 'buff_data_gen.h')), 44, 'buffdef 客户端可消费四类'),
         ('玩法', '食物', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'food_data_gen.h')), 38, 'fooddef 可食用条目'),
         ('玩法', '工具', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'tool_data_gen.h')), 25, 'tooldef 全量工具'),
