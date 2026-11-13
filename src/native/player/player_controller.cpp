@@ -1084,10 +1084,14 @@ void PlayerController::ApplyDamage(float amount, game::DamageType type) {
                 static_cast<double>(health_));
         return;
     }
-    /* 血量归零: 清空挖掘进度并进入死亡等待, 由 Update 送回出生点. */
+    /*
+     * 血量归零: 清空挖掘进度与已挂状态效果, 进入死亡等待, 由 Update 送回出生点.
+     * 效果表里所有效果都标记为死亡清除, 因此倒下后不该带着加速或回复复活.
+     */
     health_ = 0.0f;
     deathSeconds_ = kDeathSeconds;
     CancelMining();
+    buffs_.Clear();
     IM_LOGW(kTag, "player died amount=%.1f", static_cast<double>(amount));
 }
 
