@@ -1539,6 +1539,41 @@ void GameShell::UpdateProjectiles(double deltaSeconds) {
             shotCooldown_ = 0.0f;
         }
     }
+    /*
+     * 敌对飞行物: 与玩家箭同一套推进, 但命中判定换成玩家位置.
+     * 玩家身体按 0.6 米半径与身高做粗判, 命中即结算伤害.
+     */
+    if (hostileProjectiles_.Count() > 0) {
+        ProjectileContext context;
+        context.world = world_.get();
+        context.entities = nullptr;
+        std::vector<entity::ProjectileHit> hostileHits;
+        hostileProjectiles_.Update(static_cast<float>(deltaSeconds), &context, SolidAtThunk, nullptr,
+                                   hostileHits);
+        for (const entity::ProjectileHit& hit : hostileHits) {
+            if (hit.kind != entity::ProjectileHit::Kind::kBlock) {
+                continue;
+            }
+            /* 命中方块时只做消失与碎屑, 伤害由下方玩家判定处理. */
+            render::particle::EmitColored(0.70f, 0.66f, 0.58f, hit.position.x, hit.position.y,
+                                          hit.position.z, 3);
+        }
+        /* 玩家命中: 单独扫一遍仍在飞的箭, 距离足够近即结算并移除. */
+        const core::Vec3 feet = player_->Position();
+        for (int32_t index = hostileProjectiles_.Count() - 1; index >= 0; --index) {
+            const entity::Projectile* arrow = &hostileProjectiles_.At(index);
+            const core::Vec3 delta = arrow->position - core::Vec3{feet.x, feet.y + 0.9f, feet.z};
+            if (delta.Length() > 0.9f) {
+                continue;
+            }
+            const float damage = arrow->damage;
+            player_->ApplyDamage(damage, game::DamageType::kRange);
+            IM_LOGI(kTag, "hostile arrow hit player damage=%.1f", static_cast<double>(damage));
+            /* 命中后立即失效: 通过清空该发的存活时间实现, 下一帧推进时回收. */
+            hostileProjectiles_.MutableAt(index)->age = 99.0f;
+        }
+    }
+
     if (projectiles_.Count() == 0) {
         return;
     }
@@ -2496,7 +2531,30 @@ void GameShell::UpdateEntities(double deltaSeconds) {
     }
 
     UpdateEnvironmentDamage(deltaSeconds);
-    if (stats.playerDamage > 0.0f) {
+    /*
+     * 远程生物: 先决定是否改为投射物出手, 再决定是否直接扣血.
+     * 投射出手的伤害要到命中才结算, 因此整段近战附带效果都不参与.
+     */
+    bool spawnedHostileArrow = false;
+    if (stats.playerDamage > 0.0f && stats.rangedShot && stats.playerDamageSource != 0) {
+        const entity::CreatureEntity* shooter =
+            entities_.FindById(static_cast<entity::EntityId>(stats.playerDamageSource));
+        if (shooter != nullptr) {
+            const core::Vec3 from = core::Vec3{shooter->Position().x,
+                                               shooter->Position().y + shooter->BoundsHeight() * 0.7f,
+                                               shooter->Position().z};
+            const core::Vec3 to = core::Vec3{player_->Position().x, player_->Position().y + 1.0f,
+                                             player_->Position().z};
+            const core::Vec3 delta = to - from;
+            if (delta.Length() > 0.01f) {
+                hostileProjectiles_.Spawn(from, delta.Normalized(), 28.0f, stats.playerDamage);
+                spawnedHostileArrow = true;
+                IM_LOGI(kTag, "ranged creature fired, source=%u",
+                        static_cast<unsigned>(stats.playerDamageSource));
+            }
+        }
+    }
+    if (stats.playerDamage > 0.0f && !spawnedHostileArrow) {
         /* 生物出手的伤害类型由生物结算时记入统计, 这里直接取用. */
         const int32_t dealtIndex = static_cast<int32_t>(stats.playerDamageType);
         game::DamageType dealtType =
@@ -2512,6 +2570,7 @@ void GameShell::UpdateEntities(double deltaSeconds) {
             dealtType = game::DamageType::kBurn;
         }
         player_->ApplyDamage(stats.playerDamage, dealtType);
+
         /* 受击磨损: 四个部位各掉一点耐久, 归零自动卸下. */
         if (player_->Armor().WearOnHit() > 0) {
             ShowTip("ARMOR BROKEN");

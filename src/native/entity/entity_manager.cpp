@@ -89,6 +89,7 @@ EntityFrameStats EntityManager::Update(double dt, const world::World& world,
         if (tick.playerDamage > 0.0f) {
             stats.playerDamageType = tick.playerDamageType;
             stats.playerDamageSource = tick.playerDamageSource;
+            stats.rangedShot = tick.rangedShot;
         }
     }
 

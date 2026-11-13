@@ -30,6 +30,8 @@ struct EntityFrameStats {
     uint8_t playerDamageType = 1;
     /* 本帧对玩家出手的生物标识, 0 表示无. */
     uint32_t playerDamageSource = 0;
+    /* 本帧的出手是否应改为飞行物: 远程生物为真. */
+    bool rangedShot = false;
     int32_t spawned = 0;
     int32_t deaths = 0;
     int32_t despawned = 0;

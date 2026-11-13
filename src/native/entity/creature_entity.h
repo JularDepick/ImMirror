@@ -32,6 +32,11 @@ struct CreatureTick {
     uint8_t playerDamageType = 1;
     /* 本帧对玩家出手的生物标识, 0 表示无; 供反击一类效果回打攻击者. */
     uint32_t playerDamageSource = 0;
+    /*
+     * 本帧是否应以飞行物形式出手: 远程生物不再即时命中, 而是射出一发箭,
+     * 由总装按飞行物推进结算, 玩家因此有机会躲开.
+     */
+    bool rangedShot = false;
 };
 
 /*

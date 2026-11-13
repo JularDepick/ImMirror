@@ -261,6 +261,9 @@ public:
 
     /* 发射一发箭: 手持弓且有箭时消耗一支并生成飞行物. */
     bool TryShootArrow();
+
+    /* 生物射出的箭: 与玩家箭共用同一套飞行物, 但命中玩家而不是生物. */
+    entity::ProjectileSystem hostileProjectiles_;
     /* 推进飞行物并结算命中. */
     void UpdateProjectiles(double deltaSeconds);
     /*

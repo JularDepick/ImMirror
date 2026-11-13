@@ -187,6 +187,8 @@ CreatureTick CreatureEntity::Update(double dt, const world::World& world,
                                         ? 2
                                         : (def_->attackType == 2 ? 3 : 1);
             tick.playerDamageSource = Id();
+            /* 远程生物标记为投射出手, 总装据此生成飞行物而不是直接扣血. */
+            tick.rangedShot = def_->attackType == 1;
             FaceDirection(toPlayer, 1.0f);
         }
     }
