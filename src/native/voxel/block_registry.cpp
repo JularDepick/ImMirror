@@ -260,6 +260,8 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
             legacyCache[id].dropChance = gen::BlockEntryOf(id).dropChance;
             legacyCache[id].slipperiness = gen::BlockEntryOf(id).slipperiness;
             legacyCache[id].replaceable = gen::BlockEntryOf(id).replaceable != 0;
+            legacyCache[id].dropItem2 = static_cast<uint16_t>(gen::BlockEntryOf(id).dropSourceId2);
+            legacyCache[id].dropChance2 = gen::BlockEntryOf(id).dropChance2;
             legacyFilled[id] = true;
         }
         return legacyCache[id];
@@ -304,6 +306,8 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.dropChance = entry.dropChance;
         info.slipperiness = entry.slipperiness;
         info.replaceable = entry.replaceable != 0;
+        info.dropItem2 = static_cast<uint16_t>(entry.dropSourceId2);
+        info.dropChance2 = entry.dropChance2;
         filled[index] = true;
     }
     return info;

@@ -414,8 +414,16 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
     if not 0.1 <= slipperiness <= 4.0:
         slipperiness = 1.0
     replaceable = 1 if to_int(data.get("Replaceable")) == 1 else 0
+    # 二次掉落: 与主掉落独立的物品与概率, 常见于矿石附带副产物.
+    drop2 = to_int(data.get("ToolMineDrop2"))
+    prob2 = to_int(data.get("ToolMineProb2"))
+    if drop2 <= 0 or prob2 <= 0:
+        drop2 = 0
+        prob2 = 0
+    elif prob2 > 10000:
+        prob2 = 10000
     return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du, '
-            '%.2ff, %du, %du},'
+            '%.2ff, %du, %du, %du, %du},'
             "  /* %s */"
             % (source_id, client_id, escape(name),
                escape(data.get("Name", "").strip()),
@@ -425,7 +433,8 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
                escape(data.get("PlaceSound", "").strip()),
                escape(data.get("WalkSound", "").strip()),
                escape(data.get("Texture1", "").strip()),
-               drop_source, gravity, slipperiness, replaceable, drop_prob, comment))
+               drop_source, gravity, slipperiness, replaceable, drop_prob, drop2, prob2,
+               comment))
 
 
 def render_header(entries, legacy_rows, segments):
@@ -494,6 +503,8 @@ def render_header(entries, legacy_rows, segments):
         "    float slipperiness;      /* 摩擦系数, 大于 1 表示打滑 */",
         "    uint8_t replaceable;     /* 放置时是否可被直接覆盖 */",
         "    uint16_t dropChance;     /* 掉落概率万分比, 10000 表示必掉 */",
+        "    uint32_t dropSourceId2;  /* 二次掉落物物品 id, 0 表示无 */",
+        "    uint16_t dropChance2;    /* 二次掉落概率万分比 */",
         "};",
         "",
         "/* 条目按客户端 id 升序排列, 下标即客户端 id, 越界回落到首条 (空气). */",
@@ -622,6 +633,8 @@ def render_header(entries, legacy_rows, segments):
         "    float slipperiness;      /* 摩擦系数, 大于 1 表示打滑 */",
         "    uint8_t replaceable;     /* 放置时是否可被直接覆盖 */",
         "    uint16_t dropChance;     /* 掉落概率万分比, 10000 表示必掉 */",
+        "    uint32_t dropSourceId2;  /* 二次掉落物物品 id, 0 表示无 */",
+        "    uint16_t dropChance2;    /* 二次掉落概率万分比 */",
         "};",
         "",
         "constexpr int32_t kRegistryEntryCount = kBlockEntryCount - kLegacyBlockCount;",

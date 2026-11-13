@@ -155,6 +155,9 @@ struct BlockInfo {
     float slipperiness = 1.0f;
     /* 放置时是否可被直接覆盖 (草, 雪层一类). */
     bool replaceable = false;
+    /* 二次掉落: 与主掉落独立判定的附加物品与概率 (万分比). */
+    uint16_t dropItem2 = 0;
+    uint16_t dropChance2 = 0;
 };
 
 }  /* namespace immirror::voxel */

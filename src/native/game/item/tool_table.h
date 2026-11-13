@@ -17,6 +17,8 @@ struct ToolCombat {
     float attackPunch = 0.0f;
     /* 顺序与 kDamageTypeCount 一致: 物理, 打击, 远程, 爆炸, 法术, 混沌, 燃烧, 剧毒. */
     float armor[8] = {};
+    /* 移动速度加成百分比, 穿戴类装备用. */
+    float moveSpeed = 0.0f;
 };
 
 /*

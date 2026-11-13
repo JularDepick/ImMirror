@@ -62,6 +62,9 @@ public:
     /* 近战抗性点数: 四个部位上抗性附魔的数值合计, 按点数直接抵扣近战伤害. */
     int32_t MeleeResistPoints() const { return EnchantValue("PROTECTION"); }
 
+    /* 移动速度加成百分比: 四个部位装备表数值之和, 封顶 50%. */
+    float MoveSpeedPercent() const;
+
     void Clear();
 
 private:

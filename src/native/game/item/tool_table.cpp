@@ -36,6 +36,7 @@ bool ToolTable::Find(ItemId id, ToolCombat& out) const {
             out.armor[5] = data.armorChaos;
             out.armor[6] = data.armorBurn;
             out.armor[7] = data.armorToxin;
+            out.moveSpeed = data.moveSpeed;
             return true;
         }
         if (data.id < key) {

@@ -93,6 +93,19 @@ int32_t ArmorSet::EnchantValue(const char* type) const {
     return total;
 }
 
+float ArmorSet::MoveSpeedPercent() const {
+    float total = 0.0f;
+    for (int32_t slot = 0; slot < kSlotCount; ++slot) {
+        item::ToolCombat combat;
+        if (!item::ToolTable::Instance().Find(slots_[slot].item, combat)) {
+            continue;
+        }
+        total += combat.moveSpeed;
+    }
+    /* 封顶五成, 避免叠加出离谱的移动速度. */
+    return total > 50.0f ? 50.0f : total;
+}
+
 void ArmorSet::Clear() {
     for (int32_t slot = 0; slot < kSlotCount; ++slot) {
         slots_[slot].Clear();

@@ -162,7 +162,8 @@ def hud_components():
 def block_behaviors():
     """方块行为列: 生成器实际读取的行为列数, 分母是本轮确定的行为列清单."""
     source = read_text(os.path.join(SRC_ROOT, 'scripts', 'gen_block_data.py'))
-    columns = ['GravityEffect', 'Replaceable', 'Slipperiness', 'ToolMineProb1', 'ToolLevel']
+    columns = ['GravityEffect', 'Replaceable', 'Slipperiness', 'ToolMineProb1', 'ToolMineProb2',
+               'ToolLevel']
     read = [name for name in columns if ('"%s"' % name) in source]
     return (len(read), len(columns))
 
@@ -187,7 +188,7 @@ def main():
     rows = [
         ('世界', '方块条目', blocks.get('blocks', 0), blocks.get('blocks', 0), 'blockdef 收录并分配到客户端 id'),
         ('世界', '有掉落', blocks.get('drop', 0), blocks.get('blocks', 1), '掉落字段非空'),
-        ('世界', '方块行为列', *block_behaviors(), '重力/可替换/打滑/掉落概率/工具等级五列'),
+        ('世界', '方块行为列', *block_behaviors(), '重力/可替换/打滑/主掉落概率/二次掉落概率/工具等级'),
         ('世界', '有重力方式', blocks.get('gravity', 0), blocks.get('blocks', 1), 'GravityEffect 非 0'),
         ('世界', '有工具等级要求', blocks.get('toolLevel', 0), blocks.get('blocks', 1), 'ToolLevel 非 0'),
         ('世界', '非整块形状', blocks.get('shape', 0), blocks.get('blocks', 1), '台阶/楼梯/栅栏/玻璃板/地毯'),

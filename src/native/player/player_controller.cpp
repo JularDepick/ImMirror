@@ -666,6 +666,13 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
      * 打滑地面: 摩擦系数大于 1 的方块 (冰一类) 按系数折算速度,
      * 与其它倍率同样相乘, 因此冰上冲刺仍比走路快.
      */
+    /* 装备速度加成: 穿戴类装备给出的百分比直接加到移动倍率上. */
+    {
+        const float bonus = armor_.MoveSpeedPercent();
+        if (bonus > 0.0f) {
+            ratio *= 1.0f + bonus / 100.0f;
+        }
+    }
     {
         const voxel::BlockId ground = GroundBlockId();
         if (ground != voxel::block::Air) {

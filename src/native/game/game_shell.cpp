@@ -2911,6 +2911,31 @@ void GameShell::CollectDrop(voxel::BlockId brokenBlock, const voxel::BlockPos& p
     }
     SpawnDrop(dropItem, 1 + extraCount, brokenBlock, static_cast<float>(position.x) + 0.5f,
               static_cast<float>(position.y) + 0.5f, static_cast<float>(position.z) + 0.5f);
+    /*
+     * 二次掉落: 与主掉落独立判定的副产物, 常见于矿石附带碎片.
+     * 概率按万分比, 命中后再折成方块生成掉落物.
+     */
+    if (broken.dropItem2 != 0 && broken.dropChance2 > 0) {
+        bool rollHit = true;
+        if (broken.dropChance2 < 10000) {
+            dropRandom_ ^= dropRandom_ << 13;
+            dropRandom_ ^= dropRandom_ >> 17;
+            dropRandom_ ^= dropRandom_ << 5;
+            rollHit = static_cast<int32_t>(dropRandom_ % 10000u) <
+                      static_cast<int32_t>(broken.dropChance2);
+        }
+        if (rollHit) {
+            const item::ItemId second = static_cast<item::ItemId>(broken.dropItem2);
+            const voxel::BlockId secondBlock = items.BlockOf(second);
+            if (secondBlock != voxel::block::Air) {
+                SpawnDrop(second, 1, secondBlock, static_cast<float>(position.x) + 0.5f,
+                          static_cast<float>(position.y) + 0.5f,
+                          static_cast<float>(position.z) + 0.5f);
+                IM_LOGI(kTag, "second drop item=%u block=%s", static_cast<uint32_t>(second),
+                        broken.name);
+            }
+        }
+    }
     IM_LOGI(kTag, "drop spawned from=%s item=%s at=%d,%d,%d", broken.name,
             items.Info(dropItem).key, position.x, position.y, position.z);
     ShowTip("BAG FULL");
