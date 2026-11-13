@@ -38,6 +38,19 @@ public:
     Interpreter& Vm() { return vm_; }
     const std::string& Error() const { return error_; }
 
+    /*
+     * 事件派发: 把事件交给订阅它的控件.
+     * 脚本用 this:RegisterEvent("名字") 订阅, 派发时调用 <控件名>_OnEvent(控件, 事件名, ...).
+     * 返回成功调用到的处理函数个数.
+     */
+    int32_t DispatchEvent(const std::string& name, const std::vector<Value>& args);
+
+    /* 某事件当前有多少个控件订阅, 供统计与调试. */
+    int32_t SubscriberCount(const std::string& name) const;
+
+    /* 订阅表总条目数. */
+    int32_t SubscriptionCount() const { return subscriptionTotal_; }
+
 private:
     /* 取控件对应的表, 首次访问时创建并缓存. */
     Value TableOf(Widget* widget);
@@ -47,6 +60,10 @@ private:
     std::string error_;
     /* 控件到表的缓存, 保证同一控件始终是同一张表. */
     std::map<const Widget*, std::shared_ptr<Table>> cache_;
+    /* 事件名到订阅控件的列表; 同一控件重复订阅同一事件只记一次. */
+    std::map<std::string, std::vector<Widget*>> subscriptions_;
+    /* 订阅条目总数, 供统计. */
+    int32_t subscriptionTotal_ = 0;
 };
 
 }  /* namespace immirror::ui::script */

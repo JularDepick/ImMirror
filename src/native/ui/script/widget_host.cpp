@@ -170,8 +170,38 @@ Value WidgetHost::TableOf(Widget* widget) {
         tree_.SetTexture(widget, ArgAt(args, 0).ToText().c_str());
         return std::vector<Value>();
     });
-    /* RegisterEvent: 事件系统尚未接入, 注册即忽略, 但不报错以免脚本中断. */
-    bind("RegisterEvent", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    /* RegisterEvent: 把控件挂到该事件上, 重复订阅同一事件只记一次. */
+    bind("RegisterEvent", [this, widget](const std::vector<Value>& args) {
+        const Value& name = ArgAt(args, 0);
+        if (name.kind != Value::Kind::kString) {
+            return std::vector<Value>();
+        }
+        std::vector<Widget*>& list = subscriptions_[name.text];
+        for (Widget* existing : list) {
+            if (existing == widget) {
+                return std::vector<Value>();
+            }
+        }
+        list.push_back(widget);
+        subscriptionTotal_ += 1;
+        return std::vector<Value>();
+    });
+    /* UnregisterEvent: 反向操作, 脚本里少见但成对出现. */
+    bind("UnregisterEvent", [this, widget](const std::vector<Value>& args) {
+        const Value& name = ArgAt(args, 0);
+        if (name.kind != Value::Kind::kString) {
+            return std::vector<Value>();
+        }
+        std::vector<Widget*>& list = subscriptions_[name.text];
+        for (size_t index = 0; index < list.size(); ++index) {
+            if (list[index] == widget) {
+                list.erase(list.begin() + static_cast<long>(index));
+                subscriptionTotal_ -= 1;
+                break;
+            }
+        }
+        return std::vector<Value>();
+    });
     return Value::Of(table);
 }
 
@@ -183,6 +213,43 @@ bool WidgetHost::RunScript(const char* source, size_t length, const LayoutRect& 
     /* 脚本改过尺寸与锚点后再解算, 因此解算必须排在执行之后. */
     tree_.Resolve(screen);
     return true;
+}
+
+int32_t WidgetHost::SubscriberCount(const std::string& name) const {
+    const auto found = subscriptions_.find(name);
+    return found == subscriptions_.end() ? 0 : static_cast<int32_t>(found->second.size());
+}
+
+int32_t WidgetHost::DispatchEvent(const std::string& name, const std::vector<Value>& args) {
+    const auto found = subscriptions_.find(name);
+    if (found == subscriptions_.end()) {
+        return 0;
+    }
+    int32_t called = 0;
+    /* 订阅列表在派发期间可能被脚本改动, 先拷贝一份再遍历. */
+    const std::vector<Widget*> targets = found->second;
+    for (Widget* widget : targets) {
+        if (widget == nullptr || widget->frame == nullptr || widget->frame->name == nullptr) {
+            continue;
+        }
+        /* 处理函数名 = 控件名 + _OnEvent, 与界面脚本的命名约定一致. */
+        const std::string handler = std::string(widget->frame->name) + "_OnEvent";
+        const Value function = vm_.GetGlobal(handler);
+        if (function.kind != Value::Kind::kFunction) {
+            continue;
+        }
+        std::vector<Value> callArgs;
+        callArgs.push_back(TableOf(widget));
+        callArgs.push_back(Value::Str(name));
+        callArgs.insert(callArgs.end(), args.begin(), args.end());
+        vm_.CallGlobal(handler, callArgs);
+        called += 1;
+        if (!vm_.Error().empty()) {
+            error_ = vm_.Error();
+            break;
+        }
+    }
+    return called;
 }
 
 int32_t WidgetHost::CollectDrawCommands(std::vector<LayoutDrawCommand>& out) {

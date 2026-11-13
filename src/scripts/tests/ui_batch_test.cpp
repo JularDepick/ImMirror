@@ -49,6 +49,8 @@ int main(int argc, char** argv) {
     int commands = 0;
     int producedNothing = 0;
     int onLoadCalled = 0;
+    int withSubscriptions = 0;
+    int subscriptions = 0;
     std::vector<std::string> onLoadFailures;
     std::vector<std::string> loadFailures;
     std::vector<std::string> runFailures;
@@ -101,6 +103,11 @@ int main(int argc, char** argv) {
             }
             if (calledOnLoad) {
                 onLoadCalled += 1;
+                /* 订阅数反映脚本对事件系统的依赖程度. */
+                if (host.SubscriptionCount() > 0) {
+                    withSubscriptions += 1;
+                    subscriptions += host.SubscriptionCount();
+                }
                 if (!host.Vm().Error().empty()) {
                     onLoadFailures.push_back(stem + " :: " + host.Vm().Error());
                 }
@@ -119,6 +126,7 @@ int main(int argc, char** argv) {
     std::printf("绘制命令合计 %d, 零命令布局 %d\n", commands, producedNothing);
     std::printf("调用入口函数 %d 个, 入口执行失败 %d 个\n", onLoadCalled,
                 static_cast<int>(onLoadFailures.size()));
+    std::printf("订阅事件的界面 %d 个, 订阅条目合计 %d\n", withSubscriptions, subscriptions);
     for (size_t index = 0; index < onLoadFailures.size() && index < 8; ++index) {
         std::printf("  入口失败 %s\n", onLoadFailures[index].c_str());
     }
