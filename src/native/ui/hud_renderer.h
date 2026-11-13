@@ -134,6 +134,11 @@ struct HudFrame {
     float hunger = 1.0f;
     float stamina = 1.0f;
     float mineProgress = 0.0f; /* 破坏进度, 0 到 1, 归零时不绘制进度环 */
+    /*
+     * 玩家朝向, 弧度. 0 对应引擎的 -Z 方向 (记为北), 增大为左转;
+     * 供顶部罗盘换算方位.
+     */
+    float yawRadians = 0.0f;
 
     /* 每格剩余数量, 由物品栏逐帧填入; 数量为 0 时该格变暗, 数字仍显示 0. */
     int32_t slotCounts[kHudSlotCount] = {};

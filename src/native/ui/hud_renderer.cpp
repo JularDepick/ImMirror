@@ -1387,6 +1387,78 @@ void HudRenderer::SetViewport(int32_t width, int32_t height) {
     layout_ = HudLayout(width, height);
 }
 
+/*
+ * 顶部罗盘.
+ * 以玩家朝向为中心, 左右各显示 45 度: 每 15 度一根刻度, 四个正方向
+ * (北东南西) 加字母标注, 中心一条竖线表示正前方.
+ * 整条罗盘只由纯色矩形与点阵字组成, 不依赖界面图集,
+ * 因此图集不在线时照样可读.
+ */
+void DrawCompass(float* out, int32_t& offset, const HudLayout& layout, float yawRadians,
+                 float scale) {
+    constexpr float kCenterYNorm = 0.94f;     /* 归一化屏幕纵坐标, 贴顶 */
+    constexpr float kHalfWidthNorm = 0.22f;   /* 横条半宽, 以屏宽为 1 */
+    constexpr float kHalfHeightNorm = 0.014f; /* 横条半高 */
+    constexpr float kHalfFov = 0.7853982f;    /* 左右各 45 度 */
+    constexpr float kTwoPi = 6.2831853f;
+    constexpr float kPi = 3.14159265f;
+
+    const float centerX = 0.0f;
+    const float centerY = layout.DesignY(kCenterYNorm);
+    const float halfWidth = layout.DesignLength(kHalfWidthNorm);
+    const float halfHeight = layout.DesignLength(kHalfHeightNorm);
+    const float track[4] = {0.0f, 0.0f, 0.0f, 0.32f};
+    PushRect(out, offset, centerX, centerY, halfWidth, halfHeight, scale, track);
+
+    /* 朝向归一到 0 到 2pi, 正北为 0. */
+    float heading = std::fmod(yawRadians, kTwoPi);
+    if (heading < 0.0f) {
+        heading += kTwoPi;
+    }
+    /* 24 根刻度对应 15 度一格, 每 6 格一个正方向. */
+    for (int32_t step = 0; step < 24; ++step) {
+        const float bearing = static_cast<float>(step) * (kTwoPi / 24.0f);
+        float delta = bearing - heading;
+        while (delta > kPi) {
+            delta -= kTwoPi;
+        }
+        while (delta < -kPi) {
+            delta += kTwoPi;
+        }
+        if (std::fabs(delta) > kHalfFov) {
+            continue;
+        }
+        const bool cardinal = (step % 6) == 0;
+        /*
+         * 引擎的朝向以 yaw 增大为左转 (视线方向 -sin/-cos), 方位角以顺时针增大,
+         * 因此刻度相对中心的位置取负号: 面朝北时东在右侧, 面朝西时北在右侧.
+         */
+        const float x = centerX - (delta / kHalfFov) * halfWidth;
+        const float tickHalf = layout.DesignLength(cardinal ? 0.0022f : 0.0012f);
+        const float tickHeight = layout.DesignLength(cardinal ? 0.009f : 0.005f);
+        const float color[4] = {1.0f, 1.0f, 1.0f, cardinal ? 0.85f : 0.45f};
+        PushRect(out, offset, x, centerY, tickHalf, tickHeight, scale, color);
+        if (!cardinal) {
+            continue;
+        }
+        const char* label = "N";
+        if (step == 6) {
+            label = "E";
+        } else if (step == 12) {
+            label = "S";
+        } else if (step == 18) {
+            label = "W";
+        }
+        const float textSize = layout.DesignLength(0.0016f);
+        const float textY = centerY - halfHeight - layout.DesignLength(0.007f);
+        PushCenteredText(out, offset, x, textY, textSize, label, scale, color);
+    }
+    /* 中心竖线: 正前方指示, 用暖色与刻度区分. */
+    const float marker[4] = {1.0f, 0.86f, 0.35f, 0.95f};
+    PushRect(out, offset, centerX, centerY, layout.DesignLength(0.0008f), halfHeight * 0.9f, scale,
+             marker);
+}
+
 void HudRenderer::Render(const HudFrame& frame) {
     if (!ready_ || !layout_.Valid()) {
         return;
@@ -1423,6 +1495,11 @@ void HudRenderer::Render(const HudFrame& frame) {
         const float ringFill[4] = {1.0f, 0.92f, 0.55f, 0.95f};
         PushSquareProgress(vertices, offset, 0.0f, 0.0f, ringHalf, ringThickness, frame.mineProgress,
                            scale, ringTrack, ringFill);
+    }
+
+    /* 顶部罗盘: 只在没有打开任何面板时绘制, 面板会盖住它. */
+    if (frame.inventory == nullptr && frame.furnace == nullptr && frame.chest == nullptr) {
+        DrawCompass(vertices, offset, layout_, frame.yawRadians, scale);
     }
 
     /* 一个素材像素的设计长度, 九宫边界与内缩量都按它换算. */

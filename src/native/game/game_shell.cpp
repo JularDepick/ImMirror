@@ -2293,6 +2293,8 @@ void GameShell::RenderScene() {
     if (editPointerId_ >= 0 && player_->Mining() &&
         elapsedSeconds_ - editDownSeconds_ >= player::mining::kTapSeconds) {
         frame.mineProgress = player_->MiningProgress();
+    /* 罗盘: 朝向直接取玩家控制器, 与视线拾取同一来源. */
+    frame.yawRadians = player_->Yaw();
     }
     if (settings_->ClassicalMoveMode()) {
         frame.stick.active = true;
