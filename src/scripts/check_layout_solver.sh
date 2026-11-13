@@ -52,6 +52,16 @@ g++ -std=c++17 -I "$ROOT/native" \
     -o "$OUT_DIR/lua_parse.exe" || exit 1
 "$OUT_DIR/lua_parse.exe" "$ROOT/../../assets/project/ui/mobile" || STATUS=1
 
+echo "== 脚本求值"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/lua_vm_test.cpp" \
+    "$ROOT/native/ui/script/lua_lexer.cpp" \
+    "$ROOT/native/ui/script/lua_parser.cpp" \
+    "$ROOT/native/ui/script/lua_value.cpp" \
+    "$ROOT/native/ui/script/lua_vm.cpp" \
+    -o "$OUT_DIR/lua_vm_test.exe" || exit 1
+"$OUT_DIR/lua_vm_test.exe" || STATUS=1
+
 echo "== 全量布局解析"
 "$OUT_DIR/layout_xml_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 
