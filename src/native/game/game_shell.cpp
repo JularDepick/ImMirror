@@ -1559,6 +1559,15 @@ bool GameShell::OpenUiScreen(const char* layoutAsset, const char* scriptAsset) {
     return true;
 }
 
+bool GameShell::OpenUiScreenByName(const char* name) {
+    if (name == nullptr || name[0] == '\0') {
+        return false;
+    }
+    const std::string layout = std::string("ui/layout/") + name + ".xml";
+    const std::string script = std::string("ui/script/") + name + ".lua";
+    return OpenUiScreen(layout.c_str(), script.c_str());
+}
+
 void GameShell::CloseUiScreen() {
     if (uiHost_ != nullptr) {
         IM_LOGI(kTag, "ui screen closed");

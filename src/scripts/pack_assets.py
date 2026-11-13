@@ -34,6 +34,8 @@ HUD_DIR = os.path.join(ASSETS_ROOT, "ui", "hud")
 
 # 音效源目录: 素材管线的明文工程树, 按子目录分类保存
 SOUND_SOURCE = "../../../assets/project/sounds"
+# 素材仓库根目录: 界面布局与脚本按相对路径从这里整体复制.
+ASSETS_PROJECT = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "project"))
 
 # 子目录到扁平文件名的前缀: 挖掘 / 放置 / 脚步 / 环境音各占一个前缀,
 # 其余分类直接用子目录名做前缀, 保证扁平化后不重名.
@@ -113,6 +115,30 @@ def collect_ui_atlas_entries():
     return entries
 
 
+def collect_ui_screen_entries():
+    """界面布局与脚本: 保留相对目录结构整体复制.
+
+    界面目录里有同名文件 (不同子目录下), 扁平化会互相覆盖,
+    因此按相对路径落位, 读取时用同样的相对路径拼接.
+    """
+    entries = []
+    pairs = (
+        (os.path.join(ASSETS_PROJECT, "data", "xml", "ui", "mobile"), "ui/layout"),
+        (os.path.join(ASSETS_PROJECT, "ui", "mobile"), "ui/script"),
+    )
+    for source_root, target_root in pairs:
+        if not os.path.isdir(source_root):
+            continue
+        for root, _dirs, files in os.walk(source_root):
+            for name in files:
+                if not name.endswith((".xml", ".lua")):
+                    continue
+                full = os.path.join(root, name)
+                relative = os.path.relpath(full, source_root).replace(os.sep, "/")
+                entries.append((full, target_root + "/" + relative))
+    return entries
+
+
 def collect_lobby_entries():
     """大厅素材: 模板图与补充图, 按 assets/ui/lobby 下的目录结构整体复制."""
     entries = []
@@ -162,7 +188,7 @@ def main() -> int:
     copied = 0
     missing = []
     entries = (collect_sound_entries() + collect_ui_entries()
-               + collect_ui_atlas_entries()
+               + collect_ui_atlas_entries() + collect_ui_screen_entries()
                + collect_lobby_entries()
                + collect_hud_entries() + collect_item_entries())
     for source, target_rel in entries:

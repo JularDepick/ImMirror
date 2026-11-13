@@ -195,6 +195,14 @@ public final class NativeBridge {
         return nativeOpenUiScreen(layoutAsset, scriptAsset);
     }
 
+    /* 按界面名打开: 布局与脚本的路径前缀在原生侧拼好. */
+    public static boolean openUiScreenByName(String name) {
+        if (!ensureLoaded()) {
+            return false;
+        }
+        return nativeOpenUiScreenByName(name);
+    }
+
     /* 关闭当前界面. */
     public static void closeUiScreen() {
         if (!ensureLoaded()) {
@@ -445,6 +453,8 @@ public final class NativeBridge {
     private static native void nativeChooseWorldSeed(String worldName, int seed);
 
     private static native boolean nativeOpenUiScreen(String layoutAsset, String scriptAsset);
+
+    private static native boolean nativeOpenUiScreenByName(String name);
 
     private static native void nativeCloseUiScreen();
 

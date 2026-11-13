@@ -298,6 +298,12 @@ public:
      * 之后每帧把绘制命令交给界面渲染器, 直到关闭.
      */
     bool OpenUiScreen(const char* layoutAsset, const char* scriptAsset);
+
+    /*
+     * 按界面名打开: 布局取 ui/layout/<名>.xml, 脚本取 ui/script/<名>.lua.
+     * 资源打包保留相对目录结构, 因此这里直接按固定前缀拼路径.
+     */
+    bool OpenUiScreenByName(const char* name);
     void CloseUiScreen();
     bool UiScreenOpen() const { return uiHost_ != nullptr; }
 

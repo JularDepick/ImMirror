@@ -242,6 +242,24 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeOpenUiScreen(JNIEnv* env
     return opened ? JNI_TRUE : JNI_FALSE;
 }
 
+/* Java 侧低频入口: 按界面名打开, 路径前缀在原生侧拼好. */
+JNIEXPORT jboolean JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeOpenUiScreenByName(JNIEnv* env,
+                                                                         jclass clazz,
+                                                                         jstring name) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr || name == nullptr) {
+        return JNI_FALSE;
+    }
+    const char* chars = env->GetStringUTFChars(name, nullptr);
+    const bool opened = chars != nullptr && shell->OpenUiScreenByName(chars);
+    if (chars != nullptr) {
+        env->ReleaseStringUTFChars(name, chars);
+    }
+    return opened ? JNI_TRUE : JNI_FALSE;
+}
+
 /* Java 侧低频入口: 关闭当前界面. */
 JNIEXPORT void JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeCloseUiScreen(JNIEnv* env, jclass clazz) {
