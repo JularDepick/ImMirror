@@ -1878,7 +1878,24 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
      * 先记下损坏前的物品编号: 扣到 0 时该格已被清空, 之后取不到原物品.
      */
     const item::ItemId wielder = inventory_.ItemAt(selectedSlot_);
-    if (inventory_.ConsumeDurability(selectedSlot_)) {
+    /*
+     * 耐久附魔: 表里的数值是"额外耐久百分比", 按每次损耗的概率豁免折算,
+     * 也就是 value1 百分比的机会不扣耐久, 超过百分之百视为永不损耗.
+     */
+    bool skipWear = false;
+    {
+        const item::ItemStack& stack = inventory_.Slot(selectedSlot_);
+        if (stack.enchantId != 0) {
+            const game::gen::EnchantEntry* enchant =
+                item::EnchantTable::Instance().Find(stack.enchantId, stack.enchantLevel);
+            if (enchant != nullptr && item::EnchantTable::IsType(*enchant, "DURABLE")) {
+                const uint32_t percent =
+                    enchant->value1 >= 100 ? 100u : static_cast<uint32_t>(enchant->value1);
+                skipWear = nextRandom() % 100u < percent;
+            }
+        }
+    }
+    if (!skipWear && inventory_.ConsumeDurability(selectedSlot_)) {
         /*
          * 工具耗尽: 给玩家一条可见提示, 并换上一把同种工具,
          * 先看快捷栏, 再翻背包把找到的那把挪进刚空出来的格.
@@ -2048,6 +2065,34 @@ bool GameShell::TryAttackCreature() {
         /* 致死一击计一次击败事件, 并入上报增量与本地成就进度. */
         progressCounters_.kills += 1;
         progress::ProgressHub::Instance().OnKill(1);
+        /*
+         * 狩猎幸运: 表里的数值是"额外掉落的倍率上限", 1 级只到两倍, 2 级到三倍, 依此类推.
+         * 先按二成基础几率判定是否触发, 触发后再按等级抽取倍数.
+         */
+        const item::ItemStack& wielder = inventory_.Slot(selectedSlot_);
+        if (wielder.enchantId != 0) {
+            const game::gen::EnchantEntry* rob =
+                item::EnchantTable::Instance().Find(wielder.enchantId, wielder.enchantLevel);
+            if (rob != nullptr && item::EnchantTable::IsType(*rob, "ROB") &&
+                nextRandom() % 100u < 20u) {
+                const uint32_t maxTimes = rob->value1 >= 1 ? static_cast<uint32_t>(rob->value1) : 1u;
+                const uint32_t times = 1u + nextRandom() % maxTimes;
+                const core::Vec3 deathPos = target->Position();
+                const entity::CreatureEntity* loot = entities_.FindById(target->Id());
+                if (loot != nullptr && times > 1) {
+                    const item::ItemId dropItem =
+                        item::ItemTable::Instance().BlockOf(loot->Definition().lootBlock);
+                    if (dropItem != item::kNone) {
+                        for (uint32_t round = 1; round < times; ++round) {
+                            SpawnDrop(dropItem, static_cast<int32_t>(loot->Definition().lootCount),
+                                      loot->Definition().lootBlock, deathPos.x, deathPos.y + 0.6f,
+                                      deathPos.z);
+                        }
+                        IM_LOGI(kTag, "rob triggered times=%u", times);
+                    }
+                }
+            }
+        }
     }
     /* 攻击命中按次扣体力 (tili_action_attack), 未命中不扣. */
     player_->ConsumeStaminaPublic(player::survival::kStaminaAttack);
@@ -2156,6 +2201,38 @@ void GameShell::UpdateEntities(double deltaSeconds) {
                 ? static_cast<game::DamageType>(dealtIndex)
                 : game::DamageType::kPunch;
         player_->ApplyDamage(stats.playerDamage, dealtType);
+        /*
+         * 反击: 被近战打中时按附魔给定的几率与伤害值回打攻击者.
+         * 只对近战伤害触发, 远程与爆炸不回打, 与描述里的"被近战攻击"一致.
+         */
+        if (dealtType == game::DamageType::kPunch && stats.playerDamageSource != 0) {
+            const int32_t chance = player_->Armor().EnchantValue("THORNS");
+            if (chance > 0 && nextRandom() % 100u < static_cast<uint32_t>(chance)) {
+                const entity::CreatureEntity* source =
+                    entities_.FindById(static_cast<entity::EntityId>(stats.playerDamageSource));
+                if (source != nullptr) {
+                    /* 反击伤害取同一附魔的第二个数值, 各部位按最高一档取. */
+                    int32_t reflect = 0;
+                    for (int32_t slot = 0; slot < game::ArmorSet::kSlotCount; ++slot) {
+                        const item::ItemStack& worn = player_->Armor().WornStack(slot);
+                        if (worn.item == item::kNone || worn.enchantId == 0) {
+                            continue;
+                        }
+                        const game::gen::EnchantEntry* entry = item::EnchantTable::Instance().Find(
+                            worn.enchantId, worn.enchantLevel);
+                        if (entry != nullptr && item::EnchantTable::IsType(*entry, "THORNS") &&
+                            entry->value2 > reflect) {
+                            reflect = entry->value2;
+                        }
+                    }
+                    if (reflect > 0) {
+                        entities_.Damage(source->Id(), static_cast<float>(reflect));
+                        IM_LOGI(kTag, "thorns reflect=%d to=%u", reflect,
+                                static_cast<uint32_t>(source->Id()));
+                    }
+                }
+            }
+        }
         IM_LOGI(kTag, "player damaged by creature amount=%.1f health=%.1f",
                 static_cast<double>(stats.playerDamage),
                 static_cast<double>(player_->Health()));

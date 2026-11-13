@@ -28,6 +28,8 @@ struct EntityFrameStats {
     float playerDamage = 0.0f;
     /* 本帧对玩家的伤害类型, 取值见 game::DamageType; 多种来源取最后一条. */
     uint8_t playerDamageType = 1;
+    /* 本帧对玩家出手的生物标识, 0 表示无. */
+    uint32_t playerDamageSource = 0;
     int32_t spawned = 0;
     int32_t deaths = 0;
     int32_t despawned = 0;

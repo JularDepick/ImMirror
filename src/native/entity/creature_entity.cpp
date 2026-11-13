@@ -171,6 +171,7 @@ CreatureTick CreatureEntity::Update(double dt, const world::World& world,
             tick.playerDamageType = def_->attackType == 1
                                         ? 2
                                         : (def_->attackType == 2 ? 3 : 1);
+            tick.playerDamageSource = Id();
             FaceDirection(toPlayer, 1.0f);
         }
     }

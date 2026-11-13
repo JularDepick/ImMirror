@@ -142,6 +142,16 @@ def sound_coverage():
     return (len(covered), len(names))
 
 
+def enchant_wired():
+    """附魔效果: 数据表里出现的种类数, 以及原生代码里真正查表用到的种类数."""
+    header = read_text(os.path.join(NATIVE_ROOT, 'game', 'generated', 'enchant_data_gen.h'))
+    # 效果类型在数据里就是全大写的枚举名, 直接按大写串提取.
+    types = sorted(set(re.findall(r'"([A-Z][A-Z_]{2,})"', header)))
+    blob = native_sources()
+    wired = [name for name in types if ('"%s"' % name) in blob]
+    return (len(wired), len(types))
+
+
 def java_file_count():
     total = 0
     for _root, _dirs, files in os.walk(JAVA_ROOT):
@@ -178,7 +188,7 @@ def main():
         ('玩法', '状态效果', count_rows(os.path.join(NATIVE_ROOT, 'player', 'generated', 'buff_data_gen.h')), 44, 'buffdef 客户端可消费四类'),
         ('玩法', '食物', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'food_data_gen.h')), 38, 'fooddef 可食用条目'),
         ('玩法', '工具', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'tool_data_gen.h')), 25, 'tooldef 全量工具'),
-        ('玩法', '附魔效果接入', 1, 18, 'DIG_SPEED 已作用到挖掘速度; 其余 17 类只带数据'),
+        ('玩法', '附魔效果接入', *enchant_wired(), '原生代码里按类型名查表的附魔种类'),
         ('音频', '进包音效', count_files(os.path.join(APK_ASSETS, 'sounds'), '.ogg'), 1346, 'sounds 扁平化后文件数'),
         ('音频', '界面音通道',
          len(re.findall(r'_ASSET\s*=', read_text(ui_sound))),

@@ -87,6 +87,7 @@ EntityFrameStats EntityManager::Update(double dt, const world::World& world,
         stats.playerDamage += tick.playerDamage;
         if (tick.playerDamage > 0.0f) {
             stats.playerDamageType = tick.playerDamageType;
+            stats.playerDamageSource = tick.playerDamageSource;
         }
     }
 

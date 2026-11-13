@@ -984,6 +984,19 @@ void PlayerController::ApplyDamage(float amount, game::DamageType type) {
      * 折算后至少保留两成伤害, 因此穿戴齐全也不会出现完全免疫.
      */
     amount = armor_.Apply(type, amount);
+    /*
+     * 近战抗性点数: 只在近战一类伤害上按点数抵扣, 抵扣后至少留 1 点,
+     * 避免堆满抗性后完全免疫.
+     */
+    if (type == game::DamageType::kPunch) {
+        const int32_t points = armor_.MeleeResistPoints();
+        if (points > 0) {
+            amount -= static_cast<float>(points);
+            if (amount < 1.0f) {
+                amount = 1.0f;
+            }
+        }
+    }
     health_ -= amount;
     hurtSeconds_ = kHurtSeconds;
     hurtCooldown_ = kHurtCooldown;

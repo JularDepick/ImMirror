@@ -59,6 +59,9 @@ public:
      */
     int32_t EnchantValue(const char* type) const;
 
+    /* 近战抗性点数: 四个部位上抗性附魔的数值合计, 按点数直接抵扣近战伤害. */
+    int32_t MeleeResistPoints() const { return EnchantValue("PROTECTION"); }
+
     void Clear();
 
 private:

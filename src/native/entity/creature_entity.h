@@ -30,6 +30,8 @@ struct CreatureTick {
     float playerDamage = 0.0f;
     /* 本帧对玩家造成的伤害类型, 取值见 game::DamageType. */
     uint8_t playerDamageType = 1;
+    /* 本帧对玩家出手的生物标识, 0 表示无; 供反击一类效果回打攻击者. */
+    uint32_t playerDamageSource = 0;
 };
 
 /*
