@@ -494,10 +494,24 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     world::World::SaveState state;
     if (!savePath_.empty() && world_->LoadFromFile(savePath_.c_str(), state)) {
         player_->SetPose(core::Vec3{state.playerX, state.playerY, state.playerZ}, state.yaw, state.pitch);
-        /* 容器文件与世界存档配套: 旧世界档没有容器文件时按空容器处理. */
-        if (!containerPath_.empty()) {
-            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_, inventory_,
-                           player_->Armor());
+        /*
+         * 容器文件与世界存档配套: 旧世界档没有容器文件时按空容器处理.
+         * 文件存在但读不出来 (损坏或版本不认识) 时, 容器会被当成空的,
+         * 下一次存档就把背包与箱子全部冲掉, 因此同样先把原文件留底.
+         */
+        if (!containerPath_.empty() &&
+            !LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_, inventory_,
+                                    player_->Armor())) {
+            const std::string backup = containerPath_ + ".broken";
+            FILE* occupied = std::fopen(backup.c_str(), "rb");
+            if (occupied != nullptr) {
+                std::fclose(occupied);
+            } else if (std::rename(containerPath_.c_str(), backup.c_str()) == 0) {
+                IM_LOGE(kTag, "containers unreadable, kept a copy at %s", backup.c_str());
+                ShowTip("ITEMS UNREADABLE");
+            } else {
+                IM_LOGE(kTag, "containers unreadable and could not be backed up");
+            }
         }
         /* 世界时间: v3 早期档没有时间字段, 读出 0 按 0 点处理, 新档带时间. */
         worldTime_->SetTotalSeconds(state.timeOfDaySeconds);

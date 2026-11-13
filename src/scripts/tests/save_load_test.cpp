@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 
+#include "game/armor.h"
+#include "game/containers.h"
+#include "game/inventory.h"
 #include "world/world.h"
 
 static int failures = 0;
@@ -70,6 +73,30 @@ int main() {
         const bool ok = world.LoadFromFile(path, loaded);
         /* 要么明确失败, 要么读出的区块数明显少于原档. */
         check("截断档不报成功", !ok || world.LoadedChunkCount() < 4);
+    }
+
+    /* 容器存档: 文件缺失算正常, 损坏必须报失败, 否则背包与箱子会被当成空的. */
+    {
+        const char* containerPath = "../../../temp/save-corrupt.containers";
+        std::remove(containerPath);
+        immirror::game::FurnaceMap furnaces;
+        immirror::game::ChestMap chests;
+        immirror::game::Inventory inventory;
+        immirror::game::ArmorSet armor;
+        check("容器文件缺失算正常",
+              immirror::game::LoadContainersFromFile(containerPath, furnaces, chests, inventory,
+                                                     armor));
+        writeFile(containerPath, std::vector<char>(64, static_cast<char>(0x33)));
+        check("容器垃圾字节被拒",
+              !immirror::game::LoadContainersFromFile(containerPath, furnaces, chests, inventory,
+                                                      armor));
+        check("容器存档可写",
+              immirror::game::SaveContainersToFile(containerPath, furnaces, chests, inventory,
+                                                   armor));
+        check("容器存档可读",
+              immirror::game::LoadContainersFromFile(containerPath, furnaces, chests, inventory,
+                                                     armor));
+        std::remove(containerPath);
     }
 
     std::remove(path);

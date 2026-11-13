@@ -58,6 +58,12 @@ g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/native/voxel/chunk_mesher.cpp" \
     "$ROOT/native/voxel/light_field.cpp" \
     "$ROOT/native/voxel/terrain_generator.cpp" \
+    "$ROOT/native/game/containers.cpp" \
+    "$ROOT/native/game/inventory.cpp" \
+    "$ROOT/native/game/armor.cpp" \
+    "$ROOT/native/game/item/item_table.cpp" \
+    "$ROOT/native/game/item/tool_table.cpp" \
+    "$ROOT/native/game/item/enchant_table.cpp" \
     "$ROOT/scripts/tests/log_stub.cpp" \
     -o "$OUT_DIR/save_load_test.exe" || exit 1
 "$OUT_DIR/save_load_test.exe" || STATUS=1
