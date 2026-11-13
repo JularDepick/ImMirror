@@ -18,6 +18,7 @@
 #include "game/containers.h"
 #include "game/furnace.h"
 #include "game/inventory.h"
+#include "entity/sight.h"
 #include "game/item/enchant_table.h"
 #include "game/item/inventory_screen.h"
 #include "game/item/item_table.h"
@@ -1918,6 +1919,19 @@ bool GameShell::TryAttackCreature() {
         entities_.PickRay(eye, player_->LookDirection(), entity::tuning::kPlayerReach, distance);
     if (target == nullptr) {
         return false;
+    }
+    /*
+     * 视线遮挡: 射线拾取只判生物包围盒, 不判中间的方块;
+     * 不补这一步就能隔墙打到生物, 与生物出手的判定口径不对称.
+     */
+    {
+        const core::Vec3 targetCenter =
+            core::Vec3{target->Position().x, target->Position().y + target->BoundsHeight() * 0.5f,
+                       target->Position().z};
+        if (!entity::LineOfSight(*world_, eye, targetCenter)) {
+            IM_LOGD(kTag, "attack blocked by terrain, distance=%.2f", static_cast<double>(distance));
+            return false;
+        }
     }
     /* 手持物取快捷栏当前格: 空手按拳击, 手持方块按该方块的硬度加成. */
     const ItemId heldItem = inventory_.ItemAt(selectedSlot_);

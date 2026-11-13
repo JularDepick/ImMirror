@@ -1,5 +1,7 @@
 #include "entity/creature_entity.h"
 
+#include "entity/sight.h"
+
 #include <cmath>
 
 #include "entity/entity_tuning.h"
@@ -11,36 +13,6 @@ namespace {
 
 constexpr float kPi = 3.14159265358979f;
 constexpr float kTwoPi = 2.0f * kPi;
-
-/* 视线采样的步长, 米. 只判定实心方块, 水与空气不影响视线. */
-constexpr float kSightStep = 0.5f;
-
-int32_t FloorToInt(float value) {
-    return static_cast<int32_t>(std::floor(value));
-}
-
-/*
- * 两点之间是否没有实心方块遮挡. 远程生物的接触距离可以到十余米,
- * 不做遮挡判定就会隔墙命中, 因此出手前按半米步长采样一次.
- */
-bool HasLineOfSight(const world::World& world, const core::Vec3& from, const core::Vec3& to) {
-    const core::Vec3 delta = to - from;
-    const float length = delta.Length();
-    if (length < 1.0e-4f) {
-        return true;
-    }
-    const int32_t steps = static_cast<int32_t>(length / kSightStep) + 1;
-    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
-    for (int32_t step = 1; step < steps; ++step) {
-        const float ratio = static_cast<float>(step) / static_cast<float>(steps);
-        const core::Vec3 point = from + delta * ratio;
-        if (registry.Info(world.GetBlock(FloorToInt(point.x), FloorToInt(point.y),
-                                         FloorToInt(point.z))).solid) {
-            return false;
-        }
-    }
-    return true;
-}
 
 /* 角度回绕到正负 pi, 长时间转动不会累积浮点误差. */
 float WrapAngle(float angle) {
@@ -191,7 +163,7 @@ CreatureTick CreatureEntity::Update(double dt, const world::World& world,
                                    player.feet.z};
         /* 远程生物隔墙不得命中; 近身攻击不做遮挡判定, 避免一格高差下打空. */
         const bool sightOk = def_->attackDistance <= tuning::kSightCheckDistance ||
-                             HasLineOfSight(world, monsterEye, playerEye);
+                             LineOfSight(world, monsterEye, playerEye);
         if (sightOk) {
             attackCooldown_ = def_->attackInterval;
             tick.playerDamage = def_->attack * tuning::kDamageScale;
