@@ -24,6 +24,15 @@ g++ -std=c++17 -I "$ROOT/native" \
     -o "$OUT_DIR/layout_xml_test.exe" || exit 1
 "$OUT_DIR/layout_xml_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
 
+echo "== 绘制命令转顶点"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/layout_render_test.cpp" \
+    "$ROOT/native/ui/layout_render.cpp" \
+    "$ROOT/native/ui/layout_draw.cpp" \
+    "$ROOT/native/ui/layout_frame.cpp" \
+    -o "$OUT_DIR/layout_render_test.exe" || exit 1
+"$OUT_DIR/layout_render_test.exe" || STATUS=1
+
 echo "== 控件绑定"
 g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/scripts/tests/widget_tree_test.cpp" \
