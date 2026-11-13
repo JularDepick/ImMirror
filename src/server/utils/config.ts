@@ -40,6 +40,60 @@ export interface AppConfig {
 
 const DEFAULT_TIME_ZONE = "Asia/Shanghai";
 
+/**
+ * 本项目使用的全部配置键.
+ * 拼错的键会被静默忽略并回落到缺省值, 因此启动时要把"看起来是配置但没人读"的键列出来.
+ */
+export const CONFIG_KEYS = [
+  "API_VERSION",
+  "APP_TIME_ZONE",
+  "BODY_LIMIT_BYTES",
+  "CODE_TTL_SECONDS",
+  "DB_FILE",
+  "LOGIN_MAX_FAILURES",
+  "MAIL_DEBUG_LOG",
+  "MAIL_TRANSPORT",
+  "MIN_CLIENT_VERSION",
+  "NITRO_HOST",
+  "NITRO_PORT",
+  "PASSWORD_MIN_LENGTH",
+  "REQUEST_MINUTE_IP_LIMIT",
+  "RESET_HOURLY_LIMIT",
+  "SEND_COOLDOWN_SECONDS",
+  "SEND_DAILY_LIMIT",
+  "SEND_HOURLY_IP_LIMIT",
+  "SESSION_TTL_DAYS",
+  "SMTP_FROM",
+  "SMTP_HOST",
+  "SMTP_PASSWORD",
+  "SMTP_PORT",
+  "SMTP_SECURE",
+  "SMTP_USER",
+  "VERIFY_MAX_ATTEMPTS",
+] as const;
+
+/** 配置键的命名前缀: 只有这些前缀的未知键才值得提醒, 避免把系统变量当成拼错的配置. */
+const CONFIG_PREFIXES = ["NITRO_", "DB_", "SMTP_", "MAIL_", "SESSION_", "SEND_", "RESET_", "API_"];
+
+/**
+ * 找出"看起来是本项目配置但没人读"的环境变量.
+ * 典型来源是拼错的键名: 服务会照常启动并回落到缺省值, 但行为与预期不同.
+ */
+export function findUnknownConfigKeys(env: NodeJS.ProcessEnv): string[] {
+  const known = new Set<string>(CONFIG_KEYS);
+  const unknown: string[] = [];
+  for (const key of Object.keys(env)) {
+    if (known.has(key)) {
+      continue;
+    }
+    if (CONFIG_PREFIXES.some((prefix) => key.startsWith(prefix))) {
+      unknown.push(key);
+    }
+  }
+  unknown.sort();
+  return unknown;
+}
+
 function readString(env: NodeJS.ProcessEnv, key: string, fallback: string): string {
   const raw = env[key];
   if (raw === undefined) {
