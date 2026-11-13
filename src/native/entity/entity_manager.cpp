@@ -7,6 +7,7 @@
 #include "core/log.h"
 #include "entity/entity_tuning.h"
 #include "entity/monster_table.h"
+#include "game/item/item_table.h"
 #include "voxel/block_registry.h"
 #include "voxel/voxel_types.h"
 #include "world/world.h"
@@ -309,10 +310,38 @@ void EntityManager::ApplyImpulse(EntityId id, const core::Vec3& impulse, float s
 
 void EntityManager::QueueLoot(const CreatureEntity& creature) {
     const MonsterDef& def = creature.Definition();
-    if (def.lootBlock == 0 || def.lootCount <= 0) {
-        return;
+    /*
+     * 三组掉落各自按万分比判定. 掉落管道以方块为单位, 因此物品编号先折回
+     * 关联方块; 没有关联方块的物品(肉, 皮一类)暂时跳过, 不产出错误方块.
+     */
+    const game::item::ItemTable& items = game::item::ItemTable::Instance();
+    for (int32_t index = 0; index < 3; ++index) {
+        const MonsterDef::DropEntry& entry = def.drops[index];
+        if (entry.count <= 0) {
+            continue;
+        }
+        const int32_t odds = entry.odds <= 0 ? 0 : entry.odds;
+        if (odds <= 0) {
+            continue;
+        }
+        if (odds < 10000) {
+            if (static_cast<int32_t>(NextUnit() * 10000.0f) >= odds) {
+                continue;
+            }
+        }
+        voxel::BlockId block = 0;
+        if (entry.item != game::item::kNone) {
+            block = items.BlockOf(entry.item);
+        }
+        if (block == voxel::block::Air) {
+            /* 物品没有关联方块时回落到占位方块, 保证击败至少能拿到东西. */
+            block = def.lootBlock;
+        }
+        if (block == voxel::block::Air) {
+            continue;
+        }
+        drops_.push_back(EntityDrop{block, entry.count, creature.Position()});
     }
-    drops_.push_back(EntityDrop{def.lootBlock, def.lootCount, creature.Position()});
 }
 
 float EntityManager::NextUnit() {

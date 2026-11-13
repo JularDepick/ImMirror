@@ -31,8 +31,12 @@ MonsterDef ToDef(const gen::MonsterData& data) {
     def.type = data.type;
     def.hostile = data.hostile != 0;
     def.spawnWeight = data.spawnWeight;
-    def.lootBlock = static_cast<voxel::BlockId>(data.lootBlock);
-    def.lootCount = static_cast<int32_t>(data.lootCount);
+    def.lootBlock = static_cast<voxel::BlockId>(data.dropBlock);
+    for (int32_t index = 0; index < 3; ++index) {
+        def.drops[index].item = static_cast<game::item::ItemId>(data.dropItem[index]);
+        def.drops[index].odds = static_cast<int32_t>(data.dropOdds[index]);
+        def.drops[index].count = static_cast<int32_t>(data.dropCount[index]);
+    }
     return def;
 }
 

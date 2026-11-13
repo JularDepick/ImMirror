@@ -158,7 +158,21 @@ def build_entries(rows):
         armor_punch = clamp(float(to_int(row.get("ArmorPunch"))), 0.0, 95.0)
         armor_range = clamp(float(to_int(row.get("ArmorRange"))), 0.0, 95.0)
         armor_magic = clamp(float(to_int(row.get("ArmorMagic"))), 0.0, 95.0)
-        loot_block, loot_count = LOOT_BY_TYPE.get(kind, (2, 1))
+        # 真实掉落: 生物表给出三组掉落物品与各自的几率, 数量.
+        drops = []
+        for slot in (1, 2, 3):
+            item_id = to_int(row.get("DropItem%d" % slot))
+            odds = to_int(row.get("DropItemOdds%d" % slot))
+            count = to_int(row.get("DropItemNum%d" % slot))
+            if item_id <= 0:
+                continue
+            drops.append({"item": item_id, "odds": clamp(float(odds), 0.0, 10000.0),
+                          "count": count if count > 0 else 1})
+        # 表里没配掉落的生物按类别给一份方块占位, 与既有口径一致.
+        if not drops:
+            loot_block, loot_count = LOOT_BY_TYPE.get(kind, (2, 1))
+            drops.append({"item": 0, "odds": 10000.0, "count": loot_count,
+                          "block": loot_block})
 
         seen.add(source_id)
         entries.append({
@@ -180,8 +194,7 @@ def build_entries(rows):
             "type": kind,
             "hostile": 1 if kind in (0, 6) else 0,
             "weight": SPAWN_WEIGHT_BY_TYPE.get(kind, 0.0),
-            "loot_block": loot_block,
-            "loot_count": loot_count,
+            "drops": drops,
         })
     entries.sort(key=lambda item: item["source_id"])
     return entries
@@ -226,8 +239,11 @@ def render_header(entries):
         "    uint8_t type;            /* 生物类别, 取值见文件头注释 */",
         "    uint8_t hostile;         /* 1 主动攻击玩家, 0 遇人躲避 */",
         "    float spawnWeight;       /* 生成权重, 0 表示不参与生成 */",
-        "    uint16_t lootBlock;      /* 死亡掉落的客户端方块 id */",
-        "    uint16_t lootCount;      /* 死亡掉落数量 */",
+        "    /* 三组掉落: 物品编号, 万分比几率与数量; 编号为 0 时按 block 占位. */",
+        "    uint16_t dropItem[3];",
+        "    uint16_t dropOdds[3];",
+        "    uint16_t dropCount[3];",
+        "    uint16_t dropBlock;",
         "};",
         "",
         "constexpr int32_t kMonsterDataCount = %d;" % len(entries),
@@ -236,14 +252,21 @@ def render_header(entries):
         "constexpr MonsterData kMonsterData[kMonsterDataCount] = {",
     ]
     for entry in entries:
+        first = entry["drops"][0]
+        second = entry["drops"][1] if len(entry["drops"]) > 1 else {"item": 0, "odds": 0, "count": 0}
+        third = entry["drops"][2] if len(entry["drops"]) > 2 else {"item": 0, "odds": 0, "count": 0}
         lines.append('    {%du, "%s", %.1ff, %.1ff, %.2ff, %.2ff, %.2ff, %.2ff, %.1ff, %.1ff, '
-                     '%.2ff, %d, %.1ff, %.1ff, %.1ff, %d, %d, %.2ff, %du, %du},'
+                     '%.2ff, %d, %.1ff, %.1ff, %.1ff, %d, %d, %.2ff, '
+                     '%du, %du, %du, %du, %du, %du, %du, %du, %du, %du},'
                      % (entry["source_id"], escape(entry["name"]), entry["life"], entry["attack"],
                         entry["speed"], entry["height"], entry["width"], entry["thickness"],
                         entry["view"], entry["attack_distance"], entry["attack_interval"],
                         entry["attack_type"], entry["armor_punch"], entry["armor_range"],
                         entry["armor_magic"], entry["type"], entry["hostile"], entry["weight"],
-                        entry["loot_block"], entry["loot_count"]))
+                        first["item"], first["odds"], first["count"],
+                        second["item"], second["odds"], second["count"],
+                        third["item"], third["odds"], third["count"],
+                        first.get("block", 0)))
     lines += [
         "};",
         "",

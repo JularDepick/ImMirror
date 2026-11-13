@@ -2115,11 +2115,13 @@ bool GameShell::TryAttackCreature() {
                 if (loot != nullptr && times > 1) {
                     const item::ItemId dropItem =
                         item::ItemTable::Instance().BlockOf(loot->Definition().lootBlock);
+                    const int32_t extraCount = loot->Definition().drops[0].count > 0
+                                                   ? loot->Definition().drops[0].count
+                                                   : 1;
                     if (dropItem != item::kNone) {
                         for (uint32_t round = 1; round < times; ++round) {
-                            SpawnDrop(dropItem, static_cast<int32_t>(loot->Definition().lootCount),
-                                      loot->Definition().lootBlock, deathPos.x, deathPos.y + 0.6f,
-                                      deathPos.z);
+                            SpawnDrop(dropItem, extraCount, loot->Definition().lootBlock, deathPos.x,
+                                      deathPos.y + 0.6f, deathPos.z);
                         }
                         IM_LOGI(kTag, "rob triggered times=%u", times);
                     }

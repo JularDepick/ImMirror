@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "game/item/item_def.h"
 #include "voxel/voxel_types.h"
 
 namespace immirror::entity {
@@ -32,6 +33,17 @@ struct MonsterDef {
     uint8_t type = 0;           /* 生物类别, 取值见生成表注释 */
     bool hostile = false;       /* true 主动攻击玩家, false 遇人躲避 */
     float spawnWeight = 0.0f;   /* 生成权重, 0 表示不参与生成 */
+    /*
+     * 三组掉落: 物品编号为 0 表示按 lootBlock 的方块占位.
+     * odds 是万分比, 10000 表示必掉.
+     */
+    struct DropEntry {
+        game::item::ItemId item = game::item::kNone;
+        int32_t odds = 0;
+        int32_t count = 0;
+    };
+    DropEntry drops[3];
+    /* 占位掉落使用的方块编号, 表里没配物品的怪物按它产出. */
     voxel::BlockId lootBlock = 0;
     int32_t lootCount = 0;
 
