@@ -276,6 +276,7 @@ GameShell::GameShell()
       renderer_(std::make_unique<render::ChunkRenderer>()) {
     /* 设置单例在构造时已填好默认值, 因此未初始化存储也能取到视距. */
     settings_ = &settings::Settings::Instance();
+    assets_ = nullptr;
     viewDistanceChunks_ = settings_->ViewDistanceChunks();
     selectedBlock_ = ui::BlockSlotId(selectedSlot_);
 
@@ -432,6 +433,7 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     if (surfaceReady_) {
         return;
     }
+    assets_ = assets;
     if (!renderer_->Initialize(assets)) {
         IM_LOGE(kTag, "chunk renderer initialize failed");
         return;
@@ -1454,6 +1456,62 @@ void GameShell::ApplyPickupResult(int32_t dropId, int32_t blockId) {
         CountProgressEvent(3);
         progress::ProgressHub::Instance().OnItemPicked(static_cast<uint32_t>(blockId), 1);
         IM_LOGI(kTag, "pickup granted drop=%d block=%d", dropId, blockId);
+    }
+}
+
+namespace {
+
+/* 读一份资产到字符串; 读不到返回空. */
+std::string ReadAssetText(AAssetManager* assets, const char* path) {
+    if (assets == nullptr || path == nullptr) {
+        return std::string();
+    }
+    AAsset* asset = AAssetManager_open(assets, path, AASSET_MODE_STREAMING);
+    if (asset == nullptr) {
+        return std::string();
+    }
+    std::string out;
+    char buffer[8192];
+    int32_t got = 0;
+    while ((got = AAsset_read(asset, buffer, sizeof(buffer))) > 0) {
+        out.append(buffer, static_cast<size_t>(got));
+    }
+    AAsset_close(asset);
+    return out;
+}
+
+}  /* namespace */
+
+bool GameShell::OpenUiScreen(const char* layoutAsset, const char* scriptAsset) {
+    const std::string layout = ReadAssetText(assets_, layoutAsset);
+    if (layout.empty()) {
+        IM_LOGW(kTag, "ui layout missing: %s", layoutAsset == nullptr ? "" : layoutAsset);
+        return false;
+    }
+    std::unique_ptr<ui::script::WidgetHost> host(new ui::script::WidgetHost());
+    if (!host->Load(layout.data(), layout.size())) {
+        IM_LOGW(kTag, "ui layout rejected: %s", host->Error().c_str());
+        return false;
+    }
+    BindUiDataSource(*host);
+    const std::string script = ReadAssetText(assets_, scriptAsset);
+    const ui::LayoutRect screen{0.0f, 0.0f, static_cast<float>(width_),
+                                static_cast<float>(height_)};
+    if (!script.empty() && !host->RunScript(script.data(), script.size(), screen)) {
+        /* 脚本出错不阻断界面: 布局已经可用, 只记一行. */
+        IM_LOGW(kTag, "ui script failed: %s", host->Error().c_str());
+    } else if (script.empty()) {
+        host->Tree().Resolve(screen);
+    }
+    uiHost_ = std::move(host);
+    IM_LOGI(kTag, "ui screen opened: %s", layoutAsset == nullptr ? "" : layoutAsset);
+    return true;
+}
+
+void GameShell::CloseUiScreen() {
+    if (uiHost_ != nullptr) {
+        IM_LOGI(kTag, "ui screen closed");
+        uiHost_.reset();
     }
 }
 
@@ -3960,6 +4018,19 @@ void GameShell::RenderScene() {
      * 输入与界面之间只有一份来源, 界面不会再和真实输入错位.
      * 经典模式的底座常驻显示, 锚点固定在设置给定的底座中心.
      */
+    /*
+     * 界面屏幕: 打开的界面在 HUD 之后单独提交一层, 因此面板压在状态条之上.
+     * 解算用当前视口尺寸, 窗口变化后下一帧自动跟随.
+     */
+    if (uiHost_ != nullptr) {
+        const ui::LayoutRect screen{0.0f, 0.0f, static_cast<float>(width_),
+                                    static_cast<float>(height_)};
+        uiHost_->Tree().Resolve(screen);
+        std::vector<ui::LayoutDrawCommand> commands;
+        uiHost_->CollectDrawCommands(commands);
+        hud_.SubmitLayoutCommands(commands);
+    }
+
     ui::HudFrame frame;
     frame.pauseMenuVisible = pauseMenuOpen_;
     /*

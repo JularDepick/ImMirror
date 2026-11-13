@@ -293,6 +293,14 @@ public:
     /* 服务端裁定成功后, 把物品放进本地背包. */
     void ApplyPickupResult(int32_t dropId, int32_t blockId);
 
+    /*
+     * 打开一份界面: 读布局与同名脚本, 建控件树并执行脚本.
+     * 之后每帧把绘制命令交给界面渲染器, 直到关闭.
+     */
+    bool OpenUiScreen(const char* layoutAsset, const char* scriptAsset);
+    void CloseUiScreen();
+    bool UiScreenOpen() const { return uiHost_ != nullptr; }
+
     /* 把游戏状态接到界面宿主上; 界面脚本因此能读到背包与玩家数据. */
     void BindUiDataSource(ui::script::WidgetHost& host);
 
@@ -489,6 +497,10 @@ private:
      * 用指针是因为它需要引用上述对象, 而这些对象在构造期之后才就位.
      */
     std::unique_ptr<GameUiDataSource> uiDataSource_;
+    /* 当前打开的界面: 控件宿主持有布局, 脚本与控件状态. */
+    std::unique_ptr<ui::script::WidgetHost> uiHost_;
+    /* 资产管理器, 由 OnSurfaceReady 传入, 界面装载要用它读布局与脚本. */
+    AAssetManager* assets_ = nullptr;
     /* 当前世界名, 界面显示与数据源都用它. */
     std::string worldName_ = "default";
     /* 待申报的掉落物标识, 由客人侧在走到掉落物上时填入. */

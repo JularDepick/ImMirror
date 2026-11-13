@@ -187,6 +187,22 @@ public final class NativeBridge {
         nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
     }
 
+    /* 打开一份界面: 参数是布局与脚本的资源路径, 返回是否打开成功. */
+    public static boolean openUiScreen(String layoutAsset, String scriptAsset) {
+        if (!ensureLoaded()) {
+            return false;
+        }
+        return nativeOpenUiScreen(layoutAsset, scriptAsset);
+    }
+
+    /* 关闭当前界面. */
+    public static void closeUiScreen() {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeCloseUiScreen();
+    }
+
     /* 取走客人侧的拾取申报, 逗号分隔的掉落物标识; 空串表示没有. */
     public static String takePickupRequests() {
         if (!ensureLoaded()) {
@@ -427,6 +443,10 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native boolean nativeOpenUiScreen(String layoutAsset, String scriptAsset);
+
+    private static native void nativeCloseUiScreen();
 
     private static native String nativeTakePickupRequests();
 

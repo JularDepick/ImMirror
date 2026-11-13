@@ -219,6 +219,41 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetWeatherState(JNIEnv* 
     shell->SetWeatherState(static_cast<int32_t>(kind), static_cast<float>(intensity));
 }
 
+/* Java 侧低频入口: 打开一份界面, 参数是布局与脚本的资源路径. */
+JNIEXPORT jboolean JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeOpenUiScreen(JNIEnv* env, jclass clazz,
+                                                                   jstring layout,
+                                                                   jstring script) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr || layout == nullptr) {
+        return JNI_FALSE;
+    }
+    const char* layoutPath = env->GetStringUTFChars(layout, nullptr);
+    const char* scriptPath =
+        script == nullptr ? nullptr : env->GetStringUTFChars(script, nullptr);
+    const bool opened = shell->OpenUiScreen(layoutPath, scriptPath);
+    if (layoutPath != nullptr) {
+        env->ReleaseStringUTFChars(layout, layoutPath);
+    }
+    if (scriptPath != nullptr) {
+        env->ReleaseStringUTFChars(script, scriptPath);
+    }
+    return opened ? JNI_TRUE : JNI_FALSE;
+}
+
+/* Java 侧低频入口: 关闭当前界面. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeCloseUiScreen(JNIEnv* env, jclass clazz) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return;
+    }
+    shell->CloseUiScreen();
+}
+
 /* Java 侧低频入口: 取走客人侧的拾取申报, 逗号分隔的掉落物标识. */
 JNIEXPORT jstring JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakePickupRequests(JNIEnv* env,
