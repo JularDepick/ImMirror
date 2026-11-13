@@ -1,5 +1,7 @@
 #include "ui/hud_renderer.h"
 
+#include "ui/layout_render.h"
+
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
 #include <android/asset_manager.h>
@@ -1742,6 +1744,71 @@ void DrawBuffIcons(float* out, int32_t& offset, const HudLayout& layout, const H
                      fill);
         }
     }
+}
+
+void HudRenderer::SubmitLayoutCommands(const std::vector<LayoutDrawCommand>& commands) {
+    if (!ready_ || !layout_.Valid() || commands.empty()) {
+        return;
+    }
+    static float vertices[kVertexCapacity * kFloatsPerVertex];
+    static std::vector<LayoutDrawCommand> adjusted;
+    adjusted = commands;
+    /*
+     * 图集不在线时把贴图命令降级为纯色, 避免采样到未初始化的通道;
+     * 在线时给 u 加通道偏移, 与 PushUiQuad 的处理一致.
+     */
+    for (LayoutDrawCommand& command : adjusted) {
+        if (command.texture == nullptr) {
+            continue;
+        }
+        if (!uiAtlasAvailable) {
+            command.texture = nullptr;
+        }
+    }
+    LayoutRenderStats stats;
+    const int32_t vertexCount = EmitLayoutCommands(
+        adjusted, static_cast<float>(layout_.Width()), static_cast<float>(layout_.Height()), vertices,
+        kVertexCapacity, &stats);
+    if (vertexCount == 0) {
+        return;
+    }
+    if (uiAtlasAvailable) {
+        /* 只对真正带 uv 的顶点加通道偏移, 纯色顶点的 uv 保持 -1. */
+        for (int32_t index = 0; index < vertexCount; ++index) {
+            float* vertex = vertices + static_cast<size_t>(index) * kFloatsPerVertex;
+            if (vertex[2] >= 0.0f) {
+                vertex[2] += kUiChannel;
+            }
+        }
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glUseProgram(program_);
+    if (uniformAtlasLocation_ >= 0 && atlasTexture_ != 0) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, atlasTexture_);
+        glUniform1i(uniformAtlasLocation_, 0);
+    }
+    if (uniformSpriteLocation_ >= 0 && uiAtlasTexture_ != 0) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, uiAtlasTexture_);
+        glUniform1i(uniformSpriteLocation_, 1);
+    }
+    glBindVertexArray(vao_);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+    glBufferSubData(GL_ARRAY_BUFFER, 0,
+                    static_cast<GLsizeiptr>(vertexCount) * kFloatsPerVertex * sizeof(float),
+                    vertices);
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    glBindVertexArray(0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void HudRenderer::Render(const HudFrame& frame) {

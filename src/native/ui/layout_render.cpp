@@ -81,7 +81,11 @@ int32_t EmitLayoutCommands(const std::vector<LayoutDrawCommand>& commands, float
         if (command.texture != nullptr) {
             textured = UiSpriteUv(command.texture, &u0, &v0, &u1, &v1);
         }
-        const float uvs[4][2] = {{u0, v1}, {u1, v1}, {u1, v0}, {u0, v0}};
+        /*
+         * uv 朝向与 HUD 的四边形一致: 左下角取 (u0, v0), 右上角取 (u1, v1).
+         * 提交前调用方还要给 u 加界面图集的通道偏移, 与 PushUiQuad 同一处理.
+         */
+        const float uvs[4][2] = {{u0, v0}, {u1, v0}, {u1, v1}, {u0, v1}};
         const int32_t order[6] = {0, 1, 2, 0, 2, 3};
         for (int32_t index = 0; index < 6; ++index) {
             float* vertex = out + static_cast<size_t>(offset) * kLayoutFloatsPerVertex;

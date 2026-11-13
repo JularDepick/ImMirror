@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
+
+#include "ui/layout_draw.h"
 
 #include <android/asset_manager.h>
 
@@ -277,6 +280,13 @@ public:
      * 坐标与绘制共用一按钮矩形, 不会错位.
      */
     int32_t HitTestPauseMenu(float normalizedX, float normalizedY) const;
+
+    /*
+     * 提交一份界面布局的绘制命令: 转顶点并上传绘制.
+     * 贴图命令的 u 会加上界面图集通道偏移, 与 HUD 自身绘制同一套约定;
+     * 未接入图集时贴图命令按纯色绘制.
+     */
+    void SubmitLayoutCommands(const std::vector<LayoutDrawCommand>& commands);
 
     /* 判断触点是否落在背包面板底板范围内. */
     bool HitTestInventoryPanel(float normalizedX, float normalizedY) const;

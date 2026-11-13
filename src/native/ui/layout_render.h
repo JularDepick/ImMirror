@@ -36,6 +36,8 @@ struct LayoutRenderStats {
 /*
  * 把绘制命令写进顶点缓冲.
  * 屏幕像素坐标按屏幕宽高折算成裁剪空间; 容量不足时停止并记入 dropped.
+ * 贴图 uv 的朝向与 HUD 四边形一致, 但**不含界面图集的通道偏移**,
+ * 提交方需要给 u 加上该偏移, 与 PushUiQuad 的处理一致.
  * 返回写入的顶点数.
  */
 int32_t EmitLayoutCommands(const std::vector<LayoutDrawCommand>& commands, float screenWidth,
