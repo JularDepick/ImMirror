@@ -574,6 +574,35 @@ describe("房间通道", () => {
     expect(guestAfter.owner).toBe(true);
   });
 
+  it("掉落物先到先得, 同一件不会被两人捡走", async () => {
+    const owner = await registerCasePlayer("pickup", 1);
+    const guestA = await registerCasePlayer("pickup", 2);
+    const guestB = await registerCasePlayer("pickup", 3);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guestA.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guestB.token);
+
+    /* 房主上报一件掉落物. */
+    const reported = expectOk<{ contentSeq: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`,
+        { drops: [{ id: 7, block: 13, x: 1.5, y: 2, z: 3.5 }] }, owner.token),
+    );
+    expect(reported.contentSeq).toBeGreaterThan(0);
+
+    /* 客人甲先申报, 取到. */
+    const first = expectOk<{ picked: boolean; block: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/pickup`, { dropId: 7 }, guestA.token),
+    );
+    expect(first.picked).toBe(true);
+    expect(first.block).toBe(13);
+
+    /* 客人乙再申报, 已取不到. */
+    const second = expectOk<{ picked: boolean }>(
+      await app.post(`/api/v1/rooms/${room.id}/pickup`, { dropId: 7 }, guestB.token),
+    );
+    expect(second.picked).toBe(false);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);

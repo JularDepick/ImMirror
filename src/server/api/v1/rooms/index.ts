@@ -586,6 +586,39 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     return ok({ room: summarize(room) });
   });
 
+  /**
+   * 拾取仲裁: 客人走到掉落物上时向服务端申报, 由服务端裁定归属.
+   * 先到先得: 掉落物从房间移除后其他客人再申报就取不到, 因此同一件不会被两人捡走.
+   */
+  app.post("/api/v1/rooms/:id/pickup", { preHandler: guard }, async (request) => {
+    const auth = request.auth;
+    if (!auth) {
+      throw new AppError("AUTH_UNAUTHORIZED");
+    }
+    const params = request.params as Record<string, unknown>;
+    const id = typeof params.id === "string" ? params.id : "";
+    const body = requireObjectBody(request.body);
+    const rawDrop = body.dropId;
+    if (typeof rawDrop !== "number" || !Number.isFinite(rawDrop)) {
+      throw new AppError("BAD_REQUEST", "掉落物标识必须为数值");
+    }
+    const dropId = Math.trunc(rawDrop);
+    const now = ctx.now();
+    sweepRooms(now);
+    const room = requireRoom(id);
+    requireMember(room, auth.user.id);
+
+    const index = room.drops.findIndex((drop) => drop.id === dropId);
+    if (index < 0) {
+      /* 已被别人捡走或已消失: 返回未取到, 调用方据此丢弃本地视图. */
+      return ok({ picked: false, block: 0 });
+    }
+    const [drop] = room.drops.splice(index, 1);
+    room.contentSeq += 1;
+    room.updatedAt = now;
+    return ok({ picked: true, block: drop?.block ?? 0 });
+  });
+
   /** 踢人: 只有房主可以踢, 被踢成员立即移出房间, 房主自己不能被踢. */
   app.post("/api/v1/rooms/:id/kick", { preHandler: guard }, async (request) => {
     const auth = request.auth;
