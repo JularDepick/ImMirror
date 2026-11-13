@@ -44,6 +44,12 @@ int32_t Count();
  * 方块掉到地上时加入, 拾取或超时后移除; 颜色按方块图集格平均色取.
  */
 void AddDrop(int32_t id, voxel::BlockId block, float x, float y, float z);
+
+/*
+ * 按给定代表色添加掉落物.
+ * 非方块物品没有方块贴图, 由调用方按物品图标算出代表色再传进来.
+ */
+void AddDropColored(int32_t id, float red, float green, float blue, float x, float y, float z);
 /* 掉落物落地过程中更新显示位置. */
 void MoveDrop(int32_t id, float x, float y, float z);
 void RemoveDrop(int32_t id);

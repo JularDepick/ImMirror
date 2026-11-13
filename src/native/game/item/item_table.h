@@ -68,6 +68,9 @@ public:
      */
     int32_t IconCellOf(ItemId id) const;
 
+    /* 物品图标代表色: 掉落物这类只需要一个颜色的场合用它; 没有图标返回中灰. */
+    void IconColorOf(ItemId id, float* red, float* green, float* blue) const;
+
     /* 界面占位用的首字母, 取英文键首字符并转大写, 空键返回问号. */
     char Initial(ItemId id) const;
 

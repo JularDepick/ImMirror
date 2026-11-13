@@ -444,6 +444,28 @@ void AddDrop(int32_t id, voxel::BlockId block, float x, float y, float z) {
     ++gDropCount;
 }
 
+void AddDropColored(int32_t id, float red, float green, float blue, float x, float y, float z) {
+    if (!gInitialized) {
+        return;
+    }
+    if (gDropCount >= kMaxDrops) {
+        for (int32_t i = 1; i < gDropCount; ++i) {
+            gDrops[i - 1] = gDrops[i];
+        }
+        gDropCount = kMaxDrops - 1;
+    }
+    Drop& drop = gDrops[gDropCount];
+    drop.id = id;
+    drop.block = 0;
+    drop.x = x;
+    drop.y = y;
+    drop.z = z;
+    drop.red = red;
+    drop.green = green;
+    drop.blue = blue;
+    ++gDropCount;
+}
+
 void MoveDrop(int32_t id, float x, float y, float z) {
     for (int32_t i = 0; i < gDropCount; ++i) {
         if (gDrops[i].id != id) {

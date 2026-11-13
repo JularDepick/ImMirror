@@ -1,6 +1,7 @@
 #include "game/item/item_table.h"
 
 #include "ui/generated/item_icon_atlas_gen.h"
+#include "ui/generated/item_icon_color_gen.h"
 
 #include <cstring>
 
@@ -118,6 +119,20 @@ char ItemTable::Initial(ItemId id) const {
         initial = static_cast<char>(initial - 'a' + 'A');
     }
     return initial;
+}
+
+void ItemTable::IconColorOf(ItemId id, float* red, float* green, float* blue) const {
+    const int32_t slot = IconCellOf(id);
+    const ui::gen::ItemIconColor color = ui::gen::ItemIconColorOf(slot);
+    if (red != nullptr) {
+        *red = static_cast<float>(color.red) / 255.0f;
+    }
+    if (green != nullptr) {
+        *green = static_cast<float>(color.green) / 255.0f;
+    }
+    if (blue != nullptr) {
+        *blue = static_cast<float>(color.blue) / 255.0f;
+    }
 }
 
 int32_t ItemTable::IconCellOf(ItemId id) const {

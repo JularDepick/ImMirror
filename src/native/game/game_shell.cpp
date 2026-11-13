@@ -2926,7 +2926,19 @@ void GameShell::SpawnDrop(item::ItemId item, int32_t count, voxel::BlockId block
     drop.velocity = core::Vec3{0.35f, 2.0f, 0.25f};
     drop.ageSeconds = 0.0;
     droppedItems_.push_back(drop);
-    render::particle::AddDrop(drop.id, block, x, y, z);
+    if (block == voxel::block::Air) {
+        /*
+         * 非方块物品没有方块贴图: 用物品图标的平均色当代表色,
+         * 否则会取到空气方块的颜色, 掉在地上的工具与食物都是一个怪色块.
+         */
+        float red = 0.5f;
+        float green = 0.5f;
+        float blue = 0.5f;
+        item::ItemTable::Instance().IconColorOf(drop.item, &red, &green, &blue);
+        render::particle::AddDropColored(drop.id, red, green, blue, x, y, z);
+    } else {
+        render::particle::AddDrop(drop.id, block, x, y, z);
+    }
 }
 
 /*
