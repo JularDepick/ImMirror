@@ -297,6 +297,15 @@ def settings_coverage():
     return (len(used), len(keys))
 
 
+def settings_wired():
+    """设置项接线: 目录里标记为已生效的条目数, 与登记总数对比."""
+    catalog = read_text(os.path.join(JAVA_ROOT, "com", "julardepick", "immirror", "settings",
+                                     "SettingsCatalog.java"))
+    total = len(re.findall(r'add(?:Choice)?\("([a-z0-9_]+)"', catalog))
+    wired = len(re.findall(r'add(?:Choice)?\("[a-z0-9_]+",\s*Group\.[A-Z]+,\s*true', catalog))
+    return wired, total if total > 0 else 1
+
+
 def native_sources():
     """原生源文件的合并文本, 供交叉核对使用."""
     parts = []
@@ -445,6 +454,7 @@ def main():
         ('接线', '界面链路环节', *ui_chain_coverage(), '布局/锚点/控件/求值/宿主/绘制/顶点'),
         ('接线', '离线断言组', *assertion_group_count(), '每条自查都能独立输出结论'),
         ('接线', '界面字符串', *string_table_size(), '界面文案查表条目'),
+        ('接线', '设置项接线', *settings_wired(), '目录里标记为已生效的设置'),
         ('接线', '设置项落地', *settings_coverage(), '设置目录登记项能在原生侧查到引用'),
         ('接线', 'JNI 声明落地', *jni_coverage(), 'Java native 声明能找到 C++ 导出'),
         ('接线', '音效枚举落地', *sound_coverage(), '原生音效枚举能在界面加载表找到'),

@@ -104,12 +104,12 @@ public final class SettingsCatalog {
         addChoice("view", Group.VISUAL, false, "视角",
                 new int[]{1, 2, 3}, new String[]{"主视角", "背视角", "正视角"});
         add("sight", Group.VISUAL, false, "准心模式");
-        add("screenbright", Group.VISUAL, false, "画面亮度");
+        add("screenbright", Group.VISUAL, true, "画面亮度");
         addChoice("view_distance", Group.VISUAL, true, "视野距离",
                 new int[]{1, 2, 3, 5, 8}, new String[]{"近", "中", "远", "更远", "最远"});
-        addChoice("fog", Group.VISUAL, false, "雾效",
+        addChoice("fog", Group.VISUAL, true, "雾效",
                 new int[]{0, 1, 2}, new String[]{"关闭", "淡雾", "浓雾"});
-        add("treeshape", Group.VISUAL, false, "树形");
+        add("treeshape", Group.VISUAL, true, "树形");
         add("reflect", Group.VISUAL, false, "水面反射");
         add("shadow", Group.VISUAL, false, "实时光影");
         add("limiteFps", Group.VISUAL, false, "限制帧率");
@@ -140,8 +140,8 @@ public final class SettingsCatalog {
         add("fpsbuttom", Group.OTHER, false, "帧率显示按钮");
         add("physxparam", Group.OTHER, false, "物理参数面板");
         add("cantrace", Group.OTHER, false, "允许好友追踪");
-        add("damageswitch", Group.OTHER, false, "伤害数值显示");
-        add("bloodswitch", Group.OTHER, false, "血条显示");
+        add("damageswitch", Group.OTHER, true, "伤害数值显示");
+        add("bloodswitch", Group.OTHER, true, "血条显示");
         add("hideui", Group.OTHER, true, "隐藏界面");
     }
 
