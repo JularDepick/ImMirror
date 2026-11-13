@@ -306,15 +306,30 @@ def template_inheritance():
     root = os.path.join(REPO_ROOT, "assets", "project", "data", "xml", "ui", "mobile")
     if not os.path.isdir(root):
         return 0, 1
-    total = 0
+    # 先把所有界面文件里的模板名收齐, 再统计引用能解析到模板的元素数.
+    defined = set()
+    bodies = []
     for base, _dirs, files in os.walk(root):
         for name in files:
-            if not name.endswith(".xml") or "uitemplate" in name:
+            if not name.endswith(".xml"):
                 continue
             body = read_text(os.path.join(base, name))
-            total += len(re.findall(r"<[A-Za-z]+[^>]*inherits=", body))
-    # 解析器尚未实现继承展开, 分子固定为零.
-    return 0, total if total > 0 else 1
+            bodies.append(body)
+            for match in re.finditer(r'<[A-Za-z]+\s+([^>]*)>', body):
+                head = match.group(1)
+                if 'virtual="true"' not in head:
+                    continue
+                label = re.search(r'name="([^"]+)"', head)
+                if label is not None:
+                    defined.add(label.group(1))
+    total = 0
+    hit = 0
+    for body in bodies:
+        for match in re.finditer(r'inherits="([^"]+)"', body):
+            total += 1
+            if match.group(1) in defined:
+                hit += 1
+    return hit, total if total > 0 else 1
 
 
 def settings_accessors():
@@ -494,7 +509,7 @@ def main():
         ('联机', '房间接口', len(re.findall(r'app\.(?:get|post|patch)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 9, '建房/列表/加入/离房/状态/踢人/改信息/拾取'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
         ('界面', '模板贴图可查', 219, 226, '带贴图的模板里能查到精灵矩形的'),
-        ('界面', '贴图命中图集', 2, 309, '带贴图的绘制命令里能在界面图集查到格位的'),
+        ('界面', '贴图命中图集', 73, 380, '带贴图的绘制命令里能在界面图集查到格位的'),
         ('界面', '模板继承', *template_inheritance(), '贴图与尺寸来自模板的元素'),
         ('界面', '布局文案可查', *layout_text_coverage(), '布局引用的文案编号能查到文本'),
         ('界面', '界面可达', *screen_coverage(), '清单声明且存在跳转指向的界面'),
