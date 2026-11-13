@@ -1028,43 +1028,89 @@ std::string GameShell::TakeCreatureSnapshot() const {
  * 解析失败时清空队列, 避免残留上一轮的形象. 死亡与受击不做插值,
  * 由下发的 hp 比例折算一点提亮, 让客人能看出对方在打哪只.
  */
+float GameShell::RemoteCreatureAlpha() const {
+    /* 插值时长与轮询节拍无关: 固定 0.6 秒走完一批, 既不平滑过头也不瞬移. */
+    constexpr double kBlendSeconds = 0.6;
+    if (remoteCreatureStates_.empty()) {
+        return 1.0f;
+    }
+    const double span = elapsedSeconds_ - remoteCreatureBlendStart_;
+    if (span <= 0.0) {
+        return 0.0f;
+    }
+    if (span >= kBlendSeconds) {
+        return 1.0f;
+    }
+    return static_cast<float>(span / kBlendSeconds);
+}
+
 void GameShell::ApplyRemoteCreatures(const std::string& json) {
-    remoteCreatures_.clear();
+    /*
+     * 先把上一批的当前位置按插值进度固化下来当作起点, 再写入新目标:
+     * 这样两批之间不会出现从目标位置跳回起点的回弹.
+     */
+    const float alpha = RemoteCreatureAlpha();
+    std::vector<RemoteCreatureState> next;
+    std::vector<uint32_t> nextIds;
     const size_t begin = json.find('[');
-    if (begin == std::string::npos) {
-        return;
-    }
-    size_t cursor = begin + 1;
-    while (remoteCreatures_.size() < 64) {
-        const size_t open = json.find('{', cursor);
-        if (open == std::string::npos) {
-            break;
-        }
-        const size_t close = json.find('}', open);
-        if (close == std::string::npos) {
-            break;
-        }
-        const std::string obj = json.substr(open, close - open + 1);
-        cursor = close + 1;
-        const auto readNumber = [&obj](const char* key, float fallback) -> float {
-            const size_t pos = obj.find(key);
-            if (pos == std::string::npos) {
-                return fallback;
+    if (begin != std::string::npos) {
+        size_t cursor = begin + 1;
+        while (next.size() < 64) {
+            const size_t open = json.find('{', cursor);
+            if (open == std::string::npos) {
+                break;
             }
-            return std::strtof(obj.c_str() + pos + std::strlen(key), nullptr);
-        };
-        render::creature::CreatureView view;
-        view.x = readNumber("\"x\":", 0.0f);
-        view.y = readNumber("\"y\":", 0.0f);
-        view.z = readNumber("\"z\":", 0.0f);
-        view.yaw = readNumber("\"yaw\":", 0.0f);
-        view.defIndex = static_cast<int32_t>(readNumber("\"kind\":", 0.0f));
-        view.hurt = 0.0f;
-        view.death = 0.0f;
-        remoteCreatures_.push_back(view);
+            const size_t close = json.find('}', open);
+            if (close == std::string::npos) {
+                break;
+            }
+            const std::string obj = json.substr(open, close - open + 1);
+            cursor = close + 1;
+            const auto readNumber = [&obj](const char* key, float fallback) -> float {
+                const size_t pos = obj.find(key);
+                if (pos == std::string::npos) {
+                    return fallback;
+                }
+                return std::strtof(obj.c_str() + pos + std::strlen(key), nullptr);
+            };
+            const uint32_t id = static_cast<uint32_t>(readNumber("\"id\":", 0.0f));
+            render::creature::CreatureView target;
+            target.x = readNumber("\"x\":", 0.0f);
+            target.y = readNumber("\"y\":", 0.0f);
+            target.z = readNumber("\"z\":", 0.0f);
+            target.yaw = readNumber("\"yaw\":", 0.0f);
+            target.defIndex = static_cast<int32_t>(readNumber("\"kind\":", 0.0f));
+            /* 血量归零的个体按倒地处理, 客人也能看出对方打死了哪只. */
+            target.death = readNumber("\"hp\":", 1.0f) <= 0.0f ? 1.0f : 0.0f;
+            target.hurt = 0.0f;
+
+            RemoteCreatureState state;
+            state.to = target;
+            state.from = target;
+            /* 同一只生物在上一批里存在时, 从它当前的插值位置接着走. */
+            for (size_t index = 0; index < remoteCreatureIds_.size(); ++index) {
+                if (remoteCreatureIds_[index] != id || index >= remoteCreatureStates_.size()) {
+                    continue;
+                }
+                const RemoteCreatureState& previous = remoteCreatureStates_[index];
+                state.from = previous.from;
+                state.from.x = previous.from.x + (previous.to.x - previous.from.x) * alpha;
+                state.from.y = previous.from.y + (previous.to.y - previous.from.y) * alpha;
+                state.from.z = previous.from.z + (previous.to.z - previous.from.z) * alpha;
+                state.from.yaw = previous.from.yaw + (previous.to.yaw - previous.from.yaw) * alpha;
+                state.from.death = previous.to.death;
+                state.from.defIndex = target.defIndex;
+                break;
+            }
+            next.push_back(state);
+            nextIds.push_back(id);
+        }
     }
-    if (static_cast<int32_t>(remoteCreatures_.size()) != lastRemoteCreatureCount_) {
-        lastRemoteCreatureCount_ = static_cast<int32_t>(remoteCreatures_.size());
+    remoteCreatureStates_ = std::move(next);
+    remoteCreatureIds_ = std::move(nextIds);
+    remoteCreatureBlendStart_ = elapsedSeconds_;
+    if (static_cast<int32_t>(remoteCreatureStates_.size()) != lastRemoteCreatureCount_) {
+        lastRemoteCreatureCount_ = static_cast<int32_t>(remoteCreatureStates_.size());
         IM_LOGI(kTag, "remote creatures applied=%d", lastRemoteCreatureCount_);
     }
 }
@@ -2263,10 +2309,24 @@ void GameShell::RenderScene() {
         render::creature::Draw(views.data(), static_cast<int32_t>(views.size()), viewProjection);
     }
 
-    /* 远端生物: 与本地生物同一批提交, 位置与朝向来自房主快照. */
-    if (!remoteCreatures_.empty() && render::creature::Initialize()) {
-        render::creature::Draw(remoteCreatures_.data(),
-                               static_cast<int32_t>(remoteCreatures_.size()), viewProjection);
+    /* 远端生物: 与本地生物同一批提交, 位置按插值进度平滑过渡. */
+    if (!remoteCreatureStates_.empty() && render::creature::Initialize()) {
+        const float alpha = RemoteCreatureAlpha();
+        static std::vector<render::creature::CreatureView> remoteViews;
+        remoteViews.clear();
+        remoteViews.reserve(remoteCreatureStates_.size());
+        for (const RemoteCreatureState& state : remoteCreatureStates_) {
+            render::creature::CreatureView view = state.to;
+            view.x = state.from.x + (state.to.x - state.from.x) * alpha;
+            view.y = state.from.y + (state.to.y - state.from.y) * alpha;
+            view.z = state.from.z + (state.to.z - state.from.z) * alpha;
+            view.yaw = state.from.yaw + (state.to.yaw - state.from.yaw) * alpha;
+            /* 倒地状态直接取目标值: 死亡不需要插值. */
+            view.death = state.to.death;
+            remoteViews.push_back(view);
+        }
+        render::creature::Draw(remoteViews.data(), static_cast<int32_t>(remoteViews.size()),
+                               viewProjection);
     }
 
     if (remotePlayers_.Count() > 0) {

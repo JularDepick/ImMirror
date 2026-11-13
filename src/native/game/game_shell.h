@@ -163,6 +163,9 @@ public:
      */
     std::string TakeCreatureSnapshot() const;
 
+    /* 本批远端生物插值进度 0 到 1, 供渲染与再下发时固化当前位置. */
+    float RemoteCreatureAlpha() const;
+
     /*
      * 远端生物快照: 客人侧把房主下发的活体列表写入渲染队列,
      * 下一帧与本地生物同一批提交; 空数组表示清空.
@@ -170,8 +173,19 @@ public:
     void ApplyRemoteCreatures(const std::string& json);
     /* 上一轮下发的远端玩家数, 用于只在数量变化时打日志. */
     int32_t lastRemoteCount_ = -1;
-    /* 远端生物渲染队列, 由房主下发的快照填充. */
-    std::vector<render::creature::CreatureView> remoteCreatures_;
+    /*
+     * 远端生物插值状态: 每只生物保存上一轮位置与目标位置, 渲染时按
+     * 两次下发之间的时间做线性插值, 避免 10 秒一次的轮询节拍让形象瞬移.
+     */
+    struct RemoteCreatureState {
+        render::creature::CreatureView from;
+        render::creature::CreatureView to;
+    };
+    std::vector<RemoteCreatureState> remoteCreatureStates_;
+    /* 与 remoteCreatureStates_ 一一对应的实体标识, 用于跨批次匹配同一只生物. */
+    std::vector<uint32_t> remoteCreatureIds_;
+    /* 本批插值的起始时刻, 与 elapsedSeconds_ 同一时钟. */
+    double remoteCreatureBlendStart_ = 0.0;
     /* 上一轮下发的远端生物数, 只在数量变化时打日志. */
     int32_t lastRemoteCreatureCount_ = -1;
     int32_t SelectedSlot() const { return selectedSlot_; }
