@@ -33,6 +33,8 @@ struct Attributes {
     std::string level;
     /* hidden="true": 布局载入时默认不显示, 由脚本按需打开. */
     std::string hidden;
+    std::string inherits;
+    std::string uvname;
     /* 直接写在元素上的宽高 (像素): 一部分元素用这两个属性代替 Size 子元素. */
     std::string w;
     std::string h;
@@ -153,6 +155,10 @@ Attributes ParseAttributes(const std::string& body) {
             attributes.level = value;
         } else if (key == "hidden") {
             attributes.hidden = value;
+        } else if (key == "inherits") {
+            attributes.inherits = value;
+        } else if (key == "uvname") {
+            attributes.uvname = value;
         } else if (key == "w") {
             attributes.w = value;
         } else if (key == "h") {
@@ -372,6 +378,31 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
         /* hidden="true" 的帧载入时不显示, 与脚本里的 Show/Hide 配合. */
         frame->hidden = attributes.hidden == "true";
         /*
+         * 模板继承: 元素用 inherits 指向模板时, 外观信息从模板取.
+         * 元素自身给了贴图就不覆盖, 这样模板可以被局部改写.
+         */
+        if (!attributes.inherits.empty() && templates_ != nullptr) {
+            const auto found = templates_->find(attributes.inherits);
+            if (found != templates_->end()) {
+                const LayoutTemplate& entry = found->second;
+                if (!entry.texture.empty()) {
+                    textures_.push_back(entry.texture);
+                    frame->texture = textures_.back().c_str();
+                }
+                if (!entry.sprite.empty()) {
+                    sprites_.push_back(entry.sprite);
+                    frame->sprite = sprites_.back().c_str();
+                }
+                /* 尺寸同样只在元素没给的时候才取模板的值. */
+                if (frame->width <= 0.0f && entry.width > 0.0f) {
+                    frame->width = entry.width;
+                }
+                if (frame->height <= 0.0f && entry.height > 0.0f) {
+                    frame->height = entry.height;
+                }
+            }
+        }
+        /*
          * 宽高有两种写法: Size 子元素里的 AbsDimension, 或元素上的 w/h 属性.
          * 这里先按属性给值; 若后面读到 Size 子元素, 会覆盖成子元素的值.
          */
@@ -418,6 +449,38 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
         frame->anchors.push_back(anchor);
     }
     return true;
+}
+
+bool ParseTemplates(const char* text, size_t length, LayoutTemplates& out) {
+    if (text == nullptr || length == 0) {
+        return false;
+    }
+    out.clear();
+    const std::string body(text, length);
+    size_t cursor = 0;
+    while (cursor < body.size()) {
+        const size_t start = body.find('<', cursor);
+        if (start == std::string::npos) {
+            break;
+        }
+        const size_t end = body.find('>', start);
+        if (end == std::string::npos) {
+            break;
+        }
+        cursor = end + 1;
+        const std::string head = body.substr(start + 1, end - start - 1);
+        /* 只关心带名字与精灵名的元素, 其余一律跳过. */
+        const Attributes attributes = ParseAttributes(head);
+        if (attributes.name.empty() || attributes.uvname.empty()) {
+            continue;
+        }
+        LayoutTemplate entry;
+        entry.texture = attributes.file;
+        entry.sprite = attributes.uvname;
+        /* 尺寸来自子元素, 这里不展开; 留待继承方按自身尺寸决定. */
+        out[attributes.name] = entry;
+    }
+    return !out.empty();
 }
 
 }  /* namespace immirror::ui */

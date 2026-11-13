@@ -15,6 +15,8 @@ struct LayoutDrawCommand {
     LayoutRect rect;
     LayerLevel layer = LayerLevel::kArtwork;
     const char* texture = nullptr;
+    /* 图集里的精灵名, 空表示按整张图绘制. */
+    const char* sprite = nullptr;
     /* 文本内容: 只有文本控件才会带, 空表示不画文字. */
     const char* text = nullptr;
     const char* name = "";

@@ -17,6 +17,7 @@ void Emit(const LayoutFrame& frame, int32_t depth, std::vector<LayoutDrawCommand
     command.rect = frame.rect;
     command.layer = frame.layer;
     command.texture = frame.texture;
+    command.sprite = frame.sprite;
     command.name = frame.name;
     command.red = frame.red;
     command.green = frame.green;

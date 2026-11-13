@@ -5,6 +5,7 @@
 #include <deque>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "ui/layout_frame.h"
@@ -20,8 +21,28 @@ namespace immirror::ui {
  *
  * 解析只做结构, 不做绘制; 因此可以离线对真实布局文件做断言.
  */
+/* 模板条目: 元素用 inherits 指向它, 取走外观信息. */
+struct LayoutTemplate {
+    std::string texture;
+    std::string sprite;
+    float width = 0.0f;
+    float height = 0.0f;
+};
+
+/* 模板表: 名字到条目的映射, 由调用方在解析前装入. */
+using LayoutTemplates = std::unordered_map<std::string, LayoutTemplate>;
+
+/*
+ * 解析模板文件, 把带精灵名的条目收进表里.
+ * 模板文件本身也是布局格式, 这里只取外观相关字段, 不建帧树.
+ */
+bool ParseTemplates(const char* text, size_t length, LayoutTemplates& out);
+
 class LayoutDocument {
 public:
+    /* 装入模板表; 指针须在文档解析与使用期间保持有效, 传空表示不展开继承. */
+    void SetTemplates(const LayoutTemplates* templates) { templates_ = templates; }
+
     /* 解析一段布局文本; 失败时返回 false 并给出原因. */
     bool Parse(const char* text, size_t length);
 
@@ -45,9 +66,12 @@ private:
     std::deque<std::string> names_;
     /* 贴图路径同样放在容器里, 保证帧里的指针长期有效. */
     std::deque<std::string> textures_;
+    /* 精灵名同理. */
+    std::deque<std::string> sprites_;
     std::vector<std::unique_ptr<LayoutFrame>> pool_;
     LayoutFrame* root_ = nullptr;
     std::string error_;
+    const LayoutTemplates* templates_ = nullptr;
 };
 
 /* 把布局里的锚点名 (小写, 如 topleft) 转成枚举; 未知返回 false. */

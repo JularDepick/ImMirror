@@ -78,6 +78,8 @@ struct LayoutFrame {
     LayerLevel layer = LayerLevel::kArtwork;
     /* 布局里标了 hidden="true": 载入时默认不显示, 由脚本按需打开. */
     bool hidden = false;
+    /* 模板里的精灵名, 与 texture 一起决定取图集里的哪一格; 空表示整图. */
+    const char* sprite = nullptr;
 
     void AddChild(LayoutFrame* child) {
         child->parent = this;
