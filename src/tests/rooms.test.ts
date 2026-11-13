@@ -508,6 +508,16 @@ describe("房间通道", () => {
     expect(ignored.weatherKind).toBe(2);
   });
 
+  it("每人同时拥有的房间数有上限", async () => {
+    const owner = await registerCasePlayer("ownlimit", 1);
+    /* 上限为三个, 前三个建成, 第四个被拒. */
+    for (let index = 0; index < 3; index += 1) {
+      await createRoom(owner.token);
+    }
+    const denied = await app.post("/api/v1/rooms", undefined, owner.token);
+    expect(denied.status).toBe(403);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);

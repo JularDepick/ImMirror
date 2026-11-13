@@ -179,6 +179,8 @@ const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 16;
 /** 房间名长度上限. */
 const NAME_MAX = 24;
+/** 每人同时拥有的房间数上限. */
+const OWNED_ROOM_LIMIT = 3;
 /** 房间密码长度上限. */
 const PASSWORD_MAX = 16;
 /** 房间号位数与字符集: 去掉 0/O 与 1/I 等易混字符, 便于口头分享. */
@@ -368,6 +370,16 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     sweepRooms(now);
     if (rooms.size >= MAX_ROOMS) {
       throw new AppError("ROOM_FULL", "房间数量已达上限");
+    }
+    /* 每人同时拥有的房间数上限: 防止刷房占满内存, 也避免把自己挤出房间列表. */
+    let owned = 0;
+    for (const candidate of rooms.values()) {
+      if (candidate.ownerUserId === auth.user.id) {
+        owned += 1;
+      }
+    }
+    if (owned >= OWNED_ROOM_LIMIT) {
+      throw new AppError("ROOM_FORBIDDEN", `每人最多同时拥有 ${OWNED_ROOM_LIMIT} 个房间`);
     }
     const rawName = body.name;
     const name = typeof rawName === "string" ? rawName.trim() : "";
