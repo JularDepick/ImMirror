@@ -323,8 +323,9 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 | `python scripts/alignment_census.py --write` | 实现面普查, 输出到 `.agent/ALIGNMENT_CENSUS.md` |
 | `bash scripts/check_native_syntax.sh` | 全部原生源文件的语法扫描 |
 | `bash scripts/check_layout_solver.sh` | 界面与玩法的离线断言 |
+| `python scripts/check_asset_paths.py` | 资源路径与打包完整性核对 |
 
-断言脚本分十四组, 每组独立编译并输出 `failures=0`:
+断言脚本分十六组, 每组独立编译并输出 `failures=0`:
 
 | 组 | 覆盖 |
 |:---:|:---|
@@ -332,6 +333,8 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 | 布局解析 | 布局文档解析成帧树 |
 | 绘制命令转顶点 | 绘制命令折算到裁剪空间与贴图 uv |
 | 控件绑定 | 控件树构建与命中测试 |
+| 爆炸抗性 | 方块爆炸抗性与流体穿透的数据分布 |
+| 食物效果 | 食物附带状态效果的数据完整性 |
 | 全量控件加载 | 全部布局的批量加载统计 |
 | 飞行物 | 箭矢推进与命中结算 |
 | 界面脚本解析 | 全部界面脚本的词法与语法解析 |
