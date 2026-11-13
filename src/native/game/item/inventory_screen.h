@@ -59,6 +59,13 @@ public:
      * 面板内的合成完成计数: 每次成功合成累加本次产出件数,
      * 由总装逐帧取走清零, 折算成成就事件. 只增不减, 溢出量级远超实际游玩.
      */
+    /* 附魔完成计数: 每次成功附魔累加一次, 由总装取走折算成界面事件. */
+    int64_t TakeEnchantEventCount() {
+        const int64_t value = enchantEvents_;
+        enchantEvents_ = 0;
+        return value;
+    }
+
     int64_t TakeCraftEventCount() {
         const int64_t value = craftEvents_;
         craftEvents_ = 0;
@@ -80,6 +87,8 @@ private:
 
     /* 附魔等级的轻量伪随机状态, 与其它模块同一套 xorshift. */
     uint32_t enchantRandom_ = 0x6d2b79f5u;
+    /* 附魔成功次数, 由总装取走. */
+    int64_t enchantEvents_ = 0;
 
     /* 网格变化后重算候选; 候选顺序与配方表顺序一致. */
     void EnsureCandidates();

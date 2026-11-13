@@ -281,6 +281,8 @@ public final class PlayActivity extends NativeActivity {
                 com.julardepick.immirror.ui.UiSound.craftSuccess(this);
             } else if ("2".equals(code) || "3".equals(code)) {
                 com.julardepick.immirror.ui.UiSound.bagToggle(this);
+            } else if ("4".equals(code)) {
+                com.julardepick.immirror.ui.UiSound.enchant(this);
             } else {
                 Log.w(TAG, "unknown ui event " + code);
             }

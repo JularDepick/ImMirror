@@ -36,6 +36,8 @@ public final class UiSound {
     private static final String CRAFT_SUCCESS_ASSET = "sounds/ui_info_crafting_success.ogg";
     /* 背包开合音: 打开与关闭各播一次. */
     private static final String BAG_TOGGLE_ASSET = "sounds/ui_bp_bpsound2.ogg";
+    /* 附魔成功音. */
+    private static final String ENCHANT_ASSET = "sounds/ui_info_book_unlock.ogg";
     /* 界面音并发上限: 连点也不会互相打断. */
     private static final int MAX_STREAMS = 4;
 
@@ -117,6 +119,11 @@ public final class UiSound {
     /* 背包开合音: 面板打开或关闭时调用. */
     public static void bagToggle(Context context) {
         play(context, BAG_TOGGLE_ASSET);
+    }
+
+    /* 附魔成功音. */
+    public static void enchant(Context context) {
+        play(context, ENCHANT_ASSET);
     }
 
     /*

@@ -292,6 +292,7 @@ bool InventoryScreen::TryEnchant(Inventory& inventory) {
     gems.count -= kGemCost;
     grid_.SetSlot(gemSlot, gems.count > 0 ? gems : ItemStack{});
     gridDirty_ = true;
+    enchantEvents_ += 1;
     IM_LOGI(kTag, "enchant ok item=%u level=%u gems_left=%d",
             static_cast<uint32_t>(tool.item), static_cast<unsigned>(level), gems.count);
     return true;

@@ -718,6 +718,10 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
         /* 合成成功音: 事件编码 1, 由 Java 侧取走后播放. */
         uiEvents_.push_back(1);
     }
+    /* 附魔成功: 事件编码 4, 由 Java 侧取走后播放界面音. */
+    if (inventoryScreen_.TakeEnchantEventCount() > 0) {
+        uiEvents_.push_back(4);
+    }
     RefreshSelectedItem();
     /* 生物在玩家之后推进: 位置与朝向都取本帧最新的玩家状态. */
     UpdateEntities(deltaSeconds);
