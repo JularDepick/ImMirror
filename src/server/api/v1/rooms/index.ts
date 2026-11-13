@@ -68,6 +68,8 @@ interface Room {
   chests: RoomChest[];
   /* 熔炉内容: 与箱子同口径, 只同步三个格, 燃烧计时仍由房主自己推进. */
   furnaces: RoomFurnace[];
+  /* 世界时间总秒数: 房主上行, 客人据此对齐昼夜, 0 表示尚未上报. */
+  timeOfDay: number;
 }
 
 /** 对外房间摘要, 不含成员位置. */
@@ -409,6 +411,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       drops: [],
       chests: [],
       furnaces: [],
+      timeOfDay: 0,
     };
     /* 房间名缺省时用房间号补位, 保证列表里每一项都能被区分. */
     if (name === "") {
@@ -835,6 +838,13 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       }
     }
 
+    /* 世界时间: 只有房主可以设定, 客人上报忽略. */
+    const rawTime = body.timeOfDay;
+    if (typeof rawTime === "number" && Number.isFinite(rawTime) && rawTime >= 0 &&
+        room.ownerUserId === auth.user.id) {
+      room.timeOfDay = rawTime;
+    }
+
     const rawSince = body.since;
     const since = typeof rawSince === "number" && Number.isFinite(rawSince) ? Math.trunc(rawSince) : 0;
     return ok({
@@ -846,6 +856,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       drops: room.drops,
       chests: room.chests,
       furnaces: room.furnaces,
+      timeOfDay: room.timeOfDay,
       rejectedEdits,
       rejectedCreatures,
       rejectedDrops,
@@ -880,6 +891,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       drops: room.drops,
       chests: room.chests,
       furnaces: room.furnaces,
+      timeOfDay: room.timeOfDay,
       serverTime: now,
     });
   });

@@ -435,6 +435,29 @@ describe("房间通道", () => {
     expect(tooFew.status).toBe(400);
   });
 
+  it("房主上报的世界时间下发给客人, 客人上报被忽略", async () => {
+    const owner = await registerCasePlayer("time", 1);
+    const guest = await registerCasePlayer("time", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    const reported = expectOk<{ timeOfDay: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { timeOfDay: 720.5 }, owner.token),
+    );
+    expect(reported.timeOfDay).toBe(720.5);
+
+    const seen = expectOk<{ timeOfDay: number }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(seen.timeOfDay).toBe(720.5);
+
+    /* 客人的时间上报不生效. */
+    const ignored = expectOk<{ timeOfDay: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { timeOfDay: 10 }, guest.token),
+    );
+    expect(ignored.timeOfDay).toBe(720.5);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);
