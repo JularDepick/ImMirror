@@ -335,6 +335,16 @@ public final class ProgressActivity extends Activity {
         balanceView.setTypeface(balanceView.getTypeface(), Typeface.BOLD);
         column.addView(balanceView, AccountTheme.block(this, 2f));
 
+        /*
+         * 领取入口: 列表只展示进度, 领取在独立界面完成,
+         * 因此这里给一个明确的跳转, 否则达成后无处领取.
+         */
+        Button claimButton = AccountTheme.outlineButton(this, ProgressText.CLAIM_ENTRY,
+                AccountTheme.COLOR_ACCENT);
+        claimButton.setOnClickListener(view -> startActivity(
+                new android.content.Intent(this, AchievementActivity.class)));
+        column.addView(claimButton, AccountTheme.block(this, 6f));
+
         column.addView(buildTabRow(), AccountTheme.block(this, 10f));
 
         chipsHost = new LinearLayout(this);

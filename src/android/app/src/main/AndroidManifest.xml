@@ -86,6 +86,14 @@
             android:label="@string/progress_title"
             android:screenOrientation="sensorLandscape" />
 
+        <!-- 成就领取界面: 逐条领取已达成的成就奖励 -->
+        <activity
+            android:name=".progress.AchievementActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|density|fontScale|locale|layoutDirection"
+            android:exported="false"
+            android:label="@string/progress_title"
+            android:screenOrientation="sensorLandscape" />
+
         <!-- 钱包界面: 余额, 本月签到与流水, 数据来自服务端钱包接口 -->
         <activity
             android:name=".wallet.WalletActivity"

@@ -37,6 +37,9 @@ public final class ProgressText {
     public static final String REFRESH = "刷新";
 
     public static final String NOTICE_NETWORK = "网络不可用, 请检查服务端地址";
+
+    /* 成就领取入口: 列表页只展示进度, 领取在独立界面完成. */
+    public static final String CLAIM_ENTRY = "领取成就奖励";
     public static final String NOTICE_SESSION = "登录已失效, 请重新登录";
     public static final String NOTICE_REFRESHED = "成就与任务已刷新";
 
