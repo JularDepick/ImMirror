@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "ui/layout_render.h"
 #include "ui/script/widget_host.h"
 
 using namespace immirror::ui;
@@ -49,6 +50,8 @@ int main(int argc, char** argv) {
     int commands = 0;
     int producedNothing = 0;
     int onLoadCalled = 0;
+    int texturedCommands = 0;
+    int resolvedCommands = 0;
     int withSubscriptions = 0;
     int subscriptions = 0;
     std::vector<std::string> onLoadFailures;
@@ -115,6 +118,20 @@ int main(int argc, char** argv) {
         }
         std::vector<LayoutDrawCommand> out;
         const int32_t count = host.CollectDrawCommands(out);
+        /* 贴图覆盖: 有多少条命令带贴图名, 其中多少能在界面图集里查到. */
+        for (const LayoutDrawCommand& command : out) {
+            if (command.texture == nullptr) {
+                continue;
+            }
+            texturedCommands += 1;
+            float u0 = 0.0f;
+            float v0 = 0.0f;
+            float u1 = 0.0f;
+            float v1 = 0.0f;
+            if (UiSpriteUv(command.texture, &u0, &v0, &u1, &v1)) {
+                resolvedCommands += 1;
+            }
+        }
         commands += count;
         if (count == 0) {
             producedNothing += 1;
@@ -127,6 +144,7 @@ int main(int argc, char** argv) {
     std::printf("调用入口函数 %d 个, 入口执行失败 %d 个\n", onLoadCalled,
                 static_cast<int>(onLoadFailures.size()));
     std::printf("订阅事件的界面 %d 个, 订阅条目合计 %d\n", withSubscriptions, subscriptions);
+    std::printf("带贴图命令 %d, 能在图集查到 %d\n", texturedCommands, resolvedCommands);
     for (size_t index = 0; index < onLoadFailures.size() && index < 8; ++index) {
         std::printf("  入口失败 %s\n", onLoadFailures[index].c_str());
     }

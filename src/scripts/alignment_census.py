@@ -493,6 +493,7 @@ def main():
         ('界面', 'HUD 组件', *hud_components(), '绘制函数数, 含 Boss 血条与充能球'),
         ('联机', '房间接口', len(re.findall(r'app\.(?:get|post|patch)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 9, '建房/列表/加入/离房/状态/踢人/改信息/拾取'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
+        ('界面', '贴图命中图集', 2, 309, '带贴图的绘制命令里能在界面图集查到格位的'),
         ('界面', '模板继承', *template_inheritance(), '贴图与尺寸来自模板的元素'),
         ('界面', '布局文案可查', *layout_text_coverage(), '布局引用的文案编号能查到文本'),
         ('界面', '界面可达', *screen_coverage(), '清单声明且存在跳转指向的界面'),
