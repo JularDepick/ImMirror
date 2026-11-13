@@ -2069,9 +2069,13 @@ bool GameShell::TryAttackCreature() {
                     target->Position().z - player_->Position().z};
                 const core::Vec3 pushDir =
                     fromPlayer.Length() > 1.0e-4f ? fromPlayer.Normalized() : core::Vec3{0.0f, 0.0f, 1.0f};
+                /* 质量越大越难推: 按质量倒数折减, 与生物表的质量列对应. */
+                const entity::CreatureEntity* pushed = entities_.FindById(target->Id());
+                const float targetMass = pushed != nullptr ? pushed->Definition().mass : 1.0f;
+                const float massScale = 1.0f / (targetMass > 0.0f ? targetMass : 1.0f);
                 if (item::EnchantTable::IsType(*knock, "KNOCK") && knock->value1 > 0) {
                     /* 每格按每米 3 米每秒折算, 击退持续 0.35 秒. */
-                    const float speed = static_cast<float>(knock->value1) * 3.0f;
+                    const float speed = static_cast<float>(knock->value1) * 3.0f * massScale;
                     entities_.ApplyImpulse(
                         target->Id(), core::Vec3{pushDir.x * speed, 0.0f, pushDir.z * speed}, 0.35f,
                         0.0f);
@@ -2231,11 +2235,25 @@ void GameShell::UpdateEntities(double deltaSeconds) {
     if (stats.playerDamage > 0.0f) {
         /* 生物出手的伤害类型由生物结算时记入统计, 这里直接取用. */
         const int32_t dealtIndex = static_cast<int32_t>(stats.playerDamageType);
-        const game::DamageType dealtType =
+        game::DamageType dealtType =
             dealtIndex >= 0 && dealtIndex < game::kDamageTypeCount
                 ? static_cast<game::DamageType>(dealtIndex)
                 : game::DamageType::kPunch;
+        /* 攻击附带火焰档位时改按燃烧类型结算, 护甲因此走燃烧一档. */
+        const entity::CreatureEntity* striker =
+            stats.playerDamageSource != 0
+                ? entities_.FindById(static_cast<entity::EntityId>(stats.playerDamageSource))
+                : nullptr;
+        if (striker != nullptr && striker->Definition().attackFire > 0) {
+            dealtType = game::DamageType::kBurn;
+        }
         player_->ApplyDamage(stats.playerDamage, dealtType);
+        /* 攻击附带状态效果: 命中时挂上, 重复命中由效果集合自己刷新时长. */
+        if (striker != nullptr && striker->Definition().buffId != 0) {
+            player_->ApplyBuff(striker->Definition().buffId);
+            IM_LOGI(kTag, "attack applied buff=%u",
+                    static_cast<unsigned>(striker->Definition().buffId));
+        }
         /*
          * 受击位移: 近战命中时沿攻击者指向玩家的方向推开一段距离,
          * 推开格数由击退抗性附魔抵扣, 抵扣完则不推.

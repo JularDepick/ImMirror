@@ -168,6 +168,14 @@ def block_behaviors():
     return (len(read), len(columns))
 
 
+def monster_attack_extras():
+    """生物攻击附带: 生成器实际读取的附加列数."""
+    source = read_text(os.path.join(SRC_ROOT, 'scripts', 'gen_monster_data.py'))
+    columns = ['BuffId', 'AttackFire', 'Mass']
+    read = [name for name in columns if ('"%s"' % name) in source]
+    return (len(read), len(columns))
+
+
 def java_file_count():
     total = 0
     for _root, _dirs, files in os.walk(JAVA_ROOT):
@@ -202,6 +210,7 @@ def main():
         ('玩法', '附魔条目', header_constant(os.path.join(NATIVE_ROOT, 'game', 'generated', 'enchant_data_gen.h'), 'kEnchantEntryCount'), 120, 'enchant.csv 按等级分行'),
         ('玩法', '附魔效果类型', len(set(re.findall(r'\{\d+u, "[^"]*", "([A-Za-z_]+)"',
                                               read_text(os.path.join(NATIVE_ROOT, 'game', 'generated', 'enchant_data_gen.h'))))), 18, '数据表出现的效果类型种类'),
+        ('玩法', '生物攻击附带', *monster_attack_extras(), '状态效果/火焰档位/质量三列'),
         ('玩法', '状态效果', count_rows(os.path.join(NATIVE_ROOT, 'player', 'generated', 'buff_data_gen.h')), 44, 'buffdef 客户端可消费四类'),
         ('玩法', '食物', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'food_data_gen.h')), 38, 'fooddef 可食用条目'),
         ('玩法', '工具', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'tool_data_gen.h')), 25, 'tooldef 全量工具'),

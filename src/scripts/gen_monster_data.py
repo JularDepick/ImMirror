@@ -195,6 +195,9 @@ def build_entries(rows):
             "hostile": 1 if kind in (0, 6) else 0,
             "weight": SPAWN_WEIGHT_BY_TYPE.get(kind, 0.0),
             "drops": drops,
+            "buff_id": to_int(row.get("BuffId")),
+            "attack_fire": clamp(to_int(row.get("AttackFire")), 0, 10),
+            "mass": clamp(float(to_int(row.get("Mass"))) / 100.0, 1.0, 200.0),
         })
     entries.sort(key=lambda item: item["source_id"])
     return entries
@@ -244,6 +247,11 @@ def render_header(entries):
         "    uint16_t dropOdds[3];",
         "    uint16_t dropCount[3];",
         "    uint16_t dropBlock;",
+        "    /* 攻击附带: 命中时挂上的状态效果编号, 0 表示无; 火焰伤害按档位换算. */",
+        "    uint32_t buffId;",
+        "    uint8_t attackFire;",
+        "    /* 质量: 越大越难被击退. */",
+        "    float mass;",
         "};",
         "",
         "constexpr int32_t kMonsterDataCount = %d;" % len(entries),
@@ -257,7 +265,7 @@ def render_header(entries):
         third = entry["drops"][2] if len(entry["drops"]) > 2 else {"item": 0, "odds": 0, "count": 0}
         lines.append('    {%du, "%s", %.1ff, %.1ff, %.2ff, %.2ff, %.2ff, %.2ff, %.1ff, %.1ff, '
                      '%.2ff, %d, %.1ff, %.1ff, %.1ff, %d, %d, %.2ff, '
-                     '%du, %du, %du, %du, %du, %du, %du, %du, %du, %du},'
+                     '%du, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du, %.2ff},'
                      % (entry["source_id"], escape(entry["name"]), entry["life"], entry["attack"],
                         entry["speed"], entry["height"], entry["width"], entry["thickness"],
                         entry["view"], entry["attack_distance"], entry["attack_interval"],
@@ -266,7 +274,8 @@ def render_header(entries):
                         first["item"], first["odds"], first["count"],
                         second["item"], second["odds"], second["count"],
                         third["item"], third["odds"], third["count"],
-                        first.get("block", 0)))
+                        first.get("block", 0), entry["buff_id"], entry["attack_fire"],
+                        entry["mass"]))
     lines += [
         "};",
         "",

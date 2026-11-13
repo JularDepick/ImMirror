@@ -45,6 +45,12 @@ struct MonsterDef {
     DropEntry drops[3];
     /* 占位掉落使用的方块编号, 表里没配物品的怪物按它产出. */
     voxel::BlockId lootBlock = 0;
+    /* 命中玩家时挂上的状态效果编号, 0 表示无. */
+    uint32_t buffId = 0;
+    /* 攻击附带的火焰档位, 大于 0 时伤害按燃烧类型结算. */
+    uint8_t attackFire = 0;
+    /* 质量: 越大越难被击退, 1 为常规. */
+    float mass = 1.0f;
     int32_t lootCount = 0;
 
     /*
