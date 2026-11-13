@@ -149,6 +149,12 @@ def main():
     else:
         print("索引未生成, 跳过覆盖核对")
 
+    if missingAtlas:
+        # 把缺失的文件与精灵名一并列出, 免去下次重新追查.
+        for name, path in missingAtlas[:3]:
+            sprite = templates[name][1]
+            print("  子图集缺失: %s -> %s (精灵 %s)" % (name, path, sprite))
+
     print("不带贴图 %d 个, 精灵能查到 %d 个, 子图集缺失 %d 个, 精灵查不到 %d 个: %s"
           % (noSprite, resolved, len(missingAtlas), len(unresolved),
              ", ".join(name for name, _ in unresolved[:5]) or "无"))
