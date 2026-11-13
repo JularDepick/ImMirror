@@ -30,6 +30,25 @@ public:
     const std::vector<BlockId>& Blocks() const { return blocks_; }
 
     /*
+     * 流体等级: 0 表示源头或满格, 1 到 7 表示逐级变浅.
+     * 只对液体格有意义, 其余格恒为 0; 渲染高度与蔓延距离都按它算.
+     */
+    uint8_t FluidLevel(int32_t x, int32_t y, int32_t z) const {
+        if (!InRange(x, y, z)) {
+            return 0;
+        }
+        return fluidLevel_[Index(x, y, z)];
+    }
+    void SetFluidLevel(int32_t x, int32_t y, int32_t z, uint8_t level) {
+        if (!InRange(x, y, z)) {
+            return;
+        }
+        fluidLevel_[Index(x, y, z)] = level;
+    }
+    std::vector<uint8_t>& FluidLevelData() { return fluidLevel_; }
+    const std::vector<uint8_t>& FluidLevelData() const { return fluidLevel_; }
+
+    /*
      * 天光采样: 列内返回存储值; 水平越界与高于世界顶按地表全亮回落 15,
      * 低于世界底返回 0; 避免列边界出现黑缝.
      */
@@ -82,6 +101,8 @@ private:
 
     std::vector<BlockId> blocks_;
     /* 天光与方块光两通道, 布局与 blocks_ 一致, 由 LightField 维护. */
+    /* 流体等级, 每格一字节; 非液体格恒为 0. */
+    std::vector<uint8_t> fluidLevel_;
     std::vector<uint8_t> skyLight_;
     std::vector<uint8_t> blockLight_;
     int32_t topBlockY_ = -1;

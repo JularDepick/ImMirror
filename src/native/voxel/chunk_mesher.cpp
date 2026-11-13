@@ -467,10 +467,20 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                  * 液体表面: 上方是空气时把这一格整体压到八成七高,
                  * 水面因此低于方块顶沿, 看起来是液面而不是一整块实心方块.
                  */
+                /*
+                 * 液面高度: 上方是空气时按流体等级下压.
+                 * 等级 0 为满格水面 (压到 0.875), 每升一级再矮八分之一,
+                 * 因此水滩边缘逐格变浅, 与蔓延距离一致.
+                 */
                 float liquidScale = 1.0f;
                 if (isLiquid(id) && y + 1 < kWorldHeight &&
                     blocks[index + kLayerStride] == block::Air) {
-                    liquidScale = 0.875f;
+                    const uint8_t level = column.FluidLevel(x, y, z);
+                    const float step = static_cast<float>(level) * 0.125f;
+                    liquidScale = 0.875f - (step > 0.75f ? 0.75f : step);
+                    if (liquidScale < 0.125f) {
+                        liquidScale = 0.125f;
+                    }
                 }
 
                 for (int32_t face = 0; face < kFaceCount; ++face) {

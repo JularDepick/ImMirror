@@ -208,6 +208,32 @@ void World::RebuildMesh(Chunk& chunk) {
     chunk.revision += 1;
 }
 
+uint8_t World::GetFluidLevel(int32_t x, int32_t y, int32_t z) const {
+    if (y < 0 || y >= voxel::kWorldHeight) {
+        return 0;
+    }
+    const Chunk* chunk = FindChunk(
+        voxel::ChunkCoord{FloorDiv(x, voxel::kChunkSizeX), FloorDiv(z, voxel::kChunkSizeZ)});
+    if (chunk == nullptr) {
+        return 0;
+    }
+    return chunk->column.FluidLevel(x - chunk->coord.x * voxel::kChunkSizeX, y,
+                                    z - chunk->coord.z * voxel::kChunkSizeZ);
+}
+
+void World::SetFluidLevel(int32_t x, int32_t y, int32_t z, uint8_t level) {
+    if (y < 0 || y >= voxel::kWorldHeight) {
+        return;
+    }
+    Chunk* chunk = FindChunk(
+        voxel::ChunkCoord{FloorDiv(x, voxel::kChunkSizeX), FloorDiv(z, voxel::kChunkSizeZ)});
+    if (chunk == nullptr) {
+        return;
+    }
+    chunk->column.SetFluidLevel(x - chunk->coord.x * voxel::kChunkSizeX, y,
+                                z - chunk->coord.z * voxel::kChunkSizeZ, level);
+}
+
 voxel::BlockId World::GetBlock(int32_t x, int32_t y, int32_t z) const {
     if (y < 0 || y >= voxel::kWorldHeight) {
         return 0;
@@ -235,6 +261,11 @@ bool World::SetBlock(int32_t x, int32_t y, int32_t z, voxel::BlockId id) {
         return false;
     }
     chunk->column.Set(localX, y, localZ, id);
+    /*
+     * 改写方块时流体等级回到零: 新放的水按满格算,
+     * 蔓延过程会在后续帧把它逐级调浅, 因此不会残留上一份水的旧等级.
+     */
+    chunk->column.SetFluidLevel(localX, y, localZ, 0);
     /* 方块增删改变遮光与光源分布, 全列重算光场后再重建网格. */
     RecomputeLight(*chunk);
     RebuildMesh(*chunk);

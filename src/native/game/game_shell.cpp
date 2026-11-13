@@ -3383,20 +3383,36 @@ void GameShell::SettleFluidAt(int32_t x, int32_t y, int32_t z) {
         if (world_->GetBlock(cell.x, cell.y, cell.z) != voxel::block::Air) {
             continue;
         }
-        /* 找一格相邻液体作为水源; 找不到就不填, 也不继续扩散. */
+        /*
+         * 找一格相邻液体作为水源; 找不到就不填, 也不继续扩散.
+         * 同时取该水源的流体等级: 向下蔓延不降级 (落水保持满格),
+         * 水平蔓延逐格加一, 到上限就不再扩散, 因此水滩会有明显的边缘.
+         */
+        constexpr uint8_t kMaxFluidLevel = 7;
         voxel::BlockId source = voxel::block::Air;
+        uint8_t sourceLevel = 0;
+        bool fromBelow = false;
         for (const auto& offset : kOffsets) {
             const voxel::BlockId neighbour =
                 world_->GetBlock(cell.x + offset[0], cell.y + offset[1], cell.z + offset[2]);
             if (isFluid(neighbour)) {
                 source = neighbour;
+                sourceLevel = world_->GetFluidLevel(cell.x + offset[0], cell.y + offset[1],
+                                                    cell.z + offset[2]);
+                fromBelow = offset[1] > 0;
                 break;
             }
         }
         if (source == voxel::block::Air) {
             continue;
         }
+        /* 上方来的水保持满格, 侧面来的水逐级变浅. */
+        const uint8_t newLevel = fromBelow ? 0 : static_cast<uint8_t>(sourceLevel + 1);
+        if (!fromBelow && newLevel > kMaxFluidLevel) {
+            continue;
+        }
         world_->SetBlock(cell.x, cell.y, cell.z, source);
+        world_->SetFluidLevel(cell.x, cell.y, cell.z, newLevel);
         ++filled;
         for (const auto& offset : kOffsets) {
             queue.push_back(voxel::BlockPos{cell.x + offset[0], cell.y + offset[1],

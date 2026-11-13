@@ -6,6 +6,7 @@ namespace immirror::voxel {
 
 ChunkColumn::ChunkColumn()
     : blocks_(static_cast<size_t>(kChunkVolume), block::Air),
+      fluidLevel_(static_cast<size_t>(kChunkVolume), 0),
       /* 天光初始按全亮假设填充, 方块光清零; 正式值由 LightField 重算写入. */
       skyLight_(static_cast<size_t>(kChunkVolume), kMaxLightLevel),
       blockLight_(static_cast<size_t>(kChunkVolume), 0) {}

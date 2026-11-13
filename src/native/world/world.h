@@ -45,6 +45,11 @@ public:
     void Update(const core::Vec3& center, int32_t viewDistanceChunks, uint8_t treeShape = 1);
 
     voxel::BlockId GetBlock(int32_t x, int32_t y, int32_t z) const;
+
+    /* 流体等级: 0 为源头或满格, 1 到 7 逐级变浅; 非液体格返回 0. */
+    uint8_t GetFluidLevel(int32_t x, int32_t y, int32_t z) const;
+    /* 设置流体等级; 越界或列未加载时忽略. */
+    void SetFluidLevel(int32_t x, int32_t y, int32_t z, uint8_t level);
     bool SetBlock(int32_t x, int32_t y, int32_t z, voxel::BlockId id);
 
     /* 该列最高非空方块的 y 加一, 用于出生点定位. */
