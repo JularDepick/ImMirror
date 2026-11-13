@@ -51,6 +51,9 @@ public:
     /* 按屏幕矩形解算; 运行时的尺寸与锚点覆盖会在这里生效. */
     void Resolve(const LayoutRect& screen);
 
+    /* 装入模板表, 之后载入的布局会按继承属性展开外观. */
+    void SetTemplates(const LayoutTemplates* templates) { document_.SetTemplates(templates); }
+
     /*
      * 按模板复制控件: 把模板控件的整棵子树复制到指定父控件下.
      * 新根用 newName 命名, 子孙名字为 "新根名/原子名", 因此按名字仍能取到.

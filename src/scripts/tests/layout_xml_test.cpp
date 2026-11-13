@@ -181,6 +181,40 @@ int main(int argc, char** argv) {
         check("隐藏帧标记正确", hidden != nullptr && hidden->hidden);
     }
 
+    /* 模板继承: 元素带继承属性时取模板的贴图, 精灵名与尺寸. */
+    {
+        LayoutTemplates templates;
+        const char* templateText =
+            "<Ui>\n"
+            "  <Texture name=\"Bkg\" virtual=\"true\" file=\"ui/tex.xml\" uvname=\"box.png\"\n"
+            "           w=\"120\" h=\"60\"/>\n"
+            "</Ui>\n";
+        check("模板文本能解析",
+              ParseTemplates(templateText, std::string(templateText).size(), templates));
+        check("模板表有一条", templates.size() == 1);
+
+        LayoutDocument document;
+        document.SetTemplates(&templates);
+        const char* layoutText =
+            "<Ui>\n"
+            "  <Texture name=\"Panel\" inherits=\"Bkg\"/>\n"
+            "  <Texture name=\"Own\" inherits=\"Bkg\" file=\"ui/other.xml\"/>\n"
+            "</Ui>\n";
+        check("带继承的布局能解析",
+              document.Parse(layoutText, std::string(layoutText).size()));
+        LayoutFrame* panel = document.Find("Panel");
+        check("继承拿到贴图", panel != nullptr && panel->texture != nullptr &&
+                                  std::string(panel->texture) == "ui/tex.xml");
+        check("继承拿到精灵名", panel != nullptr && panel->sprite != nullptr &&
+                                    std::string(panel->sprite) == "box.png");
+        check("继承拿到尺寸", panel != nullptr && panel->width == 120.0f &&
+                                  panel->height == 60.0f);
+        LayoutFrame* own = document.Find("Own");
+        check("自身贴图不被模板覆盖",
+              own != nullptr && own->texture != nullptr &&
+                  std::string(own->texture) == "ui/other.xml");
+    }
+
     /* 解析失败要带行号, 否则上千行的布局文件无法定位. */
     {
         LayoutDocument broken;

@@ -26,6 +26,9 @@ namespace immirror::ui::script {
  */
 class WidgetHost {
 public:
+    /* 装入模板表, 载入布局时按继承属性展开外观; 指针须长期有效. */
+    void SetTemplates(const LayoutTemplates* templates);
+
     /* 载入布局文本; 成功后自动建好控件表与全局绑定. */
     bool Load(const char* layoutText, size_t length);
 

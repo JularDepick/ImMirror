@@ -58,6 +58,25 @@ int main(int argc, char** argv) {
     std::vector<std::string> loadFailures;
     std::vector<std::string> runFailures;
 
+    /*
+     * 模板表: 模板既可以放在模板文件里, 也可以就地定义在任意界面文件里,
+     * 因此要把所有布局文件都扫一遍再合并.
+     */
+    LayoutTemplates templates;
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(layoutDir)) {
+        if (!entry.is_regular_file() || entry.path().extension() != ".xml") {
+            continue;
+        }
+        std::string body;
+        if (!ReadFile(entry.path().string(), body)) {
+            continue;
+        }
+        LayoutTemplates part;
+        if (ParseTemplates(body.data(), body.size(), part)) {
+            templates.insert(part.begin(), part.end());
+        }
+    }
+
     for (const auto& entry : std::filesystem::recursive_directory_iterator(layoutDir)) {
         if (!entry.is_regular_file() || entry.path().extension() != ".xml") {
             continue;
@@ -68,6 +87,7 @@ int main(int argc, char** argv) {
             continue;
         }
         WidgetHost host;
+        host.SetTemplates(&templates);
         if (!host.Load(layout.data(), layout.size())) {
             /* 没有帧的 XML 是资源清单一类, 不算失败. */
             if (host.Error() != "没有帧节点") {

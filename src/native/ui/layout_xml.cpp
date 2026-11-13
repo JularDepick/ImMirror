@@ -477,7 +477,9 @@ bool ParseTemplates(const char* text, size_t length, LayoutTemplates& out) {
         LayoutTemplate entry;
         entry.texture = attributes.file;
         entry.sprite = attributes.uvname;
-        /* 尺寸来自子元素, 这里不展开; 留待继承方按自身尺寸决定. */
+        /* 模板直接写了宽高时一并收下; 写在子元素里的不展开. */
+        entry.width = ToFloat(attributes.w);
+        entry.height = ToFloat(attributes.h);
         out[attributes.name] = entry;
     }
     return !out.empty();

@@ -85,6 +85,10 @@ Value MakeNative(Closure::NativeFn fn) {
 
 }  /* namespace */
 
+void WidgetHost::SetTemplates(const LayoutTemplates* templates) {
+    tree_.SetTemplates(templates);
+}
+
 bool WidgetHost::Load(const char* layoutText, size_t length) {
     cache_.clear();
     if (!tree_.Load(layoutText, length)) {
