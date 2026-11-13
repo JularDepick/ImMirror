@@ -5,6 +5,8 @@
 用法: python scripts/alignment_census.py [--write]
 """
 
+import csv
+import io
 import os
 import re
 import sys
@@ -99,6 +101,30 @@ def layout_text_coverage():
     hit = len(effective & defined)
     total = len(effective)
     return hit, total if total > 0 else 1
+
+
+def drop_target_coverage():
+    """方块掉落物必须都在客户端物品表里, 否则挖掉方块拿不到东西."""
+    block_csv = os.path.join(REPO_ROOT, "assets", "project", "csvdef", "blockdef.csv")
+    item_header = os.path.join(NATIVE_ROOT, "game", "generated", "item_data_gen.h")
+    if not os.path.isfile(block_csv) or not os.path.isfile(item_header):
+        return 0, 1
+    items = set(int(v) for v in re.findall(r"\{(\d+)u,", read_text(item_header)))
+    rows = list(csv.reader(io.StringIO(open(block_csv, "rb").read().decode("utf-8-sig"))))
+    if len(rows) < 3:
+        return 0, 1
+    index = {name: position for position, name in enumerate(rows[1])}
+    columns = [index[name] for name in ("ToolMineDrop1", "ToolMineDrop2") if name in index]
+    targets = set()
+    for row in rows[2:]:
+        for column in columns:
+            if column >= len(row):
+                continue
+            raw = row[column].strip()
+            if raw.isdigit() and int(raw) > 0:
+                targets.add(int(raw))
+    hit = len(targets & items)
+    return hit, len(targets) if targets else 1
 
 
 def monster_coverage():
@@ -370,6 +396,7 @@ def main():
                                               read_text(os.path.join(NATIVE_ROOT, 'game', 'generated', 'enchant_data_gen.h'))))), 18, '数据表出现的效果类型种类'),
         ('玩法', '生物攻击附带', *monster_attack_extras(), '状态效果/火焰档位/质量三列'),
         ('玩法', '状态效果', count_rows(os.path.join(NATIVE_ROOT, 'player', 'generated', 'buff_data_gen.h')), 44, 'buffdef 客户端可消费四类'),
+        ('玩法', '掉落目标可查', *drop_target_coverage(), '方块掉落物都能在物品表里找到'),
         ('玩法', '生物条目', *(lambda t, n, p: (t, n))(*monster_coverage()), '生成表收录的生物'),
         ('玩法', '和平生物', *(lambda t, n, p: (p, p if p > 0 else 1))(*monster_coverage()), '不主动攻击的生物'),
         ('玩法', '角色皮肤', *skin_coverage(), '皮肤编号与模型的对照条目'),

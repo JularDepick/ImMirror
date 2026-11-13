@@ -210,6 +210,40 @@ def load_furnace_sources():
     return result
 
 
+BLOCK_CSV_PATH = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "project",
+                                               "csvdef", "blockdef.csv"))
+
+
+def read_drop_sources():
+    """取方块表里"挖掉后掉落"的物品编号.
+
+    这些编号必须出现在客户端物品表里, 否则挖掉方块时找不到对应物品,
+    玩家看到方块碎了却什么都没拿到. 它们不是方块, 不会被方块种子带进来,
+    因此单独作为种子补入.
+    """
+    if not os.path.isfile(BLOCK_CSV_PATH):
+        return []
+    import io
+    with open(BLOCK_CSV_PATH, "rb") as handle:
+        rows = list(csv.reader(io.StringIO(handle.read().decode("utf-8-sig"))))
+    if len(rows) < 3:
+        return []
+    header = rows[1]
+    index = {name: position for position, name in enumerate(header)}
+    columns = [index[name] for name in ("ToolMineDrop1", "ToolMineDrop2") if name in index]
+    if not columns:
+        return []
+    sources = set()
+    for row in rows[2:]:
+        for column in columns:
+            if column >= len(row):
+                continue
+            raw = row[column].strip()
+            if raw.isdigit() and int(raw) > 0:
+                sources.add(int(raw))
+    return sorted(sources)
+
+
 def compute_closure(recipes, seed_sources):
     """以方块为原料逐层展开可合成闭包, 无序口径: 材料齐备即可合成."""
     available = set(seed_sources)
@@ -252,11 +286,21 @@ def main():
             items_by_id[key] = row
     source_pairs = read_block_sources()
     seed_sources = [source for _, source in source_pairs]
+    # 方块掉落物也必须是客户端物品, 否则挖掉方块拿不到东西.
+    drop_sources = read_drop_sources()
+    for source in drop_sources:
+        if source not in seed_sources:
+            seed_sources.append(source)
     emit("物品 %d 条, 配方 %d 条, 客户端方块 %d 种"
          % (len(items_by_id), len(recipes), len(source_pairs)))
 
     closure, rounds = compute_closure(recipes, seed_sources)
     selected = [source for _, source in source_pairs]
+    # 方块物品与方块 id 同值, 前 N 个位置必须留给方块; 掉落物排在方块之后,
+    # 且要去重, 否则会把后面的物品 id 整体推后.
+    for source in drop_sources:
+        if source not in selected:
+            selected.append(source)
     selected[0] = 0  # 方块 0 是空气, 物品 0 也是空气
     for source in sorted(closure):
         if source in seed_sources or source <= 0:
