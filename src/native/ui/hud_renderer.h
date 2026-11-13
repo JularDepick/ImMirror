@@ -140,6 +140,13 @@ struct HudFrame {
      */
     float yawRadians = 0.0f;
 
+    /* 左上角状态图标上限, 与 BuffState::kMaxActive 一致. */
+    static constexpr int32_t kMaxBuffIcons = 8;
+    /* 当前挂着的状态效果: 编号与剩余秒数, 图标底部按剩余时间画进度条. */
+    int32_t buffCount = 0;
+    uint32_t buffIds[kMaxBuffIcons] = {};
+    float buffRemaining[kMaxBuffIcons] = {};
+
     /* 每格剩余数量, 由物品栏逐帧填入; 数量为 0 时该格变暗, 数字仍显示 0. */
     int32_t slotCounts[kHudSlotCount] = {};
     /*

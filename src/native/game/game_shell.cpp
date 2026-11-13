@@ -2452,6 +2452,23 @@ void GameShell::RenderScene() {
         frame.mineProgress = player_->MiningProgress();
     /* 罗盘: 朝向直接取玩家控制器, 与视线拾取同一来源. */
     frame.yawRadians = player_->Yaw();
+    /* 状态图标: 取当前挂着的效果编号与剩余秒数, 由 HUD 画成一排小方块. */
+    {
+        const player::BuffState& buffs = player_->Buffs();
+        for (int32_t index = 0; index < player::BuffState::kMaxActive; ++index) {
+            uint32_t buffId = 0;
+            float remaining = 0.0f;
+            if (!buffs.At(index, &buffId, &remaining)) {
+                break;
+            }
+            if (frame.buffCount >= ui::HudFrame::kMaxBuffIcons) {
+                break;
+            }
+            frame.buffIds[frame.buffCount] = buffId;
+            frame.buffRemaining[frame.buffCount] = remaining;
+            frame.buffCount += 1;
+        }
+    }
     }
     if (settings_->ClassicalMoveMode()) {
         frame.stick.active = true;

@@ -1459,6 +1459,45 @@ void DrawCompass(float* out, int32_t& offset, const HudLayout& layout, float yaw
              marker);
 }
 
+/*
+ * 状态效果图标.
+ * 左上角血条下方一排小方块: 底色按效果编号折算固定色调, 同一效果每次同色;
+ * 图标底部一条剩余时间进度条, 6 秒内线性缩短, 超过 6 秒按满格显示.
+ * 只由纯色矩形组成, 不依赖界面图集.
+ */
+void DrawBuffIcons(float* out, int32_t& offset, const HudLayout& layout, const HudFrame& frame,
+                   float scale) {
+    constexpr float kStartXNorm = 0.055f;
+    constexpr float kStepXNorm = 0.042f;
+    constexpr float kCenterYNorm = 0.165f;
+    constexpr float kHalfNorm = 0.016f;
+    for (int32_t index = 0; index < frame.buffCount && index < HudFrame::kMaxBuffIcons; ++index) {
+        const float x = layout.DesignX(kStartXNorm + kStepXNorm * static_cast<float>(index));
+        const float y = layout.DesignY(kCenterYNorm);
+        const float half = layout.DesignLength(kHalfNorm);
+        const uint32_t id = frame.buffIds[index];
+        const float tint[4] = {
+            0.35f + 0.12f * static_cast<float>(id % 3u),
+            0.45f + 0.10f * static_cast<float>((id / 3u) % 3u),
+            0.55f + 0.08f * static_cast<float>((id / 9u) % 3u),
+            0.92f,
+        };
+        PushRect(out, offset, x, y, half, half, scale, tint);
+        /* 剩余时间条: 底部一条, 6 秒封顶. */
+        const float remaining = frame.buffRemaining[index];
+        const float ratio = remaining <= 0.0f ? 0.0f : (remaining >= 6.0f ? 1.0f : remaining / 6.0f);
+        const float barHalfHeight = half * 0.16f;
+        const float barY = y - half + barHalfHeight;
+        const float track[4] = {0.0f, 0.0f, 0.0f, 0.45f};
+        PushRect(out, offset, x, barY, half, barHalfHeight, scale, track);
+        if (ratio > 0.0f) {
+            const float fill[4] = {0.95f, 0.92f, 0.55f, 0.95f};
+            PushRect(out, offset, x - half + half * ratio, barY, half * ratio, barHalfHeight, scale,
+                     fill);
+        }
+    }
+}
+
 void HudRenderer::Render(const HudFrame& frame) {
     if (!ready_ || !layout_.Valid()) {
         return;
@@ -1497,9 +1536,10 @@ void HudRenderer::Render(const HudFrame& frame) {
                            scale, ringTrack, ringFill);
     }
 
-    /* 顶部罗盘: 只在没有打开任何面板时绘制, 面板会盖住它. */
+    /* 顶部罗盘与状态图标: 只在没有打开任何面板时绘制, 面板会盖住它们. */
     if (frame.inventory == nullptr && frame.furnace == nullptr && frame.chest == nullptr) {
         DrawCompass(vertices, offset, layout_, frame.yawRadians, scale);
+        DrawBuffIcons(vertices, offset, layout_, frame, scale);
     }
 
     /* 一个素材像素的设计长度, 九宫边界与内缩量都按它换算. */
