@@ -1460,6 +1460,40 @@ void DrawCompass(float* out, int32_t& offset, const HudLayout& layout, float yaw
 }
 
 /*
+ * 战斗框: 顶部罗盘下方一条细长血条加目标名称.
+ * 只在最近攻击过且目标仍存活时绘制, 名称走点阵字, 血条按血量比例填充.
+ * 与罗盘同一套设计坐标, 不依赖界面图集.
+ */
+void DrawBattleFrame(float* out, int32_t& offset, const HudLayout& layout, const HudFrame& frame,
+                     float scale) {
+    if (!frame.targetVisible) {
+        return;
+    }
+    constexpr float kCenterYNorm = 0.075f;
+    constexpr float kHalfWidthNorm = 0.16f;
+    constexpr float kHalfHeightNorm = 0.011f;
+    const float centerX = 0.0f;
+    const float centerY = layout.DesignY(kCenterYNorm);
+    const float halfWidth = layout.DesignLength(kHalfWidthNorm);
+    const float halfHeight = layout.DesignLength(kHalfHeightNorm);
+    const float track[4] = {0.0f, 0.0f, 0.0f, 0.45f};
+    PushRect(out, offset, centerX, centerY, halfWidth, halfHeight, scale, track);
+    const float health = frame.targetHealth < 0.0f ? 0.0f
+                         : (frame.targetHealth > 1.0f ? 1.0f : frame.targetHealth);
+    if (health > 0.0f) {
+        const float fill[4] = {0.86f, 0.28f, 0.26f, 0.95f};
+        PushRect(out, offset, centerX - halfWidth + halfWidth * health, centerY, halfWidth * health,
+                 halfHeight, scale, fill);
+    }
+    if (frame.targetName != nullptr) {
+        const float textSize = layout.DesignLength(0.0015f);
+        const float textY = centerY + halfHeight + layout.DesignLength(0.006f);
+        const float white[4] = {1.0f, 1.0f, 1.0f, 0.9f};
+        PushCenteredText(out, offset, centerX, textY, textSize, frame.targetName, scale, white);
+    }
+}
+
+/*
  * 状态效果图标.
  * 左上角血条下方一排小方块: 底色按效果编号折算固定色调, 同一效果每次同色;
  * 图标底部一条剩余时间进度条, 6 秒内线性缩短, 超过 6 秒按满格显示.
@@ -1539,6 +1573,7 @@ void HudRenderer::Render(const HudFrame& frame) {
     /* 顶部罗盘与状态图标: 只在没有打开任何面板时绘制, 面板会盖住它们. */
     if (frame.inventory == nullptr && frame.furnace == nullptr && frame.chest == nullptr) {
         DrawCompass(vertices, offset, layout_, frame.yawRadians, scale);
+        DrawBattleFrame(vertices, offset, layout_, frame, scale);
         DrawBuffIcons(vertices, offset, layout_, frame, scale);
     }
 

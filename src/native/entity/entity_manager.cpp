@@ -211,6 +211,15 @@ CreatureEntity* EntityManager::Find(EntityId id) {
     return nullptr;
 }
 
+const CreatureEntity* EntityManager::FindById(EntityId id) const {
+    for (const auto& creature : creatures_) {
+        if (creature != nullptr && creature->Id() == id) {
+            return creature.get();
+        }
+    }
+    return nullptr;
+}
+
 void EntityManager::RemoveGone() {
     creatures_.erase(
         std::remove_if(creatures_.begin(), creatures_.end(),

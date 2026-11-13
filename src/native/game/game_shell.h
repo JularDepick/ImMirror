@@ -174,6 +174,19 @@ public:
     /* 上一轮下发的远端玩家数, 用于只在数量变化时打日志. */
     int32_t lastRemoteCount_ = -1;
     /*
+     * 环境伤害: 岩浆里持续掉血, 头部长时间在水下开始溺水.
+     * 溺水计时在离开水面时清零.
+     */
+    void UpdateEnvironmentDamage(double deltaSeconds);
+
+    /* 连续在水下的秒数, 用于溺水判定. */
+    double drownSeconds_ = 0.0;
+
+    /* 战斗框目标: 最近攻击过的生物标识与显示截止时刻. */
+    entity::EntityId battleTargetId_ = 0;
+    double battleTargetUntil_ = 0.0;
+
+    /*
      * 远端生物插值状态: 每只生物保存上一轮位置与目标位置, 渲染时按
      * 两次下发之间的时间做线性插值, 避免 10 秒一次的轮询节拍让形象瞬移.
      */

@@ -87,6 +87,9 @@ public:
     /* 同时存在的生物上限. */
     int32_t Capacity() const;
 
+    /* 按标识查生物, 未找到返回空指针; 供战斗框刷新目标血量. */
+    const CreatureEntity* FindById(EntityId id) const;
+
     /* 只读访问全部生物, 供渲染侧接入生物网格时逐个体取位置, 朝向与状态. */
     const std::vector<std::unique_ptr<CreatureEntity>>& Creatures() const { return creatures_; }
 

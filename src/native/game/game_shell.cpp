@@ -1732,6 +1732,48 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
  * 受一次伤害. 伤害按手持物换算: 空手取拳击伤害, 手持方块按方块硬度加成并封顶,
  * 换算关系集中在 entity_tuning.h, 后续接入武器物品只改那一处.
  */
+/*
+ * 环境伤害.
+ * 岩浆: 脚或头所在方块是岩浆时按每秒 4 点扣血, 不需要计时.
+ * 溺水: 头部在水下连续超过 15 秒后按每秒 2 点扣血, 一露出水面立刻清零.
+ * 死亡与重生由玩家控制器自己处理, 这里只负责按帧喂伤害.
+ */
+void GameShell::UpdateEnvironmentDamage(double deltaSeconds) {
+    if (player_ == nullptr || !player_->Alive() || world_ == nullptr) {
+        return;
+    }
+    constexpr double kLavaDamagePerSecond = 4.0;
+    constexpr double kDrownGraceSeconds = 15.0;
+    constexpr double kDrownDamagePerSecond = 2.0;
+    constexpr float kHeadOffset = 1.6f;
+    const core::Vec3 feet = player_->Position();
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    const auto blockNameAt = [this, &registry](float x, float y, float z) {
+        const voxel::BlockId id = world_->GetBlock(static_cast<int32_t>(std::floor(x)),
+                                                   static_cast<int32_t>(std::floor(y)),
+                                                   static_cast<int32_t>(std::floor(z)));
+        return registry.Info(id).name;
+    };
+    const char* feetName = blockNameAt(feet.x, feet.y + 0.1f, feet.z);
+    const char* headName = blockNameAt(feet.x, feet.y + kHeadOffset, feet.z);
+    const bool feetLava = feetName != nullptr && std::strstr(feetName, "lava") != nullptr;
+    const bool headLava = headName != nullptr && std::strstr(headName, "lava") != nullptr;
+    if (feetLava || headLava) {
+        player_->ApplyDamage(static_cast<float>(kLavaDamagePerSecond * deltaSeconds));
+        drownSeconds_ = 0.0;
+        return;
+    }
+    const bool headInWater = headName != nullptr && std::strstr(headName, "water") != nullptr;
+    if (!headInWater) {
+        drownSeconds_ = 0.0;
+        return;
+    }
+    drownSeconds_ += deltaSeconds;
+    if (drownSeconds_ > kDrownGraceSeconds) {
+        player_->ApplyDamage(static_cast<float>(kDrownDamagePerSecond * deltaSeconds));
+    }
+}
+
 bool GameShell::TryAttackCreature() {
     const core::Vec3 feet = player_->Position();
     const core::Vec3 eye{feet.x, feet.y + kEyeHeight, feet.z};
@@ -1747,6 +1789,9 @@ bool GameShell::TryAttackCreature() {
     const voxel::BlockId heldBlock = item::ItemTable::Instance().BlockOf(heldItem);
     const float hardness = voxel::BlockRegistry::Instance().Info(heldBlock).hardness;
     const float damage = entity::tuning::HeldAttackDamage(holding, hardness);
+    /* 记下战斗框目标: 命中后 4 秒内显示其血量, 致死一击同样显示到超时. */
+    battleTargetId_ = target->Id();
+    battleTargetUntil_ = elapsedSeconds_ + 4.0;
     const bool killed = entities_.Damage(target->Id(), damage);
     if (killed) {
         /* 致死一击计一次击败事件, 并入上报增量与本地成就进度. */
@@ -1799,6 +1844,11 @@ void GameShell::UpdateEntities(double deltaSeconds) {
     /* 生物伤害汇总后一次性施加, 玩家控制器内部完成免伤窗口与死亡判定.
      * 伤害数值显示 (kDamageSwitch) 暂无消费点: 伤害数字系统尚未实现,
      * 接入飘字后在此按开关决定是否生成数字事件. */
+    /*
+     * 环境伤害与生物伤害同一帧结算: 岩浆每秒 4 点, 头部入水超过 15 秒后
+     * 每秒 2 点. 判定取脚下方块与头部方块, 与水下滤镜同一取块方式.
+     */
+    UpdateEnvironmentDamage(deltaSeconds);
     if (stats.playerDamage > 0.0f) {
         player_->ApplyDamage(stats.playerDamage);
         IM_LOGI(kTag, "player damaged by creature amount=%.1f health=%.1f",
@@ -2452,6 +2502,18 @@ void GameShell::RenderScene() {
         frame.mineProgress = player_->MiningProgress();
     /* 罗盘: 朝向直接取玩家控制器, 与视线拾取同一来源. */
     frame.yawRadians = player_->Yaw();
+    /*
+     * 战斗框: 最近 4 秒内攻击过且目标仍在场时显示其血量比例.
+     * 名称不填: 点阵字只有 ASCII 字形, 中文名画不出来, 等字库接入后再补.
+     */
+    if (battleTargetId_ != 0 && elapsedSeconds_ < battleTargetUntil_) {
+        const entity::CreatureEntity* battleTarget = entities_.FindById(battleTargetId_);
+        if (battleTarget != nullptr && !battleTarget->Removed()) {
+            frame.targetVisible = true;
+            frame.targetHealth = battleTarget->HealthRatio();
+            frame.targetName = nullptr;
+        }
+    }
     /* 状态图标: 取当前挂着的效果编号与剩余秒数, 由 HUD 画成一排小方块. */
     {
         const player::BuffState& buffs = player_->Buffs();

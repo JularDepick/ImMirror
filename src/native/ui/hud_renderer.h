@@ -140,6 +140,14 @@ struct HudFrame {
      */
     float yawRadians = 0.0f;
 
+    /*
+     * 战斗框: 攻击命中后短时间显示目标名称与血量, 名称由总装从生物表取.
+     * targetVisible 为假时整块不绘制.
+     */
+    bool targetVisible = false;
+    const char* targetName = nullptr;
+    float targetHealth = 1.0f;
+
     /* 左上角状态图标上限, 与 BuffState::kMaxActive 一致. */
     static constexpr int32_t kMaxBuffIcons = 8;
     /* 当前挂着的状态效果: 编号与剩余秒数, 图标底部按剩余时间画进度条. */
