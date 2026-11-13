@@ -341,6 +341,38 @@ describe("房间通道", () => {
     expect(rejected.rejectedDrops).toBe(1);
   });
 
+  it("房主上报的储物箱内容被转发给客人, 客人的上报被拒", async () => {
+    const owner = await registerCasePlayer("chest", 1);
+    const guest = await registerCasePlayer("chest", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    const chests = [
+      { key: "11259375", slots: [{ i: 0, item: 3, c: 12 }, { i: 5, item: 7, c: 1 }] },
+    ];
+    const reported = expectOk<{ chests: unknown[]; rejectedChests: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { chests }, owner.token),
+    );
+    expect(reported.rejectedChests).toBe(0);
+    expect(reported.chests).toHaveLength(1);
+
+    const seen = expectOk<{ chests: { key: string; slots: { i: number; c: number }[] }[] }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(seen.chests[0]?.key).toBe("11259375");
+    expect(seen.chests[0]?.slots).toHaveLength(2);
+
+    /* 客人上报被拒. */
+    const rejected = expectOk<{ rejectedChests: number }>(
+      await app.post(
+        `/api/v1/rooms/${room.id}/state`,
+        { chests: [{ key: "1", slots: [{ i: 0, item: 1, c: 1 }] }] },
+        guest.token,
+      ),
+    );
+    expect(rejected.rejectedChests).toBe(1);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);
