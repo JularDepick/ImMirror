@@ -167,6 +167,32 @@ describe("房间通道", () => {
     expect(guestView.edits.map((edit) => edit.block).sort()).toEqual([3, 5]);
   });
 
+  it("离开房间后再同步返回无权, 按房间号重进可恢复", async () => {
+    const owner = await registerCasePlayer("rejoin", 1);
+    const guest = await registerCasePlayer("rejoin", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    /* 主动离房后, 再上报状态应当被判定为不在房内. */
+    await app.post(`/api/v1/rooms/${room.id}/leave`, {}, guest.token);
+    const rejected = await app.post(
+      `/api/v1/rooms/${room.id}/state`,
+      { edits: [] },
+      guest.token,
+    );
+    expect(rejected.status).toBeGreaterThanOrEqual(400);
+
+    /* 房间还在, 按房间号重进即可恢复成员身份. */
+    const rejoined = expectOk<{ room: { id: string } }>(
+      await app.post("/api/v1/rooms/join", { code: room.code }, guest.token),
+    );
+    expect(rejoined.room.id).toBe(room.id);
+    const state = expectOk<{ seq: number }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(state.seq).toBeGreaterThanOrEqual(0);
+  });
+
   it("增量被单次上限截断时给出标记", async () => {
     const owner = await registerCasePlayer("truncate", 1);
     const room = await createRoom(owner.token);
