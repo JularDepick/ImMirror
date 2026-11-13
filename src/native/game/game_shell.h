@@ -262,6 +262,9 @@ public:
      */
     void SetGuestMode(bool guest);
 
+    /* 界面层给一条提示: 与内部提示同一通道, 供网络状态一类的低频事件使用. */
+    void ShowTipFromUi(const char* text) { ShowTip(text); }
+
     /* 世界时间: 总秒数, 供房间同步昼夜; 客人侧写入房主的时间. */
     float WorldTimeSeconds() const;
     void SetWorldTimeSeconds(float seconds);

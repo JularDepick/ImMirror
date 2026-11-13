@@ -219,6 +219,26 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetWeatherState(JNIEnv* 
     shell->SetWeatherState(static_cast<int32_t>(kind), static_cast<float>(intensity));
 }
 
+/* Java 侧低频入口: 由界面层给一条 HUD 提示, 文案为拉丁字母. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeShowTip(JNIEnv* env, jclass clazz,
+                                                               jstring text) {
+    (void)clazz;
+    if (text == nullptr) {
+        return;
+    }
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    if (utf == nullptr) {
+        return;
+    }
+    shell->ShowTipFromUi(utf);
+    env->ReleaseStringUTFChars(text, utf);
+}
+
 /* Java 侧低频入口: 设置房间客人模式, 关闭本地自然生成. */
 JNIEXPORT void JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetGuestMode(JNIEnv* env, jclass clazz,

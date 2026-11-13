@@ -187,6 +187,14 @@ public final class NativeBridge {
         nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
     }
 
+    /* 由界面层给一条 HUD 提示; 文案只支持拉丁字母. */
+    public static void showTip(String text) {
+        if (!ensureLoaded() || text == null) {
+            return;
+        }
+        nativeShowTip(text);
+    }
+
     /* 当前世界时间总秒数, 房主每轮上报给房间. */
     public static float worldTimeSeconds() {
         if (!ensureLoaded()) {
@@ -395,6 +403,8 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native void nativeShowTip(String text);
 
     private static native int nativeWeatherKind();
 

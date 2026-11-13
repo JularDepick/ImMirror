@@ -107,6 +107,13 @@ public final class PlayActivity extends NativeActivity {
     private long roomSeq;
     /* 上次看到的内容版本: 版本没变时服务端不下发四份内容数组. */
     private long roomContentSeq;
+    /*
+     * 断线重连: 连续失败到阈值时进入重连状态并在界面提示,
+     * 恢复后自动退出; 房间已不存在时直接结束本局.
+     */
+    private int roomSyncFailures;
+    private boolean roomReconnecting;
+    private static final int ROOM_RECONNECT_THRESHOLD = 3;
     /* 已应用的生物快照版本号, 与位置通道的序号分开记. */
     private long roomCreatureSeq = -1L;
     /* 本端是否房主: 房主上行生物快照, 客人应用房主下发的快照. */
@@ -422,6 +429,13 @@ public final class PlayActivity extends NativeActivity {
                     public void onSuccess(RoomApi.State state) {
                         roomSeq = state.seq;
                         roomContentSeq = state.contentSeq;
+                        /* 任何一次成功都视为链路恢复, 清掉失败计数与提示. */
+                        roomSyncFailures = 0;
+                        if (roomReconnecting) {
+                            roomReconnecting = false;
+                            NativeBridge.showTip("RECONNECTED");
+                            Log.i(TAG, "room sync recovered");
+                        }
                         Log.i(TAG, "room sync ok, seq=" + state.seq + " players="
                                 + countPlayers(state.playersJson) + " edits="
                                 + state.editsJson.length() + " rejected=" + state.rejectedEdits);
@@ -468,6 +482,23 @@ public final class PlayActivity extends NativeActivity {
                     @Override
                     public void onFailure(com.julardepick.immirror.account.ApiException error) {
                         Log.w(TAG, "room sync failed: " + error.code() + " " + error.detail());
+                        /*
+                         * 房间已被关闭或自己已不在房内: 没有恢复可能, 直接结束本局.
+                         * 其余错误 (网络抖动, 服务重启) 累加失败次数, 到阈值后提示重连.
+                         */
+                        if ("ROOM_NOT_FOUND".equals(error.code())
+                                || "AUTH_UNAUTHORIZED".equals(error.code())) {
+                            NativeBridge.showTip("ROOM CLOSED");
+                            finish();
+                            return;
+                        }
+                        roomSyncFailures += 1;
+                        if (!roomReconnecting && roomSyncFailures >= ROOM_RECONNECT_THRESHOLD) {
+                            roomReconnecting = true;
+                            NativeBridge.showTip("RECONNECTING");
+                            Log.w(TAG, "room sync reconnecting after " + roomSyncFailures
+                                    + " failures");
+                        }
                     }
                 });
     }
