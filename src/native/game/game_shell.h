@@ -255,6 +255,11 @@ public:
     float WorldTimeSeconds() const;
     void SetWorldTimeSeconds(float seconds);
 
+    /* 天气: 房主上报编号与强度, 客人侧据此对齐降水与天色. */
+    int32_t WeatherKindCode() const;
+    float WeatherIntensity() const;
+    void SetWeatherState(int32_t kind, float intensity);
+
     /* 本端是否允许改动方块; 房间客人没有改方块权限, 世界内容以房主为准. */
     bool BlocksEditable() const { return blocksEditable_; }
     bool blocksEditable_ = true;

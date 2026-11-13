@@ -203,6 +203,30 @@ public final class NativeBridge {
         nativeSetWorldTimeSeconds(seconds);
     }
 
+    /* 当前天气编号: 0 晴, 1 雨, 2 雪, 3 雷暴. */
+    public static int weatherKind() {
+        if (!ensureLoaded()) {
+            return 0;
+        }
+        return nativeWeatherKind();
+    }
+
+    /* 当前天气强度 0 到 1. */
+    public static float weatherIntensity() {
+        if (!ensureLoaded()) {
+            return 0.0f;
+        }
+        return nativeWeatherIntensity();
+    }
+
+    /* 按房主的天气设定本地天气, 客人侧使用. */
+    public static void setWeatherState(int kind, float intensity) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeSetWeatherState(kind, intensity);
+    }
+
     /* 设置房间客人模式: 客人侧不再本地生成生物, 生物由房主上报驱动. */
     public static void setGuestMode(boolean guest) {
         if (!ensureLoaded()) {
@@ -371,6 +395,12 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native int nativeWeatherKind();
+
+    private static native float nativeWeatherIntensity();
+
+    private static native void nativeSetWeatherState(int kind, float intensity);
 
     private static native float nativeWorldTimeSeconds();
 

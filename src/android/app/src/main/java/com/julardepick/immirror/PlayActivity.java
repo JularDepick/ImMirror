@@ -409,8 +409,10 @@ public final class PlayActivity extends NativeActivity {
         final String furnaces = roomOwner ? NativeBridge.takeFurnaceSnapshot() : "[]";
         /* 房主上报世界时间, 客人不报, 由服务端把房主的时间下发回来. */
         final float worldTime = roomOwner ? NativeBridge.worldTimeSeconds() : 0.0f;
+        final int weatherKind = roomOwner ? NativeBridge.weatherKind() : 0;
+        final float weatherIntensity = roomOwner ? NativeBridge.weatherIntensity() : 0.0f;
         roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, creatures, drops, chests,
-                furnaces, worldTime, roomSeq,
+                furnaces, worldTime, weatherKind, weatherIntensity, roomSeq,
                 new RoomApi.StateCallback() {
                     @Override
                     public void onSuccess(RoomApi.State state) {
@@ -443,6 +445,9 @@ public final class PlayActivity extends NativeActivity {
                             /* 客人跟房主的昼夜走, 两边看到的天色一致. */
                             if (state.timeOfDay > 0.0f) {
                                 NativeBridge.setWorldTimeSeconds(state.timeOfDay);
+                                /* 天气跟房主走, 两边的雨雪与天色一致. */
+                                NativeBridge.setWeatherState(state.weatherKind,
+                                        state.weatherIntensity);
                             }
                         }
                         if (state.creatureSeq != roomCreatureSeq) {

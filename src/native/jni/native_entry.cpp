@@ -181,6 +181,44 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetWorldTimeSeconds(JNIE
     shell->SetWorldTimeSeconds(static_cast<float>(seconds));
 }
 
+/* Java 侧低频入口: 取当前天气编号, 供房主同步给房间. */
+JNIEXPORT jint JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeWeatherKind(JNIEnv* env, jclass clazz) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return 0;
+    }
+    return static_cast<jint>(shell->WeatherKindCode());
+}
+
+/* Java 侧低频入口: 取当前天气强度 0 到 1. */
+JNIEXPORT jfloat JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeWeatherIntensity(JNIEnv* env, jclass clazz) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return 0.0f;
+    }
+    return static_cast<jfloat>(shell->WeatherIntensity());
+}
+
+/* Java 侧低频入口: 按房主的天气设定本地天气, 客人侧使用. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetWeatherState(JNIEnv* env, jclass clazz,
+                                                                       jint kind,
+                                                                       jfloat intensity) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return;
+    }
+    shell->SetWeatherState(static_cast<int32_t>(kind), static_cast<float>(intensity));
+}
+
 /* Java 侧低频入口: 设置房间客人模式, 关闭本地自然生成. */
 JNIEXPORT void JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetGuestMode(JNIEnv* env, jclass clazz,

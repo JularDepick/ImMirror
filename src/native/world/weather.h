@@ -38,6 +38,12 @@ public:
     /* 调试用名称. */
     const char* KindName() const;
 
+    /*
+     * 直接设定天气与强度, 供房间客人跟随房主的天气.
+     * 设定后重抽计时重置, 客人不会被自己的权重抽签带跑.
+     */
+    void SetState(WeatherKind kind, float intensity);
+
 private:
     /* 按权重重抽一次天气, 只在允许的档位里选. */
     void Reevaluate();

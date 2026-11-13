@@ -26,6 +26,14 @@ void Weather::Configure(bool canRain, bool canSnow, uint8_t clearWeight, uint8_t
     timer_ = nextChangeSeconds_;
 }
 
+void Weather::SetState(WeatherKind kind, float intensity) {
+    kind_ = kind;
+    intensity_ = intensity < 0.0f ? 0.0f : (intensity > 1.0f ? 1.0f : intensity);
+    /* 重置重抽计时, 让客人在下一次房主上报前保持同一状态. */
+    timer_ = 0.0f;
+    nextChangeSeconds_ = 120.0f;
+}
+
 bool Weather::PrecipitationAllowed() const {
     return (canRain_ && rainWeight_ > 0) || (canSnow_ && rainWeight_ > 0) ||
            (rainWeight_ > 0 && thunderWeight_ > 0);

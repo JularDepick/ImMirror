@@ -77,10 +77,14 @@ public final class RoomApi {
         public final String furnacesJson;
         /* 房主的世界时间总秒数; 0 表示尚未上报. */
         public final float timeOfDay;
+        /* 房主的天气编号与强度. */
+        public final int weatherKind;
+        public final float weatherIntensity;
 
         State(long seq, int rejectedEdits, String playersJson, String editsJson,
               String creaturesJson, long creatureSeq, int rejectedCreatures, String dropsJson,
-              String chestsJson, String furnacesJson, float timeOfDay) {
+              String chestsJson, String furnacesJson, float timeOfDay, int weatherKind,
+              float weatherIntensity) {
             this.seq = seq;
             this.rejectedEdits = rejectedEdits;
             this.playersJson = playersJson;
@@ -92,6 +96,8 @@ public final class RoomApi {
             this.chestsJson = chestsJson;
             this.furnacesJson = furnacesJson;
             this.timeOfDay = timeOfDay;
+            this.weatherKind = weatherKind;
+            this.weatherIntensity = weatherIntensity;
         }
     }
 
@@ -299,7 +305,8 @@ public final class RoomApi {
                      final float z, final float yaw, final float pitch, final String localEditsJson,
                      final String creaturesJson, final String dropsJson,
                      final String chestsJson, final String furnacesJson,
-                     final float worldTimeSeconds, final long sinceSeq,
+                     final float worldTimeSeconds, final int weatherKind,
+                     final float weatherIntensity, final long sinceSeq,
                      final StateCallback callback) {
         if (!usable(session) || roomId == null || roomId.isEmpty()) {
             callback.onFailure(new ApiException("AUTH_UNAUTHORIZED", "no session"));
@@ -333,6 +340,11 @@ public final class RoomApi {
                 if (worldTimeSeconds > 0.0f) {
                     body.put("timeOfDay", (double) worldTimeSeconds);
                 }
+                /* 天气与时间同一条路: 只有房主的设定会被服务端采纳. */
+                if (worldTimeSeconds > 0.0f) {
+                    body.put("weatherKind", weatherKind);
+                    body.put("weatherIntensity", (double) weatherIntensity);
+                }
                 final JSONObject data = request("POST", "/rooms/" + roomId + "/state", session, body);
                 final State state = new State(data.optLong("seq", 0L),
                         data.optInt("rejectedEdits", 0),
@@ -344,7 +356,9 @@ public final class RoomApi {
                         arrayText(data, "drops"),
                         arrayText(data, "chests"),
                         arrayText(data, "furnaces"),
-                        (float) data.optDouble("timeOfDay", 0.0));
+                        (float) data.optDouble("timeOfDay", 0.0),
+                        data.optInt("weatherKind", 0),
+                        (float) data.optDouble("weatherIntensity", 0.0));
                 mainHandler.post(() -> callback.onSuccess(state));
             } catch (ApiException error) {
                 mainHandler.post(() -> callback.onFailure(error));

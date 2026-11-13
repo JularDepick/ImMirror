@@ -1375,6 +1375,21 @@ void GameShell::SetWorldTimeSeconds(float seconds) {
     worldTime_->SetTotalSeconds(seconds);
 }
 
+int32_t GameShell::WeatherKindCode() const {
+    return static_cast<int32_t>(weather_.Kind());
+  }
+
+float GameShell::WeatherIntensity() const {
+    return weather_.Intensity();
+}
+
+void GameShell::SetWeatherState(int32_t kind, float intensity) {
+    if (kind < 0 || kind > 3) {
+        return;
+    }
+    weather_.SetState(static_cast<world::WeatherKind>(kind), intensity);
+}
+
 void GameShell::SetGuestMode(bool guest) {
     /* 客人的方块改动服务端会拒绝, 本地也就不要再改, 否则画面与世界不一致. */
     blocksEditable_ = !guest;
