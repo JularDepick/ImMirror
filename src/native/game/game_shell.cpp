@@ -436,6 +436,8 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     assets_ = assets;
     if (!renderer_->Initialize(assets)) {
         IM_LOGE(kTag, "chunk renderer initialize failed");
+        /* 渲染通道起不来时画面会是空的, 必须让玩家看到原因而不是以为卡住. */
+        ShowTip("RENDER INIT FAILED");
         return;
     }
     renderer_->SetViewportSize(width_, height_);
@@ -594,6 +596,19 @@ void GameShell::SaveWorld() {
     }
     IM_LOGI(kTag, "world save %s, containers %s, path=%s", saved ? "ok" : "failed",
             containersSaved ? "ok" : "skipped", savePath_.c_str());
+    /*
+     * 存档失败必须让玩家知道: 磁盘满或没有写权限时, 后续进度会一直存不下来.
+     * 只提示一次, 避免自动存档每次失败都刷屏; 下次成功时重新允许提示.
+     */
+    if (!saved || (!containerPath_.empty() && !containersSaved)) {
+        if (!saveFailureNotified_) {
+            saveFailureNotified_ = true;
+            ShowTip("SAVE FAILED");
+        }
+        IM_LOGE(kTag, "world save failed, data may be lost on exit");
+    } else {
+        saveFailureNotified_ = false;
+    }
 }
 
 void GameShell::OnSurfaceLost() {

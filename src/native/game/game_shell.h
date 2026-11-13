@@ -318,6 +318,8 @@ public:
     bool blocksEditable_ = true;
     /* 本端是否房主: 掉落物拾取与内容上报按它判断, 与编辑权限无关. */
     bool isHost_ = true;
+    /* 存档失败提示只弹一次, 下次成功后复位. */
+    bool saveFailureNotified_ = false;
 
     void TogglePauseMenu() { pauseMenuOpen_ = !pauseMenuOpen_; }
     bool PauseMenuOpen() const { return pauseMenuOpen_; }
