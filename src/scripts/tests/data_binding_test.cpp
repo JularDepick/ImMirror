@@ -22,6 +22,21 @@ static void check(const char* label, bool ok) {
 /* 假数据源: 固定三个背包格与一组状态. */
 class FakeSource : public UiDataSource {
 public:
+    ItemDefView ItemDef(int32_t id) const override {
+        ItemDefView view;
+        if (id != 11012) {
+            return view;
+        }
+        view.found = true;
+        view.id = id;
+        view.displayName = "石矿镐";
+        view.englishName = "StonePickaxe";
+        view.icon = "icon11012";
+        view.category = 3;
+        view.maxStack = 1;
+        return view;
+    }
+
     int32_t BagSlotCount() const override { return 3; }
     std::string BagSlotName(int32_t slot) const override {
         static const char* const kNames[] = {"StonePickaxe", "Torch", "Bread"};
@@ -103,6 +118,20 @@ int main(int argc, char** argv) {
     check("执行写入脚本", host.RunScript(writeScript, std::strlen(writeScript), screen));
     Widget* label = host.Tree().Find("DropdownBoxNickname");
     check("数据写入控件", label != nullptr && label->text == "Torch");
+
+    /* 物品定义查询: 脚本按字段读取. */
+    const char* defScript =
+        "local d = GetInst(\"DefMgr\"):getItemDef(11012) "
+        "DefName = d.EnglishName "
+        "DefIcon = d.Icon "
+        "DefStack = d.MaxStack "
+        "DefMissing = GetInst(\"DefMgr\"):getItemDef(999999) "
+        "DefMissingOk = (DefMissing.ID == nil) and 1 or 0 ";
+    check("执行定义查询", host.RunScript(defScript, std::strlen(defScript), screen));
+    check("定义英文名", host.Vm().GetGlobal("DefName").text == "StonePickaxe");
+    check("定义图标", host.Vm().GetGlobal("DefIcon").text == "icon11012");
+    check("定义堆叠", host.Vm().GetGlobal("DefStack").number == 1.0);
+    check("未收录定义为空", host.Vm().GetGlobal("DefMissingOk").number == 1.0);
 
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;

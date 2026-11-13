@@ -82,6 +82,8 @@ private:
     /* 控件到表的缓存, 保证同一控件始终是同一张表. */
     std::map<const Widget*, std::shared_ptr<Table>> cache_;
     /* 事件名到订阅控件的列表; 同一控件重复订阅同一事件只记一次. */
+    /* 数据源指针, 供管理器方法查询定义; 由 BindDataSource 设置. */
+    UiDataSource* dataSource_ = nullptr;
     /* 脚本提示与音效的出口, 未设置时只写日志. */
     std::function<void(const std::string&)> tipSink_;
     std::function<void(const std::string&)> soundSink_;

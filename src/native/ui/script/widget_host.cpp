@@ -189,6 +189,28 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
                 return std::vector<Value>();
             }));
         } else if (name == "DefMgr") {
+            /*
+             * 物品定义查询: 返回表里放脚本实际读取的字段.
+             * 字段名与物品表列名一致, 未收录的字段返回零或空串, 由脚本判空跳过.
+             */
+            if (dataSource_ != nullptr) {
+                table->Set(Value::Str("getItemDef"), MakeNative([this](const std::vector<Value>& call) {
+                    const int32_t id = static_cast<int32_t>(NumberAt(call, 0, 0.0));
+                    const ItemDefView view = dataSource_->ItemDef(id);
+                    std::shared_ptr<Table> def(new Table());
+                    if (!view.found) {
+                        return std::vector<Value>{Value::Of(def)};
+                    }
+                    def->Set(Value::Str("ID"), Value::Number(static_cast<double>(view.id)));
+                    def->Set(Value::Str("Name"), Value::Str(view.displayName));
+                    def->Set(Value::Str("EnglishName"), Value::Str(view.englishName));
+                    def->Set(Value::Str("Icon"), Value::Str(view.icon));
+                    def->Set(Value::Str("Type"), Value::Number(static_cast<double>(view.category)));
+                    def->Set(Value::Str("ItemType"), Value::Number(static_cast<double>(view.category)));
+                    def->Set(Value::Str("MaxStack"), Value::Number(static_cast<double>(view.maxStack)));
+                    return std::vector<Value>{Value::Of(def)};
+                }));
+            }
             /* 字符串表查询: 与全局 GetS 同一张表. */
             table->Set(Value::Str("getStringDef"), MakeNative([](const std::vector<Value>& call) {
                 const int32_t id = static_cast<int32_t>(NumberAt(call, 0, 0.0));
@@ -329,6 +351,7 @@ void WidgetHost::BindDataSource(UiDataSource* source) {
     if (source == nullptr) {
         return;
     }
+    dataSource_ = source;
     /*
      * 数据读取一律走宿主函数: 脚本不直接持有游戏对象, 因此界面可以先用假数据跑通,
      * 接入游戏时只换数据源实现.

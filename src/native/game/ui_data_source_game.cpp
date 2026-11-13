@@ -15,6 +15,26 @@ GameUiDataSource::GameUiDataSource(const Inventory& inventory,
                                    const world::WorldTime& worldTime)
     : inventory_(inventory), player_(player), world_(world), worldTime_(worldTime) {}
 
+ui::script::ItemDefView GameUiDataSource::ItemDef(int32_t id) const {
+    ui::script::ItemDefView view;
+    if (id <= 0) {
+        return view;
+    }
+    const item::ItemTable& table = item::ItemTable::Instance();
+    const item::ItemInfo& info = table.Info(static_cast<item::ItemId>(id));
+    if (info.key == nullptr || info.key[0] == '\0') {
+        return view;
+    }
+    view.found = true;
+    view.id = id;
+    view.displayName = info.displayName == nullptr ? "" : info.displayName;
+    view.englishName = info.key;
+    view.icon = info.icon == nullptr ? "" : info.icon;
+    view.category = static_cast<int32_t>(info.category);
+    view.maxStack = static_cast<int32_t>(info.maxStack);
+    return view;
+}
+
 int32_t GameUiDataSource::BagSlotCount() const {
     return Inventory::kSlotCount;
 }
