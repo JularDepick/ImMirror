@@ -40,6 +40,20 @@ struct ItemInfo {
     ItemCategory category;   /* 背包筛选类别 */
     uint8_t itemType;        /* Type 字段, 保留便于回溯 */
     int16_t block;           /* 放置出的客户端方块 id, -1 表示不可放置 */
+    /*
+     * 界面字段: 界面脚本按物品定义读取, 这里原样带下来, 不做语义解释.
+     * 未填写的列取 0, 文本列取空串.
+     */
+    const char* desc;        /* 物品描述文本 */
+    uint16_t involvedId;     /* 关联物品编号 */
+    uint16_t unlockFlag;     /* 解锁标记 */
+    uint16_t unlockType;     /* 解锁方式 */
+    uint16_t createType;     /* 获取方式 */
+    uint16_t model;          /* 模型编号 */
+    uint16_t replaceId;      /* 替换物品编号 */
+    uint16_t enchantTag;     /* 附魔标签 */
+    uint16_t stuffType;      /* 材料类别 */
+    uint16_t quality;        /* 品质档位 */
 };
 
 /* 一格物品堆叠: 物品 id 与数量, 空堆叠两者都是 0. */

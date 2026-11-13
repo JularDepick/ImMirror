@@ -79,8 +79,12 @@ def to_int(text, fallback=0):
 
 
 def escape(text):
-    """转义 C 字符串字面量里的反斜杠与双引号."""
-    return text.replace("\\", "\\\\").replace('"', '\\"')
+    """转义 C 字符串字面量里的反斜杠, 双引号与换行."""
+    backslash = chr(92)
+    out = text.replace(backslash, backslash + backslash)
+    out = out.replace(chr(34), backslash + chr(34))
+    out = out.replace(chr(13), "")
+    return out.replace(chr(10), backslash + "n")
 
 
 def load_table(path):
@@ -361,6 +365,9 @@ def main():
             item_rows.append({
                 "id": 0, "source": 0, "key": "Air", "name": "空气", "icon": "",
                 "max_stack": 64, "category": "kBlock", "type": 1, "block": 0,
+                "ui": {"desc": "", "involved": 0, "unlock_flag": 0, "unlock_type": 0,
+                       "create_type": 0, "model": 0, "replace": 0, "enchant_tag": 0,
+                       "stuff_type": 0, "quality": 0},
             })
             continue
         row = items_by_id.get(source, {})
@@ -397,12 +404,26 @@ def main():
             if category is None:
                 category = "kBlock" if to_int(row.get("Type")) == 1 else "kMaterial"
             item_type = to_int(row.get("Type"))
+            # 界面字段: 原样带下来, 界面脚本按名字读取.
+            ui_fields = {
+                "desc": (row.get("Desc") or "").strip(),
+                "involved": to_int(row.get("InvolvedID")),
+                "unlock_flag": to_int(row.get("UnlockFlag")),
+                "unlock_type": to_int(row.get("UnlockType")),
+                "create_type": to_int(row.get("CreateType")),
+                "model": to_int(row.get("Model")),
+                "replace": to_int(row.get("ReplaceID")),
+                "enchant_tag": to_int(row.get("EnchantTag")),
+                "stuff_type": to_int(row.get("StuffType")),
+                "quality": to_int(row.get("Quality")),
+            }
         block = source_to_block.get(source, -1)
         if block == 0:
             block = -1
         item_rows.append({
             "id": item_id, "source": source, "key": key, "name": name, "icon": icon,
             "max_stack": max_stack, "category": category, "type": item_type, "block": block,
+            "ui": ui_fields,
         })
 
     # 物品 id 与方块 id 对齐检查: 方块 1 起的物品 id 必须与方块 id 同值
@@ -506,9 +527,14 @@ def render_items(rows, block_items):
     for row in rows:
         comment = "方块 %d" % row["block"] if row["block"] >= 0 else "无关联方块"
         lines.append(
-            '    {%du, "%s", "%s", "%s", %du, item::ItemCategory::%s, %du, %d},  /* %s */'
+            '    {%du, "%s", "%s", "%s", %du, item::ItemCategory::%s, %du, %d, '
+            '"%s", %du, %du, %du, %du, %du, %du, %du, %du, %du},  /* %s */'
             % (row["source"], escape(row["key"]), escape(row["name"]), escape(row["icon"]),
-               row["max_stack"], row["category"], row["type"], row["block"], comment))
+               row["max_stack"], row["category"], row["type"], row["block"],
+               escape(row["ui"]["desc"]), row["ui"]["involved"], row["ui"]["unlock_flag"],
+               row["ui"]["unlock_type"], row["ui"]["create_type"], row["ui"]["model"],
+               row["ui"]["replace"], row["ui"]["enchant_tag"], row["ui"]["stuff_type"],
+               row["ui"]["quality"], comment))
     lines += [
         "};",
         "",

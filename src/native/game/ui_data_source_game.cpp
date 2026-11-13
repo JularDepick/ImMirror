@@ -32,6 +32,16 @@ ui::script::ItemDefView GameUiDataSource::ItemDef(int32_t id) const {
     view.icon = info.icon == nullptr ? "" : info.icon;
     view.category = static_cast<int32_t>(info.category);
     view.maxStack = static_cast<int32_t>(info.maxStack);
+    view.description = info.desc == nullptr ? "" : info.desc;
+    view.involvedId = static_cast<int32_t>(info.involvedId);
+    view.unlockFlag = static_cast<int32_t>(info.unlockFlag);
+    view.unlockType = static_cast<int32_t>(info.unlockType);
+    view.createType = static_cast<int32_t>(info.createType);
+    view.model = static_cast<int32_t>(info.model);
+    view.replaceId = static_cast<int32_t>(info.replaceId);
+    view.enchantTag = static_cast<int32_t>(info.enchantTag);
+    view.stuffType = static_cast<int32_t>(info.stuffType);
+    view.quality = static_cast<int32_t>(info.quality);
     return view;
 }
 

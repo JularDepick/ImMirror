@@ -22,6 +22,17 @@ struct ItemDefView {
     /* 类别编号与单格堆叠上限. */
     int32_t category = 0;
     int32_t maxStack = 0;
+    /* 界面字段: 原样带出, 由界面脚本按需读取. */
+    std::string description;
+    int32_t involvedId = 0;
+    int32_t unlockFlag = 0;
+    int32_t unlockType = 0;
+    int32_t createType = 0;
+    int32_t model = 0;
+    int32_t replaceId = 0;
+    int32_t enchantTag = 0;
+    int32_t stuffType = 0;
+    int32_t quality = 0;
 };
 
 class UiDataSource {

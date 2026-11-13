@@ -208,6 +208,24 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
                     def->Set(Value::Str("Type"), Value::Number(static_cast<double>(view.category)));
                     def->Set(Value::Str("ItemType"), Value::Number(static_cast<double>(view.category)));
                     def->Set(Value::Str("MaxStack"), Value::Number(static_cast<double>(view.maxStack)));
+                    /* 界面字段: 名字与物品表列名一致. */
+                    def->Set(Value::Str("Desc"), Value::Str(view.description));
+                    def->Set(Value::Str("InvolvedID"),
+                             Value::Number(static_cast<double>(view.involvedId)));
+                    def->Set(Value::Str("UnlockFlag"),
+                             Value::Number(static_cast<double>(view.unlockFlag)));
+                    def->Set(Value::Str("UnlockType"),
+                             Value::Number(static_cast<double>(view.unlockType)));
+                    def->Set(Value::Str("CreateType"),
+                             Value::Number(static_cast<double>(view.createType)));
+                    def->Set(Value::Str("Model"), Value::Number(static_cast<double>(view.model)));
+                    def->Set(Value::Str("ReplaceID"),
+                             Value::Number(static_cast<double>(view.replaceId)));
+                    def->Set(Value::Str("EnchantTag"),
+                             Value::Number(static_cast<double>(view.enchantTag)));
+                    def->Set(Value::Str("StuffType"),
+                             Value::Number(static_cast<double>(view.stuffType)));
+                    def->Set(Value::Str("Quality"), Value::Number(static_cast<double>(view.quality)));
                     return std::vector<Value>{Value::Of(def)};
                 }));
             }
