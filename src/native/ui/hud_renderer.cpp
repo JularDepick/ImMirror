@@ -1504,6 +1504,28 @@ void DrawBattleFrame(float* out, int32_t& offset, const HudLayout& layout, const
 }
 
 /*
+ * 伤害飘字: 战斗框上方一行动态数字, 按进度向上位移并淡出.
+ * 点阵字只有 ASCII 字形, 因此只画数值本身, 不带单位.
+ */
+void DrawDamagePopup(float* out, int32_t& offset, const HudLayout& layout, const HudFrame& frame,
+                     float scale) {
+    if (!frame.damageVisible || frame.damageText == nullptr) {
+        return;
+    }
+    constexpr float kStartYNorm = 0.045f;
+    constexpr float kRiseNorm = 0.030f;
+    const float progress = frame.damageProgress < 0.0f
+                               ? 0.0f
+                               : (frame.damageProgress > 1.0f ? 1.0f : frame.damageProgress);
+    const float y = layout.DesignY(kStartYNorm - kRiseNorm * progress);
+    /* 后三分之一淡出, 前段保持清晰. */
+    const float alpha = progress > 0.66f ? (1.0f - progress) / 0.34f : 1.0f;
+    const float color[4] = {1.0f, 0.86f, 0.40f, alpha < 0.0f ? 0.0f : alpha};
+    const float textSize = layout.DesignLength(0.0022f);
+    PushCenteredText(out, offset, 0.0f, y, textSize, frame.damageText, scale, color);
+}
+
+/*
  * 状态效果图标.
  * 左上角血条下方一排小方块: 底色按效果编号折算固定色调, 同一效果每次同色;
  * 图标底部一条剩余时间进度条, 6 秒内线性缩短, 超过 6 秒按满格显示.
@@ -1584,6 +1606,7 @@ void HudRenderer::Render(const HudFrame& frame) {
     if (frame.inventory == nullptr && frame.furnace == nullptr && frame.chest == nullptr) {
         DrawCompass(vertices, offset, layout_, frame.yawRadians, scale);
         DrawBattleFrame(vertices, offset, layout_, frame, scale);
+        DrawDamagePopup(vertices, offset, layout_, frame, scale);
         DrawBuffIcons(vertices, offset, layout_, frame, scale);
     }
 

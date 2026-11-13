@@ -56,6 +56,9 @@ constexpr float kNearPlane = 0.05f;
 constexpr float kFarPlane = 320.0f;
 constexpr float kEyeHeight = 1.62f;
 
+/* 伤害飘字的显示时长, 秒; 与 HUD 的飘字曲线配套. */
+constexpr float kDamagePopupSeconds = 1.0f;
+
 /*
  * 容器方块判定. 方块注册表没有类别字段, 用英文键反查:
  * 熔炉族取类别 furnace 的四个键 (熔炉与三个壁炉, blockdef 同类别),
@@ -733,6 +736,13 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     UpdateEntities(deltaSeconds);
     UpdateNamePlate(deltaSeconds);
     UpdateTip(deltaSeconds);
+    /* 伤害飘字计时: 到点归零, 归零后不再填充 HUD 帧. */
+    if (damagePopupSeconds_ > 0.0f) {
+        damagePopupSeconds_ -= static_cast<float>(deltaSeconds);
+        if (damagePopupSeconds_ < 0.0f) {
+            damagePopupSeconds_ = 0.0f;
+        }
+    }
     LogStatus(deltaSeconds);
     previousDownMask_ = lastInput_.downMask;
 
@@ -1829,6 +1839,10 @@ bool GameShell::TryAttackCreature() {
     /* 记下战斗框目标: 命中后 4 秒内显示其血量, 致死一击同样显示到超时. */
     battleTargetId_ = target->Id();
     battleTargetUntil_ = elapsedSeconds_ + 4.0;
+    /* 伤害飘字: 数值取本次实际伤害, 按设置开关决定是否显示. */
+    std::snprintf(damageText_, sizeof(damageText_), "%d",
+                  static_cast<int32_t>(damage < 0.0f ? 0.0f : damage + 0.5f));
+    damagePopupSeconds_ = kDamagePopupSeconds;
     const bool killed = entities_.Damage(target->Id(), damage);
     if (killed) {
         /* 致死一击计一次击败事件, 并入上报增量与本地成就进度. */
@@ -3035,6 +3049,12 @@ void GameShell::RenderScene() {
             frame.targetHealth = battleTarget->HealthRatio();
             frame.targetName = nullptr;
         }
+    }
+    /* 伤害飘字: 开关打开且未过显示期时填充, 进度用于上飘与淡出. */
+    if (damagePopupSeconds_ > 0.0f && settings_->Get(settings::Key::kDamageSwitch) != 0) {
+        frame.damageVisible = true;
+        frame.damageText = damageText_;
+        frame.damageProgress = 1.0f - damagePopupSeconds_ / kDamagePopupSeconds;
     }
     /* 状态图标: 取当前挂着的效果编号与剩余秒数, 由 HUD 画成一排小方块. */
     {

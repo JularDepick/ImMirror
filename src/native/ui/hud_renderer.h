@@ -150,6 +150,14 @@ struct HudFrame {
     const char* targetName = nullptr;
     float targetHealth = 1.0f;
 
+    /*
+     * 伤害飘字: 命中时的一次数值提示, 显示在战斗框上方并向上飘.
+     * damageProgress 0 到 1 表示飘字从起点升到终点, 同时淡出.
+     */
+    bool damageVisible = false;
+    const char* damageText = nullptr;
+    float damageProgress = 0.0f;
+
     /* 左上角状态图标上限, 与 BuffState::kMaxActive 一致. */
     static constexpr int32_t kMaxBuffIcons = 8;
     /* 当前挂着的状态效果: 编号与剩余秒数, 图标底部按剩余时间画进度条. */

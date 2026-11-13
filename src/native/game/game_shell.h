@@ -241,6 +241,9 @@ public:
     /* 战斗框目标: 最近攻击过的生物标识与显示截止时刻. */
     entity::EntityId battleTargetId_ = 0;
     double battleTargetUntil_ = 0.0;
+    /* 伤害飘字: 文案与剩余显示秒数; 受设置里的"伤害数值显示"开关控制. */
+    char damageText_[16] = {};
+    float damagePopupSeconds_ = 0.0f;
 
     /*
      * 远端生物插值状态: 每只生物保存上一轮位置与目标位置, 渲染时按
