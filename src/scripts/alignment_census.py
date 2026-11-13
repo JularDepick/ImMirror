@@ -297,6 +297,26 @@ def settings_coverage():
     return (len(used), len(keys))
 
 
+def template_inheritance():
+    """模板继承: 带继承属性的元素数量, 以及解析器目前能解析的数量.
+
+    继承意味着元素的贴图与尺寸来自模板, 自身不带 file 属性;
+    解析器尚未支持该属性时, 这些元素没有贴图也没有尺寸.
+    """
+    root = os.path.join(REPO_ROOT, "assets", "project", "data", "xml", "ui", "mobile")
+    if not os.path.isdir(root):
+        return 0, 1
+    total = 0
+    for base, _dirs, files in os.walk(root):
+        for name in files:
+            if not name.endswith(".xml") or "uitemplate" in name:
+                continue
+            body = read_text(os.path.join(base, name))
+            total += len(re.findall(r"<[A-Za-z]+[^>]*inherits=", body))
+    # 解析器尚未实现继承展开, 分子固定为零.
+    return 0, total if total > 0 else 1
+
+
 def settings_accessors():
     """设置访问器: 定义在设置类里, 且在其它原生模块被调用过的数量.
 
@@ -473,6 +493,7 @@ def main():
         ('界面', 'HUD 组件', *hud_components(), '绘制函数数, 含 Boss 血条与充能球'),
         ('联机', '房间接口', len(re.findall(r'app\.(?:get|post|patch)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 9, '建房/列表/加入/离房/状态/踢人/改信息/拾取'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
+        ('界面', '模板继承', *template_inheritance(), '贴图与尺寸来自模板的元素'),
         ('界面', '布局文案可查', *layout_text_coverage(), '布局引用的文案编号能查到文本'),
         ('界面', '界面可达', *screen_coverage(), '清单声明且存在跳转指向的界面'),
         ('界面', '物品图标可接入', *item_icon_coverage(), '图标名能对上素材文件的物品'),
