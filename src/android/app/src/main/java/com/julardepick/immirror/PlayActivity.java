@@ -119,6 +119,8 @@ public final class PlayActivity extends NativeActivity {
     private long roomCreatureSeq = -1L;
     /* 本端是否房主: 房主上行生物快照, 客人应用房主下发的快照. */
     private boolean roomOwner;
+    /* 改动裁剪提示只弹一次. */
+    private boolean roomTrimWarned;
     private AmbientAudioManager ambientManager;
     private Handler presenceHandler;
     private Runnable presenceRunnable;
@@ -440,6 +442,15 @@ public final class PlayActivity extends NativeActivity {
                             NativeBridge.setGuestMode(!roomOwner);
                             NativeBridge.showTip(roomOwner ? "YOU ARE HOST" : "HOST CHANGED");
                             Log.i(TAG, "room owner changed to " + roomOwner);
+                        }
+                        /*
+                         * 改动表被服务端裁剪过: 较早的方块改动对后加入的成员不再可见.
+                         * 只提示一次, 避免每次同步都刷屏.
+                         */
+                        if (state.droppedEdits > 0 && !roomTrimWarned) {
+                            roomTrimWarned = true;
+                            NativeBridge.showTip("TOO MANY EDITS");
+                            Log.w(TAG, "room edits trimmed: dropped=" + state.droppedEdits);
                         }
                         /* 任何一次成功都视为链路恢复, 清掉失败计数与提示. */
                         roomSyncFailures = 0;

@@ -86,10 +86,14 @@ public final class RoomApi {
         /* 当前请求者是否房主: 房主移交后据此切换上报身份. */
         public final boolean owner;
 
+        /* 因超出改动上限而被丢弃的格数, 大于零说明部分较早改动已不可见. */
+        public final int droppedEdits;
+
         State(long seq, int rejectedEdits, String playersJson, String editsJson,
               String creaturesJson, long creatureSeq, int rejectedCreatures, String dropsJson,
               String chestsJson, String furnacesJson, float timeOfDay, int weatherKind,
-              float weatherIntensity, long contentSeq, boolean contentChanged, boolean owner) {
+              float weatherIntensity, long contentSeq, boolean contentChanged, boolean owner,
+              int droppedEdits) {
             this.seq = seq;
             this.rejectedEdits = rejectedEdits;
             this.playersJson = playersJson;
@@ -106,6 +110,7 @@ public final class RoomApi {
             this.contentSeq = contentSeq;
             this.contentChanged = contentChanged;
             this.owner = owner;
+            this.droppedEdits = droppedEdits;
         }
     }
 
@@ -402,7 +407,8 @@ public final class RoomApi {
                         (float) data.optDouble("weatherIntensity", 0.0),
                         data.optLong("contentSeq", 0L),
                         data.optBoolean("contentChanged", true),
-                        data.optBoolean("owner", false));
+                        data.optBoolean("owner", false),
+                        data.optInt("droppedEdits", 0));
                 mainHandler.post(() -> callback.onSuccess(state));
             } catch (ApiException error) {
                 mainHandler.post(() -> callback.onFailure(error));
