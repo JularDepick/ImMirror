@@ -502,6 +502,14 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
      */
     const uint32_t uiAtlasTexture = ui::LoadUiAtlasFromAssets(assets);
     hud_.Initialize(renderer_->AtlasTexture(), uiAtlasTexture);
+    /*
+     * 界面图集缺失时所有界面贴图退化成纯色块, 界面会变得难以辨认.
+     * 让玩家知道是资源缺失而不是界面坏了.
+     */
+    if (!ui::UiAtlasReady()) {
+        ShowTip("UI TEXTURES MISSING");
+        IM_LOGW(kTag, "ui atlas unavailable, interface sprites fall back to solid color");
+    }
     /* 生物形象程序与几何在上下文就绪后初始化, 失败只记日志, 生物退回无形象. */
     render::creature::Initialize();
     IM_LOGI(kTag, "game shell ready, chunks=%d fov=%.0f", world_->LoadedChunkCount(),

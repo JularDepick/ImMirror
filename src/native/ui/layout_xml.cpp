@@ -1,5 +1,7 @@
 #include "ui/layout_xml.h"
 
+#include <string>
+
 #include <cstdlib>
 #include <cstring>
 
@@ -222,6 +224,22 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
 
     size_t index = 0;
 
+    /*
+     * 报错带上行号: 布局文件动辄上千行, 只说"标签未闭合"几乎无法定位.
+     * 行号按当前扫描位置数换行符得到, 不需要额外维护计数.
+     */
+    const auto failAt = [this, text, length](size_t offset, const char* reason) {
+        int32_t line = 1;
+        const size_t limit = offset < length ? offset : length;
+        for (size_t position = 0; position < limit; ++position) {
+            if (text[position] == '\n') {
+                ++line;
+            }
+        }
+        error_ = "第 " + std::to_string(line) + " 行: " + reason;
+        return false;
+    };
+
     while (index < length) {
         if (text[index] != '<') {
             ++index;
@@ -232,8 +250,7 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
             text[index + 3] == '-') {
             const size_t end = std::string(text + index, length - index).find("-->");
             if (end == std::string::npos) {
-                error_ = "注释未闭合";
-                return false;
+                return failAt(index, "注释未闭合");
             }
             index += end + 3;
             continue;
@@ -241,16 +258,14 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
         if (index + 1 < length && text[index + 1] == '?') {
             const size_t end = std::string(text + index, length - index).find("?>");
             if (end == std::string::npos) {
-                error_ = "处理指令未闭合";
-                return false;
+                return failAt(index, "处理指令未闭合");
             }
             index += end + 2;
             continue;
         }
         const size_t close = std::string(text + index, length - index).find('>');
         if (close == std::string::npos) {
-            error_ = "标签未闭合";
-            return false;
+            return failAt(index, "标签未闭合");
         }
         const std::string body = std::string(text + index + 1, close - 1);
         index += close + 1;

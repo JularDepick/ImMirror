@@ -166,6 +166,14 @@ int main(int argc, char** argv) {
     std::printf("带非白颜色的命令 %d 条\n", colored);
     check("颜色被解析进命令", colored > 0);
 
+    /* 解析失败要带行号, 否则上千行的布局文件无法定位. */
+    {
+        LayoutDocument broken;
+        const char* text = "<Root>\n<Frame name=\"A\">\n</Frame>\n<!-- unclosed\n";
+        check("未闭合注释被拒", !broken.Parse(text, std::string(text).size()));
+        check("错误信息带行号", broken.Error().find("行") != std::string::npos);
+    }
+
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;
 }

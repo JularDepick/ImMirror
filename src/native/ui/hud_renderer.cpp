@@ -2641,6 +2641,10 @@ constexpr int32_t kUiAtlasPixels = 2048;
 constexpr size_t kUiAtlasBytes =
     static_cast<size_t>(kUiAtlasPixels) * static_cast<size_t>(kUiAtlasPixels) * 4u;
 
+bool UiAtlasReady() {
+    return uiAtlasAvailable;
+}
+
 uint32_t LoadUiAtlasFromAssets(AAssetManager* assets) {
     if (assets == nullptr || !HasCurrentContext()) {
         IM_LOGW(kTag, "ui atlas skipped, no asset manager or no graphics context");

@@ -333,6 +333,9 @@ struct RemoteMarkerView {
 };
 
 /* hps 可为空, 为空时不画血条. */
+/* 界面图集是否已就位: 未就位时界面贴图退化为纯色块. */
+bool UiAtlasReady();
+
 void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, const float* hps,
                          int32_t count, const float* viewProjection, int32_t width,
                          int32_t height);
