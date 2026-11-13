@@ -58,19 +58,28 @@ void FurnaceScreen::SetCarryPosition(float normalizedX, float normalizedY) {
 }
 
 void FurnaceScreen::ReturnAllToInventory(Inventory& inventory) {
-    if (!carry_.Empty()) {
-        inventory.Add(carry_.item, carry_.count);
-        carry_.Clear();
-    }
+    /*
+     * 放入接口返回实际放入数量. 背包放不下时只清掉已放入的部分,
+     * 剩下的留在原处, 否则关闭面板时这些东西会凭空消失.
+     */
+    const auto putBack = [&inventory](ItemStack& stack) {
+        if (stack.Empty()) {
+            return;
+        }
+        const int32_t added = inventory.Add(stack.item, stack.count);
+        if (added >= stack.count) {
+            stack.Clear();
+            return;
+        }
+        stack.count -= added > 0 ? added : 0;
+        if (stack.count <= 0) {
+            stack.Clear();
+        }
+    };
+    putBack(carry_);
     if (furnace_ != nullptr) {
-        if (!furnace_->input.Empty()) {
-            inventory.Add(furnace_->input.item, furnace_->input.count);
-            furnace_->input.Clear();
-        }
-        if (!furnace_->fuel.Empty()) {
-            inventory.Add(furnace_->fuel.item, furnace_->fuel.count);
-            furnace_->fuel.Clear();
-        }
+        putBack(furnace_->input);
+        putBack(furnace_->fuel);
     }
 }
 
@@ -132,9 +141,16 @@ void FurnaceScreen::CollectOutput(Inventory& inventory) {
         }
         return;
     }
-    /* 手上拿着别的东西: 尝试直接收进物品栏. */
-    inventory.Add(output.item, output.count);
-    output.Clear();
+    /* 手上拿着别的东西: 尝试直接收进物品栏, 放不下的留在产出格里. */
+    const int32_t added = inventory.Add(output.item, output.count);
+    if (added >= output.count) {
+        output.Clear();
+        return;
+    }
+    output.count -= added > 0 ? added : 0;
+    if (output.count <= 0) {
+        output.Clear();
+    }
 }
 
 bool FurnaceScreen::HandlePress(const ui::InventoryHit& hit, Inventory& inventory) {
@@ -238,8 +254,17 @@ void ChestScreen::SetCarryPosition(float normalizedX, float normalizedY) {
 }
 
 void ChestScreen::ReturnAllToInventory(Inventory& inventory) {
-    if (!carry_.Empty()) {
-        inventory.Add(carry_.item, carry_.count);
+    if (carry_.Empty()) {
+        return;
+    }
+    /* 同上: 放不下的部分留在手上, 不能连同已放的一起清掉. */
+    const int32_t added = inventory.Add(carry_.item, carry_.count);
+    if (added >= carry_.count) {
+        carry_.Clear();
+        return;
+    }
+    carry_.count -= added > 0 ? added : 0;
+    if (carry_.count <= 0) {
         carry_.Clear();
     }
 }
