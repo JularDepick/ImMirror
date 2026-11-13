@@ -66,6 +66,21 @@ def collect_names():
     return sorted(names)
 
 
+# 贴图名与源文件名语义不同但确实是同一件东西的显式对照.
+# 只收能一眼确认的: 盒子取第一个状态, 茎取连接段, 蜂巢取满巢, 蘑菇取红菇,
+# 红外感应器取侧面. 其余缺源名宁可留占位格, 也不做猜测性匹配.
+SOURCE_ALIASES = {
+    "chrismas_box": "chrismas_box0",
+    "melon_stem": "melon_stem_connected",
+    "pumpkin_stem": "pumpkin_stem_connected",
+    "hive": "hive_full",
+    "absorb_claws": "absorb_claws_off",
+    "thicket": "thicket1",
+    "mushroom": "mushroom_red",
+    "Infrared_induction": "infrared_side",
+}
+
+
 # 贴图文件名到实际源文件的回落后缀.
 # 多方块贴图在源目录里按状态或部件拆分存放: 铁砧是 anvil_s0/s1/s2,
 # 门是 door_birch_lower/upper, 花是 agave_middle, 台阶类取 _s0 即可.
@@ -78,6 +93,12 @@ def resolve_source(name, pngs, lower):
     先按原样匹配, 再按部件后缀匹配, 最后统一转小写重试一次,
     源目录里大小写并不统一 (Air_wall 与 air_wall 都存在).
     """
+    alias = SOURCE_ALIASES.get(name)
+    if alias is not None:
+        if alias in pngs:
+            return alias
+        if alias.lower() in lower:
+            return lower[alias.lower()]
     for suffix in SUFFIX_CANDIDATES:
         candidate = name + suffix
         if candidate in pngs:
