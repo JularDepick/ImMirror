@@ -404,6 +404,7 @@ public final class AchievementActivity extends Activity {
                 }
                 int coins = value == null ? 0 : value.optInt("coins",
                         value.optInt("awarded", item.coinReward));
+                com.julardepick.immirror.ui.UiSound.achievementComplete(AchievementActivity.this);
                 showNotice(String.format(ProgressText.EARNED_FORMAT, coins),
                         AccountTheme.COLOR_SUCCESS);
                 refresh();
@@ -431,6 +432,7 @@ public final class AchievementActivity extends Activity {
                 }
                 int coins = value == null ? 0 : value.optInt("coins",
                         value.optInt("reward", task.coinReward));
+                com.julardepick.immirror.ui.UiSound.achievementReach(AchievementActivity.this);
                 showNotice(String.format(ProgressText.EARNED_FORMAT, coins),
                         AccountTheme.COLOR_SUCCESS);
                 refresh();

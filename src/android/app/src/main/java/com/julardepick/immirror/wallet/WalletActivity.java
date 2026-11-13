@@ -142,6 +142,8 @@ public final class WalletActivity extends Activity {
 
     /* 签到成功: 先用响应里的新余额与次数重绘, 再拉一次流水与签到状态补齐. */
     private void applyCheckinResult(CheckinResult value) {
+        /* 签到成功音: 只在真正签到成功时播放, 已签提示不响. */
+        com.julardepick.immirror.ui.UiSound.experienceStar(this);
         board = WalletBoard.withCheckinResult(board, value);
         render();
         checkinCard.setBusy(false);
