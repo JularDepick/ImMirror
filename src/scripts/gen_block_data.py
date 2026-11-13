@@ -351,6 +351,8 @@ def build_extension_entry(client_id, source_id, row, used_keys):
         "tool": tool,
         "tool_level": tool_level,
         "gravity": gravity,
+        "slipperiness": to_float(row.get("Slipperiness")) or 1.0,
+        "replaceable": 1 if to_int(row.get("Replaceable")) == 1 else 0,
         "dig_sound": dig_name,
         "place_sound": place_name,
         "walk_sound": walk_name,
@@ -408,7 +410,12 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
     if not 0 <= gravity <= 3:
         gravity = 0
     _, _, drop_prob = pick_drop(data)
-    return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du, %du},'
+    slipperiness = to_float(data.get("Slipperiness"), 1.0)
+    if not 0.1 <= slipperiness <= 4.0:
+        slipperiness = 1.0
+    replaceable = 1 if to_int(data.get("Replaceable")) == 1 else 0
+    return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du, '
+            '%.2ff, %du, %du},'
             "  /* %s */"
             % (source_id, client_id, escape(name),
                escape(data.get("Name", "").strip()),
@@ -418,7 +425,7 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
                escape(data.get("PlaceSound", "").strip()),
                escape(data.get("WalkSound", "").strip()),
                escape(data.get("Texture1", "").strip()),
-               drop_source, gravity, drop_prob, comment))
+               drop_source, gravity, slipperiness, replaceable, drop_prob, comment))
 
 
 def render_header(entries, legacy_rows, segments):
@@ -484,6 +491,8 @@ def render_header(entries, legacy_rows, segments):
         "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
         "    uint32_t dropSourceId;   /* 掉落物物品 id, 0 表示无掉落 */",
         "    uint8_t gravity;         /* 重力方式: 0 不影响, 1 下坠 */",
+        "    float slipperiness;      /* 摩擦系数, 大于 1 表示打滑 */",
+        "    uint8_t replaceable;     /* 放置时是否可被直接覆盖 */",
         "    uint16_t dropChance;     /* 掉落概率万分比, 10000 表示必掉 */",
         "};",
         "",
@@ -610,6 +619,8 @@ def render_header(entries, legacy_rows, segments):
         "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
         "    uint8_t shape;           /* 渲染形状, 与 voxel::BlockShape 对齐 */",
         "    uint8_t gravity;         /* 重力方式: 0 不影响, 1 下坠 */",
+        "    float slipperiness;      /* 摩擦系数, 大于 1 表示打滑 */",
+        "    uint8_t replaceable;     /* 放置时是否可被直接覆盖 */",
         "    uint16_t dropChance;     /* 掉落概率万分比, 10000 表示必掉 */",
         "};",
         "",

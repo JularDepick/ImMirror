@@ -258,6 +258,8 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
             legacyCache[id] = kLegacyBlockTable[id];
             legacyCache[id].gravity = gen::BlockEntryOf(id).gravity;
             legacyCache[id].dropChance = gen::BlockEntryOf(id).dropChance;
+            legacyCache[id].slipperiness = gen::BlockEntryOf(id).slipperiness;
+            legacyCache[id].replaceable = gen::BlockEntryOf(id).replaceable != 0;
             legacyFilled[id] = true;
         }
         return legacyCache[id];
@@ -300,6 +302,8 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.toolLevel = entry.toolLevel;
         info.gravity = entry.gravity;
         info.dropChance = entry.dropChance;
+        info.slipperiness = entry.slipperiness;
+        info.replaceable = entry.replaceable != 0;
         filled[index] = true;
     }
     return info;

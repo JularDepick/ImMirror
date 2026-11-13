@@ -329,8 +329,13 @@ bool PlayerController::PlaceBlock(world::World& world, voxel::BlockId id) {
     if (target.y < 0 || target.y >= voxel::kWorldHeight) {
         return false;
     }
-    /* 只能放进空格, 且不能与玩家自身碰撞盒重叠. */
-    if (world.GetBlock(target.x, target.y, target.z) != 0) {
+    /*
+     * 只能放进空格或可替换方块 (草, 雪层一类): 后者被直接覆盖,
+     * 因此铺路与清理地表不需要先挖一遍.
+     */
+    const voxel::BlockId existing = world.GetBlock(target.x, target.y, target.z);
+    if (existing != 0 &&
+        !voxel::BlockRegistry::Instance().Info(existing).replaceable) {
         return false;
     }
     if (AabbHitsBlock(position_, target)) {
@@ -656,6 +661,19 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     }
     if (sneaking_) {
         ratio *= survival::kMoveSneakRatio;
+    }
+    /*
+     * 打滑地面: 摩擦系数大于 1 的方块 (冰一类) 按系数折算速度,
+     * 与其它倍率同样相乘, 因此冰上冲刺仍比走路快.
+     */
+    {
+        const voxel::BlockId ground = GroundBlockId();
+        if (ground != voxel::block::Air) {
+            const float slip = voxel::BlockRegistry::Instance().Info(ground).slipperiness;
+            if (slip > 1.0f) {
+                ratio *= 1.0f / slip;
+            }
+        }
     }
     /* 蜂蜜: 泡在液体蜂蜜里速度压到十分之一, 与游泳倍率叠加. */
     if (InHoney(world)) {

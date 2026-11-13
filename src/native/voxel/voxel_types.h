@@ -151,6 +151,10 @@ struct BlockInfo {
     uint8_t gravity = 0;
     /* 掉落概率万分比, 10000 表示必掉; 0 表示没有掉落. */
     uint16_t dropChance = 10000;
+    /* 摩擦系数: 1 为常规, 大于 1 表示打滑 (冰一类). */
+    float slipperiness = 1.0f;
+    /* 放置时是否可被直接覆盖 (草, 雪层一类). */
+    bool replaceable = false;
 };
 
 }  /* namespace immirror::voxel */
