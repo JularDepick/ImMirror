@@ -173,6 +173,15 @@ def self_count(path, constant=None):
     return total, total if total > 0 else 1
 
 
+
+def audio_track_count(path, prefix):
+    """音频曲目数: 资源路径是扁平命名, 按前缀统计; 分母取实际条目数."""
+    if not os.path.isfile(path):
+        return 0, 1
+    total = len(re.findall(r'"' + re.escape(prefix), read_text(path)))
+    return total, total if total > 0 else 1
+
+
 def screen_coverage():
     """界面可达性: 界面类是否都在清单里声明且有跳转指向."""
     java_root = os.path.join(SRC_ROOT, "android", "app", "src", "main", "java")
@@ -421,8 +430,8 @@ def main():
         ('音频', '界面音通道',
          len(re.findall(r'_ASSET\s*=', read_text(ui_sound))),
          len(re.findall(r'_ASSET\s*=', read_text(ui_sound))), 'UiSound 具名通道'),
-        ('音频', '环境音曲目', len(re.findall(r'"sounds/env/', read_text(audio_java))), 19, '环境音分组曲表'),
-        ('音频', '音乐曲目', len(re.findall(r'"sounds/music/', read_text(audio_java))), 25, '背景音乐曲池'),
+        ('音频', '环境音曲目', *audio_track_count(audio_java, 'sounds/env_'), '环境音分组曲表'),
+        ('音频', '音乐曲目', *audio_track_count(audio_java, 'sounds/music_'), '背景音乐曲池'),
         ('音频', '生物音效', len(re.findall(r'"sounds/ent_', read_text(os.path.join(NATIVE_ROOT, 'entity', 'generated', 'entity_sound_gen.h')))), 183, '68 生物四类动作'),
         ('界面', 'Java 类', java_file_count(), 81, 'Java 侧 .java 总数'),
         ('界面', '界面素材', count_files(os.path.join(APK_ASSETS, 'ui'), '.png', recursive=True),
