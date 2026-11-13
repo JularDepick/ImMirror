@@ -8,7 +8,7 @@ namespace net {
 
 void RemotePlayerManager::ReplaceAll(const std::string* uids, const float* xs, const float* ys,
                                      const float* zs, const float* yaws, const float* pitches,
-                                     const float* hps, int32_t count) {
+                                     const float* hps, const uint32_t* skins, int32_t count) {
     if (uids == nullptr || xs == nullptr || ys == nullptr || zs == nullptr || count <= 0) {
         players_.clear();
         return;
@@ -38,6 +38,7 @@ void RemotePlayerManager::ReplaceAll(const std::string* uids, const float* xs, c
         player.targetYaw = yaws != nullptr ? yaws[index] : 0.0f;
         player.pitch = pitches != nullptr ? pitches[index] : 0.0f;
         player.hp = hps != nullptr ? hps[index] : 1.0f;
+        player.skin = skins != nullptr ? skins[index] : 0u;
         player.x = player.targetX;
         player.y = player.targetY;
         player.z = player.targetZ;

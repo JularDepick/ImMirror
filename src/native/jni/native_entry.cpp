@@ -242,6 +242,19 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeOpenUiScreen(JNIEnv* env
     return opened ? JNI_TRUE : JNI_FALSE;
 }
 
+/* Java 侧低频入口: 设置当前角色皮肤编号, 随位姿同步给其它玩家. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetSkinId(JNIEnv* env, jclass clazz,
+                                                                jint skinId) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return;
+    }
+    shell->SetSkinId(skinId < 0 ? 0u : static_cast<uint32_t>(skinId));
+}
+
 /* Java 侧低频入口: 按界面名打开, 路径前缀在原生侧拼好. */
 JNIEXPORT jboolean JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeOpenUiScreenByName(JNIEnv* env,

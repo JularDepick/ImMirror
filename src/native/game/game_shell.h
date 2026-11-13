@@ -307,6 +307,10 @@ public:
     void CloseUiScreen();
     bool UiScreenOpen() const { return uiHost_ != nullptr; }
 
+    /* 当前使用的角色皮肤编号: 由界面选择后下发, 随位姿一起同步给其它玩家. */
+    void SetSkinId(uint32_t skinId) { skinId_ = skinId; }
+    uint32_t SkinId() const { return skinId_; }
+
     /* 把游戏状态接到界面宿主上; 界面脚本因此能读到背包与玩家数据. */
     void BindUiDataSource(ui::script::WidgetHost& host);
 
@@ -326,6 +330,8 @@ public:
     bool isHost_ = true;
     /* 存档失败提示只弹一次, 下次成功后复位. */
     bool saveFailureNotified_ = false;
+    /* 当前角色皮肤编号, 0 表示默认外观. */
+    uint32_t skinId_ = 0;
 
     void TogglePauseMenu() { pauseMenuOpen_ = !pauseMenuOpen_; }
     bool PauseMenuOpen() const { return pauseMenuOpen_; }

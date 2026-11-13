@@ -195,6 +195,14 @@ public final class NativeBridge {
         return nativeOpenUiScreen(layoutAsset, scriptAsset);
     }
 
+    /* 设置当前角色皮肤编号: 随位姿同步给房间里的其它玩家. */
+    public static void setSkinId(int skinId) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeSetSkinId(skinId);
+    }
+
     /* 按界面名打开: 布局与脚本的路径前缀在原生侧拼好. */
     public static boolean openUiScreenByName(String name) {
         if (!ensureLoaded()) {
@@ -453,6 +461,8 @@ public final class NativeBridge {
     private static native void nativeChooseWorldSeed(String worldName, int seed);
 
     private static native boolean nativeOpenUiScreen(String layoutAsset, String scriptAsset);
+
+    private static native void nativeSetSkinId(int skinId);
 
     private static native boolean nativeOpenUiScreenByName(String name);
 

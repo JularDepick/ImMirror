@@ -47,6 +47,12 @@ g++ -std=c++17 -I "$ROOT/native" \
 echo "== 全量控件加载"
 "$OUT_DIR/widget_tree_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 
+echo "== 角色皮肤"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/skin_data_test.cpp" \
+    -o "$OUT_DIR/skin_data_test.exe" || exit 1
+"$OUT_DIR/skin_data_test.exe" || STATUS=1
+
 echo "== 爆炸抗性"
 g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/scripts/tests/block_blast_test.cpp" \

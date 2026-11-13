@@ -77,6 +77,16 @@ def item_icon_coverage():
     return total, total if total > 0 else 1
 
 
+def skin_coverage():
+    """角色皮肤: 生成表条目数."""
+    path = os.path.join(NATIVE_ROOT, "game", "generated", "skin_data_gen.h")
+    if not os.path.isfile(path):
+        return 0, 1
+    match = re.search(r"kSkinEntryCount\s*=\s*(\d+)", read_text(path))
+    total = int(match.group(1)) if match else 0
+    return total, total if total > 0 else 1
+
+
 def screen_coverage():
     """界面可达性: 界面类是否都在清单里声明且有跳转指向."""
     java_root = os.path.join(SRC_ROOT, "android", "app", "src", "main", "java")
@@ -314,6 +324,7 @@ def main():
                                               read_text(os.path.join(NATIVE_ROOT, 'game', 'generated', 'enchant_data_gen.h'))))), 18, '数据表出现的效果类型种类'),
         ('玩法', '生物攻击附带', *monster_attack_extras(), '状态效果/火焰档位/质量三列'),
         ('玩法', '状态效果', count_rows(os.path.join(NATIVE_ROOT, 'player', 'generated', 'buff_data_gen.h')), 44, 'buffdef 客户端可消费四类'),
+        ('玩法', '角色皮肤', *skin_coverage(), '皮肤编号与模型的对照条目'),
         ('玩法', '食物', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'food_data_gen.h')), 38, 'fooddef 可食用条目'),
         ('玩法', '工具', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'tool_data_gen.h')), 25, 'tooldef 全量工具'),
         ('玩法', '附魔效果接入', *enchant_wired(), '原生代码里按类型名查表的附魔种类'),

@@ -1059,11 +1059,11 @@ std::string GameShell::FormatPlayerPose() const {
     char buffer[320];
     /* 血量比例一并上报: 客人因此能看到其他玩家的血条, 而不只是位置. */
     std::snprintf(buffer, sizeof(buffer),
-                  R"({"x":%.2f,"y":%.2f,"z":%.2f,"yaw":%.4f,"pitch":%.4f,"hp":%.3f})",
+                  R"({"x":%.2f,"y":%.2f,"z":%.2f,"yaw":%.4f,"pitch":%.4f,"hp":%.3f,"skin":%u})",
                   static_cast<double>(position.x), static_cast<double>(position.y),
                   static_cast<double>(position.z),
                   static_cast<double>(player_->Yaw()), static_cast<double>(player_->Pitch()),
-                  static_cast<double>(player_->HealthRatio()));
+                  static_cast<double>(player_->HealthRatio()), static_cast<unsigned>(skinId_));
     return buffer;
 }
 
@@ -1262,10 +1262,12 @@ void GameShell::ApplyRemotePlayers(const std::string& json) {
     float yaws[net::RemotePlayerManager::kMaxPlayers];
     float pitches[net::RemotePlayerManager::kMaxPlayers];
     float hps[net::RemotePlayerManager::kMaxPlayers];
+    uint32_t skins[net::RemotePlayerManager::kMaxPlayers];
     int32_t count = 0;
     size_t cursor = json.find("\"others\":[");
     if (cursor == std::string::npos) {
-        remotePlayers_.ReplaceAll(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0);
+        remotePlayers_.ReplaceAll(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+                                  nullptr, 0);
         return;
     }
     cursor += 9;
@@ -1305,6 +1307,17 @@ void GameShell::ApplyRemotePlayers(const std::string& json) {
                 hps[count] = parsed < 0.0f ? 0.0f : (parsed > 1.0f ? 1.0f : parsed);
             }
         }
+        /* 皮肤编号缺省为 0 (默认外观): 老版本对端不上报该字段. */
+        skins[count] = 0u;
+        {
+            const size_t skinPos = obj.find("skin");
+            const size_t colon = skinPos == std::string::npos ? std::string::npos
+                                                             : obj.find(':', skinPos);
+            if (colon != std::string::npos) {
+                const long parsed = std::atol(obj.c_str() + colon + 1);
+                skins[count] = parsed < 0 ? 0u : static_cast<uint32_t>(parsed);
+            }
+        }
         const auto readFloat = [&](const char* key) -> float {
             const size_t pos = obj.find(key);
             if (pos == std::string::npos) {
@@ -1321,7 +1334,7 @@ void GameShell::ApplyRemotePlayers(const std::string& json) {
         pitches[count] = readFloat("\"pitch\":");
         count += 1;
     }
-    remotePlayers_.ReplaceAll(uids, xs, ys, zs, yaws, pitches, hps, count);
+    remotePlayers_.ReplaceAll(uids, xs, ys, zs, yaws, pitches, hps, skins, count);
     /* 远端玩家数每轮打一条: 联机时据此确认房间状态确实下发到了渲染侧. */
     if (count != lastRemoteCount_) {
         lastRemoteCount_ = count;
