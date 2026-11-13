@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   email         TEXT NOT NULL UNIQUE COLLATE NOCASE,
   password_hash TEXT NOT NULL,
   status        TEXT NOT NULL DEFAULT 'active',
+  skin_id       INTEGER NOT NULL DEFAULT 0,
   email_verified_at INTEGER,
   created_at    INTEGER NOT NULL,
   updated_at    INTEGER NOT NULL
