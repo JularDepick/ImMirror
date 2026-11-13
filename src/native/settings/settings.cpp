@@ -76,6 +76,22 @@ bool Settings::Initialize(const char* dataPath) {
     const bool fromFile = store_.Load(&entries);
     if (fromFile) {
         ApplyEntries(entries);
+    } else if (!path.empty()) {
+        /*
+         * 文件存在但读不出来: 设置会全部回落到缺省值, 下一次保存把原文件冲掉.
+         * 先把原文件留底, 至少让玩家改过的选项还有恢复的余地.
+         */
+        FILE* existing = std::fopen(path.c_str(), "rb");
+        if (existing != nullptr) {
+            std::fclose(existing);
+            const std::string backup = path + ".broken";
+            FILE* occupied = std::fopen(backup.c_str(), "rb");
+            if (occupied != nullptr) {
+                std::fclose(occupied);
+            } else if (std::rename(path.c_str(), backup.c_str()) == 0) {
+                IM_LOGW(kTag, "settings unreadable, kept a copy at %s", backup.c_str());
+            }
+        }
     }
     dirty_.store(false);
     IM_LOGI(kTag, "settings %s, path=%s entries=%d sensitivity=%d view_distance=%d volume=%d",

@@ -295,7 +295,27 @@ void ProgressHub::AddWalkLocked(double distanceMeters) {
 
 void ProgressHub::LoadLocked() {
     std::vector<ProgressStore::Entry> entries;
-    store_.LoadState(&entries);
+    const bool fromFile = store_.LoadState(&entries);
+    /*
+     * 文件存在但读不出来时, 进度会全部归零, 下一次保存把原文件冲掉.
+     * 先把原文件留底, 至少让统计与任务进度还有恢复的余地.
+     */
+    if (!fromFile) {
+        const std::string path = store_.StatePath();
+        if (!path.empty()) {
+            FILE* existing = std::fopen(path.c_str(), "rb");
+            if (existing != nullptr) {
+                std::fclose(existing);
+                const std::string backup = path + ".broken";
+                FILE* occupied = std::fopen(backup.c_str(), "rb");
+                if (occupied != nullptr) {
+                    std::fclose(occupied);
+                } else if (std::rename(path.c_str(), backup.c_str()) == 0) {
+                    IM_LOGW(kTag, "progress unreadable, kept a copy at %s", backup.c_str());
+                }
+            }
+        }
+    }
 
     stats_.Reset();
     tracker_.Reset();
