@@ -18,6 +18,12 @@ constexpr int32_t kLayoutFloatsPerVertex = 8;
 /* 纯色顶点的 uv 约定, 与 HUD 一致. */
 constexpr float kLayoutSolidUv = -1.0f;
 
+/*
+ * 按素材名查界面图集: 传入贴图路径, 取文件名去掉扩展名后在图集里找同名精灵.
+ * 找到时写入归一化 uv 并返回 true; 找不到返回 false, 调用方回落到纯色.
+ */
+bool UiSpriteUv(const char* texturePath, float* u0, float* v0, float* u1, float* v1);
+
 struct LayoutRenderStats {
     int32_t quads = 0;
     int32_t vertices = 0;

@@ -79,16 +79,29 @@ int main() {
         check("容量只够两条", vertices == 12);
         check("超出记入丢弃", stats.dropped == 2);
     }
-    /* 带贴图的命令单独计数. */
+    /* 贴图名能在图集里查到: 写入真实 uv. */
     {
         std::vector<LayoutDrawCommand> commands;
         LayoutDrawCommand command;
         command.rect = LayoutRect{0.0f, 0.0f, 10.0f, 10.0f};
-        command.texture = "ui/test.png";
+        command.texture = "ui/hud/slot_normal.png";
         commands.push_back(command);
         LayoutRenderStats stats;
         EmitLayoutCommands(commands, kW, kH, buffer, 48, &stats);
         check("贴图命令被统计", stats.textured == 1);
+        check("uv 不再是纯色约定", buffer[2] > 0.0f && buffer[3] > 0.0f);
+    }
+    /* 查不到的贴图名回落到纯色. */
+    {
+        std::vector<LayoutDrawCommand> commands;
+        LayoutDrawCommand command;
+        command.rect = LayoutRect{0.0f, 0.0f, 10.0f, 10.0f};
+        command.texture = "ui/no_such_sprite.png";
+        commands.push_back(command);
+        LayoutRenderStats stats;
+        EmitLayoutCommands(commands, kW, kH, buffer, 48, &stats);
+        check("未知贴图不计入", stats.textured == 0);
+        near("未知贴图回落纯色", buffer[2], -1.0f);
     }
 
     std::printf("failures=%d\n", failures);
