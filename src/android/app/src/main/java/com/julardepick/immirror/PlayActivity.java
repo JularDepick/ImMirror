@@ -105,6 +105,8 @@ public final class PlayActivity extends NativeActivity {
     private String roomId;
     private String roomCode;
     private long roomSeq;
+    /* 上次看到的内容版本: 版本没变时服务端不下发四份内容数组. */
+    private long roomContentSeq;
     /* 已应用的生物快照版本号, 与位置通道的序号分开记. */
     private long roomCreatureSeq = -1L;
     /* 本端是否房主: 房主上行生物快照, 客人应用房主下发的快照. */
@@ -414,11 +416,12 @@ public final class PlayActivity extends NativeActivity {
         final int weatherKind = roomOwner ? NativeBridge.weatherKind() : 0;
         final float weatherIntensity = roomOwner ? NativeBridge.weatherIntensity() : 0.0f;
         roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, creatures, drops, chests,
-                furnaces, worldTime, weatherKind, weatherIntensity, roomSeq,
+                furnaces, worldTime, weatherKind, weatherIntensity, roomContentSeq, roomSeq,
                 new RoomApi.StateCallback() {
                     @Override
                     public void onSuccess(RoomApi.State state) {
                         roomSeq = state.seq;
+                        roomContentSeq = state.contentSeq;
                         Log.i(TAG, "room sync ok, seq=" + state.seq + " players="
                                 + countPlayers(state.playersJson) + " edits="
                                 + state.editsJson.length() + " rejected=" + state.rejectedEdits);
@@ -440,10 +443,13 @@ public final class PlayActivity extends NativeActivity {
                         }
                         /* 客人应用房主下发的生物快照; 版本号变化时打一条便于核对. */
                         if (!roomOwner) {
-                            NativeBridge.applyRemoteCreatures(state.creaturesJson);
-                            NativeBridge.applyRemoteDrops(state.dropsJson);
-                            NativeBridge.applyRemoteChests(state.chestsJson);
-                            NativeBridge.applyRemoteFurnaces(state.furnacesJson);
+                            /* 内容未变化时四份数组为 null, 直接跳过, 省掉重复解析. */
+                            if (state.contentChanged) {
+                                NativeBridge.applyRemoteCreatures(state.creaturesJson);
+                                NativeBridge.applyRemoteDrops(state.dropsJson);
+                                NativeBridge.applyRemoteChests(state.chestsJson);
+                                NativeBridge.applyRemoteFurnaces(state.furnacesJson);
+                            }
                             /* 客人跟房主的昼夜走, 两边看到的天色一致. */
                             if (state.timeOfDay > 0.0f) {
                                 NativeBridge.setWorldTimeSeconds(state.timeOfDay);

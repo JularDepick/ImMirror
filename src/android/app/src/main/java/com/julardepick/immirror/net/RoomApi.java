@@ -80,11 +80,14 @@ public final class RoomApi {
         /* 房主的天气编号与强度. */
         public final int weatherKind;
         public final float weatherIntensity;
+        /* 内容版本与是否变化: 没变化时四份内容数组为 null, 调用方跳过应用. */
+        public final long contentSeq;
+        public final boolean contentChanged;
 
         State(long seq, int rejectedEdits, String playersJson, String editsJson,
               String creaturesJson, long creatureSeq, int rejectedCreatures, String dropsJson,
               String chestsJson, String furnacesJson, float timeOfDay, int weatherKind,
-              float weatherIntensity) {
+              float weatherIntensity, long contentSeq, boolean contentChanged) {
             this.seq = seq;
             this.rejectedEdits = rejectedEdits;
             this.playersJson = playersJson;
@@ -98,6 +101,8 @@ public final class RoomApi {
             this.timeOfDay = timeOfDay;
             this.weatherKind = weatherKind;
             this.weatherIntensity = weatherIntensity;
+            this.contentSeq = contentSeq;
+            this.contentChanged = contentChanged;
         }
     }
 
@@ -306,7 +311,7 @@ public final class RoomApi {
                      final String creaturesJson, final String dropsJson,
                      final String chestsJson, final String furnacesJson,
                      final float worldTimeSeconds, final int weatherKind,
-                     final float weatherIntensity, final long sinceSeq,
+                     final float weatherIntensity, final long contentSeq, final long sinceSeq,
                      final StateCallback callback) {
         if (!usable(session) || roomId == null || roomId.isEmpty()) {
             callback.onFailure(new ApiException("AUTH_UNAUTHORIZED", "no session"));
@@ -321,6 +326,8 @@ public final class RoomApi {
                 body.put("yaw", (double) yaw);
                 body.put("pitch", (double) pitch);
                 body.put("since", Math.max(0L, sinceSeq));
+                /* 带上上次看到的内容版本, 版本没变时服务端不下发四份内容数组. */
+                body.put("content", Math.max(0L, contentSeq));
                 final String edits = localEditsJson == null || localEditsJson.isEmpty()
                         ? "[]" : localEditsJson;
                 body.put("edits", new JSONArray(edits));
@@ -354,11 +361,13 @@ public final class RoomApi {
                         data.optLong("creatureSeq", 0L),
                         data.optInt("rejectedCreatures", 0),
                         arrayText(data, "drops"),
-                        arrayText(data, "chests"),
-                        arrayText(data, "furnaces"),
+                        data.has("chests") ? arrayText(data, "chests") : null,
+                        data.has("furnaces") ? arrayText(data, "furnaces") : null,
                         (float) data.optDouble("timeOfDay", 0.0),
                         data.optInt("weatherKind", 0),
-                        (float) data.optDouble("weatherIntensity", 0.0));
+                        (float) data.optDouble("weatherIntensity", 0.0),
+                        data.optLong("contentSeq", 0L),
+                        data.optBoolean("contentChanged", true));
                 mainHandler.post(() -> callback.onSuccess(state));
             } catch (ApiException error) {
                 mainHandler.post(() -> callback.onFailure(error));
