@@ -441,7 +441,13 @@ public final class PlayActivity extends NativeActivity {
                 new RoomApi.StateCallback() {
                     @Override
                     public void onSuccess(RoomApi.State state) {
-                        roomSeq = state.seq;
+                        /*
+                         * 增量被截断时只推进到本批最后一条, 下一拍继续拉剩余部分;
+                         * 否则直接把序号跳到房间最新, 被截掉的中间改动就永久缺失.
+                         */
+                        roomSeq = state.editsTruncated
+                                ? lastEditSeq(state.editsJson, roomSeq)
+                                : state.seq;
                         roomContentSeq = state.contentSeq;
                         /* 送达即清空待发改动. */
                         pendingRoomEdits = null;
@@ -543,6 +549,28 @@ public final class PlayActivity extends NativeActivity {
                         }
                     }
                 });
+    }
+
+    /* 取改动数组里最大的序号; 解析失败时返回原序号, 不推进. */
+    private static long lastEditSeq(String editsJson, long fallback) {
+        if (editsJson == null || editsJson.length() <= 2) {
+            return fallback;
+        }
+        try {
+            final org.json.JSONArray array = new org.json.JSONArray(editsJson);
+            long best = fallback;
+            for (int index = 0; index < array.length(); index += 1) {
+                final long seq = array.optJSONObject(index) == null
+                        ? 0L
+                        : array.optJSONObject(index).optLong("seq", 0L);
+                if (seq > best) {
+                    best = seq;
+                }
+            }
+            return best;
+        } catch (org.json.JSONException error) {
+            return fallback;
+        }
     }
 
     /* 合并两份改动数组; 任一侧为空时直接返回另一侧. */

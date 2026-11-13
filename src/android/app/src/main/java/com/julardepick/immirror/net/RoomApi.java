@@ -89,11 +89,18 @@ public final class RoomApi {
         /* 因超出改动上限而被丢弃的格数, 大于零说明部分较早改动已不可见. */
         public final int droppedEdits;
 
+        /*
+         * 本批方块改动是否被单次拉取上限截断.
+         * 为真时本地同步序号只能推进到本批最后一条, 不能直接跳到房间最新序号,
+         * 否则被截掉的中间部分会永久缺失.
+         */
+        public final boolean editsTruncated;
+
         State(long seq, int rejectedEdits, String playersJson, String editsJson,
               String creaturesJson, long creatureSeq, int rejectedCreatures, String dropsJson,
               String chestsJson, String furnacesJson, float timeOfDay, int weatherKind,
               float weatherIntensity, long contentSeq, boolean contentChanged, boolean owner,
-              int droppedEdits) {
+              int droppedEdits, boolean editsTruncated) {
             this.seq = seq;
             this.rejectedEdits = rejectedEdits;
             this.playersJson = playersJson;
@@ -111,6 +118,7 @@ public final class RoomApi {
             this.contentChanged = contentChanged;
             this.owner = owner;
             this.droppedEdits = droppedEdits;
+            this.editsTruncated = editsTruncated;
         }
     }
 
@@ -408,7 +416,8 @@ public final class RoomApi {
                         data.optLong("contentSeq", 0L),
                         data.optBoolean("contentChanged", true),
                         data.optBoolean("owner", false),
-                        data.optInt("droppedEdits", 0));
+                        data.optInt("droppedEdits", 0),
+                        data.optBoolean("editsTruncated", false));
                 mainHandler.post(() -> callback.onSuccess(state));
             } catch (ApiException error) {
                 mainHandler.post(() -> callback.onFailure(error));
