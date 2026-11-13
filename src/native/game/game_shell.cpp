@@ -1551,11 +1551,23 @@ void GameShell::ApplyPickupResult(int32_t dropId, int32_t blockId) {
     if (itemId == item::kNone) {
         return;
     }
-    if (inventory_.Add(itemId, 1) > 0) {
-        CountProgressEvent(3);
-        progress::ProgressHub::Instance().OnItemPicked(static_cast<uint32_t>(blockId), 1);
-        IM_LOGI(kTag, "pickup granted drop=%d block=%d", dropId, blockId);
+    /* 放入接口返回实际放入的数量: 为 0 表示背包放不下. */
+    const int32_t added = inventory_.Add(itemId, 1);
+    if (added <= 0) {
+        /*
+         * 背包放不下: 服务端那边已经把这件掉落物算作被取走, 本地视图也已移除,
+         * 若什么都不做这件物品就凭空消失了. 因此把它原地放回地面, 等腾出空间再捡.
+         */
+        const core::Vec3 position = player_->Position();
+        SpawnDrop(itemId, 1, static_cast<voxel::BlockId>(blockId), position.x,
+                  position.y + 0.4f, position.z);
+        ShowTip("BAG FULL");
+        IM_LOGI(kTag, "pickup dropped on ground, bag full, item=%u", static_cast<uint32_t>(itemId));
+        return;
     }
+    CountProgressEvent(3);
+    progress::ProgressHub::Instance().OnItemPicked(static_cast<uint32_t>(blockId), 1);
+    IM_LOGI(kTag, "pickup granted drop=%d block=%d", dropId, blockId);
 }
 
 namespace {

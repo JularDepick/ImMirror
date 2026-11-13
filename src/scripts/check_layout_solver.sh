@@ -47,6 +47,18 @@ g++ -std=c++17 -I "$ROOT/native" \
 echo "== 全量控件加载"
 "$OUT_DIR/widget_tree_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 
+echo "== 背包容量"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/inventory_room_test.cpp" \
+    "$ROOT/native/game/inventory.cpp" \
+    "$ROOT/native/game/item/item_table.cpp" \
+    "$ROOT/native/game/item/tool_table.cpp" \
+    "$ROOT/native/game/item/enchant_table.cpp" \
+    "$ROOT/native/voxel/block_registry.cpp" \
+    "$ROOT/scripts/tests/log_stub.cpp" \
+    -o "$OUT_DIR/inventory_room_test.exe" || exit 1
+"$OUT_DIR/inventory_room_test.exe" || STATUS=1
+
 echo "== 存档容错"
 g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/scripts/tests/save_load_test.cpp" \

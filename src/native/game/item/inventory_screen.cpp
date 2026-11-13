@@ -386,6 +386,16 @@ bool InventoryScreen::CraftOnce(Inventory& inventory) {
         craftFailEvents_ += 1;
         return false;
     }
+    /*
+     * 先确认背包放得下产物, 再扣材料: 否则材料已经消耗而产物放不进去,
+     * 玩家的材料就凭空消失了.
+     */
+    if (inventory.RoomFor(recipe->result) < recipe->resultCount) {
+        IM_LOGI(kTag, "craft blocked, bag full, result=%u x%d",
+                static_cast<uint32_t>(recipe->result), recipe->resultCount);
+        craftFailEvents_ += 1;
+        return false;
+    }
     if (!crafting::RecipeMatcher::ConsumeFromGrid(grid_, *recipe)) {
         return false;
     }
