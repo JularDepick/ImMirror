@@ -1,6 +1,7 @@
 /* 控件绑定层的离线断言: 加载真实布局后逐个验证脚本侧常用动作. */
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -199,6 +200,28 @@ int main(int argc, char** argv) {
     tree.Hide(box);
     check("隐藏后父帧不命中", tree.HitTest(200.0f, 100.0f) != box);
     tree.Show(box);
+
+    /* 精灵名要一路带到绘制命令, 否则取不到图集格位. */
+    {
+        LayoutTemplates templates;
+        const char* templateText =
+            "<Ui><Texture name=\"Bkg\" virtual=\"true\" file=\"ui/tex.xml\" uvname=\"box.png\""
+            " w=\"40\" h=\"40\"/></Ui>";
+        ParseTemplates(templateText, std::strlen(templateText), templates);
+
+        const char* layoutText =
+            "<Ui><Texture name=\"Panel\" inherits=\"Bkg\"/></Ui>";
+        WidgetTree tree;
+        tree.SetTemplates(&templates);
+        check("带模板的布局能载入", tree.Load(layoutText, std::strlen(layoutText)));
+        tree.Resolve(LayoutRect{0.0f, 0.0f, 640.0f, 480.0f});
+        std::vector<LayoutDrawCommand> commands;
+        tree.CollectDrawCommands(commands);
+        check("产生一条绘制命令", commands.size() == 1);
+        check("命令带精灵名",
+              !commands.empty() && commands[0].sprite != nullptr &&
+                  std::string(commands[0].sprite) == "box.png");
+    }
 
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;

@@ -221,6 +221,8 @@ void WalkVisible(const LayoutFrame& frame, const std::unordered_map<const Layout
         command.name = frame.name;
         command.depth = depth;
         command.texture = hasTexture ? widget->texture.c_str() : frame.texture;
+        /* 精灵名决定取图集里的哪一格, 必须一并带出去, 否则只能按整图绘制. */
+        command.sprite = frame.sprite;
         command.text = hasText ? widget->text.c_str() : nullptr;
         if (hasText) {
             command.red = widget->textRed;
