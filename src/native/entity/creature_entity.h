@@ -28,6 +28,8 @@ enum class CreatureState : uint8_t {
 /* 生物每帧对外的结果: 本帧对玩家造成的伤害合计. */
 struct CreatureTick {
     float playerDamage = 0.0f;
+    /* 本帧对玩家造成的伤害类型, 取值见 game::DamageType. */
+    uint8_t playerDamageType = 1;
 };
 
 /*

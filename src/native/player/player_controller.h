@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "core/vec3.h"
+#include "game/armor.h"
 #include "player/buff_state.h"
 #include "player/input_tuning.h"
 #include "player/survival_tuning.h"
@@ -157,7 +158,13 @@ public:
      * 受到伤害. 伤害非正, 已死亡或仍在免伤窗口内时直接忽略;
      * 血量归零时清空挖掘进度并进入死亡等待, 由 Update 送回出生点.
      */
-    void ApplyDamage(float amount);
+    void ApplyDamage(float amount, game::DamageType type = game::DamageType::kPhysics);
+
+    /* 护甲套装: 穿戴与减伤都在这里, 外部只通过它读写四个部位. */
+    game::ArmorSet& Armor() { return armor_; }
+    const game::ArmorSet& Armor() const { return armor_; }
+    /* 四个部位的穿戴状态, 随血量一起由对局总装读写. */
+    game::ArmorSet armor_;
 
     /* 读档后恢复位置与朝向, 跳过延迟落位. */
     void SetPose(const core::Vec3& position, float yaw, float pitch);

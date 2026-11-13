@@ -966,10 +966,15 @@ float PlayerController::HealthRatio() const {
     return ratio > 1.0f ? 1.0f : ratio;
 }
 
-void PlayerController::ApplyDamage(float amount) {
+void PlayerController::ApplyDamage(float amount, game::DamageType type) {
     if (!(amount > 0.0f) || health_ <= 0.0f || hurtCooldown_ > 0.0f) {
         return;
     }
+    /*
+     * 护甲减伤: 按伤害类型把各部位百分比相加后折算, 总额封顶,
+     * 折算后至少保留两成伤害, 因此穿戴齐全也不会出现完全免疫.
+     */
+    amount = armor_.Apply(type, amount);
     health_ -= amount;
     hurtSeconds_ = kHurtSeconds;
     hurtCooldown_ = kHurtCooldown;

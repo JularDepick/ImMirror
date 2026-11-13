@@ -167,6 +167,10 @@ CreatureTick CreatureEntity::Update(double dt, const world::World& world,
         if (sightOk) {
             attackCooldown_ = def_->attackInterval;
             tick.playerDamage = def_->attack * tuning::kDamageScale;
+            /* 攻击方式 0 近程, 1 远程, 2 爆炸, 与伤害类型的序号对应. */
+            tick.playerDamageType = def_->attackType == 1
+                                        ? 2
+                                        : (def_->attackType == 2 ? 3 : 1);
             FaceDirection(toPlayer, 1.0f);
         }
     }

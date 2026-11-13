@@ -344,6 +344,8 @@ bool GameShell::TryAutoEat() {
 
 void GameShell::SeedStartingItems() {
     inventory_.Reset();
+    /* 新建世界从空护甲开始, 读档时由容器存档覆盖. */
+    player_->Armor().Clear();
     const item::ItemTable& items = item::ItemTable::Instance();
     /*
      * 起步工具先进快捷栏: 第一格放石铲, 第二格放木铲.
@@ -451,7 +453,8 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         player_->SetPose(core::Vec3{state.playerX, state.playerY, state.playerZ}, state.yaw, state.pitch);
         /* 容器文件与世界存档配套: 旧世界档没有容器文件时按空容器处理. */
         if (!containerPath_.empty()) {
-            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_, inventory_);
+            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_, inventory_,
+                           player_->Armor());
         }
         /* 世界时间: v3 早期档没有时间字段, 读出 0 按 0 点处理, 新档带时间. */
         worldTime_->SetTotalSeconds(state.timeOfDaySeconds);
@@ -567,7 +570,8 @@ void GameShell::SaveWorld() {
     bool containersSaved = false;
     if (!containerPath_.empty()) {
         containersSaved =
-        SaveContainersToFile(containerPath_.c_str(), furnaces_, chests_, inventory_);
+        SaveContainersToFile(containerPath_.c_str(), furnaces_, chests_, inventory_,
+                             player_->Armor());
     }
     IM_LOGI(kTag, "world save %s, containers %s, path=%s", saved ? "ok" : "failed",
             containersSaved ? "ok" : "skipped", savePath_.c_str());
@@ -888,7 +892,8 @@ bool GameShell::SelectWorld(const std::string& name, uint32_t seed) {
         player_->SetPose(core::Vec3{state.playerX, state.playerY, state.playerZ}, state.yaw,
                          state.pitch);
         if (!containerPath_.empty()) {
-            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_, inventory_);
+            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_, inventory_,
+                           player_->Armor());
         }
         worldTime_->SetTotalSeconds(state.timeOfDaySeconds);
         /* 换世界读档后基线同样重采样. */
@@ -2101,7 +2106,13 @@ void GameShell::UpdateEntities(double deltaSeconds) {
 
     UpdateEnvironmentDamage(deltaSeconds);
     if (stats.playerDamage > 0.0f) {
-        player_->ApplyDamage(stats.playerDamage);
+        /* 生物出手的伤害类型由生物结算时记入统计, 这里直接取用. */
+        const int32_t dealtIndex = static_cast<int32_t>(stats.playerDamageType);
+        const game::DamageType dealtType =
+            dealtIndex >= 0 && dealtIndex < game::kDamageTypeCount
+                ? static_cast<game::DamageType>(dealtIndex)
+                : game::DamageType::kPunch;
+        player_->ApplyDamage(stats.playerDamage, dealtType);
         IM_LOGI(kTag, "player damaged by creature amount=%.1f health=%.1f",
                 static_cast<double>(stats.playerDamage),
                 static_cast<double>(player_->Health()));
@@ -2579,6 +2590,21 @@ void GameShell::UpdateDrops(double deltaSeconds) {
         const float dz = drop.position.z - feet.z;
         const bool near = std::sqrt(dx * dx + dy * dy + dz * dz) <= kPickupRadius;
         bool keep = true;
+        /*
+         * 护甲自动穿戴: 对应部位空着时直接穿上, 不占背包格子;
+         * 部位已有装备则照常进背包, 由玩家自行决定何时替换.
+         */
+        if (near && game::ArmorSet::SlotOf(drop.item) >= 0) {
+            const int32_t armorSlot = game::ArmorSet::SlotOf(drop.item);
+            if (player_->Armor().Worn(armorSlot) == item::kNone) {
+                player_->Armor().Equip(drop.item);
+                IM_LOGI(kTag, "auto equip armor slot=%d item=%u", armorSlot,
+                        static_cast<uint32_t>(drop.item));
+                render::particle::RemoveDrop(drop.id);
+                keep = false;
+                continue;
+            }
+        }
         if (near && inventory_.RoomFor(drop.item) > 0) {
             const int32_t added = inventory_.Add(drop.item, drop.count);
             if (added > 0) {

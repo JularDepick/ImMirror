@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "game/armor.h"
 #include "game/furnace.h"
 #include "game/inventory.h"
 #include "game/item/item_def.h"
@@ -42,13 +43,13 @@ using ChestMap = std::unordered_map<uint64_t, ChestState>;
  * 返回 false 表示文件存在但无法解析, 调用方记日志即可, 不阻断进世界.
  */
 bool SaveContainersToFile(const char* path, const FurnaceMap& furnaces, const ChestMap& chests,
-                          const Inventory& inventory);
+                          const Inventory& inventory, const ArmorSet& armor);
 
 /*
  * 读回容器与物品栏. 早期版本的文件没有物品栏节, 此时物品栏保持调用方给的初值,
  * 不视为错误. 返回 false 表示文件存在但无法解析.
  */
 bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& chests,
-                            Inventory& inventory);
+                            Inventory& inventory, ArmorSet& armor);
 
 }  /* namespace immirror::game */
