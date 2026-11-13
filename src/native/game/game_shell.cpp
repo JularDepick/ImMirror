@@ -2758,7 +2758,8 @@ void GameShell::UpdateEntities(double deltaSeconds) {
     /* 昼夜刷怪口径: 白天只放动物, 夜间才放主动攻击的生物. */
     entities_.SetHostileSpawnAllowed(!worldTime_->IsDay());
 
-    const entity::EntityFrameStats stats = entities_.Update(deltaSeconds, *world_, probe);
+    /* 非 const: 和平模式下要把生物出手的伤害清零. */
+    entity::EntityFrameStats stats = entities_.Update(deltaSeconds, *world_, probe);
 
     /* 生物音效: 受击与死亡事件按生物种类查表, 路径直接交给音频引擎播放. */
     for (const entity::EntityManager::SoundEvent& event : entities_.TakeSoundEvents()) {
@@ -2870,6 +2871,13 @@ void GameShell::UpdateEntities(double deltaSeconds) {
     }
 
     UpdateEnvironmentDamage(deltaSeconds);
+    /*
+     * 和平模式: 生物照常存在与走动, 但不对玩家造成伤害.
+     * 直接在这里把伤害清零, 比逐个改生物行为简单, 也不会漏掉远程出手.
+     */
+    if (settings_->Get(settings::Key::kPeaceModel) != 0) {
+        stats.playerDamage = 0.0f;
+    }
     /*
      * 远程生物: 先决定是否改为投射物出手, 再决定是否直接扣血.
      * 投射出手的伤害要到命中才结算, 因此整段近战附带效果都不参与.

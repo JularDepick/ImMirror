@@ -135,7 +135,7 @@ public final class SettingsCatalog {
          * 其他. 界面与提示类开关归到这里, 画面组只放影响场景渲染质量的项,
          * 避免同一页里质量档与界面开关混在一起.
          */
-        add("peacemodel", Group.OTHER, false, "和平模式");
+        add("peacemodel", Group.OTHER, true, "和平模式");
         add("popups", Group.OTHER, false, "邀请弹窗");
         add("fpsbuttom", Group.OTHER, false, "帧率显示按钮");
         add("physxparam", Group.OTHER, false, "物理参数面板");
