@@ -89,6 +89,16 @@ public:
     /* 赋值: 找到已有的那层就改它, 都没有则写在当前层. */
     void Assign(const std::string& name, const Value& value);
 
+    /* 当前层定义的变量名, 供调试与按名字批量调用使用. */
+    std::vector<std::string> Names() const {
+        std::vector<std::string> out;
+        out.reserve(values_.size());
+        for (const auto& entry : values_) {
+            out.push_back(entry.first);
+        }
+        return out;
+    }
+
 private:
     std::shared_ptr<Scope> parent_;
     std::map<std::string, Value> values_;

@@ -108,6 +108,16 @@ Value Interpreter::GetGlobal(const std::string& name) const {
     return global_->Get(name);
 }
 
+std::vector<std::string> Interpreter::GlobalFunctionNames() const {
+    std::vector<std::string> out;
+    for (const std::string& name : global_->Names()) {
+        if (global_->Get(name).kind == Value::Kind::kFunction) {
+            out.push_back(name);
+        }
+    }
+    return out;
+}
+
 Value Interpreter::CallGlobal(const std::string& name, const std::vector<Value>& args) {
     const Value callee = global_->Get(name);
     if (callee.kind != Value::Kind::kFunction) {

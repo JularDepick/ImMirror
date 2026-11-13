@@ -77,6 +77,22 @@ g++ -std=c++17 -I "$ROOT/native" \
     -o "$OUT_DIR/widget_host_test.exe" || exit 1
 "$OUT_DIR/widget_host_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
 
+echo "== 真实界面批量"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/ui_batch_test.cpp" \
+    "$ROOT/native/ui/script/lua_lexer.cpp" \
+    "$ROOT/native/ui/script/lua_parser.cpp" \
+    "$ROOT/native/ui/script/lua_value.cpp" \
+    "$ROOT/native/ui/script/lua_vm.cpp" \
+    "$ROOT/native/ui/script/widget_host.cpp" \
+    "$ROOT/native/ui/layout_frame.cpp" \
+    "$ROOT/native/ui/layout_xml.cpp" \
+    "$ROOT/native/ui/layout_draw.cpp" \
+    "$ROOT/native/ui/widget_tree.cpp" \
+    -o "$OUT_DIR/ui_batch.exe" || exit 1
+"$OUT_DIR/ui_batch.exe" "$ROOT/../../assets/project/data/xml/ui/mobile" \
+    "$ROOT/../../assets/project/ui/mobile" || STATUS=1
+
 echo "== 全量布局解析"
 "$OUT_DIR/layout_xml_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 

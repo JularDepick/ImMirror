@@ -33,6 +33,9 @@ public:
     /* 调用全局函数, 返回第一个结果. */
     Value CallGlobal(const std::string& name, const std::vector<Value>& args);
 
+    /* 全局作用域里定义的函数名, 供按名字批量调用入口函数. */
+    std::vector<std::string> GlobalFunctionNames() const;
+
     const std::string& Error() const { return error_; }
     /* 已执行的语句条数, 用于统计与限流. */
     int64_t StepCount() const { return steps_; }
