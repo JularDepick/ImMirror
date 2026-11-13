@@ -324,6 +324,7 @@ frame fps=119.9 avg=8.34ms max=9.85ms frames=4360 size=2560x1440 gpu=Adreno (TM)
 | `bash scripts/check_native_syntax.sh` | 全部原生源文件的语法扫描 |
 | `bash scripts/check_layout_solver.sh` | 界面与玩法的离线断言 |
 | `python scripts/check_asset_paths.py` | 资源路径与打包完整性核对 |
+| `python scripts/check_screens.py` | 界面可达性与字符串资源核对 |
 
 断言脚本分十六组, 每组独立编译并输出 `failures=0`:
 
