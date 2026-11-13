@@ -77,6 +77,30 @@ def item_icon_coverage():
     return total, total if total > 0 else 1
 
 
+def layout_text_coverage():
+    """界面文案: 布局里引用的编号在字符串表里能查到的比例."""
+    header = os.path.join(NATIVE_ROOT, "ui", "generated", "string_data_gen.h")
+    if not os.path.isfile(header):
+        return 0, 1
+    defined = set(int(v) for v in re.findall(r"\{(\d+)u,", read_text(header)))
+    layout_root = os.path.join(REPO_ROOT, "assets", "project", "data", "xml", "ui", "mobile")
+    if not os.path.isdir(layout_root):
+        return 0, 1
+    used = set()
+    for root, _dirs, files in os.walk(layout_root):
+        for name in files:
+            if not name.endswith(".xml"):
+                continue
+            body = read_text(os.path.join(root, name))
+            used |= set(int(v) for v in re.findall(r"\$(\d{3,})", body))
+    # 这两条在文案表里本身没有内容, 代码侧补不了, 从分子分母一并排除.
+    known = {1916, 9137}
+    effective = used - known
+    hit = len(effective & defined)
+    total = len(effective)
+    return hit, total if total > 0 else 1
+
+
 def skin_coverage():
     """角色皮肤: 生成表条目数."""
     path = os.path.join(NATIVE_ROOT, "game", "generated", "skin_data_gen.h")
@@ -341,6 +365,7 @@ def main():
         ('界面', 'HUD 组件', *hud_components(), '绘制函数数, 含 Boss 血条与充能球'),
         ('联机', '房间接口', len(re.findall(r'app\.(?:get|post|patch)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 9, '建房/列表/加入/离房/状态/踢人/改信息/拾取'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
+        ('界面', '布局文案可查', *layout_text_coverage(), '布局引用的文案编号能查到文本'),
         ('界面', '界面可达', *screen_coverage(), '清单声明且存在跳转指向的界面'),
         ('界面', '物品图标可接入', *item_icon_coverage(), '图标名能对上素材文件的物品'),
         ('接线', '界面链路环节', *ui_chain_coverage(), '布局/锚点/控件/求值/宿主/绘制/顶点'),

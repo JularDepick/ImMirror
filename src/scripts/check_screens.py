@@ -29,6 +29,32 @@ def check_strings(sources, manifest):
     return len(used), len(defined), missing
 
 
+# 已知缺失的文案编号: 素材侧本身没有这两条, 代码侧无法补.
+# 1916 在文案表里没有这一行, 9137 这一行中英文都是空的.
+KNOWN_MISSING_TEXTS = {1916, 9137}
+
+
+def check_layout_texts():
+    """布局里引用的文案编号必须在字符串表里有定义, 否则界面上是空白."""
+    header = os.path.join(SRC_ROOT, "native", "ui", "generated", "string_data_gen.h")
+    if not os.path.isfile(header):
+        return 0, 0, []
+    defined = set(int(v) for v in re.findall(r"\{(\d+)u,", open(header, encoding="utf-8").read()))
+    project = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "project"))
+    layout_root = os.path.join(project, "data", "xml", "ui", "mobile")
+    if not os.path.isdir(layout_root):
+        return 0, len(defined), []
+    used = set()
+    for root, _dirs, files in os.walk(layout_root):
+        for name in files:
+            if not name.endswith(".xml"):
+                continue
+            body = open(os.path.join(root, name), encoding="utf-8", errors="replace").read()
+            used |= set(int(value) for value in re.findall(r"\$(\d{3,})", body))
+    missing = sorted(used - defined - KNOWN_MISSING_TEXTS)
+    return len(used), len(defined), missing
+
+
 def main():
     if not os.path.isdir(JAVA_ROOT) or not os.path.isfile(MANIFEST):
         print("界面源码或清单不存在")
@@ -63,7 +89,12 @@ def main():
     print("字符串资源 引用 %d 定义 %d 缺定义 %d: %s"
           % (used, defined, len(missing), ", ".join(missing) or "无"))
 
-    return 0 if not undeclared and not unreachable and not missing else 2
+    textUsed, textDefined, textMissing = check_layout_texts()
+    print("布局文案 引用 %d 定义 %d 缺定义 %d: %s"
+          % (textUsed, textDefined, len(textMissing),
+             ", ".join(str(v) for v in textMissing[:8]) or "无"))
+
+    return 0 if not undeclared and not unreachable and not missing and not textMissing else 2
 
 
 if __name__ == "__main__":

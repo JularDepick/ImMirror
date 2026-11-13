@@ -58,13 +58,21 @@ def main():
     header = rows[1]
     id_index = header.index("ID")
     en_index = header.index("ENDesc")
+    # 中文列用于英文缺失时回落, 列名固定为第二列.
+    cn_index = 1 if len(header) > 1 else -1
     entries = {}
     for row in rows[2:]:
         if len(row) <= max(id_index, en_index):
             continue
         key = row[id_index].strip()
+        if not key.isdigit():
+            continue
+        # 英文列缺失时回落到中文列: 当前字形只有 ASCII, 中文暂时画不出来,
+        # 但条目要留在表里, 否则接入中文字形时还得重新生成一遍.
         text = row[en_index].strip()
-        if not key.isdigit() or not text:
+        if not text and cn_index >= 0 and cn_index < len(row):
+            text = row[cn_index].strip()
+        if not text:
             continue
         entries[int(key)] = text
     ordered = sorted(entries.items())
