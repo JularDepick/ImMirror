@@ -76,6 +76,8 @@ struct LayoutFrame {
     /* 贴图相对路径, 空表示无贴图. */
     const char* texture = nullptr;
     LayerLevel layer = LayerLevel::kArtwork;
+    /* 布局里标了 hidden="true": 载入时默认不显示, 由脚本按需打开. */
+    bool hidden = false;
 
     void AddChild(LayoutFrame* child) {
         child->parent = this;

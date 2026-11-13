@@ -166,6 +166,21 @@ int main(int argc, char** argv) {
     std::printf("带非白颜色的命令 %d 条\n", colored);
     check("颜色被解析进命令", colored > 0);
 
+    /* 隐藏属性: 布局里标了 hidden="true" 的帧载入时默认不显示. */
+    {
+        LayoutDocument document;
+        const char* text =
+            "<Root>\n"
+            "  <Frame name=\"Visible\" size=\"100,100\"/>\n"
+            "  <Frame name=\"Hidden\" size=\"100,100\" hidden=\"true\"/>\n"
+            "</Root>\n";
+        check("带隐藏属性的布局能解析", document.Parse(text, std::string(text).size()));
+        LayoutFrame* visible = document.Find("Visible");
+        LayoutFrame* hidden = document.Find("Hidden");
+        check("可见帧存在", visible != nullptr && !visible->hidden);
+        check("隐藏帧标记正确", hidden != nullptr && hidden->hidden);
+    }
+
     /* 解析失败要带行号, 否则上千行的布局文件无法定位. */
     {
         LayoutDocument broken;

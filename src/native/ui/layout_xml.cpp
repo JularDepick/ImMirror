@@ -31,6 +31,8 @@ struct Attributes {
     std::string a;
     std::string file;
     std::string level;
+    /* hidden="true": 布局载入时默认不显示, 由脚本按需打开. */
+    std::string hidden;
 };
 
 /* 图层名转枚举; 未知名按 artwork 处理. */
@@ -146,6 +148,8 @@ Attributes ParseAttributes(const std::string& body) {
             attributes.file = value;
         } else if (key == "level") {
             attributes.level = value;
+        } else if (key == "hidden") {
+            attributes.hidden = value;
         }
     }
     return attributes;
@@ -358,6 +362,8 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
         frame->name = names_.back().c_str();
         /* 所在图层决定绘制顺序; 贴图路径来自元素自身的 file 属性. */
         frame->layer = layerStack.empty() ? LayerLevel::kArtwork : layerStack.back();
+        /* hidden="true" 的帧载入时不显示, 与脚本里的 Show/Hide 配合. */
+        frame->hidden = attributes.hidden == "true";
         if (!attributes.file.empty()) {
             textures_.push_back(attributes.file);
             frame->texture = textures_.back().c_str();

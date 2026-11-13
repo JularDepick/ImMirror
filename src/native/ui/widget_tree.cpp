@@ -115,6 +115,8 @@ bool WidgetTree::Load(const char* text, size_t length) {
         widgets_.push_back(std::unique_ptr<Widget>(new Widget()));
         Widget* widget = widgets_.back().get();
         widget->frame = frame;
+        /* 布局里标了隐藏的控件载入时不显示, 由脚本按需打开. */
+        widget->shown = !frame->hidden;
         if (frame->name != nullptr) {
             byName_[frame->name] = widget;
         }
