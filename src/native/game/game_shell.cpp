@@ -1868,8 +1868,44 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
      * 挖掉一格扣一次手持工具耐久, 耗尽时工具消失并提示.
      * 徒手与方块类手持物不带耐久, 这里会直接返回 false.
      */
+    /*
+     * 先记下损坏前的物品编号: 扣到 0 时该格已被清空, 之后取不到原物品.
+     */
+    const item::ItemId wielder = inventory_.ItemAt(selectedSlot_);
     if (inventory_.ConsumeDurability(selectedSlot_)) {
-        IM_LOGI(kTag, "tool broken at slot %d", selectedSlot_);
+        /*
+         * 工具耗尽: 给玩家一条可见提示, 并换上一把同种工具,
+         * 先看快捷栏, 再翻背包把找到的那把挪进刚空出来的格.
+         */
+        IM_LOGI(kTag, "tool broken at slot %d item=%u", selectedSlot_,
+                static_cast<uint32_t>(wielder));
+        ShowTip("TOOL BROKEN");
+        int32_t replacement = -1;
+        for (int32_t slot = 0; slot < Inventory::kHotbarSlots; ++slot) {
+            if (slot == selectedSlot_) {
+                continue;
+            }
+            const item::ItemStack& candidate = inventory_.Slot(slot);
+            if (!candidate.Empty() && candidate.item == wielder) {
+                replacement = slot;
+                break;
+            }
+        }
+        if (replacement < 0) {
+            for (int32_t slot = Inventory::kHotbarSlots; slot < Inventory::kSlotCount; ++slot) {
+                const item::ItemStack& candidate = inventory_.Slot(slot);
+                if (!candidate.Empty() && candidate.item == wielder) {
+                    inventory_.MoveSlot(slot, selectedSlot_);
+                    replacement = selectedSlot_;
+                    break;
+                }
+            }
+        }
+        if (replacement >= 0) {
+            selectedSlot_ = replacement;
+            RefreshSelectedItem();
+            IM_LOGI(kTag, "tool switched to slot %d after break", replacement);
+        }
     } else {
         IM_LOGD(kTag, "tool durability left=%d slot=%d", inventory_.DurabilityAt(selectedSlot_),
                 selectedSlot_);
