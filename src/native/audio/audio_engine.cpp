@@ -217,7 +217,7 @@ void AudioEngine::DetachCreatureBank(JNIEnv* env) {
     creatureHandleMethod_ = nullptr;
 }
 
-void AudioEngine::PlayCreatureAsset(const char* assetPath) {
+void AudioEngine::PlayCreatureAsset(const char* assetPath, float scale) {
     if (assetPath == nullptr || assetPath[0] == '\0') {
         return;
     }
@@ -246,7 +246,13 @@ void AudioEngine::PlayCreatureAsset(const char* assetPath) {
     if (handle <= 0) {
         return;
     }
-    const jint stream = env->CallIntMethod(soundPool_, playMethod_, handle, volume_, volume_, 1, 0, 1.0f);
+    /* 距离衰减: 系数与总音量相乘, 钳到 0 到 1, 远处生物自然变轻. */
+    float attenuated = volume_ * (scale < 0.0f ? 0.0f : (scale > 1.0f ? 1.0f : scale));
+    if (attenuated <= 0.001f) {
+        return;
+    }
+    const jint stream =
+        env->CallIntMethod(soundPool_, playMethod_, handle, attenuated, attenuated, 1, 0, 1.0f);
     if (env->ExceptionCheck()) {
         env->ExceptionClear();
         return;

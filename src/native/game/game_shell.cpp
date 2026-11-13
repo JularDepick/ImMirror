@@ -2172,7 +2172,23 @@ void GameShell::UpdateEntities(double deltaSeconds) {
     for (const entity::EntityManager::SoundEvent& event : entities_.TakeSoundEvents()) {
         const char* path = entity::gen::EntitySoundPath(event.sourceId, event.action);
         if (path != nullptr && path[0] != '\0') {
-            audio::AudioEngine::Instance().PlayCreatureAsset(path);
+            /*
+             * 距离衰减: 八米内按原音量, 之后线性降到四十八米外静音,
+             * 因此远处的战斗声不会盖过身边的声音.
+             */
+            float scale = 1.0f;
+            {
+                const core::Vec3 feet = player_->Position();
+                const core::Vec3 eye = core::Vec3{feet.x, feet.y + 1.62f, feet.z};
+                const float distance = (event.position - eye).Length();
+                constexpr float kNear = 8.0f;
+                constexpr float kFar = 48.0f;
+                scale = distance <= kNear
+                            ? 1.0f
+                            : (distance >= kFar ? 0.0f
+                                                : 1.0f - (distance - kNear) / (kFar - kNear));
+            }
+            audio::AudioEngine::Instance().PlayCreatureAsset(path, scale);
         }
     }
 

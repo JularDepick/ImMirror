@@ -94,6 +94,8 @@ public:
     struct SoundEvent {
         uint32_t sourceId = 0;
         uint8_t action = 0; /* 0 受击, 1 死亡 */
+        /* 发生位置: 播放侧据此做距离衰减. */
+        core::Vec3 position;
     };
     std::vector<SoundEvent> TakeSoundEvents();
 

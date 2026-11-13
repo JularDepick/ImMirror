@@ -125,7 +125,8 @@ EntityFrameStats EntityManager::Update(double dt, const world::World& world,
         if (candidateCount > 0) {
             const int32_t pick = static_cast<int32_t>(NextUnit() * static_cast<float>(candidateCount));
             const int32_t index = pick < candidateCount ? pick : candidateCount - 1;
-            soundEvents_.push_back(SoundEvent{candidates[index]->Definition().sourceId, 2});
+            soundEvents_.push_back(SoundEvent{candidates[index]->Definition().sourceId, 2,
+                                               candidates[index]->Position()});
         }
     }
 
@@ -183,9 +184,10 @@ bool EntityManager::Damage(EntityId id, float amount) {
         return false;
     }
     /* 未致死记一条受击音, 致死记一条死亡音, 两种动作不同时出现. */
-    soundEvents_.push_back(SoundEvent{sourceId, 0});
+    const core::Vec3 eventPosition = creature->Position();
+    soundEvents_.push_back(SoundEvent{sourceId, 0, eventPosition});
     /* 致死一击额外记一条死亡音, 受击音已在上方记录. */
-    soundEvents_.push_back(SoundEvent{sourceId, 1});
+    soundEvents_.push_back(SoundEvent{sourceId, 1, eventPosition});
     QueueLoot(*creature);
     ++deathsPending_;
     IM_LOGI(kTag, "creature died id=%u name=%s life=%.0f", static_cast<uint32_t>(id),
