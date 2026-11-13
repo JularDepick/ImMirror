@@ -2510,8 +2510,10 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
             for (int32_t slot = Inventory::kHotbarSlots; slot < Inventory::kSlotCount; ++slot) {
                 const item::ItemStack& candidate = inventory_.Slot(slot);
                 if (!candidate.Empty() && candidate.item == wielder) {
-                    inventory_.MoveSlot(slot, selectedSlot_);
-                    replacement = selectedSlot_;
+                    /* 只有真的换过去了才切到那一格, 否则会选到原来的东西. */
+                    if (inventory_.MoveSlot(slot, selectedSlot_)) {
+                        replacement = selectedSlot_;
+                    }
                     break;
                 }
             }
