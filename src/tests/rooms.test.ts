@@ -22,6 +22,7 @@ interface RoomSummary {
   seed: number;
   worldName: string;
   createdAt: number;
+  hasPassword: boolean;
 }
 
 interface RoomMemberSnapshot {
@@ -259,6 +260,53 @@ describe("房间通道", () => {
       await app.post("/api/v1/rooms/join", { code: room.code, password: "room-1234" }, guest.token),
     );
     expect(joined.room.memberCount).toBe(2);
+  });
+
+  it("房主上报的生物快照被转发给客人, 客人的上报被拒", async () => {
+    const owner = await registerCasePlayer("creature", 1);
+    const guest = await registerCasePlayer("creature", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    const creatures = [
+      { id: 1, kind: 3101, x: 8.5, y: 74, z: 4.5, yaw: 0.3, hp: 20 },
+      { id: 2, kind: 3102, x: 12.5, y: 74, z: 9.5, yaw: -1.2, hp: 8 },
+    ];
+    const reported = expectOk<{ creatures: unknown[]; creatureSeq: number; rejectedCreatures: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { creatures }, owner.token),
+    );
+    expect(reported.rejectedCreatures).toBe(0);
+    expect(reported.creatureSeq).toBe(1);
+    expect(reported.creatures).toHaveLength(2);
+
+    /* 客人拉取到同一批快照. */
+    const seen = expectOk<{ creatures: { id: number; kind: number }[]; creatureSeq: number }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(seen.creatureSeq).toBe(1);
+    expect(seen.creatures.map((item) => item.id)).toEqual([1, 2]);
+
+    /* 客人上报被拒, 快照不变. */
+    const rejected = expectOk<{ rejectedCreatures: number; creatureSeq: number }>(
+      await app.post(
+        `/api/v1/rooms/${room.id}/state`,
+        { creatures: [{ id: 9, kind: 1, x: 0, y: 0, z: 0, yaw: 0, hp: 1 }] },
+        guest.token,
+      ),
+    );
+    expect(rejected.rejectedCreatures).toBe(1);
+    expect(rejected.creatureSeq).toBe(1);
+
+    /* 房主整轮替换: 快照条数与版本号都更新. */
+    const replaced = expectOk<{ creatures: unknown[]; creatureSeq: number }>(
+      await app.post(
+        `/api/v1/rooms/${room.id}/state`,
+        { creatures: [{ id: 3, kind: 3103, x: 1, y: 2, z: 3, yaw: 0, hp: 5 }] },
+        owner.token,
+      ),
+    );
+    expect(replaced.creatureSeq).toBe(2);
+    expect(replaced.creatures).toHaveLength(1);
   });
 
   it("无密码房间的 hasPassword 为假", async () => {
