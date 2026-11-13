@@ -19,6 +19,7 @@ import com.julardepick.immirror.audio.CreatureSoundBank;
 import com.julardepick.immirror.editor.EditorBridge;
 import com.julardepick.immirror.net.BlockSyncApi;
 import com.julardepick.immirror.net.PresenceApi;
+import com.julardepick.immirror.net.RoomApi;
 import com.julardepick.immirror.progress.ProgressApi;
 import com.julardepick.immirror.progress.ProgressBoard;
 import android.view.WindowManager;
@@ -81,6 +82,11 @@ public final class PlayActivity extends NativeActivity {
     /* 启动附加字段: 要进入或新建的世界名, 与主菜单的世界列表配套. */
     public static final String EXTRA_WORLD = "world";
 
+    /* 联机房间附加字段: 房间 id, 房间号与房间种子, 由联机大厅下发. */
+    public static final String EXTRA_ROOM_ID = "room_id";
+    public static final String EXTRA_ROOM_CODE = "room_code";
+    public static final String EXTRA_ROOM_SEED = "room_seed";
+
     /* 成就统计的上报周期. */
     private static final long PROGRESS_REPORT_INTERVAL_MS = 30000L;
     private static final long PRESENCE_INTERVAL_MS = 10000L;
@@ -88,6 +94,11 @@ public final class PlayActivity extends NativeActivity {
     /* 方块改动同步: 与位置轮询同一节拍, 一次调用完成上报与拉取. */
     private BlockSyncApi blockSyncApi;
     private long blockSeq;
+    /* 房间通道: 房内用一次请求完成位置上报与改动同步, 与位置通道互斥. */
+    private RoomApi roomApi;
+    private String roomId;
+    private String roomCode;
+    private long roomSeq;
     private AmbientAudioManager ambientManager;
     private Handler presenceHandler;
     private Runnable presenceRunnable;
@@ -108,7 +119,18 @@ public final class PlayActivity extends NativeActivity {
         NativeBridge.onDeviceProfile(DeviceProfile.obtain(this).toNativePayload());
         /* 试玩参数: 从编辑器进入时携带工程名, 原生侧据此加载导出的世界存档. */
         final String playtestProject = getIntent().getStringExtra(EditorBridge.EXTRA_PLAYTEST);
-        if (playtestProject != null && !playtestProject.isEmpty()) {
+        final String roomExtraId = getIntent().getStringExtra(EXTRA_ROOM_ID);
+        if (roomExtraId != null && !roomExtraId.isEmpty()) {
+            /*
+             * 联机房间: 世界名按房间号生成, 种子取房间种子, 同一房间的各方因此生成
+             * 同一份地形; 房内位置与方块改动由房间通道同步, 房主权威.
+             */
+            roomId = roomExtraId;
+            roomCode = getIntent().getStringExtra(EXTRA_ROOM_CODE);
+            final String roomWorld = "room_" + (roomCode == null || roomCode.isEmpty()
+                    ? roomExtraId : roomCode);
+            NativeBridge.chooseWorldWithSeed(roomWorld, getIntent().getIntExtra(EXTRA_ROOM_SEED, 0));
+        } else if (playtestProject != null && !playtestProject.isEmpty()) {
             NativeBridge.selectWorld(playtestProject);
         } else {
             /*
@@ -191,6 +213,9 @@ public final class PlayActivity extends NativeActivity {
         if (blockSyncApi == null) {
             blockSyncApi = new BlockSyncApi(this);
         }
+        if (roomApi == null) {
+            roomApi = new RoomApi(this);
+        }
         if (presenceHandler == null) {
             presenceHandler = new Handler(Looper.getMainLooper());
         }
@@ -254,11 +279,88 @@ public final class PlayActivity extends NativeActivity {
         });
     }
 
+    /* 房间玩家数组的长度, 解析失败按零计, 只用于日志与诊断. */
+    private static int countPlayers(String playersJson) {
+        if (playersJson == null || playersJson.length() <= 2) {
+            return 0;
+        }
+        try {
+            return new org.json.JSONArray(playersJson).length();
+        } catch (org.json.JSONException error) {
+            return 0;
+        }
+    }
+
+    /*
+     * 房内同步节拍: 一次请求上报自身位置与本地改动, 同时拉取其他玩家与远端改动.
+     * 远端玩家交给原生侧画成体素人形, 远端改动直接写世界, 不再回灌本地队列.
+     */
+    private void roomSyncTick(final Session session) {
+        if (roomApi == null || roomId == null || roomId.isEmpty()) {
+            return;
+        }
+        final String localEdits = NativeBridge.takeBlockEdits();
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        float yaw = 0.0f;
+        float pitch = 0.0f;
+        final String pose = NativeBridge.takePlayerPose();
+        if (pose != null && pose.length() > 2) {
+            try {
+                final org.json.JSONObject self = new org.json.JSONObject(pose);
+                x = (float) self.optDouble("x", 0.0);
+                y = (float) self.optDouble("y", 0.0);
+                z = (float) self.optDouble("z", 0.0);
+                yaw = (float) self.optDouble("yaw", 0.0);
+                pitch = (float) self.optDouble("pitch", 0.0);
+            } catch (org.json.JSONException error) {
+                Log.w(TAG, "room pose parse failed: " + error);
+            }
+        }
+        roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, roomSeq,
+                new RoomApi.StateCallback() {
+                    @Override
+                    public void onSuccess(RoomApi.State state) {
+                        roomSeq = state.seq;
+                        Log.i(TAG, "room sync ok, seq=" + state.seq + " players="
+                                + countPlayers(state.playersJson) + " edits="
+                                + state.editsJson.length() + " rejected=" + state.rejectedEdits);
+                        if (state.editsJson != null && state.editsJson.length() > 2) {
+                            NativeBridge.applyBlockEdits(state.editsJson);
+                        }
+                        try {
+                            final org.json.JSONObject payload = new org.json.JSONObject();
+                            payload.put("others", new org.json.JSONArray(state.playersJson));
+                            NativeBridge.applyRemotePlayers(payload.toString());
+                        } catch (org.json.JSONException error) {
+                            Log.w(TAG, "room players apply failed: " + error);
+                        }
+                        if (state.rejectedEdits > 0) {
+                            Log.w(TAG, "room rejected local edits=" + state.rejectedEdits);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(com.julardepick.immirror.account.ApiException error) {
+                        Log.w(TAG, "room sync failed: " + error.code() + " " + error.detail());
+                    }
+                });
+    }
+
     private void presenceTick(final Session session) {
         /* 日相与环境音: 顺带查询游戏内昼夜, 切换昼/夜环境音轨. */
         if (ambientManager != null) {
             ambientManager.setDayPhase(NativeBridge.getDayPhase());
             ambientManager.setAmbientGroup(ambientGroupOf(NativeBridge.getAmbientContext()));
+        }
+        /*
+         * 房内走房间通道: 位置与方块改动在同一请求里完成, 不再走全局位置通道与
+         * 全局改动通道, 两条通道互斥, 避免房内改动写进全局世界表.
+         */
+        if (roomId != null && !roomId.isEmpty()) {
+            roomSyncTick(session);
+            return;
         }
         /* 位置与方块同一节拍推进, 两条通道互不阻塞. */
         blockSyncTick(session);
@@ -352,6 +454,20 @@ public final class PlayActivity extends NativeActivity {
         stopPresenceReporting();
         if (ambientManager != null) {
             ambientManager.releaseAll();
+        }
+        /* 房内退出时主动离房, 服务端据此尽快把房主身份移交出去. */
+        if (roomApi != null && roomId != null && !roomId.isEmpty() && presenceSession != null) {
+            roomApi.leave(presenceSession, roomId, new RoomApi.SimpleCallback() {
+                @Override
+                public void onSuccess() {
+                    Log.i(TAG, "room left, id=" + roomId);
+                }
+
+                @Override
+                public void onFailure(com.julardepick.immirror.account.ApiException error) {
+                    Log.w(TAG, "room leave failed: " + error.code() + " " + error.detail());
+                }
+            });
         }
         NativeBridge.stop();
         NativeBridge.flushSettings();

@@ -1,6 +1,7 @@
 package com.julardepick.immirror.lobby;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -10,11 +11,13 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.julardepick.immirror.PlayActivity;
 import com.julardepick.immirror.R;
 import com.julardepick.immirror.account.AccountTheme;
+import com.julardepick.immirror.account.ApiException;
 import com.julardepick.immirror.account.Session;
 import com.julardepick.immirror.account.SessionStore;
-import com.julardepick.immirror.net.LanDiscovery;
+import com.julardepick.immirror.net.RoomApi;
 import com.julardepick.immirror.ui.MobilePage;
 
 import java.util.ArrayList;
@@ -23,8 +26,9 @@ import java.util.List;
 /*
  * 联机大厅.
  *
- * 面板内自上而下是状态提示, 扫描状态, 房间列表区与底部按钮行, 末尾是作者页脚.
- * 标题与关闭由面板标题行承担, 房间列表随面板一起滚动, 列表项全部可见.
+ * 面板内自上而下是状态提示, 列表状态, 房间列表区与底部按钮行, 末尾是作者页脚.
+ * 房间列表来自账号服务端的房间通道: 进入与刷新各拉一次, 点房间即按房间号加入,
+ * 底部创建按钮内联确认后建房并直接进游戏. 房主权威的方块同步在房内由 PlayActivity 承担.
  */
 public final class MultiplayerLobbyActivity extends Activity {
 
@@ -33,49 +37,55 @@ public final class MultiplayerLobbyActivity extends Activity {
     /* 创建按钮内联确认的等待时长, 超时自动回到初始按钮状态. */
     private static final long CREATE_CONFIRM_MS = 3000L;
 
-    private LanDiscovery discovery;
+    /* 建房时申请的人数上限, 服务端允许 2 到 16. */
+    private static final int CREATE_MAX_PLAYERS = 8;
+
+    private RoomApi roomApi;
+    private Session session;
     private TextView noticeView;
-    private TextView scanStateView;
+    private TextView stateView;
     private LinearLayout roomListHost;
     private TextView roomEmptyView;
     private Button createButton;
     private boolean createConfirmPending;
+    private boolean busy;
 
-    /* 最近一次扫描发现的服务端地址, 房间服就位后按地址逐个拉房间列表. */
-    private final List<String> discoveredServers = new ArrayList<>();
+    /* 最近一次拉取到的房间, 供列表重绘与加入时取房间号. */
+    private final List<RoomApi.Room> rooms = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        discovery = new LanDiscovery(this);
+        roomApi = new RoomApi(this);
+        session = SessionStore.load(this);
         setContentView(buildPage());
         refresh();
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onResume() {
+        super.onResume();
+        /* 从对局返回时房间状态可能已变化, 回到本页就重新拉一次. */
+        refresh();
     }
 
     /*
-     * 面板内纵向内容: 状态提示, 扫描状态, 房间列表区, 底部按钮行与作者页脚.
-     * 房间列表不再自带滚动容器, 由面板的滚动承担.
+     * 面板内纵向内容: 状态提示, 列表状态, 房间列表区, 底部按钮行与作者页脚.
+     * 房间列表不单独滚动, 由面板的滚动承担.
      */
     private View buildPage() {
         final LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
 
-        /* 提示条与扫描状态. */
         noticeView = AccountTheme.notice(this);
         noticeView.setTextColor(AccountTheme.COLOR_NOTICE_TEXT);
         noticeView.setVisibility(View.GONE);
         column.addView(noticeView, AccountTheme.block(this, 2f));
 
-        scanStateView = AccountTheme.body(this, getString(R.string.lobby_room_scanning),
+        stateView = AccountTheme.body(this, getString(R.string.lobby_room_scanning),
                 AccountTheme.COLOR_TEXT_MUTED, AccountTheme.TEXT_SIZE_SUB);
-        column.addView(scanStateView, AccountTheme.block(this, 6f));
+        column.addView(stateView, AccountTheme.block(this, 6f));
 
-        /* 房间列表区: 空态文案与动态房间卡片共用一个容器. */
         roomEmptyView = AccountTheme.body(this, getString(R.string.lobby_room_empty),
                 AccountTheme.COLOR_TEXT_MUTED, AccountTheme.TEXT_SIZE_BODY);
         roomEmptyView.setGravity(Gravity.CENTER);
@@ -86,7 +96,6 @@ public final class MultiplayerLobbyActivity extends Activity {
         roomListHost.addView(roomEmptyView);
         column.addView(roomListHost, AccountTheme.block(this, 12f));
 
-        /* 底部按钮行: 刷新与创建房间. */
         final LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
         final Button refresh = AccountTheme.outlineButton(this, getString(R.string.lobby_refresh),
@@ -110,10 +119,6 @@ public final class MultiplayerLobbyActivity extends Activity {
         author.setGravity(Gravity.CENTER);
         column.addView(author, AccountTheme.block(this, 14f));
 
-        /*
-         * 外层: 场景底图 + 遮罩 + 居中面板, 标题与关闭按钮由面板标题行承担,
-         * 内容在面板内部滚动.
-         */
         final FrameLayout root = new FrameLayout(this);
         root.addView(MobilePage.create(this, getString(R.string.lobby_title),
                 MobilePage.scrollable(this, column)), new FrameLayout.LayoutParams(
@@ -121,59 +126,107 @@ public final class MultiplayerLobbyActivity extends Activity {
         return root;
     }
 
-    /* 扫描入口: 局域网发现, 回调在主线程, 空结果直接落空态. */
+    /* 刷新房间列表: 会话不可用时直接落提示, 不发请求. */
     private void refresh() {
-        discoveredServers.clear();
-        roomListHost.removeAllViews();
-        roomListHost.addView(roomEmptyView);
-        roomEmptyView.setText(getString(R.string.lobby_room_scanning));
-        scanStateView.setText(getString(R.string.lobby_room_scanning));
-        discovery.discover(new LanDiscovery.Callback() {
+        if (session == null || !session.isUsable()) {
+            showNotice(getString(R.string.lobby_room_list_failed), AccountTheme.COLOR_WARNING);
+            renderRooms(new ArrayList<>());
+            stateView.setText(getString(R.string.lobby_room_empty));
+            return;
+        }
+        stateView.setText(getString(R.string.lobby_room_scanning));
+        roomApi.list(session, new RoomApi.ListCallback() {
             @Override
-            public void onFound(java.util.Set<String> addresses) {
-                discoveredServers.clear();
-                discoveredServers.addAll(addresses);
+            public void onSuccess(List<RoomApi.Room> listed) {
+                Log.i(TAG, "rooms listed, count=" + listed.size());
+                stateView.setText(getString(R.string.lobby_room_count_format, listed.size()));
+                renderRooms(listed);
             }
 
             @Override
-            public void onFinished(int found) {
-                onScanFinished(found);
+            public void onFailure(ApiException error) {
+                Log.w(TAG, "room list failed: " + error.code() + " " + error.detail());
+                stateView.setText(getString(R.string.lobby_room_empty));
+                renderRooms(new ArrayList<>());
+                showNotice(getString(R.string.lobby_room_list_failed), AccountTheme.COLOR_WARNING);
             }
         });
     }
 
-    /*
-     * 扫描结束: found 为 0 表示局域网内没有服务端, 落空态;
-     * 找到服务端则逐个尝试拉房间列表, 房间服未部署 (404 或网络错误)
-     * 时按空态处理并记日志, 界面不崩溃.
-     */
-    private void onScanFinished(int found) {
-        scanStateView.setText(getString(R.string.lobby_room_scanning).replace("...", "")
-                + (found > 0 ? " " + found : "") );
-        if (found == 0) {
+    /* 房间列表重绘: 空列表落空态, 否则每行一个可点卡片. */
+    private void renderRooms(List<RoomApi.Room> listed) {
+        rooms.clear();
+        rooms.addAll(listed);
+        roomListHost.removeAllViews();
+        if (rooms.isEmpty()) {
             roomEmptyView.setText(getString(R.string.lobby_room_empty));
-            showNotice(null);
-            Log.i(TAG, "lan scan finished, no server found");
+            roomListHost.addView(roomEmptyView);
             return;
         }
-        Log.i(TAG, "lan scan finished, servers=" + found);
-        /*
-         * 房间列表接口尚未部署: 这里按"发现服务端但无房间服务"降级,
-         * 保持空态文案, 并把发现的服务端地址留在日志里供联机接入时核对.
-         */
-        for (String server : discoveredServers) {
-            Log.i(TAG, "server discovered: " + server);
+        for (RoomApi.Room room : rooms) {
+            roomListHost.addView(buildRoomRow(room), AccountTheme.block(this, 8f));
         }
-        roomEmptyView.setText(getString(R.string.lobby_room_empty));
-        showNotice(getString(R.string.lobby_server_unavailable), AccountTheme.COLOR_WARNING);
     }
 
-    /* 创建房间点击: 先内联二次确认, 再按会话与房间服可用性降级. */
+    /* 单行房间卡片: 名称, 房间号, 房主与人数; 整行可点即加入. */
+    private View buildRoomRow(final RoomApi.Room room) {
+        final LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setBackground(AccountTheme.panelBackground(this));
+        final int padding = AccountTheme.dp(this, 12f);
+        card.setPadding(padding, padding, padding, padding);
+
+        final TextView name = AccountTheme.label(this, room.name);
+        card.addView(name);
+
+        final String codeLine = getString(R.string.lobby_room_code_format, room.code)
+                + "  " + getString(R.string.lobby_room_players_format, room.memberCount,
+                room.maxPlayers);
+        final TextView meta = AccountTheme.body(this, codeLine,
+                AccountTheme.COLOR_TEXT_MUTED, AccountTheme.TEXT_SIZE_SUB);
+        card.addView(meta, AccountTheme.block(this, 4f));
+
+        final TextView host = AccountTheme.body(this,
+                getString(R.string.lobby_room_host_format, room.ownerUid),
+                AccountTheme.COLOR_TEXT_FAINT, AccountTheme.TEXT_SIZE_SUB);
+        card.addView(host, AccountTheme.block(this, 2f));
+
+        card.setOnClickListener(view -> joinRoom(room));
+        return card;
+    }
+
+    /* 加入房间: 成功后带房间标识进入对局, 失败按错误码给提示. */
+    private void joinRoom(final RoomApi.Room room) {
+        if (busy) {
+            return;
+        }
+        busy = true;
+        showNotice(getString(R.string.lobby_room_joining));
+        roomApi.join(session, room.code, new RoomApi.JoinCallback() {
+            @Override
+            public void onSuccess(RoomApi.Room joined, long seq) {
+                busy = false;
+                Log.i(TAG, "room joined, code=" + joined.code + " members=" + joined.memberCount);
+                openPlay(joined);
+            }
+
+            @Override
+            public void onFailure(ApiException error) {
+                busy = false;
+                Log.w(TAG, "room join failed: " + error.code() + " " + error.detail());
+                final String message = "ROOM_FULL".equals(error.code())
+                        ? getString(R.string.lobby_room_full)
+                        : getString(R.string.lobby_room_join_failed);
+                showNotice(message, AccountTheme.COLOR_WARNING);
+            }
+        });
+    }
+
+    /* 创建房间点击: 先内联二次确认, 再建房并直接进入. */
     private void onCreateRoomClicked() {
         if (!createConfirmPending) {
-            /* 内联确认: 3 秒内再按才真正创建, 超时回归初始状态. */
             createConfirmPending = true;
-            createButton.setText(getString(R.string.settings_reset_confirm));
+            createButton.setText(getString(R.string.lobby_create_confirm));
             createButton.postDelayed(() -> {
                 if (createConfirmPending) {
                     createConfirmPending = false;
@@ -184,11 +237,39 @@ public final class MultiplayerLobbyActivity extends Activity {
         }
         createConfirmPending = false;
         createButton.setText(getString(R.string.lobby_create_room));
-        /* 房间服未部署: 提示并记日志, 不崩溃. 输入房间名的入口保留, 服务端就位后接上. */
-        final Session session = SessionStore.load(this);
-        Log.i(TAG, "create room requested, session=" + (session != null && session.isUsable())
-                + " servers=" + discoveredServers.size());
-        showNotice(getString(R.string.lobby_server_unavailable), AccountTheme.COLOR_WARNING);
+        if (session == null || !session.isUsable()) {
+            showNotice(getString(R.string.lobby_room_create_failed), AccountTheme.COLOR_WARNING);
+            return;
+        }
+        if (busy) {
+            return;
+        }
+        busy = true;
+        roomApi.create(session, "", CREATE_MAX_PLAYERS, new RoomApi.RoomCallback() {
+            @Override
+            public void onSuccess(RoomApi.Room room) {
+                busy = false;
+                Log.i(TAG, "room created, code=" + room.code + " seed=" + room.seed);
+                openPlay(room);
+            }
+
+            @Override
+            public void onFailure(ApiException error) {
+                busy = false;
+                Log.w(TAG, "room create failed: " + error.code() + " " + error.detail());
+                showNotice(getString(R.string.lobby_room_create_failed), AccountTheme.COLOR_WARNING);
+            }
+        });
+    }
+
+    /* 进入对局: 房间号与种子随附加字段下发, 原生侧据此生成同一份地形. */
+    private void openPlay(RoomApi.Room room) {
+        final Intent intent = new Intent(this, PlayActivity.class);
+        intent.putExtra(PlayActivity.EXTRA_ROOM_ID, room.id);
+        intent.putExtra(PlayActivity.EXTRA_ROOM_CODE, room.code);
+        intent.putExtra(PlayActivity.EXTRA_ROOM_SEED, (int) room.seed);
+        startActivity(intent);
+        finish();
     }
 
     /* 页内提示条; 空文本隐藏, 与账号界面的 NoticeBar 语义一致. */

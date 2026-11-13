@@ -117,7 +117,11 @@ public:
      * 文件不存在时只切路径, 后续进入流程走地形生成, 即"新建世界".
      * 返回是否载入了已有存档.
      */
-    bool SelectWorld(const std::string& name);
+    /*
+     * 选择世界: seed 为 0 时按世界名与时间派生新种子, 非 0 时直接采用,
+     * 供联机房间让同一房间的各方生成同一份地形.
+     */
+    bool SelectWorld(const std::string& name, uint32_t seed = 0);
 
     /*
      * 扫描目录下的 *.world 存档, 逐个读头取元数据, 返回 JSON 数组:
@@ -138,6 +142,8 @@ public:
      */
     int32_t AmbientContext() const;
     void ApplyRemotePlayers(const std::string& json);
+    /* 上一轮下发的远端玩家数, 用于只在数量变化时打日志. */
+    int32_t lastRemoteCount_ = -1;
     int32_t SelectedSlot() const { return selectedSlot_; }
     void SelectSlotPublic(int32_t index) { SelectSlot(index); }
 
@@ -393,6 +399,8 @@ private:
      * 等 OnSurfaceReady 建好路径后再切换, 保证读档落到正确的文件.
      */
     std::string pendingWorldName_;
+    /* 与延迟世界名配套的种子, 0 表示按世界名派生. */
+    uint32_t pendingWorldSeed_ = 0;
     int32_t viewDistanceChunks_ = 4;
     /* 天光混合因子的平滑缓存, 每帧向目标值靠近, 10 秒完成过渡. */
     float skyBlend_ = 1.0f;

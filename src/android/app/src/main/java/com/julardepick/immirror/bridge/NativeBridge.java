@@ -176,6 +176,17 @@ public final class NativeBridge {
         nativeChooseWorld(worldName == null ? "" : worldName);
     }
 
+    /*
+     * 按指定种子选择世界: 联机房间用房间种子, 让同一房间的各方生成同一份地形.
+     * 种子为 0 时退回按世界名派生, 与 chooseWorld 等价.
+     */
+    public static void chooseWorldWithSeed(String worldName, int seed) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
+    }
+
     /* 查询游戏内是否为白天, 供环境音按日相切换曲目. */
     public static boolean getDayPhase() {
         if (!ensureLoaded()) {
@@ -254,6 +265,8 @@ public final class NativeBridge {
     private static native String nativeListWorlds(String directory);
 
     private static native void nativeChooseWorld(String worldName);
+
+    private static native void nativeChooseWorldSeed(String worldName, int seed);
 
     private static native boolean nativeGetDayPhase();
 

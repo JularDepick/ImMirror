@@ -419,8 +419,10 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
     /* 大厅可能在本函数之前就下发了世界名, 这里补上切换, 让随后的读档走对文件. */
     if (!pendingWorldName_.empty()) {
         const std::string pending = pendingWorldName_;
+        const uint32_t pendingSeed = pendingWorldSeed_;
         pendingWorldName_.clear();
-        SelectWorld(pending);
+        pendingWorldSeed_ = 0;
+        SelectWorld(pending, pendingSeed);
     }
 
     /*
@@ -818,13 +820,14 @@ void GameShell::LoadNamedWorld(const std::string& projectName) {
  * 名字安全化与世界名回落规则与 LoadNamedWorld 一致; 文件不存在时只切路径,
  * 容器文件同步切换, 后续进入流程由 LoadFromFile 失败自然走进地形生成.
  */
-bool GameShell::SelectWorld(const std::string& name) {
+bool GameShell::SelectWorld(const std::string& name, uint32_t seed) {
     if (savePath_.empty()) {
         /*
          * 表面尚未就绪时存档路径还没建立: 记下世界名, 等 OnSurfaceReady
          * 建好路径后重新调用本函数, 否则这次选择会被静默丢弃.
          */
         pendingWorldName_ = name;
+        pendingWorldSeed_ = seed;
         IM_LOGI(kTag, "world selection deferred until surface ready, name=%s", name.c_str());
         return false;
     }
@@ -855,8 +858,11 @@ bool GameShell::SelectWorld(const std::string& name) {
     furnaces_.clear();
     chests_.clear();
     worldTime_->SetTotalSeconds(world::WorldTime::kDayLengthSeconds * 0.5f);
-    /* 每个新世界分配独立种子: 沿用上一次的种子会让所有新世界地形完全相同. */
-    world_->SetSeed(NewWorldSeed(safe));
+    /*
+     * 每个新世界分配独立种子: 沿用上一次的种子会让所有新世界地形完全相同.
+     * 调用方给出种子时直接采用, 联机房间据此让各方生成同一份地形.
+     */
+    world_->SetSeed(seed != 0u ? seed : NewWorldSeed(safe));
     /* 地形换了种子, 原来的脚点已经没有意义, 按原点重新落到地表. */
     player_->Spawn(*world_, 0.0f, 0.0f);
     smeltBaseline_ = -1;
@@ -1040,6 +1046,11 @@ void GameShell::ApplyRemotePlayers(const std::string& json) {
         count += 1;
     }
     remotePlayers_.ReplaceAll(uids, xs, ys, zs, yaws, pitches, count);
+    /* 远端玩家数每轮打一条: 联机时据此确认房间状态确实下发到了渲染侧. */
+    if (count != lastRemoteCount_) {
+        lastRemoteCount_ = count;
+        IM_LOGI(kTag, "remote players applied=%d", count);
+    }
 }
 
 /*

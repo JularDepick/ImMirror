@@ -133,6 +133,29 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeChooseWorld(JNIEnv* env,
 }
 
 /*
+ * Java 侧低频入口: 按指定种子选择世界, 供联机房间让同一房间的各方生成同一份地形.
+ * 种子为 0 时退回按世界名派生, 与 nativeChooseWorld 行为一致.
+ */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeChooseWorldSeed(JNIEnv* env, jclass clazz,
+                                                                       jstring worldName,
+                                                                       jint seed) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr || worldName == nullptr) {
+        return;
+    }
+    const char* chars = env->GetStringUTFChars(worldName, nullptr);
+    const std::string name = chars != nullptr ? chars : "";
+    if (chars != nullptr) {
+        env->ReleaseStringUTFChars(worldName, chars);
+    }
+    if (!name.empty()) {
+        shell->SelectWorld(name, static_cast<uint32_t>(seed));
+    }
+}
+
+/*
  * Java 侧低频入口: 查询当前是否为游戏内白天.
  * 环境音按日相切换曲目, 由 PlayActivity 的轮询周期顺带拉取;
  * Shell 未装配时回落 true, 避免误切到夜曲.
