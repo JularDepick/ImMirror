@@ -150,6 +150,8 @@ public:
     float HurtSeconds() const { return hurtSeconds_; }
     /* 是否处于死亡等待中. */
     bool Dying() const { return deathSeconds_ > 0.0f; }
+    /* 死亡等待的剩余秒数, 供界面画复活倒计时; 未死亡时为 0. */
+    float DeathRemaining() const { return deathSeconds_ > 0.0f ? deathSeconds_ : 0.0f; }
 
     /*
      * 受到伤害. 伤害非正, 已死亡或仍在免伤窗口内时直接忽略;

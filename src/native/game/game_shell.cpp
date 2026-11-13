@@ -3015,6 +3015,13 @@ void GameShell::RenderScene() {
      */
     ui::HudFrame frame;
     frame.pauseMenuVisible = pauseMenuOpen_;
+    /* 死亡遮罩: 血量归零到复活之间显示, 进度按剩余等待秒数折算. */
+    if (player_->Dying()) {
+        const float remaining = player_->DeathRemaining();
+        frame.deathVisible = true;
+        frame.deathProgress =
+            1.0f - remaining / player::PlayerController::kDeathSeconds;
+    }
     frame.selectedSlot = selectedSlot_;
     frame.stick = player_->GetStickVisual();
     frame.jumpPressed = jumpHeld_;

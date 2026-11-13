@@ -1572,6 +1572,40 @@ void DrawPauseMenu(float* out, int32_t& offset, const HudLayout& layout, float s
 }
 
 /*
+ * 死亡遮罩: 整屏压一层暗红, 中间两行字与一条倒计时条.
+ * 点阵字只有 ASCII, 因此用两行英文标签.
+ */
+void DrawDeathOverlay(float* out, int32_t& offset, const HudLayout& layout, const HudFrame& frame,
+                      float scale) {
+    if (!frame.deathVisible || !(scale > 0.0f)) {
+        return;
+    }
+    const float veil[4] = {0.28f, 0.04f, 0.04f, 0.55f};
+    PushRect(out, offset, 0.0f, 0.0f, 1.0f / scale, 1.0f, scale, veil);
+
+    const float title[4] = {1.0f, 0.90f, 0.86f, 0.98f};
+    PushCenteredText(out, offset, 0.0f, 0.10f, 0.030f, "YOU DIED", scale, title);
+    const float hint[4] = {1.0f, 0.86f, 0.80f, 0.85f};
+    PushCenteredText(out, offset, 0.0f, -0.02f, 0.014f, "RESPAWNING", scale, hint);
+
+    /* 倒计时条: 底槽铺满, 前景按进度回缩, 表示复活还需多久. */
+    const float trackHalf = 0.24f;
+    const float trackHalfH = 0.012f;
+    const float trackY = -0.10f;
+    const float track[4] = {0.0f, 0.0f, 0.0f, 0.45f};
+    PushRect(out, offset, 0.0f, trackY, trackHalf, trackHalfH, scale, track);
+    const float progress = frame.deathProgress < 0.0f
+                               ? 0.0f
+                               : (frame.deathProgress > 1.0f ? 1.0f : frame.deathProgress);
+    const float fill = 1.0f - progress;
+    if (fill > 0.0f) {
+        const float fillColor[4] = {0.85f, 0.30f, 0.26f, 0.95f};
+        PushRect(out, offset, -trackHalf + trackHalf * fill, trackY, trackHalf * fill, trackHalfH,
+                 scale, fillColor);
+    }
+}
+
+/*
  * 状态效果图标.
  * 左上角血条下方一排小方块: 底色按效果编号折算固定色调, 同一效果每次同色;
  * 图标底部一条剩余时间进度条, 6 秒内线性缩短, 超过 6 秒按满格显示.
@@ -2031,6 +2065,9 @@ void HudRenderer::Render(const HudFrame& frame) {
         glBindTexture(GL_TEXTURE_2D, uiAtlasTexture_);
         glUniform1i(uniformSpriteLocation_, 1);
     }
+    /* 死亡遮罩压在常规 HUD 之上, 暂停面板再压在它之上. */
+    DrawDeathOverlay(vertices, offset, layout_, frame, scale);
+
     /* 暂停面板最后画: 压在所有 HUD 之上, 与命中判定共用同一份按钮矩形. */
     if (frame.pauseMenuVisible) {
         DrawPauseMenu(vertices, offset, layout_, scale);

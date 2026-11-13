@@ -167,6 +167,13 @@ struct HudFrame {
     /* 暂停面板: 为真时整屏压暗并显示两个按钮, 世界推进由总装冻结. */
     bool pauseMenuVisible = false;
 
+    /*
+     * 死亡遮罩: 血量归零到复活之间显示, progress 0 到 1 表示等待进度,
+     * 供界面画一条倒计时条.
+     */
+    bool deathVisible = false;
+    float deathProgress = 0.0f;
+
     /* 左上角状态图标上限, 与 BuffState::kMaxActive 一致. */
     static constexpr int32_t kMaxBuffIcons = 8;
     /* 当前挂着的状态效果: 编号与剩余秒数, 图标底部按剩余时间画进度条. */
