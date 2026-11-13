@@ -60,6 +60,9 @@ int main(int argc, char** argv) {
     check("未订阅事件返回零", host.DispatchEvent("GE_OTHER", {}) == 0);
 
     /* 派发后控件被隐藏, 绘制命令减少. */
+    /* 目标控件在布局里默认隐藏, 先打开再比较, 命令数的变化才有意义. */
+    const char* showScript = "local w = getglobal(\"DropdownBox\") if w ~= nil then w:Show() end";
+    check("打开目标控件", host.RunScript(showScript, std::strlen(showScript), screen));
     std::vector<LayoutDrawCommand> before;
     const int32_t beforeCount = host.CollectDrawCommands(before);
     check("派发命中处理函数", host.DispatchEvent("GE_HIDE", {}) == 1);

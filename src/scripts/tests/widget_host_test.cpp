@@ -43,10 +43,11 @@ int main(int argc, char** argv) {
     }
     const LayoutRect screen{0.0f, 0.0f, 1280.0f, 720.0f};
 
-    /* 基线: 不跑脚本时的绘制命令数. */
+    /* 基线: 先把目标控件打开再计数, 该控件在布局里默认隐藏. */
     WidgetHost host;
     check("载入布局", host.Load(layout.data(), layout.size()));
-    host.RunScript("", 0, screen);
+    const char* showScript = "local w = getglobal(\"DropdownBox\") if w ~= nil then w:Show() end";
+    check("打开目标控件", host.RunScript(showScript, std::strlen(showScript), screen));
     std::vector<LayoutDrawCommand> base;
     const int32_t baseCount = host.CollectDrawCommands(base);
     std::printf("基线绘制命令 %d 条\n", baseCount);

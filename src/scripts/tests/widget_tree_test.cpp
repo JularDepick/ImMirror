@@ -119,7 +119,12 @@ int main(int argc, char** argv) {
     if (box == nullptr) {
         return 1;
     }
-    check("初始可见", tree.IsShown(box));
+    /*
+     * 初始状态按布局里的隐藏标记来, 该控件在布局里是隐藏的.
+     * 先显式打开, 后面的隐藏与显示才有一致的基线.
+     */
+    tree.Show(box);
+    check("打开后可见", tree.IsShown(box));
 
     std::vector<LayoutDrawCommand> base;
     tree.CollectDrawCommands(base);
