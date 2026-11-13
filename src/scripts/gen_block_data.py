@@ -353,6 +353,8 @@ def build_extension_entry(client_id, source_id, row, used_keys):
         "gravity": gravity,
         "slipperiness": to_float(row.get("Slipperiness")) or 1.0,
         "replaceable": 1 if to_int(row.get("Replaceable")) == 1 else 0,
+        # 爆炸抗性: 负数表示完全免疫, 非负数是摧毁所需的最小威力.
+        "blast_resist": max(-1, min(32767, to_int(row.get("AntiExplode")))),
         "dig_sound": dig_name,
         "place_sound": place_name,
         "walk_sound": walk_name,
@@ -416,6 +418,10 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
     if not 0.1 <= slipperiness <= 4.0:
         slipperiness = 1.0
     replaceable = 1 if to_int(data.get("Replaceable")) == 1 else 0
+    # 爆炸抗性: 负数表示完全免疫, 非负数是摧毁所需的最小威力.
+    blast_resist = to_int(data.get("AntiExplode"))
+    if blast_resist < -1 or blast_resist > 32767:
+        blast_resist = 0
     # 二次掉落: 与主掉落独立的物品与概率, 常见于矿石附带副产物.
     drop2 = to_int(data.get("ToolMineDrop2"))
     prob2 = to_int(data.get("ToolMineProb2"))
@@ -425,7 +431,7 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
     elif prob2 > 10000:
         prob2 = 10000
     return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", "%s", '
-            '%du, %du, %.2ff, %du, %du, %du, %du},'
+            '%du, %du, %.2ff, %du, %du, %du, %du, %d},'
             "  /* %s */"
             % (source_id, client_id, escape(name),
                escape(data.get("Name", "").strip()),
@@ -437,7 +443,7 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
                escape(data.get("Texture1", "").strip()),
                escape(data.get("Texture2", "").strip()),
                drop_source, gravity, slipperiness, replaceable, drop_prob, drop2, prob2,
-               comment))
+               blast_resist, comment))
 
 
 def render_header(entries, legacy_rows, segments):
@@ -509,6 +515,7 @@ def render_header(entries, legacy_rows, segments):
         "    uint16_t dropChance;     /* 掉落概率万分比, 10000 表示必掉 */",
         "    uint32_t dropSourceId2;  /* 二次掉落物物品 id, 0 表示无 */",
         "    uint16_t dropChance2;    /* 二次掉落概率万分比 */",
+        "    int16_t blastResist;     /* 爆炸抗性: 负数完全免疫, 非负为摧毁所需最小威力 */",
         "};",
         "",
         "/* 条目按客户端 id 升序排列, 下标即客户端 id, 越界回落到首条 (空气). */",
@@ -526,7 +533,7 @@ def render_header(entries, legacy_rows, segments):
         comment = "%s, 掉落字段 %s" % (entry["category"] or "无类别",
                                      entry["drop_field"] or "无")
         lines.append('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", "%s", '
-                     '%du, %du, %.2ff, %du, %du, %du, %du},'
+                     '%du, %du, %.2ff, %du, %du, %du, %du, %d},'
                      "  /* %s */"
                      % (entry["source_id"], entry["client_id"], escape(entry["key"]),
                         escape(entry["display_name"]), escape(entry["category"]),
@@ -537,7 +544,8 @@ def render_header(entries, legacy_rows, segments):
                         escape(entry["texture_top"]),
                         entry["drop_source"], entry["gravity"], entry["slipperiness"],
                         entry["replaceable"], entry["drop_prob"],
-                        entry.get("drop2", 0), entry.get("drop2_prob", 0), comment))
+                        entry.get("drop2", 0), entry.get("drop2_prob", 0),
+                        entry["blast_resist"], comment))
     lines += [
         "};",
         "",
@@ -644,6 +652,7 @@ def render_header(entries, legacy_rows, segments):
         "    uint16_t dropChance;     /* 掉落概率万分比, 10000 表示必掉 */",
         "    uint32_t dropSourceId2;  /* 二次掉落物物品 id, 0 表示无 */",
         "    uint16_t dropChance2;    /* 二次掉落概率万分比 */",
+        "    int16_t blastResist;     /* 爆炸抗性: 负数完全免疫, 非负为摧毁所需最小威力 */",
         "};",
         "",
         "constexpr int32_t kRegistryEntryCount = kBlockEntryCount - kLegacyBlockCount;",
@@ -652,7 +661,7 @@ def render_header(entries, legacy_rows, segments):
     ]
     for entry in entries:
         lines.append('    {%du, "%s", %s, %s, %s, %du, %du, %du, "%s", "%s", "%s", "%s", "%s", '
-                     '%du, %du, %.2ff, %du, %du, %du, %du},'
+                     '%du, %du, %.2ff, %du, %du, %du, %du, %d},'
                      % (entry["client_id"], escape(entry["key"]),
                         "true" if entry["solid"] else "false",
                         "true" if entry["opaque"] else "false",
@@ -662,7 +671,7 @@ def render_header(entries, legacy_rows, segments):
                         escape(entry["texture"]), escape(entry["texture_top"]),
                         SHAPE_INDEX.get(entry["shape"], 0), entry["gravity"],
                         entry["slipperiness"], entry["replaceable"], entry["drop_prob"],
-                        0, 0))
+                        0, 0, entry["blast_resist"]))
     lines += [
         "};",
         "",

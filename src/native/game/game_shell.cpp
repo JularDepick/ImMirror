@@ -1843,6 +1843,46 @@ void GameShell::UpdateProjectiles(double deltaSeconds) {
                 const float scale = 1.0f - distance / hit.explodeRadius;
                 entities_.Damage(creature->Id(), hit.damage * (0.4f + 0.6f * scale));
             }
+            /*
+             * 爆炸破坏地形: 以命中点为中心的立方范围内逐格判定.
+             * 威力按半径折算, 抗性为负的方块完全免疫, 抗性超过威力的也不动.
+             * 破坏走与挖掘相同的掉落结算, 因此产出与进度统计一致.
+             */
+            const int32_t power = static_cast<int32_t>(hit.explodeRadius * 2.0f);
+            const int32_t reach = static_cast<int32_t>(hit.explodeRadius) + 1;
+            const int32_t centerX = static_cast<int32_t>(std::floor(hit.position.x));
+            const int32_t centerY = static_cast<int32_t>(std::floor(hit.position.y));
+            const int32_t centerZ = static_cast<int32_t>(std::floor(hit.position.z));
+            int32_t destroyed = 0;
+            for (int32_t dy = -reach; dy <= reach; ++dy) {
+                for (int32_t dz = -reach; dz <= reach; ++dz) {
+                    for (int32_t dx = -reach; dx <= reach; ++dx) {
+                        const int32_t x = centerX + dx;
+                        const int32_t y = centerY + dy;
+                        const int32_t z = centerZ + dz;
+                        if (y < 0 || y >= voxel::kWorldHeight) {
+                            continue;
+                        }
+                        const voxel::BlockId block = world_->GetBlock(x, y, z);
+                        if (block == voxel::block::Air) {
+                            continue;
+                        }
+                        const voxel::BlockInfo& info =
+                            voxel::BlockRegistry::Instance().Info(block);
+                        if (info.blastResist < 0 || info.blastResist > power) {
+                            continue;
+                        }
+                        world_->SetBlock(x, y, z, voxel::block::Air);
+                        CollectDrop(block, voxel::BlockPos{x, y, z});
+                        SettleGravityAt(x, y, z);
+                        SettleFluidAt(x, y, z);
+                        destroyed += 1;
+                    }
+                }
+            }
+            if (destroyed > 0) {
+                IM_LOGI(kTag, "explosion destroyed %d blocks", destroyed);
+            }
             render::particle::EmitColored(1.0f, 0.55f, 0.15f, hit.position.x, hit.position.y,
                                           hit.position.z, 10);
             IM_LOGI(kTag, "arrow exploded radius=%.1f", static_cast<double>(hit.explodeRadius));

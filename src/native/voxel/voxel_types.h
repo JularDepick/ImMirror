@@ -158,6 +158,8 @@ struct BlockInfo {
     /* 二次掉落: 与主掉落独立判定的附加物品与概率 (万分比). */
     uint16_t dropItem2 = 0;
     uint16_t dropChance2 = 0;
+    /* 爆炸抗性: 负数完全免疫, 非负数是摧毁所需的最小威力. */
+    int16_t blastResist = 0;
 
 };
 
