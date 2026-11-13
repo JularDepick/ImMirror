@@ -567,6 +567,7 @@ void GameShell::OnSurfaceLost() {
     }
     /* 表面销毁前释放粒子通道的图形资源, 与区块渲染器同一时机. */
     render::particle::Shutdown();
+    droppedItems_.clear();
     SaveWorld();
     /* 面板关闭并把合成网格与携带中的堆叠退回物品栏, 避免退出时丢材料. */
     inventoryScreen_.ReturnAllToInventory(inventory_);
@@ -839,6 +840,9 @@ bool GameShell::SelectWorld(const std::string& name, uint32_t seed) {
     }
     const std::string directory = savePath_.substr(0, slash);
     const std::string safe = world::World::SafeFileName(name);
+    /* 换世界时地上的掉落物属于旧世界, 一并清掉. */
+    droppedItems_.clear();
+    render::particle::ClearDrops();
     savePath_ = directory + "/" + safe + ".world";
     SyncContainerPath();
 
@@ -1714,7 +1718,7 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
     render::particle::EmitBlockBreak(tick.block, static_cast<float>(tick.blockPos.x) + 0.5f,
                                      static_cast<float>(tick.blockPos.y) + 0.5f,
                                      static_cast<float>(tick.blockPos.z) + 0.5f);
-    CollectDrop(tick.block);
+    CollectDrop(tick.block, tick.blockPos);
     /* 破坏点上方若有重力方块, 失去支撑后落下来; 水边破坏则触发流动. */
     SettleGravityAt(tick.blockPos.x, tick.blockPos.y, tick.blockPos.z);
     SettleFluidAt(tick.blockPos.x, tick.blockPos.y, tick.blockPos.z);
@@ -1870,6 +1874,7 @@ void GameShell::UpdateEntities(double deltaSeconds) {
     }
     lastPlayerAlive_ = player_->Alive();
     CollectCreatureDrops();
+    UpdateDrops(deltaSeconds);
     if (stats.spawned > 0 || stats.deaths > 0 || stats.despawned > 0) {
         IM_LOGD(kTag, "entities spawned=%d deaths=%d despawned=%d alive=%d awake=%d",
                 stats.spawned, stats.deaths, stats.despawned, entities_.Count(),
@@ -1897,6 +1902,95 @@ std::string GameShell::TakeUiEvents() {
     return out;
 }
 
+/*
+ * 生成一个地面掉落物.
+ * 初速轻微上抛并带一点水平散开, 与碎屑同一手感; 渲染交给粒子系统的掉落物通道.
+ */
+void GameShell::SpawnDrop(item::ItemId item, int32_t count, voxel::BlockId block, float x, float y,
+                          float z) {
+    if (item == item::kNone || count <= 0) {
+        return;
+    }
+    DroppedItem drop;
+    drop.id = nextDropId_;
+    nextDropId_ += 1;
+    drop.item = item;
+    drop.block = block;
+    drop.count = count;
+    drop.position = core::Vec3{x, y, z};
+    drop.velocity = core::Vec3{0.35f, 2.0f, 0.25f};
+    drop.ageSeconds = 0.0;
+    droppedItems_.push_back(drop);
+    render::particle::AddDrop(drop.id, block, x, y, z);
+}
+
+/*
+ * 掉落物推进: 重力下落, 落到实心方块表面停住; 玩家靠近且物品栏放得下就拾取.
+ * 超过保留时长自动消失, 避免长期堆积占内存与顶点.
+ */
+void GameShell::UpdateDrops(double deltaSeconds) {
+    if (droppedItems_.empty() || player_ == nullptr || world_ == nullptr) {
+        return;
+    }
+    constexpr double kPickupRadius = 1.6;
+    constexpr double kDespawnSeconds = 120.0;
+    constexpr float kDropGravity = -18.0f;
+    constexpr float kDropHalfSize = 0.13f;
+    const core::Vec3 feet = player_->Position();
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    const auto solidAt = [this, &registry](float x, float y, float z) {
+        const voxel::BlockId id = world_->GetBlock(static_cast<int32_t>(std::floor(x)),
+                                                   static_cast<int32_t>(std::floor(y)),
+                                                   static_cast<int32_t>(std::floor(z)));
+        return registry.Info(id).solid;
+    };
+    size_t write = 0;
+    for (size_t read = 0; read < droppedItems_.size(); ++read) {
+        DroppedItem& drop = droppedItems_[read];
+        const float step = static_cast<float>(deltaSeconds);
+        drop.ageSeconds += deltaSeconds;
+        /* 竖直方向: 下方不是实心就继续下落, 否则停住并清掉速度. */
+        if (!solidAt(drop.position.x, drop.position.y - kDropHalfSize, drop.position.z)) {
+            drop.velocity.y += kDropGravity * step;
+            drop.position.x += drop.velocity.x * step;
+            drop.position.y += drop.velocity.y * step;
+            drop.position.z += drop.velocity.z * step;
+            drop.velocity.x *= 0.9f;
+            drop.velocity.z *= 0.9f;
+        } else {
+            drop.velocity = core::Vec3{};
+        }
+        render::particle::MoveDrop(drop.id, drop.position.x, drop.position.y, drop.position.z);
+
+        /* 拾取: 玩家胸口到掉落物的距离在半径内, 且物品栏还有空间. */
+        const float dx = drop.position.x - feet.x;
+        const float dy = drop.position.y - (feet.y + 0.9f);
+        const float dz = drop.position.z - feet.z;
+        const bool near = std::sqrt(dx * dx + dy * dy + dz * dz) <= kPickupRadius;
+        bool keep = true;
+        if (near && inventory_.RoomFor(drop.item) > 0) {
+            const int32_t added = inventory_.Add(drop.item, drop.count);
+            if (added > 0) {
+                render::particle::RemoveDrop(drop.id);
+                IM_LOGI(kTag, "drop picked item=%u count=%d", static_cast<uint32_t>(drop.item),
+                        added);
+                keep = false;
+            }
+        }
+        if (keep && drop.ageSeconds > kDespawnSeconds) {
+            render::particle::RemoveDrop(drop.id);
+            keep = false;
+        }
+        if (keep) {
+            if (write != read) {
+                droppedItems_[write] = drop;
+            }
+            ++write;
+        }
+    }
+    droppedItems_.resize(write);
+}
+
 void GameShell::CollectCreatureDrops() {
     const item::ItemTable& items = item::ItemTable::Instance();
     for (const entity::EntityDrop& drop : entities_.TakeDrops()) {
@@ -1907,19 +2001,15 @@ void GameShell::CollectCreatureDrops() {
             IM_LOGW(kTag, "creature drop has no item, block=%s", name);
             continue;
         }
-        const int32_t added = inventory_.Add(itemId, drop.count);
-        if (added > 0) {
-            IM_LOGI(kTag, "creature drop collected block=%s item=%u count=%d", name,
-                    static_cast<uint32_t>(itemId), added);
-        }
-        if (added < drop.count) {
-            IM_LOGW(kTag, "inventory full, creature drop discarded block=%s want=%d added=%d",
-                    name, drop.count, added);
-        }
+        /* 生物掉落同样先落地, 走近再拾取, 与方块掉落一致. */
+        const core::Vec3 at = player_->Position();
+        SpawnDrop(itemId, drop.count, drop.block, at.x, at.y + 0.6f, at.z);
+        IM_LOGI(kTag, "creature drop spawned block=%s item=%u count=%d", name,
+                static_cast<uint32_t>(itemId), drop.count);
     }
 }
 
-void GameShell::CollectDrop(voxel::BlockId brokenBlock) {
+void GameShell::CollectDrop(voxel::BlockId brokenBlock, const voxel::BlockPos& position) {
     /*
      * 工具等级门槛: 等级不足时采下来也不掉落, 与挖掘速度的等级折算同一口径.
      * 判定只读方块表与手持工具, 不影响破坏本身与进度统计.
@@ -1945,18 +2035,14 @@ void GameShell::CollectDrop(voxel::BlockId brokenBlock) {
         return;
     }
     CountProgressEvent(1);
-    const char* sourceName = voxel::BlockRegistry::Instance().Info(brokenBlock).name;
-    const char* name = items.Info(dropItem).key;
-    const int32_t slot = inventory_.SlotOf(dropItem);
-    const int32_t added = inventory_.Add(dropItem, 1);
-    if (added == 1) {
-        IM_LOGI(kTag, "drop collected from=%s item=%s slot=%d count=%d", sourceName, name, slot,
-                inventory_.Count(slot));
-        return;
-    }
-    /* 槽位堆满时丢弃, 只累计数量并写警告, 不影响破坏本身. */
-    IM_LOGW(kTag, "inventory full, drop discarded item=%s slot=%d discarded=%d", name, slot,
-            inventory_.Discarded());
+    /*
+     * 掉落物落到破坏点上方一点点, 带一点水平初速, 走近再拾取.
+     * 计数与进度在破坏时已结算, 拾取只负责把物品放进物品栏.
+     */
+    SpawnDrop(dropItem, 1, brokenBlock, static_cast<float>(position.x) + 0.5f,
+              static_cast<float>(position.y) + 0.5f, static_cast<float>(position.z) + 0.5f);
+    IM_LOGI(kTag, "drop spawned from=%s item=%s at=%d,%d,%d", broken.name,
+            items.Info(dropItem).key, position.x, position.y, position.z);
     ShowTip("BAG FULL");
 }
 

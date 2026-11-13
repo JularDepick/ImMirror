@@ -32,5 +32,16 @@ void Draw(const float* viewProjection16);
 /* 当前活跃粒子数, 供调试与日志. */
 int32_t Count();
 
+/*
+ * 掉落物通道: 与碎屑共用着色器与顶点缓冲, 但存活由游戏层控制.
+ * 方块掉到地上时加入, 拾取或超时后移除; 颜色按方块图集格平均色取.
+ */
+void AddDrop(int32_t id, voxel::BlockId block, float x, float y, float z);
+/* 掉落物落地过程中更新显示位置. */
+void MoveDrop(int32_t id, float x, float y, float z);
+void RemoveDrop(int32_t id);
+void ClearDrops();
+int32_t DropCount();
+
 }  /* namespace particle */
 }  /* namespace immirror::render */

@@ -192,6 +192,25 @@ public:
     bool lastPlayerAlive_ = true;
     std::vector<uint8_t> uiEvents_;
 
+    /*
+     * 地面掉落物: 破坏方块与生物掉落先落在地上, 走近再拾取.
+     * 渲染交给粒子系统的掉落物通道, 游戏层只维护位置与存活.
+     */
+    struct DroppedItem {
+        int32_t id = 0;
+        item::ItemId item = 0;
+        voxel::BlockId block = 0;
+        int32_t count = 0;
+        core::Vec3 position;
+        core::Vec3 velocity;
+        double ageSeconds = 0.0;
+    };
+    void SpawnDrop(item::ItemId item, int32_t count, voxel::BlockId block, float x, float y,
+                   float z);
+    void UpdateDrops(double deltaSeconds);
+    std::vector<DroppedItem> droppedItems_;
+    int32_t nextDropId_ = 1;
+
     /* 战斗框目标: 最近攻击过的生物标识与显示截止时刻. */
     entity::EntityId battleTargetId_ = 0;
     double battleTargetUntil_ = 0.0;
@@ -272,7 +291,8 @@ private:
     void AdvanceEditMining(double deltaSeconds);
 
     /* 把这次破坏的掉落物放进物品栏, 堆满或没有对应槽位时只累计丢弃数. */
-    void CollectDrop(voxel::BlockId brokenBlock);
+    /* 方块破坏后的掉落处理: 按破坏点生成地面掉落物. */
+    void CollectDrop(voxel::BlockId brokenBlock, const voxel::BlockPos& position);
 
     /*
      * 生物与战斗: 每帧推进生物管理器, 把生物对玩家的伤害转交玩家控制器,

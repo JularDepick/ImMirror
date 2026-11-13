@@ -47,6 +47,29 @@ struct Particle {
 
 Particle gParticles[kMaxParticles];
 int32_t gCount = 0;
+
+/*
+ * 掉落物通道: 方块掉到地上时画成一个小立方体, 比碎屑大且不淡出,
+ * 拾取或超时后由游戏层移除. 与碎屑共用着色器与顶点缓冲, 只是存活更久.
+ */
+constexpr int32_t kMaxDrops = 64;
+constexpr float kDropSize = 0.26f;
+
+struct Drop {
+    int32_t id = 0;
+    voxel::BlockId block = 0;
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    float red = 1.0f;
+    float green = 1.0f;
+    float blue = 1.0f;
+};
+
+Drop gDrops[kMaxDrops];
+int32_t gDropCount = 0;
+/* 上下浮动的相位, 让静止的掉落物看起来是"活着"的. */
+float gDropBobPhase = 0.0f;
 /* 粒子撒布用的轻量伪随机, 与其它模块同一套 xorshift. */
 uint32_t gRandom = 0x9e3779b9u;
 
@@ -141,9 +164,8 @@ float NextSigned() {
     return NextUnit() * 2.0f - 1.0f;
 }
 
-/* 往顶点缓冲写一个立方体的 36 个顶点, 每个顶点带位置与颜色. */
-int32_t WriteCube(const Particle& particle, float alpha, float* out) {
-    const float half = kParticleSize * 0.5f;
+/* 往顶点缓冲写一个立方体的 36 个顶点, 每个顶点带位置与颜色; half 为半边长. */
+int32_t WriteCube(const Particle& particle, float alpha, float half, float* out) {
     const float x0 = particle.x - half;
     const float x1 = particle.x + half;
     const float y0 = particle.y - half;
@@ -282,7 +304,12 @@ void EmitBlockBreak(voxel::BlockId block, float centerX, float centerY, float ce
 }
 
 void Update(double deltaSeconds) {
-    if (gCount <= 0 || !(deltaSeconds > 0.0)) {
+    if (!(deltaSeconds > 0.0)) {
+        return;
+    }
+    /* 掉落物的浮动相位与碎屑生命周期无关, 单独推进. */
+    gDropBobPhase += static_cast<float>(deltaSeconds) * 2.0f;
+    if (gCount <= 0) {
         return;
     }
     const float step = static_cast<float>(deltaSeconds > 0.1 ? 0.1 : deltaSeconds);
@@ -304,17 +331,32 @@ void Update(double deltaSeconds) {
 }
 
 void Draw(const float* viewProjection16) {
-    if (!gInitialized || gCount <= 0 || viewProjection16 == nullptr || !HasCurrentContext()) {
+    if (!gInitialized || (gCount <= 0 && gDropCount <= 0) || viewProjection16 == nullptr ||
+        !HasCurrentContext()) {
         return;
     }
-    static float vertices[kMaxParticles * kVerticesPerParticle * kFloatsPerVertex];
+    static float vertices[(kMaxParticles + kMaxDrops) * kVerticesPerParticle * kFloatsPerVertex];
     int32_t written = 0;
     for (int32_t i = 0; i < gCount; ++i) {
         const Particle& particle = gParticles[i];
         /* 后三分之一生命开始淡出, 前段保持不透明, 碎屑落地时不会突然消失. */
         const float remaining = 1.0f - particle.age / kLifeSeconds;
         const float alpha = remaining > 0.33f ? 1.0f : remaining / 0.33f;
-        written += WriteCube(particle, alpha, vertices + static_cast<size_t>(written) * kFloatsPerVertex);
+        written += WriteCube(particle, alpha, kParticleSize * 0.5f,
+                             vertices + static_cast<size_t>(written) * kFloatsPerVertex);
+    }
+    /* 掉落物: 上下浮动一点点, 不淡出, 由游戏层决定何时移除. */
+    for (int32_t i = 0; i < gDropCount; ++i) {
+        const Drop& drop = gDrops[i];
+        Particle cube;
+        cube.x = drop.x;
+        cube.y = drop.y + std::sin(gDropBobPhase + static_cast<float>(i)) * 0.04f;
+        cube.z = drop.z;
+        cube.red = drop.red;
+        cube.green = drop.green;
+        cube.blue = drop.blue;
+        written += WriteCube(cube, 1.0f, kDropSize * 0.5f,
+                             vertices + static_cast<size_t>(written) * kFloatsPerVertex);
     }
     if (written == 0) {
         return;
@@ -343,6 +385,64 @@ void Draw(const float* viewProjection16) {
 
 int32_t Count() {
     return gCount;
+}
+
+void AddDrop(int32_t id, voxel::BlockId block, float x, float y, float z) {
+    if (!gInitialized) {
+        return;
+    }
+    const voxel::BlockInfo& info = voxel::BlockRegistry::Instance().Info(block);
+    const int32_t slot = info.atlasTop == 0xFFFF ? static_cast<int32_t>(info.atlasIndex)
+                                                 : static_cast<int32_t>(info.atlasTop);
+    const voxel::gen::AtlasCellColor color = voxel::gen::AtlasColorOf(slot);
+    /* 满了就覆盖最老的一条: 掉落物只是表现层, 丢失最老的不影响拾取逻辑. */
+    if (gDropCount >= kMaxDrops) {
+        for (int32_t i = 1; i < gDropCount; ++i) {
+            gDrops[i - 1] = gDrops[i];
+        }
+        gDropCount = kMaxDrops - 1;
+    }
+    Drop& drop = gDrops[gDropCount];
+    drop.id = id;
+    drop.block = block;
+    drop.x = x;
+    drop.y = y;
+    drop.z = z;
+    drop.red = static_cast<float>(color.red) / 255.0f;
+    drop.green = static_cast<float>(color.green) / 255.0f;
+    drop.blue = static_cast<float>(color.blue) / 255.0f;
+    ++gDropCount;
+}
+
+void MoveDrop(int32_t id, float x, float y, float z) {
+    for (int32_t i = 0; i < gDropCount; ++i) {
+        if (gDrops[i].id != id) {
+            continue;
+        }
+        gDrops[i].x = x;
+        gDrops[i].y = y;
+        gDrops[i].z = z;
+        return;
+    }
+}
+
+void RemoveDrop(int32_t id) {
+    for (int32_t i = 0; i < gDropCount; ++i) {
+        if (gDrops[i].id != id) {
+            continue;
+        }
+        gDrops[i] = gDrops[gDropCount - 1];
+        gDropCount -= 1;
+        return;
+    }
+}
+
+void ClearDrops() {
+    gDropCount = 0;
+}
+
+int32_t DropCount() {
+    return gDropCount;
 }
 
 }  /* namespace particle */
