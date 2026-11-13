@@ -281,6 +281,13 @@ public:
 
     bool pauseMenuOpen_ = false;
 
+    /*
+     * 天气环境音: 降水期间按间隔重复播放雨声, 雷暴时另外插入雷声.
+     * 间隔取一段随机区间, 避免雨声节奏过于机械.
+     */
+    float rainSoundSeconds_ = 0.0f;
+    float thunderSoundSeconds_ = 0.0f;
+
     /* 伤害飘字: 文案与剩余显示秒数; 受设置里的"伤害数值显示"开关控制. */
     char damageText_[16] = {};
     float damagePopupSeconds_ = 0.0f;

@@ -33,6 +33,9 @@ enum class SoundId {
     kWalkGravel,
     kWalkCloth,
     kWalkLadder,
+    /* 天气环境音: 降水循环与雷声. */
+    kRain,
+    kThunder,
     kCount,
 };
 

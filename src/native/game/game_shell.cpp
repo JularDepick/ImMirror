@@ -2104,6 +2104,37 @@ void GameShell::UpdateEntities(double deltaSeconds) {
         progress::ProgressHub::Instance().Tick(deltaSeconds, static_cast<float>(distance));
     }
 
+    /*
+     * 天气环境音: 按当前天气与强度决定是否铺雨声与雷声.
+     * 降水强度不到一半时不出声, 免得小雨也轰鸣.
+     */
+    {
+        const float intensity = weather_.Intensity();
+        const world::WeatherKind kind = weather_.Kind();
+        const bool precipitating =
+            intensity > 0.35f && (kind == world::WeatherKind::kRain ||
+                                  kind == world::WeatherKind::kSnow ||
+                                  kind == world::WeatherKind::kThunder);
+        if (precipitating) {
+            rainSoundSeconds_ -= static_cast<float>(deltaSeconds);
+            if (rainSoundSeconds_ <= 0.0f) {
+                audio::AudioEngine::Instance().Play(audio::SoundId::kRain);
+                rainSoundSeconds_ = 5.0f + static_cast<float>(nextRandom() % 400u) / 100.0f;
+            }
+        } else {
+            rainSoundSeconds_ = 0.0f;
+        }
+        if (kind == world::WeatherKind::kThunder && intensity > 0.5f) {
+            thunderSoundSeconds_ -= static_cast<float>(deltaSeconds);
+            if (thunderSoundSeconds_ <= 0.0f) {
+                audio::AudioEngine::Instance().Play(audio::SoundId::kThunder);
+                thunderSoundSeconds_ = 12.0f + static_cast<float>(nextRandom() % 1600u) / 100.0f;
+            }
+        } else {
+            thunderSoundSeconds_ = 0.0f;
+        }
+    }
+
     UpdateEnvironmentDamage(deltaSeconds);
     if (stats.playerDamage > 0.0f) {
         /* 生物出手的伤害类型由生物结算时记入统计, 这里直接取用. */

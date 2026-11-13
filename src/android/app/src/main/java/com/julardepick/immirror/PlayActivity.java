@@ -75,6 +75,8 @@ public final class PlayActivity extends NativeActivity {
         {"walk_gravel", "4", null},
         {"walk_cloth", "4", null},
         {"walk_ladder", "4", null},
+        {"env_rain", "4", null},
+        {"env_thunder", "1", null},
     };
 
     private static final String TAG = "ImMirrorPlay";
