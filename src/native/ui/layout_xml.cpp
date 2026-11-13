@@ -199,12 +199,27 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
         return false;
     }
 
-    /* 帧栈与标签栈: 帧栈决定父子关系, 标签栈用来判断 AbsDimension 归属. */
+    /*
+     * 帧栈决定父子关系; 配对栈记录每个未闭合标签是否真的建了帧.
+     * 弹栈必须与压栈严格对应: 无名的容器标签不建帧, 若也去弹帧栈,
+     * 就会把父帧甚至合成根弹掉, 后续建帧时读到空栈.
+     */
     std::vector<LayoutFrame*> frameStack;
-    std::vector<std::string> tagStack;
+    std::vector<std::pair<std::string, bool>> openTags;
     std::vector<LayerLevel> layerStack;
     std::vector<std::pair<LayoutFrame*, RawAnchor>> pending;
     std::string current;
+
+    /*
+     * 合成根: 布局里可以平铺多个顶层帧, 需要一个统一父节点把它们收在一起,
+     * 否则除第一个之外的同级顶层帧会被丢掉.
+     */
+    names_.push_back(std::string());
+    pool_.push_back(std::unique_ptr<LayoutFrame>(new LayoutFrame()));
+    root_ = pool_.back().get();
+    root_->name = names_.back().c_str();
+    frameStack.push_back(root_);
+
     size_t index = 0;
 
     while (index < length) {
@@ -246,11 +261,12 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
             if (tag == "Layer" && !layerStack.empty()) {
                 layerStack.pop_back();
             }
-            if (!tagStack.empty()) {
-                tagStack.pop_back();
-            }
-            if (!IsStructural(tag) && !frameStack.empty()) {
-                frameStack.pop_back();
+            if (!openTags.empty()) {
+                /* 只有压栈时真的建过帧的标签才弹帧栈. */
+                if (openTags.back().second && !frameStack.empty()) {
+                    frameStack.pop_back();
+                }
+                openTags.pop_back();
             }
             continue;
         }
@@ -274,9 +290,9 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
             } else if (tag == "AbsDimension") {
                 /* 归属看最近的 Anchor 或 Size: 前者是偏移, 后者是尺寸. */
                 std::string owner;
-                for (size_t i = tagStack.size(); i > 0; --i) {
-                    if (tagStack[i - 1] == "Anchor" || tagStack[i - 1] == "Size") {
-                        owner = tagStack[i - 1];
+                for (size_t i = openTags.size(); i > 0; --i) {
+                    if (openTags[i - 1].first == "Anchor" || openTags[i - 1].first == "Size") {
+                        owner = openTags[i - 1].first;
                         break;
                     }
                 }
@@ -299,7 +315,7 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
                 layerStack.push_back(ParseLayerLevel(attributes.level));
             }
             if (!selfClosing) {
-                tagStack.push_back(tag);
+                openTags.push_back(std::make_pair(tag, false));
             }
             continue;
         }
@@ -307,7 +323,7 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
         /* 带名字的元素才成为帧; 无名的按普通容器处理, 不进入帧树. */
         if (attributes.name.empty()) {
             if (!selfClosing) {
-                tagStack.push_back(tag);
+                openTags.push_back(std::make_pair(tag, false));
             }
             continue;
         }
@@ -323,20 +339,17 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
             textures_.push_back(attributes.file);
             frame->texture = textures_.back().c_str();
         }
-        if (frameStack.empty()) {
-            if (root_ == nullptr) {
-                root_ = frame;
-            }
-        } else {
+        if (!frameStack.empty()) {
             frameStack.back()->AddChild(frame);
         }
         if (!selfClosing) {
-            tagStack.push_back(tag);
+            openTags.push_back(std::make_pair(tag, true));
             frameStack.push_back(frame);
         }
     }
 
-    if (root_ == nullptr) {
+    if (root_ == nullptr || root_->children.empty()) {
+        /* 只有合成根说明这份 XML 不是布局, 例如资源清单或按键表. */
         error_ = "没有帧节点";
         return false;
     }

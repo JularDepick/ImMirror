@@ -24,6 +24,16 @@ g++ -std=c++17 -I "$ROOT/native" \
     -o "$OUT_DIR/layout_xml_test.exe" || exit 1
 "$OUT_DIR/layout_xml_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
 
+echo "== 控件绑定"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/widget_tree_test.cpp" \
+    "$ROOT/native/ui/layout_frame.cpp" \
+    "$ROOT/native/ui/layout_xml.cpp" \
+    "$ROOT/native/ui/layout_draw.cpp" \
+    "$ROOT/native/ui/widget_tree.cpp" \
+    -o "$OUT_DIR/widget_tree_test.exe" || exit 1
+"$OUT_DIR/widget_tree_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
+
 echo "== 全量布局解析"
 "$OUT_DIR/layout_xml_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 

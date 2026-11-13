@@ -15,6 +15,8 @@ struct LayoutDrawCommand {
     LayoutRect rect;
     LayerLevel layer = LayerLevel::kArtwork;
     const char* texture = nullptr;
+    /* 文本内容: 只有文本控件才会带, 空表示不画文字. */
+    const char* text = nullptr;
     const char* name = "";
     float red = 1.0f;
     float green = 1.0f;
