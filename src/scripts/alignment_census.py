@@ -101,6 +101,28 @@ def layout_text_coverage():
     return hit, total if total > 0 else 1
 
 
+def monster_coverage():
+    """生物: 生成表条目与其中的和平生物数量."""
+    path = os.path.join(NATIVE_ROOT, "entity", "generated", "monster_data_gen.h")
+    if not os.path.isfile(path):
+        return 0, 1, 0
+    body = read_text(path)
+    match = re.search(r"kMonsterDataCount\s*=\s*(\d+)", body)
+    total = int(match.group(1)) if match else 0
+    # 每条记录里敌意标志紧跟在类别之后, 取"类别, 敌意"这一对统计和平生物.
+    peaceful = 0
+    for line in body.splitlines():
+        if not line.strip().startswith("{"):
+            continue
+        values = [v.strip() for v in line.strip().strip(",").strip("{}").split(",")]
+        # 字段顺序: 编号, 名字, 生命, 攻击, ..., 类别, 敌意, 权重.
+        if len(values) < 17:
+            continue
+        if values[16] == "0":
+            peaceful += 1
+    return total, total if total > 0 else 1, peaceful
+
+
 def skin_coverage():
     """角色皮肤: 生成表条目数."""
     path = os.path.join(NATIVE_ROOT, "game", "generated", "skin_data_gen.h")
@@ -348,6 +370,8 @@ def main():
                                               read_text(os.path.join(NATIVE_ROOT, 'game', 'generated', 'enchant_data_gen.h'))))), 18, '数据表出现的效果类型种类'),
         ('玩法', '生物攻击附带', *monster_attack_extras(), '状态效果/火焰档位/质量三列'),
         ('玩法', '状态效果', count_rows(os.path.join(NATIVE_ROOT, 'player', 'generated', 'buff_data_gen.h')), 44, 'buffdef 客户端可消费四类'),
+        ('玩法', '生物条目', *(lambda t, n, p: (t, n))(*monster_coverage()), '生成表收录的生物'),
+        ('玩法', '和平生物', *(lambda t, n, p: (p, p if p > 0 else 1))(*monster_coverage()), '不主动攻击的生物'),
         ('玩法', '角色皮肤', *skin_coverage(), '皮肤编号与模型的对照条目'),
         ('玩法', '食物', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'food_data_gen.h')), 38, 'fooddef 可食用条目'),
         ('玩法', '工具', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'tool_data_gen.h')), 25, 'tooldef 全量工具'),

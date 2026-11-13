@@ -141,7 +141,9 @@ def build_entries(rows):
             continue
         if PLACEHOLDER_NAMES.search(name):
             continue
-        if life <= 0 or attack <= 0 or kind not in KEEP_TYPES:
+        # 攻击为 0 的生物是和平生物: 它们照样有生命与掉落, 只是不主动攻击.
+        # 早前把这类整条丢掉, 世界里因此只剩敌对生物.
+        if life <= 0 or kind not in KEEP_TYPES:
             continue
 
         speed = clamp(to_int(row.get("Speed")) * CM_TO_M, SPEED_MIN, SPEED_MAX)
@@ -192,7 +194,8 @@ def build_entries(rows):
             "armor_range": armor_range,
             "armor_magic": armor_magic,
             "type": kind,
-            "hostile": 1 if kind in (0, 6) else 0,
+            # 主动攻击只由类别与攻击力共同决定: 攻击为 0 的类别即使属敌对型也不主动出手.
+            "hostile": 1 if (kind in (0, 6) and attack > 0) else 0,
             "weight": SPAWN_WEIGHT_BY_TYPE.get(kind, 0.0),
             "drops": drops,
             "buff_id": to_int(row.get("BuffId")),
