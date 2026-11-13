@@ -35,9 +35,36 @@ struct ItemDefView {
     int32_t quality = 0;
 };
 
+/* 方块定义视图: 界面脚本按方块编号读取的字段. */
+struct BlockDefView {
+    bool found = false;
+    int32_t id = 0;
+    /* 注册表英文键; 方块表没有独立中文名列, 界面显示同用此键. */
+    std::string englishName;
+    /* 采集与形态: 硬度, 工具族, 材质族, 所需等级, 形状, 重力方式. */
+    float hardness = 0.0f;
+    int32_t tool = 0;
+    int32_t material = 0;
+    int32_t toolLevel = 0;
+    int32_t shape = 0;
+    int32_t gravity = 0;
+    int32_t replaceable = 0;
+    /* 掉落概率万分比与爆炸抗性. */
+    int32_t dropChance = 0;
+    int32_t blastResist = 0;
+    /* 摩擦系数, 大于 1 表示打滑. */
+    float slipperiness = 1.0f;
+};
+
 class UiDataSource {
 public:
     virtual ~UiDataSource() = default;
+
+    /* 方块定义: 供界面脚本按方块编号查询形态与采集要求. */
+    virtual BlockDefView BlockDef(int32_t id) const = 0;
+
+    /* 方块对应的物品定义: 界面拿方块编号直接要物品信息. */
+    virtual ItemDefView BlockItemDef(int32_t blockId) const = 0;
 
     /* 物品定义: 供界面脚本按编号查询名称与图标. */
     virtual ItemDefView ItemDef(int32_t id) const = 0;

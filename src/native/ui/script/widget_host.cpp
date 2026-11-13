@@ -193,7 +193,51 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
              * 物品定义查询: 返回表里放脚本实际读取的字段.
              * 字段名与物品表列名一致, 未收录的字段返回零或空串, 由脚本判空跳过.
              */
+            /* 方块定义查询: 字段名与方块表列名一致, 未收录的返回空表. */
             if (dataSource_ != nullptr) {
+                table->Set(Value::Str("getBlockDef"), MakeNative([this](const std::vector<Value>& call) {
+                    const int32_t id = static_cast<int32_t>(NumberAt(call, 0, 0.0));
+                    const BlockDefView view = dataSource_->BlockDef(id);
+                    std::shared_ptr<Table> def(new Table());
+                    if (!view.found) {
+                        return std::vector<Value>{Value::Of(def)};
+                    }
+                    def->Set(Value::Str("ID"), Value::Number(static_cast<double>(view.id)));
+                    def->Set(Value::Str("EnglishName"), Value::Str(view.englishName));
+                    def->Set(Value::Str("Name"), Value::Str(view.englishName));
+                    def->Set(Value::Str("Hardness"), Value::Number(static_cast<double>(view.hardness)));
+                    def->Set(Value::Str("Tool"), Value::Number(static_cast<double>(view.tool)));
+                    def->Set(Value::Str("Material"), Value::Number(static_cast<double>(view.material)));
+                    def->Set(Value::Str("ToolLevel"),
+                             Value::Number(static_cast<double>(view.toolLevel)));
+                    def->Set(Value::Str("Type"), Value::Number(static_cast<double>(view.shape)));
+                    def->Set(Value::Str("Shape"), Value::Number(static_cast<double>(view.shape)));
+                    def->Set(Value::Str("Gravity"), Value::Number(static_cast<double>(view.gravity)));
+                    def->Set(Value::Str("Replaceable"),
+                             Value::Number(static_cast<double>(view.replaceable)));
+                    def->Set(Value::Str("DropChance"),
+                             Value::Number(static_cast<double>(view.dropChance)));
+                    def->Set(Value::Str("AntiExplode"),
+                             Value::Number(static_cast<double>(view.blastResist)));
+                    def->Set(Value::Str("Slipperiness"),
+                             Value::Number(static_cast<double>(view.slipperiness)));
+                    return std::vector<Value>{Value::Of(def)};
+                }));
+                /* 方块对应物品的定义: 界面拿方块编号直接要物品信息. */
+                table->Set(Value::Str("getBlockItemDefById"),
+                           MakeNative([this](const std::vector<Value>& call) {
+                               const int32_t id = static_cast<int32_t>(NumberAt(call, 0, 0.0));
+                               const ItemDefView view = dataSource_->BlockItemDef(id);
+                               std::shared_ptr<Table> def(new Table());
+                               if (!view.found) {
+                                   return std::vector<Value>{Value::Of(def)};
+                               }
+                               def->Set(Value::Str("ID"), Value::Number(static_cast<double>(view.id)));
+                               def->Set(Value::Str("Name"), Value::Str(view.displayName));
+                               def->Set(Value::Str("EnglishName"), Value::Str(view.englishName));
+                               def->Set(Value::Str("Icon"), Value::Str(view.icon));
+                               return std::vector<Value>{Value::Of(def)};
+                           }));
                 table->Set(Value::Str("getItemDef"), MakeNative([this](const std::vector<Value>& call) {
                     const int32_t id = static_cast<int32_t>(NumberAt(call, 0, 0.0));
                     const ItemDefView view = dataSource_->ItemDef(id);

@@ -29,6 +29,8 @@ public:
                      const world::World& world, const world::WorldTime& worldTime);
 
     ui::script::ItemDefView ItemDef(int32_t id) const override;
+    ui::script::BlockDefView BlockDef(int32_t id) const override;
+    ui::script::ItemDefView BlockItemDef(int32_t blockId) const override;
 
     int32_t BagSlotCount() const override;
     std::string BagSlotName(int32_t slot) const override;

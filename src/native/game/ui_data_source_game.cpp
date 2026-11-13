@@ -45,6 +45,41 @@ ui::script::ItemDefView GameUiDataSource::ItemDef(int32_t id) const {
     return view;
 }
 
+ui::script::ItemDefView GameUiDataSource::BlockItemDef(int32_t blockId) const {
+    if (blockId <= 0) {
+        return ui::script::ItemDefView();
+    }
+    const item::ItemId itemId =
+        item::ItemTable::Instance().OfBlock(static_cast<voxel::BlockId>(blockId));
+    return ItemDef(static_cast<int32_t>(itemId));
+}
+
+ui::script::BlockDefView GameUiDataSource::BlockDef(int32_t id) const {
+    ui::script::BlockDefView view;
+    if (id <= 0) {
+        return view;
+    }
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    const voxel::BlockInfo& info = registry.Info(static_cast<voxel::BlockId>(id));
+    if (info.name == nullptr || info.name[0] == '\0') {
+        return view;
+    }
+    view.found = true;
+    view.id = id;
+    view.englishName = info.name;
+    view.hardness = info.hardness;
+    view.tool = static_cast<int32_t>(info.tool);
+    view.material = static_cast<int32_t>(info.material);
+    view.toolLevel = static_cast<int32_t>(info.toolLevel);
+    view.shape = static_cast<int32_t>(info.shape);
+    view.gravity = static_cast<int32_t>(info.gravity);
+    view.replaceable = static_cast<int32_t>(info.replaceable);
+    view.dropChance = static_cast<int32_t>(info.dropChance);
+    view.blastResist = static_cast<int32_t>(info.blastResist);
+    view.slipperiness = info.slipperiness;
+    return view;
+}
+
 int32_t GameUiDataSource::BagSlotCount() const {
     return Inventory::kSlotCount;
 }

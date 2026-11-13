@@ -37,6 +37,28 @@ public:
         return view;
     }
 
+    BlockDefView BlockDef(int32_t id) const override {
+        BlockDefView view;
+        if (id != 100) {
+            return view;
+        }
+        view.found = true;
+        view.id = id;
+        view.englishName = "grass";
+        view.hardness = 3.5f;
+        view.tool = 3;
+        view.toolLevel = 1;
+        view.shape = 0;
+        view.gravity = 0;
+        view.dropChance = 10000;
+        view.blastResist = 7;
+        return view;
+    }
+
+    ItemDefView BlockItemDef(int32_t blockId) const override {
+        return blockId == 100 ? ItemDef(11012) : ItemDefView();
+    }
+
     int32_t BagSlotCount() const override { return 3; }
     std::string BagSlotName(int32_t slot) const override {
         static const char* const kNames[] = {"StonePickaxe", "Torch", "Bread"};
@@ -132,6 +154,25 @@ int main(int argc, char** argv) {
     check("定义图标", host.Vm().GetGlobal("DefIcon").text == "icon11012");
     check("定义堆叠", host.Vm().GetGlobal("DefStack").number == 1.0);
     check("未收录定义为空", host.Vm().GetGlobal("DefMissingOk").number == 1.0);
+
+    /* 方块定义查询: 字段名与方块表列名一致. */
+    const char* blockScript =
+        "local b = GetInst(\"DefMgr\"):getBlockDef(100) "
+        "BlockName = b.EnglishName "
+        "BlockHard = b.Hardness "
+        "BlockLevel = b.ToolLevel "
+        "BlockBlast = b.AntiExplode "
+        "local miss = GetInst(\"DefMgr\"):getBlockDef(999999) "
+        "BlockMissingOk = (miss.ID == nil) and 1 or 0 "
+        "local bi = GetInst(\"DefMgr\"):getBlockItemDefById(100) "
+        "BlockItemName = bi.EnglishName ";
+    check("执行方块查询", host.RunScript(blockScript, std::strlen(blockScript), screen));
+    check("方块英文名", host.Vm().GetGlobal("BlockName").text == "grass");
+    check("方块硬度", host.Vm().GetGlobal("BlockHard").number > 3.4 && host.Vm().GetGlobal("BlockHard").number < 3.6);
+    check("方块工具等级", host.Vm().GetGlobal("BlockLevel").number == 1.0);
+    check("方块抗性", host.Vm().GetGlobal("BlockBlast").number == 7.0);
+    check("未收录方块为空", host.Vm().GetGlobal("BlockMissingOk").number == 1.0);
+    check("方块对应物品", host.Vm().GetGlobal("BlockItemName").text == "StonePickaxe");
 
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;
