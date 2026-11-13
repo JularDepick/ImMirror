@@ -2034,6 +2034,26 @@ void GameShell::CollectDrop(voxel::BlockId brokenBlock, const voxel::BlockPos& p
         IM_LOGI(kTag, "block has no drop, block=%u", static_cast<uint32_t>(brokenBlock));
         return;
     }
+    /*
+     * 掉落概率: 方块表给出万分比, 10000 表示必掉.
+     * 概率不足时直接跳过, 不生成掉落物, 也不影响破坏计数.
+     */
+    const int32_t chance = static_cast<int32_t>(broken.dropChance);
+    if (chance <= 0) {
+        IM_LOGD(kTag, "drop skipped, no chance block=%s", broken.name);
+        return;
+    }
+    if (chance < 10000) {
+        dropRandom_ ^= dropRandom_ << 13;
+        dropRandom_ ^= dropRandom_ >> 17;
+        dropRandom_ ^= dropRandom_ << 5;
+        const int32_t roll = static_cast<int32_t>(dropRandom_ % 10000u);
+        if (roll >= chance) {
+            IM_LOGD(kTag, "drop skipped by chance block=%s roll=%d chance=%d", broken.name, roll,
+                    chance);
+            return;
+        }
+    }
     CountProgressEvent(1);
     /*
      * 掉落物落到破坏点上方一点点, 带一点水平初速, 走近再拾取.

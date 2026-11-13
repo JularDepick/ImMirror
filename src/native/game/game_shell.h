@@ -210,6 +210,8 @@ public:
     void UpdateDrops(double deltaSeconds);
     std::vector<DroppedItem> droppedItems_;
     int32_t nextDropId_ = 1;
+    /* 掉落概率用的轻量伪随机状态, 与其它模块同一套 xorshift. */
+    uint32_t dropRandom_ = 0x9e3779b9u;
 
     /* 战斗框目标: 最近攻击过的生物标识与显示截止时刻. */
     entity::EntityId battleTargetId_ = 0;

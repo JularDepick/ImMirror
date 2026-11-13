@@ -142,6 +142,8 @@ struct BlockInfo {
      * 当前只消费 1, 其余两值先带进运行时, 供流体与花草判定后续接入.
      */
     uint8_t gravity = 0;
+    /* 掉落概率万分比, 10000 表示必掉; 0 表示没有掉落. */
+    uint16_t dropChance = 10000;
 };
 
 }  /* namespace immirror::voxel */

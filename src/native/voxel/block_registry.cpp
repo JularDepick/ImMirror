@@ -257,6 +257,7 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         if (!legacyFilled[id]) {
             legacyCache[id] = kLegacyBlockTable[id];
             legacyCache[id].gravity = gen::BlockEntryOf(id).gravity;
+            legacyCache[id].dropChance = gen::BlockEntryOf(id).dropChance;
             legacyFilled[id] = true;
         }
         return legacyCache[id];
@@ -298,6 +299,7 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.material = MaterialOf(entry.material);
         info.toolLevel = entry.toolLevel;
         info.gravity = entry.gravity;
+        info.dropChance = entry.dropChance;
         filled[index] = true;
     }
     return info;

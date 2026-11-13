@@ -200,15 +200,19 @@ def load_rows():
 
 
 def pick_drop(row):
-    """按优先级取掉落物原始取值, 返回 (掉落 id, 命中的字段名)."""
+    """按优先级取掉落物原始取值, 返回 (掉落 id, 命中的字段名, 掉落概率万分比).
+
+    概率列缺省或非正时按必掉处理; PreciseDrop 没有概率列, 同样按必掉.
+    """
     for drop_column, prob_column in DROP_FIELDS:
         drop = to_int(row.get(drop_column))
-        if drop > 0 and to_int(row.get(prob_column)) > 0:
-            return drop, drop_column
+        prob = to_int(row.get(prob_column))
+        if drop > 0 and prob > 0:
+            return drop, drop_column, min(prob, 10000)
     precise = to_int(row.get("PreciseDrop"))
     if precise > 0:
-        return precise, "PreciseDrop"
-    return 0, ""
+        return precise, "PreciseDrop", 10000
+    return 0, "", 0
 
 
 def sound_family(sound_name):
@@ -328,7 +332,7 @@ def build_extension_entry(client_id, source_id, row, used_keys):
     material = SOUND_FAMILY_TO_MATERIAL.get(dig_family, 0)
 
     texture = row.get("Texture1", "").strip()
-    drop_source, drop_field = pick_drop(row)
+    drop_source, drop_field, drop_prob = pick_drop(row)
     shape = shape_of(category)
 
     # 移动碰撞到实心属性的折算: 1 固体与 3 不挡投射物按实心处理
@@ -356,6 +360,7 @@ def build_extension_entry(client_id, source_id, row, used_keys):
         "texture": texture,
         "drop_source": drop_source,
         "drop_field": drop_field,
+        "drop_prob": drop_prob,
         "shape": shape,
     }
 
@@ -402,7 +407,8 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
     gravity = to_int(data.get("GravityEffect"))
     if not 0 <= gravity <= 3:
         gravity = 0
-    return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du},'
+    _, _, drop_prob = pick_drop(data)
+    return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du, %du},'
             "  /* %s */"
             % (source_id, client_id, escape(name),
                escape(data.get("Name", "").strip()),
@@ -412,7 +418,7 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
                escape(data.get("PlaceSound", "").strip()),
                escape(data.get("WalkSound", "").strip()),
                escape(data.get("Texture1", "").strip()),
-               drop_source, gravity, comment))
+               drop_source, gravity, drop_prob, comment))
 
 
 def render_header(entries, legacy_rows, segments):
@@ -478,6 +484,7 @@ def render_header(entries, legacy_rows, segments):
         "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
         "    uint32_t dropSourceId;   /* 掉落物物品 id, 0 表示无掉落 */",
         "    uint8_t gravity;         /* 重力方式: 0 不影响, 1 下坠 */",
+        "    uint16_t dropChance;     /* 掉落概率万分比, 10000 表示必掉 */",
         "};",
         "",
         "/* 条目按客户端 id 升序排列, 下标即客户端 id, 越界回落到首条 (空气). */",
@@ -486,7 +493,7 @@ def render_header(entries, legacy_rows, segments):
     source_to_client = {source_id: client_id
                         for client_id, _, source_id, _ in CLIENT_BLOCKS}
     for client_id, name, source_id, data in legacy_rows:
-        drop_source, drop_field = pick_drop(data)
+        drop_source, drop_field, _ = pick_drop(data)
         drop_block = source_to_client.get(drop_source, client_id) if drop_source > 0 else 0
         del drop_block
         lines.append(render_legacy_row(client_id, name, source_id, data,
@@ -494,7 +501,7 @@ def render_header(entries, legacy_rows, segments):
     for entry in entries:
         comment = "%s, 掉落字段 %s" % (entry["category"] or "无类别",
                                      entry["drop_field"] or "无")
-        lines.append('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du},'
+        lines.append('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du, %du},'
                      "  /* %s */"
                      % (entry["source_id"], entry["client_id"], escape(entry["key"]),
                         escape(entry["display_name"]), escape(entry["category"]),
@@ -502,7 +509,7 @@ def render_header(entries, legacy_rows, segments):
                         entry["tool"], entry["tool_level"],
                         escape(entry["dig_sound"]), escape(entry["place_sound"]),
                         escape(entry["walk_sound"]), escape(entry["texture"]),
-                        entry["drop_source"], entry["gravity"], comment))
+                        entry["drop_source"], entry["gravity"], entry["drop_prob"], comment))
     lines += [
         "};",
         "",
@@ -550,7 +557,7 @@ def render_header(entries, legacy_rows, segments):
         "constexpr BlockData kBlockData[kBlockDataCount] = {",
     ]
     for client_id, name, source_id, data in legacy_rows:
-        drop_source, drop_field = pick_drop(data)
+        drop_source, drop_field, _ = pick_drop(data)
         # 掉落取值是物品 id: 能折回兼容段的按映射取, 折不回则原地回收自身
         drop_block = source_to_client.get(drop_source, client_id) if drop_source > 0 else 0
         comment = "掉落字段 %s" % drop_field if drop_field else "无掉落字段"
@@ -603,6 +610,7 @@ def render_header(entries, legacy_rows, segments):
         "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
         "    uint8_t shape;           /* 渲染形状, 与 voxel::BlockShape 对齐 */",
         "    uint8_t gravity;         /* 重力方式: 0 不影响, 1 下坠 */",
+        "    uint16_t dropChance;     /* 掉落概率万分比, 10000 表示必掉 */",
         "};",
         "",
         "constexpr int32_t kRegistryEntryCount = kBlockEntryCount - kLegacyBlockCount;",
@@ -610,7 +618,7 @@ def render_header(entries, legacy_rows, segments):
         "constexpr RegistryEntry kRegistryEntries[kRegistryEntryCount] = {",
     ]
     for entry in entries:
-        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, %du, "%s", "%s", "%s", "%s", %du, %du},'
+        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, %du, "%s", "%s", "%s", "%s", %du, %du, %du},'
                      % (entry["client_id"], escape(entry["key"]),
                         "true" if entry["solid"] else "false",
                         "true" if entry["opaque"] else "false",
@@ -618,7 +626,7 @@ def render_header(entries, legacy_rows, segments):
                         entry["material"], entry["tool_level"], escape(entry["dig_sound"]),
                         escape(entry["place_sound"]), escape(entry["walk_sound"]),
                         escape(entry["texture"]),
-                        SHAPE_INDEX.get(entry["shape"], 0), entry["gravity"]))
+                        SHAPE_INDEX.get(entry["shape"], 0), entry["gravity"], entry["drop_prob"]))
     lines += [
         "};",
         "",
