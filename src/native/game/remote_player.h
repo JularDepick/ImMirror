@@ -14,11 +14,17 @@ namespace net {
  */
 struct RemotePlayer {
     std::string uid;
+    /* 当前渲染位置: 每帧向目标位置按固定速率靠拢, 避免轮询节拍造成的瞬移. */
     float x = 0.0f;
     float y = 0.0f;
     float z = 0.0f;
     float yaw = 0.0f;
     float pitch = 0.0f;
+    /* 本轮快照给出的目标位置与朝向. */
+    float targetX = 0.0f;
+    float targetY = 0.0f;
+    float targetZ = 0.0f;
+    float targetYaw = 0.0f;
     /* 快照年龄, 秒; 由管理器按帧累计, 供过期判断与淡出使用. */
     double ageSeconds = 0.0;
 };
@@ -35,6 +41,8 @@ public:
     static constexpr double kSnapshotTtlSeconds = 30.0;
     /* 一次喂入的快照数量上限, 与服务端内存表容量一致, 防御异常响应撑爆列表. */
     static constexpr int32_t kMaxPlayers = 256;
+    /* 跟随速率, 每秒把剩余距离收敛掉的比例; 6.0 约 0.17 秒时间常数. */
+    static constexpr double kFollowRate = 6.0;
 
     /*
      * 整批替换远端玩家快照: 每次轮询成功后调用一次.
