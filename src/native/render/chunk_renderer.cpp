@@ -26,11 +26,14 @@ constexpr const char* kTag = "ImMirrorChunkRenderer";
 constexpr GLuint kAttributePosition = 0;
 constexpr GLuint kAttributeTexCoord = 1;
 constexpr GLuint kAttributeShade = 2;
+/* 位置 3 为群系染色 vec3: 草方块顶面与树叶按群系草色乘上去. */
+constexpr GLuint kAttributeTint = 3;
 
 constexpr GLsizei kVertexStride = static_cast<GLsizei>(sizeof(voxel::Vertex));
 constexpr size_t kPositionOffset = 0;
 constexpr size_t kTexCoordOffset = sizeof(float) * 3;
 constexpr size_t kShadeOffset = sizeof(float) * 5;
+constexpr size_t kTintOffset = sizeof(float) * 6;
 
 /*
  * 雾色常量, 取值与 gles_device.cpp 的清屏底色一致 (即天空色):
@@ -41,8 +44,8 @@ constexpr float kFogGreen = 0.12f;
 constexpr float kFogBlue = 0.20f;
 
 /* 顶点布局是渲染与网格构建之间的硬约定, 这里的断言用于尽早发现接口漂移. */
-static_assert(sizeof(voxel::Vertex) == sizeof(float) * 6, "顶点结构必须为 6 个 float, 共 24 字节");
-static_assert(sizeof(voxel::Vertex) == 24, "顶点步长必须为 24 字节");
+static_assert(sizeof(voxel::Vertex) == sizeof(float) * 9, "顶点结构必须为 9 个 float, 共 36 字节");
+static_assert(sizeof(voxel::Vertex) == 36, "顶点步长必须为 36 字节");
 
 /*
  * 网格三角形绕序. 网格构建侧若以顺时针书写正面, 只需把这里改成 GL_CW,
@@ -59,6 +62,7 @@ const char* const kVertexShaderSource = R"glsl(#version 300 es
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in float aShade;
+layout(location = 3) in vec3 aTint;
 
 uniform mat4 uViewProjection;
 uniform vec3 uChunkOrigin;
@@ -66,11 +70,13 @@ uniform vec3 uCameraPosition;
 
 out vec2 vTexCoord;
 out float vShade;
+out vec3 vTint;
 out float vViewDistance;
 
 void main() {
     vTexCoord = aTexCoord;
     vShade = aShade;
+    vTint = aTint;
     /* 网格顶点是区块局部坐标, 逐个区块加上世界原点后再变换. */
     vec3 worldPosition = aPosition + uChunkOrigin;
     /* 视距在顶点算好传给片元, 片元只做雾混合, 避免逐片元求长度. */
@@ -90,6 +96,7 @@ precision mediump float;
 
 in vec2 vTexCoord;
 in float vShade;
+in vec3 vTint;
 in float vViewDistance;
 
 uniform sampler2D uAtlas;
@@ -109,7 +116,8 @@ void main() {
     if (texel.a < kAlphaCutoff) {
         discard;
     }
-    vec3 color = texel.rgb * vShade * mix(0.27, 1.0, clamp(uSkyFactor, 0.0, 1.0));
+    /* 群系染色: 草方块顶面与树叶带色, 其余顶点为白色即不改变颜色. */
+    vec3 color = texel.rgb * vTint * vShade * mix(0.27, 1.0, clamp(uSkyFactor, 0.0, 1.0));
     /* 指数平方雾: 密度为 0 时雾因子恒为 0, 关雾时不产生混合开销. */
     float fogFactor = 1.0 - exp(-uFogDensity * uFogDensity * vViewDistance * vViewDistance);
     color = mix(color, uFogColor, clamp(fogFactor, 0.0, 1.0));
@@ -579,6 +587,9 @@ bool EnsureBufferObjects(GLuint* vao, GLuint* vbo, GLuint* ibo) {
     glEnableVertexAttribArray(kAttributeTexCoord);
     glVertexAttribPointer(kAttributeTexCoord, 2, GL_FLOAT, GL_FALSE, kVertexStride,
                           reinterpret_cast<const void*>(kTexCoordOffset));
+    glEnableVertexAttribArray(kAttributeTint);
+    glVertexAttribPointer(kAttributeTint, 3, GL_FLOAT, GL_FALSE, kVertexStride,
+                          reinterpret_cast<const void*>(kTintOffset));
     glEnableVertexAttribArray(kAttributeShade);
     glVertexAttribPointer(kAttributeShade, 1, GL_FLOAT, GL_FALSE, kVertexStride,
                           reinterpret_cast<const void*>(kShadeOffset));

@@ -12,6 +12,7 @@
 #include "voxel/chunk_column.h"
 #include "voxel/chunk_mesher.h"
 #include "voxel/light_field.h"
+#include "voxel/generated/biome_data_gen.h"
 #include "voxel/terrain_generator.h"
 
 namespace immirror::world {
@@ -182,8 +183,22 @@ void World::RebuildMesh(Chunk& chunk) {
     if (Chunk* n = FindChunk({chunk.coord.x - 1, chunk.coord.z})) neighbors.west = &n->column;
     if (Chunk* n = FindChunk({chunk.coord.x, chunk.coord.z + 1})) neighbors.south = &n->column;
     if (Chunk* n = FindChunk({chunk.coord.x, chunk.coord.z - 1})) neighbors.north = &n->column;
+    /*
+     * 群系草色: 按区块中心所在的群系带取草颜色, 归一化后传给网格构建,
+     * 草方块顶面与树叶按它染色; 取不到带时按白色不染色.
+     */
+    float tint[3] = {1.0f, 1.0f, 1.0f};
+    const int32_t band = voxel::TerrainGenerator{}.BiomeAt(
+        seed_, chunk.coord.x * voxel::kChunkSizeX + voxel::kChunkSizeX / 2,
+        chunk.coord.z * voxel::kChunkSizeZ + voxel::kChunkSizeZ / 2);
+    if (band >= 0 && band < voxel::kBiomeBandCount) {
+        const voxel::BiomeBand& info = voxel::kBiomeBands[band];
+        tint[0] = static_cast<float>(info.grassR) / 255.0f;
+        tint[1] = static_cast<float>(info.grassG) / 255.0f;
+        tint[2] = static_cast<float>(info.grassB) / 255.0f;
+    }
     voxel::ChunkMesher{}.Build(chunk.column, chunk.coord, voxel::BlockRegistry::Instance(), neighbors,
-                               chunk.mesh);
+                               chunk.mesh, tint);
     chunk.meshDirty = false;
     chunk.revision += 1;
 }

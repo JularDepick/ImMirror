@@ -30,7 +30,7 @@ struct BlockPos {
     int32_t z = 0;
 };
 
-/* 顶点布局: 位置 3, 图集坐标 2, 明暗 1, 共 24 字节. */
+/* 顶点布局: 位置 3, 图集坐标 2, 明暗 1, 群系染色 3, 共 36 字节. */
 struct Vertex {
     float px = 0.0f;
     float py = 0.0f;
@@ -39,6 +39,13 @@ struct Vertex {
     float v = 0.0f;
     /* 朝向底色与光照系数的乘积, 光照系数由面外侧邻格光场折算. */
     float shade = 1.0f;
+    /*
+     * 群系染色: 草方块顶面与树叶按所在群系的草色乘上去, 其余方块为白色.
+     * 放在顶点上而不是整块 uniform, 同一区块里不同方块的染色互不影响.
+     */
+    float red = 1.0f;
+    float green = 1.0f;
+    float blue = 1.0f;
 };
 
 /*

@@ -140,21 +140,27 @@ const FaceLayout kFaceLayouts[kFaceCount] = {
 }  /* namespace */
 
 void ChunkMesher::Build(const ChunkColumn& column, ChunkCoord coord, const BlockRegistry& registry,
-                        MeshData& out) const {
+                        MeshData& out, const float* tint) const {
     const ChunkColumn* neighbors[4] = {nullptr, nullptr, nullptr, nullptr};
-    BuildWithNeighbors(column, coord, registry, neighbors, out);
+    BuildWithNeighbors(column, coord, registry, neighbors, out, tint);
 }
 
 void ChunkMesher::Build(const ChunkColumn& column, ChunkCoord coord, const BlockRegistry& registry,
-                        const NeighborColumns& neighbors, MeshData& out) const {
+                        const NeighborColumns& neighbors, MeshData& out,
+                        const float* tint) const {
     const ChunkColumn* list[4] = {neighbors.east, neighbors.west, neighbors.south, neighbors.north};
-    BuildWithNeighbors(column, coord, registry, list, out);
+    BuildWithNeighbors(column, coord, registry, list, out, tint);
 }
 
-void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord, const BlockRegistry& registry,
-                                     const ChunkColumn* const* neighbors, MeshData& out) const {
+void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord,
+                                     const BlockRegistry& registry, const ChunkColumn* const* neighbors,
+                                     MeshData& out, const float* tint) const {
     /* 顶点使用区块局部坐标, 列坐标只标注调用方来源, 不参与计算. */
     (void)coord;
+    /* 群系草色: 缺省白色即不染色; 染色只作用于草方块顶面与树叶. */
+    const float tintR = tint != nullptr ? tint[0] : 1.0f;
+    const float tintG = tint != nullptr ? tint[1] : 1.0f;
+    const float tintB = tint != nullptr ? tint[2] : 1.0f;
     out.Clear();
 
     const int32_t topY = column.TopBlockY();
@@ -412,6 +418,16 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                     continue;
                 }
 
+                /*
+                 * 群系染色: 草方块只染顶面, 树叶整块染, 其余方块保持白色.
+                 * 判定按方块名做一次, 面循环里只比较两个布尔.
+                 */
+                const char* blockName = registry.Info(id).name;
+                const bool tintLeaves =
+                    blockName != nullptr && std::strstr(blockName, "leaves") != nullptr;
+                const bool tintGrassTop =
+                    blockName != nullptr && std::strstr(blockName, "grass") != nullptr;
+
                 for (int32_t face = 0; face < kFaceCount; ++face) {
                     if (!needFace[face]) {
                         continue;
@@ -435,6 +451,12 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                         vertex.u = tileU + ((corner == 1 || corner == 2) ? kTileExtent : 0.0f);
                         vertex.v = tileV + (corner >= 2 ? kTileExtent : 0.0f);
                         vertex.shade = layout.shade * lightFactor;
+                        /* 草方块顶面与树叶按群系草色染色, 其余顶点保持白色. */
+                        if (tintLeaves || (tintGrassTop && face == 2)) {
+                            vertex.red = tintR;
+                            vertex.green = tintG;
+                            vertex.blue = tintB;
+                        }
                         out.vertices.push_back(vertex);
                     }
                     std::vector<uint32_t>& target = isLiquid(id) ? liquidIndices : out.indices;

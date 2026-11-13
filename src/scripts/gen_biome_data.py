@@ -153,6 +153,24 @@ def collect_decorations(rows, col, mapping):
     return decorations, skipped
 
 
+def band_color(rows_of_band, col, column):
+    """取该带首个非空颜色值的 RGB; 缺失或解析失败按白色 (不染色) 处理."""
+    index = col.get(column)
+    if index is None:
+        return (255, 255, 255)
+    for row in rows_of_band:
+        if index >= len(row):
+            continue
+        text = row[index].strip().lstrip("#")
+        if len(text) != 6:
+            continue
+        try:
+            return (int(text[0:2], 16), int(text[2:4], 16), int(text[4:6], 16))
+        except ValueError:
+            continue
+    return (255, 255, 255)
+
+
 def band_names_index(band):
     return [b[0] for b in BANDS].index(band)
 
@@ -234,7 +252,7 @@ def main():
     lines.append("/* 52 群系按 (温度, 湿度) 二维空间折算成 6 个群系带, */")
     lines.append("/* 判定顺序即数组顺序, 兜底带是森林. 温度湿度取值 0-100 与数据表一致. */")
     lines.append("/* 树密度按ChunkTrees 的相对比例折算成 0-255 成树概率. */")
-    lines.append("/* 草颜色与水颜色本期不做顶点色, 原值不进生成表. */")
+    lines.append("/* 草颜色与水颜色取该带首个群系的十六进制原值, 白色表示不染色. */")
     lines.append("")
     lines.append("namespace immirror::voxel {")
     lines.append("")
@@ -254,6 +272,12 @@ def main():
     lines.append("    uint8_t thunderWeight; /* ThunderModulus, 相对权重 */")
     lines.append("    uint16_t woodBlock;    /* 该带的原木方块 id, 0 表示不长树 */")
     lines.append("    uint16_t leavesBlock;  /* 该带的树叶方块 id, 0 表示不长树 */")
+    lines.append("    uint8_t grassR;        /* 草颜色, 白色表示不染色 */")
+    lines.append("    uint8_t grassG;")
+    lines.append("    uint8_t grassB;")
+    lines.append("    uint8_t waterR;        /* 水颜色, 白色表示不染色 */")
+    lines.append("    uint8_t waterG;")
+    lines.append("    uint8_t waterB;")
     lines.append("    const char* key;       /* 群系带英文键 */")
     lines.append("    const char* nameZh;    /* 群系带中文名 */")
     lines.append("};")
@@ -266,11 +290,16 @@ def main():
         fill_key = TOP_BLOCK_MAP.get(fill_src, "Dirt")
         can_rain, can_snow, clear_w, rain_w, thunder_w = weather_of(band_rows[key], col)
         wood_block, leaves_block = BAND_TREES.get(key, (0, 0))
-        lines.append('    {%du, %du, %du, %du, %uu, %uu, %du, %du, %du, %du, %du, %du, %du, %du, "%s", "%s"},'
+        grass_rgb = band_color(band_rows[key], col, "GrassColor")
+        water_rgb = band_color(band_rows[key], col, "WaterColor")
+        lines.append('    {%du, %du, %du, %du, %uu, %uu, %du, %du, %du, %du, %du, %du, %du, %du, '
+                     '%du, %du, %du, %du, %du, %du, "%s", "%s"},'
                  % (heat_min, heat_max, humid_min, humid_max,
                    CLIENT_BLOCK_ID.get(block_key, 1), CLIENT_BLOCK_ID.get(fill_key, 2),
                    chance, can_rain, can_snow, clear_w, rain_w, thunder_w,
-                   wood_block, leaves_block, key, name_zh))
+                   wood_block, leaves_block,
+                   grass_rgb[0], grass_rgb[1], grass_rgb[2],
+                   water_rgb[0], water_rgb[1], water_rgb[2], key, name_zh))
     lines.append("};")
     lines.append("")
     decorations, skipped = collect_decorations(rows, col, mapping)
