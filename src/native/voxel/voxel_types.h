@@ -160,6 +160,8 @@ struct BlockInfo {
     uint16_t dropChance2 = 0;
     /* 爆炸抗性: 负数完全免疫, 非负数是摧毁所需的最小威力. */
     int16_t blastResist = 0;
+    /* 流体能否灌入此格: 1 表示可以 (空气, 花草, 地毯一类). */
+    uint8_t flowThrough = 0;
 
 };
 

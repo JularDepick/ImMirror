@@ -263,6 +263,7 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
             legacyCache[id].dropItem2 = static_cast<uint16_t>(gen::BlockEntryOf(id).dropSourceId2);
             legacyCache[id].dropChance2 = gen::BlockEntryOf(id).dropChance2;
             legacyCache[id].blastResist = gen::BlockEntryOf(id).blastResist;
+            legacyCache[id].flowThrough = gen::BlockEntryOf(id).flowThrough;
             legacyFilled[id] = true;
         }
         return legacyCache[id];
@@ -310,6 +311,7 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.dropItem2 = static_cast<uint16_t>(entry.dropSourceId2);
         info.dropChance2 = entry.dropChance2;
         info.blastResist = entry.blastResist;
+        info.flowThrough = entry.flowThrough;
         /*
          * 顶面贴图: 布局里给了独立的顶面名时单独查图集格,
          * 查不到就保持回落值, 渲染侧会自动沿用侧面, 不会出现空洞.

@@ -40,6 +40,17 @@ int main() {
     std::printf("低抗性 %d, 高抗性 %d\n", fragile, highResist);
     check("有低抗性方块", fragile > 0);
     /* 两类都要有, 具体比例由数据决定, 不做假设. */
+    /* 流体穿透: 空气与花草一类可被灌入, 实心方块不行. */
+    int32_t flowThrough = 0;
+    for (int32_t index = 0; index < immirror::game::gen::kRegistryEntryCount; ++index) {
+        if (immirror::game::gen::kRegistryEntries[index].flowThrough != 0) {
+            flowThrough += 1;
+        }
+    }
+    std::printf("流体可灌入 %d\n", flowThrough);
+    check("有流体可灌入的方块", flowThrough > 0);
+    check("可灌入的方块不是全部", flowThrough < immirror::game::gen::kRegistryEntryCount);
+
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;
 }

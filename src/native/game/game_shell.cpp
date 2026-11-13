@@ -3657,8 +3657,17 @@ void GameShell::SettleFluidAt(int32_t x, int32_t y, int32_t z) {
         if (cell.y < 0 || cell.y >= voxel::kWorldHeight) {
             continue;
         }
-        if (world_->GetBlock(cell.x, cell.y, cell.z) != voxel::block::Air) {
-            continue;
+        /*
+         * 只有空气与"流体可灌入"的格才能被填: 花草与地毯一类会被冲掉,
+         * 实心方块挡住水流. 灌入非空格时原方块直接消失, 不产生掉落.
+         */
+        const voxel::BlockId occupied = world_->GetBlock(cell.x, cell.y, cell.z);
+        if (occupied != voxel::block::Air) {
+            const voxel::BlockInfo& occupiedInfo = voxel::BlockRegistry::Instance().Info(occupied);
+            /* 已经是液体的格不重填: 否则会反复覆盖自身并把流体等级冲掉. */
+            if (isFluid(occupied) || !occupiedInfo.flowThrough) {
+                continue;
+            }
         }
         /*
          * 找一格相邻液体作为水源; 找不到就不填, 也不继续扩散.
