@@ -44,6 +44,8 @@ public final class UiSound {
     private static final String CRAFT_FAIL_ASSET = "sounds/ui_info_crafting_error.ogg";
     /* 进食音. */
     private static final String EAT_ASSET = "sounds/misc_eat1.ogg";
+    /* 受伤音. */
+    private static final String HURT_ASSET = "sounds/buff_buff_damaged_1.ogg";
     /* 界面音并发上限: 连点也不会互相打断. */
     private static final int MAX_STREAMS = 4;
 
@@ -145,6 +147,11 @@ public final class UiSound {
     /* 进食音: 吃下食物时调用. */
     public static void eat(Context context) {
         play(context, EAT_ASSET);
+    }
+
+    /* 受伤音: 血量下降时调用. */
+    public static void hurt(Context context) {
+        play(context, HURT_ASSET);
     }
 
     /*

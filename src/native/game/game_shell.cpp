@@ -1901,6 +1901,15 @@ void GameShell::UpdateEntities(double deltaSeconds) {
         IM_LOGI(kTag, "ui event death");
     }
     lastPlayerAlive_ = player_->Alive();
+    /*
+     * 受伤沿: 血量比上一帧低就记一条界面事件 (编码 8).
+     * 放在所有伤害来源之后统一判定, 生物攻击, 岩浆, 溺水与摔落都能触发.
+     */
+    const float healthNow = player_->Health();
+    if (lastHealth_ >= 0.0f && healthNow < lastHealth_ - 0.01f) {
+        uiEvents_.push_back(8);
+    }
+    lastHealth_ = healthNow;
     CollectCreatureDrops();
     UpdateDrops(deltaSeconds);
     if (stats.spawned > 0 || stats.deaths > 0 || stats.despawned > 0) {

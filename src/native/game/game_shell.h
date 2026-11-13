@@ -190,6 +190,8 @@ public:
 
     /* 上一帧玩家是否存活, 用于识别死亡沿. */
     bool lastPlayerAlive_ = true;
+    /* 上一帧血量, 用于识别受伤沿; 负值表示尚未采样. */
+    float lastHealth_ = -1.0f;
     std::vector<uint8_t> uiEvents_;
 
     /*
