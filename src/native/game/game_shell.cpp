@@ -1735,8 +1735,12 @@ bool GameShell::TryShootArrow() {
             }
         }
     }
-    if (!freeShot) {
-        inventory_.Consume(arrowSlot, 1);
+    /*
+     * 先扣箭再出手: 扣不掉说明这一格已经没有箭, 此时不该凭空发出一发.
+     */
+    if (!freeShot && !inventory_.Consume(arrowSlot, 1)) {
+        IM_LOGI(kTag, "shoot aborted, arrow slot %d is empty", arrowSlot);
+        return false;
     }
     const core::Vec3 feet = player_->Position();
     const core::Vec3 eye = core::Vec3{feet.x, feet.y + 1.62f, feet.z};
@@ -3813,8 +3817,12 @@ bool GameShell::TryPlaceSelectedBlock() {
      */
     const int32_t armorSlot = game::ArmorSet::SlotOf(stack.item);
     if (armorSlot >= 0) {
+        /* 先扣掉手上这件再穿, 扣不掉就不穿, 否则会凭空多出一件护甲. */
+        if (!inventory_.Consume(selectedSlot_, 1)) {
+            IM_LOGI(kTag, "equip aborted, slot %d is empty", selectedSlot_);
+            return false;
+        }
         const item::ItemStack previous = player_->Armor().Equip(stack);
-        inventory_.Consume(selectedSlot_, 1);
         if (!previous.Empty()) {
             /*
              * 换下的装备优先放回原格: 整份写回, 附魔与耐久一并保留,
@@ -3833,10 +3841,18 @@ bool GameShell::TryPlaceSelectedBlock() {
         IM_LOGD(kTag, "place rejected, item=%s has no block", items.Info(stack.item).key);
         return false;
     }
-    if (!player_->PlaceBlock(*world_, block)) {
+    /*
+     * 先扣物品再放方块: 扣不掉说明这一格已经空了, 此时放出去就是白送一个方块.
+     */
+    if (!inventory_.Consume(selectedSlot_, 1)) {
+        IM_LOGI(kTag, "place aborted, slot %d is empty", selectedSlot_);
         return false;
     }
-    inventory_.Consume(selectedSlot_, 1);
+    if (!player_->PlaceBlock(*world_, block)) {
+        /* 放不进去就把扣掉的还回去, 不能因为地形挡住就吃掉一个方块. */
+        inventory_.Add(stack.item, 1);
+        return false;
+    }
     CountProgressEvent(2);
     /* 本地进度: 放置方块推进对应成就与当日任务. */
     progress::ProgressHub::Instance().OnBlockPlaced(block);
