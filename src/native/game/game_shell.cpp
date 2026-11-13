@@ -655,6 +655,23 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
         return;
     }
 
+    /*
+     * 攀爬附魔: 手持物带该附魔时把倍率注入玩家控制器,
+     * 控制器本身不持有物品表, 因此每帧按当前手持物刷新.
+     */
+    {
+        float climbScale = 1.0f;
+        const item::ItemStack& held = inventory_.Slot(selectedSlot_);
+        if (!held.Empty() && held.enchantId != 0) {
+            const game::gen::EnchantEntry* enchant =
+                item::EnchantTable::Instance().Find(held.enchantId, held.enchantLevel);
+            if (enchant != nullptr && item::EnchantTable::IsType(*enchant, "CLIMB")) {
+                climbScale = 1.0f + static_cast<float>(enchant->value1) / 100.0f;
+            }
+        }
+        player_->SetClimbScale(climbScale);
+    }
+
     /* 世界时间先行推进, 光照与环境音都取本帧的昼夜状态. */
     worldTime_->Tick(static_cast<float>(deltaSeconds));
 
@@ -1437,6 +1454,7 @@ bool GameShell::TryShootArrow() {
     float damage = 12.0f;
     bool freeShot = false;
     bool explosive = false;
+    float homing = 0.0f;
     item::ToolCombat combat;
     if (item::ToolTable::Instance().Find(held.item, combat) && combat.attack[0] > 0.0f) {
         damage = combat.attack[0];
@@ -1451,6 +1469,9 @@ bool GameShell::TryShootArrow() {
                 freeShot = nextRandom() % 100u < static_cast<uint32_t>(enchant->value1);
             } else if (item::EnchantTable::IsType(*enchant, "ARROW_EXPLODE")) {
                 explosive = true;
+            } else if (item::EnchantTable::IsType(*enchant, "TARGET_FIRE")) {
+                /* 锁定目标: 箭会朝最近生物修正方向. */
+                homing = 1.2f;
             }
         }
     }
@@ -1461,8 +1482,9 @@ bool GameShell::TryShootArrow() {
     const core::Vec3 eye = core::Vec3{feet.x, feet.y + 1.62f, feet.z};
     const core::Vec3 direction = player_->LookDirection();
     projectiles_.Spawn(eye + direction * 0.6f, direction, 42.0f, damage);
+    /* 附魔参数挂到刚发射的这一发上: 追踪强度与爆炸半径. */
+    projectiles_.MarkLast(homing, explosive ? 3.5f : 0.0f);
     shotCooldown_ = 0.45f;
-    /* 爆炸箭: 用同一发飞行物标记, 命中时由结算侧放大范围伤害. */
     if (explosive) {
         ShowTip("EXPLOSIVE ARROW");
     }
@@ -1520,6 +1542,45 @@ void GameShell::UpdateProjectiles(double deltaSeconds) {
     if (projectiles_.Count() == 0) {
         return;
     }
+    /*
+     * 追踪箭: 推进前把方向朝最近的生物修正一点, 修正量与追踪强度成正比,
+     * 因此不会瞬间拐弯, 而是画出可见的弧线.
+     */
+    for (int32_t index = 0; index < projectiles_.Count(); ++index) {
+        entity::Projectile* projectile = projectiles_.MutableAt(index);
+        if (projectile == nullptr || !(projectile->homing > 0.0f)) {
+            continue;
+        }
+        const entity::CreatureEntity* nearest = nullptr;
+        float bestDistance = 1.0e9f;
+        for (int32_t probe = 0; probe < entities_.Count(); ++probe) {
+            const entity::CreatureEntity* creature = entities_.At(probe);
+            if (creature == nullptr || creature->Removed()) {
+                continue;
+            }
+            const core::Vec3 delta = creature->Position() - projectile->position;
+            const float distance = delta.Length();
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                nearest = creature;
+            }
+        }
+        if (nearest == nullptr || bestDistance > 24.0f) {
+            continue;
+        }
+        const core::Vec3 desired = (nearest->Position() - projectile->position).Normalized();
+        const float speed = projectile->velocity.Length();
+        const float blend = projectile->homing * static_cast<float>(deltaSeconds);
+        const core::Vec3 steered =
+            core::Vec3{projectile->velocity.x + desired.x * speed * blend,
+                       projectile->velocity.y + desired.y * speed * blend,
+                       projectile->velocity.z + desired.z * speed * blend};
+        const float steeredLength = steered.Length();
+        if (steeredLength > 0.01f) {
+            projectile->velocity = steered * (speed / steeredLength);
+        }
+    }
+
     ProjectileContext context;
     context.world = world_.get();
     context.entities = &entities_;
@@ -1535,6 +1596,25 @@ void GameShell::UpdateProjectiles(double deltaSeconds) {
         } else if (hit.kind == entity::ProjectileHit::Kind::kBlock) {
             render::particle::EmitColored(0.70f, 0.66f, 0.58f, hit.position.x, hit.position.y,
                                           hit.position.z, 3);
+        }
+        /* 爆炸箭: 命中点周围一定半径内的生物一起受伤, 中心伤害按距离折减. */
+        if (hit.explodeRadius > 0.0f) {
+            for (int32_t probe = 0; probe < entities_.Count(); ++probe) {
+                const entity::CreatureEntity* creature = entities_.At(probe);
+                if (creature == nullptr || creature->Removed()) {
+                    continue;
+                }
+                const core::Vec3 delta = creature->Position() - hit.position;
+                const float distance = delta.Length();
+                if (distance > hit.explodeRadius) {
+                    continue;
+                }
+                const float scale = 1.0f - distance / hit.explodeRadius;
+                entities_.Damage(creature->Id(), hit.damage * (0.4f + 0.6f * scale));
+            }
+            render::particle::EmitColored(1.0f, 0.55f, 0.15f, hit.position.x, hit.position.y,
+                                          hit.position.z, 10);
+            IM_LOGI(kTag, "arrow exploded radius=%.1f", static_cast<double>(hit.explodeRadius));
         }
     }
 }

@@ -23,6 +23,10 @@ struct Projectile {
     float damage = 0.0f;
     /* 是否由玩家射出: 用于区分命中归属. */
     bool fromPlayer = true;
+    /* 追踪强度: 大于 0 时每帧朝最近生物修正方向, 数值越大修正越快. */
+    float homing = 0.0f;
+    /* 命中时的爆炸半径, 0 表示不爆炸. */
+    float explodeRadius = 0.0f;
 };
 
 /* 一次推进的命中结果. */
@@ -35,6 +39,8 @@ struct ProjectileHit {
     core::Vec3 position;
     /* 该发飞行物的伤害, 由发射时决定. */
     float damage = 0.0f;
+    /* 命中时的爆炸半径, 0 表示不爆炸. */
+    float explodeRadius = 0.0f;
 };
 
 /*
@@ -56,6 +62,9 @@ public:
     uint32_t Spawn(const core::Vec3& origin, const core::Vec3& direction, float speed,
                    float damage);
 
+    /* 给最近发射的一发设置追踪与爆炸参数, 用于带对应附魔的箭. */
+    void MarkLast(float homing, float explodeRadius);
+
     /*
      * 推进一帧. context 透传给两个回调;
      * hits 收集本帧全部命中, 由调用方决定伤害与特效.
@@ -65,6 +74,13 @@ public:
 
     int32_t Count() const { return static_cast<int32_t>(items_.size()); }
     const Projectile& At(int32_t index) const { return items_[static_cast<size_t>(index)]; }
+
+    /* 可写访问: 供调用方在推进前按追踪参数修正方向. */
+    Projectile* MutableAt(int32_t index) {
+        return index < 0 || index >= static_cast<int32_t>(items_.size())
+                   ? nullptr
+                   : &items_[static_cast<size_t>(index)];
+    }
 
 private:
     std::vector<Projectile> items_;

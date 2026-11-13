@@ -166,11 +166,16 @@ public:
      */
     void ApplyKnockback(const core::Vec3& direction, float cells);
 
+    /* 攀爬速度倍率: 由总装按手持物附魔注入, 缺省 1 表示不加成. */
+    void SetClimbScale(float scale) { climbScale_ = scale > 0.0f ? scale : 1.0f; }
+
     /* 护甲套装: 穿戴与减伤都在这里, 外部只通过它读写四个部位. */
     game::ArmorSet& Armor() { return armor_; }
     const game::ArmorSet& Armor() const { return armor_; }
     /* 四个部位的穿戴状态, 随血量一起由对局总装读写. */
     game::ArmorSet armor_;
+    /* 攀爬速度倍率, 缺省 1. */
+    float climbScale_ = 1.0f;
     /* 受击位移剩余秒数与速度, 大于零时覆盖自主移动的速度. */
     float knockSeconds_ = 0.0f;
     core::Vec3 knockVelocity_;
@@ -337,6 +342,11 @@ private:
 
     /* 判定身体中段或脚部是否浸在蜂蜜里 (蜂蜜移动倍率的判定). */
     bool InHoney(const world::World& world) const;
+
+    /* 判定身体是否贴着梯子一类可攀爬方块. */
+    bool OnClimbable(const world::World& world) const;
+
+
 
     /* 回到出生点并清空运动状态. */
     void Respawn();

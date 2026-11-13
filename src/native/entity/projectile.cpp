@@ -30,6 +30,14 @@ uint32_t ProjectileSystem::Spawn(const core::Vec3& origin, const core::Vec3& dir
     return projectile.id;
 }
 
+void ProjectileSystem::MarkLast(float homing, float explodeRadius) {
+    if (items_.empty()) {
+        return;
+    }
+    items_.back().homing = homing;
+    items_.back().explodeRadius = explodeRadius;
+}
+
 void ProjectileSystem::Update(float seconds, void* context, SolidAt solidAt,
                               CreatureAt creatureAt, std::vector<ProjectileHit>& hits) {
     if (seconds <= 0.0f) {
@@ -57,6 +65,7 @@ void ProjectileSystem::Update(float seconds, void* context, SolidAt solidAt,
                 hit.creatureId = creatureId;
                 hit.position = projectile.position;
                 hit.damage = projectile.damage;
+                hit.explodeRadius = projectile.explodeRadius;
                 hits.push_back(hit);
                 consumed = true;
                 break;

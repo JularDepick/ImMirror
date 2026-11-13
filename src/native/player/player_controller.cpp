@@ -25,6 +25,7 @@ constexpr float kDegreesToRadians = kPi / 180.0f;
 constexpr float kGravity = -24.0f;            /* 重力加速度 */
 constexpr float kMoveSpeed = 4.5f;            /* 水平移动速度 */
 constexpr float kJumpSpeed = 8.0f;            /* 起跳初速度 */
+constexpr float kClimbSpeed = 3.5f;           /* 攀爬升降速度 */
 constexpr float kFallSpeedLimit = -58.0f;     /* 下落速度上限, 控制单帧位移量 */
 /* 摔落伤害: 3 格以内不受伤, 之后每格 5 点 (未给出, 自定注明). */
 constexpr float kFallSafeDistance = 3.0f;
@@ -711,6 +712,8 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
         velocity_.z = wish.z * kMoveSpeed * ratio;
     }
 
+    /* 攀爬判定要早于跳跃消费, 因此先记下本帧是否请求跳跃. */
+    const bool climbUp = jumpRequested_;
     if (jumpRequested_ && onGround_) {
         /* 体力低于下限禁止起跳; 冲刺中起跳按快跑跳扣更多体力 (分组语义). */
         if (stamina_ >= survival::kStaminaActionFloor) {
@@ -740,9 +743,25 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
         }
     }
 
-    velocity_.y += kGravity * seconds;
-    if (velocity_.y < kFallSpeedLimit) {
-        velocity_.y = kFallSpeedLimit;
+    /*
+     * 攀爬: 贴着梯子时不受重力, 摇杆前后或跳跃决定升降, 松手则悬停.
+     * 攀爬期间下落速度归零, 因此从高处贴梯不会摔下去.
+     */
+    const bool climbing = OnClimbable(world);
+    if (climbing) {
+        velocity_.y = 0.0f;
+        /* 攀爬倍率由总装按手持物附魔注入, 控制器本身不持有物品表. */
+        const float climbSpeed = kClimbSpeed * climbScale_;
+        if (climbUp) {
+            velocity_.y = climbSpeed;
+        } else if (sneaking_) {
+            velocity_.y = -climbSpeed;
+        }
+    } else {
+        velocity_.y += kGravity * seconds;
+        if (velocity_.y < kFallSpeedLimit) {
+            velocity_.y = kFallSpeedLimit;
+        }
     }
 
     /* 单帧位移按最大步长切片, 切片后再逐轴分离解算, 位移再大也不会穿墙. */
@@ -1126,6 +1145,26 @@ bool PlayerController::InWater(const world::World& world) const {
  * 与浸水同一取格方式, 只看液体的蜂蜜 (honey_still / honey_flow / honey),
  * 蜂蜜块, 蜂巢块一类实心方块不算, 否则站在建筑上也会被拖慢.
  */
+bool PlayerController::OnClimbable(const world::World& world) const {
+    /*
+     * 攀爬判定: 脚部与胸口两格任一为梯子即可, 因此上下梯子时衔接连续.
+     * 名字里带 ladder 的方块视为可攀爬, 与行走音的梯子族同一口径.
+     */
+    const int32_t bodyX = FloorToInt(position_.x);
+    const int32_t bodyZ = FloorToInt(position_.z);
+    const int32_t footY = FloorToInt(position_.y + 0.1f);
+    const int32_t chestY = FloorToInt(position_.y + kHeight * 0.5f);
+    const auto isLadder = [](voxel::BlockId id) {
+        if (id == voxel::block::Air) {
+            return false;
+        }
+        const char* name = voxel::BlockRegistry::Instance().Info(id).name;
+        return name != nullptr && std::strstr(name, "ladder") != nullptr;
+    };
+    return isLadder(world.GetBlock(bodyX, footY, bodyZ)) ||
+           isLadder(world.GetBlock(bodyX, chestY, bodyZ));
+}
+
 bool PlayerController::InHoney(const world::World& world) const {
     const int32_t bodyX = FloorToInt(position_.x);
     const int32_t bodyZ = FloorToInt(position_.z);
