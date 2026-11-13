@@ -20,6 +20,7 @@ g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/scripts/tests/layout_xml_test.cpp" \
     "$ROOT/native/ui/layout_frame.cpp" \
     "$ROOT/native/ui/layout_xml.cpp" \
+    "$ROOT/native/ui/layout_draw.cpp" \
     -o "$OUT_DIR/layout_xml_test.exe" || exit 1
 "$OUT_DIR/layout_xml_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
 

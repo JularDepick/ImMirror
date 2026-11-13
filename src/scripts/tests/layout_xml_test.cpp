@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "ui/layout_draw.h"
 #include "ui/layout_frame.h"
 #include "ui/layout_xml.h"
 
@@ -125,6 +126,45 @@ int main(int argc, char** argv) {
     near("Nickname.x", nickname->rect.x, 15.0f);
     near("Nickname.y", nickname->rect.y, 10.0f);
     check("父子帧均完成解算", nickname->rect.width > 0.0f);
+
+    /* 绘制命令: 帧树展开成矩形序列. */
+    std::vector<LayoutDrawCommand> commands;
+    const int32_t count = CollectDrawCommands(*box, commands);
+    std::printf("绘制命令 %d 条\n", count);
+    check("生成了绘制命令", count > 0);
+    /*
+     * 布局里大量帧只给几何, 贴图与文字由脚本在运行时设置,
+     * 因此能直接画出来的帧只占少数. 这个比例是判断"纯数据驱动能走多远"的依据.
+     */
+    std::printf("帧总数 %d, 可直接绘制 %d (%.1f%%)\n", document.FrameCount(), count,
+                document.FrameCount() > 0
+                    ? 100.0 * static_cast<double>(count) / static_cast<double>(document.FrameCount())
+                    : 0.0);
+    bool allSized = true;
+    bool allWithinRoot = true;
+    for (const LayoutDrawCommand& command : commands) {
+        if (command.rect.width <= 0.0f || command.rect.height <= 0.0f) {
+            allSized = false;
+        }
+        /* 子帧允许溢出父帧, 但整体必须落在屏幕矩形内. */
+        if (command.rect.x < -1.0f || command.rect.y < -1.0f ||
+            command.rect.x + command.rect.width > 1281.0f ||
+            command.rect.y + command.rect.height > 721.0f) {
+            allWithinRoot = false;
+        }
+    }
+    check("每条命令都有正尺寸", allSized);
+    check("命令整体落在屏幕内", allWithinRoot);
+
+    /* 有颜色的帧必须把颜色带进命令. */
+    int32_t colored = 0;
+    for (const LayoutDrawCommand& command : commands) {
+        if (command.red < 0.999f || command.green < 0.999f || command.blue < 0.999f) {
+            colored += 1;
+        }
+    }
+    std::printf("带非白颜色的命令 %d 条\n", colored);
+    check("颜色被解析进命令", colored > 0);
 
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;

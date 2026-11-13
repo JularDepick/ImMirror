@@ -37,6 +37,8 @@ public:
 private:
     /* 帧与名字都放在容器里, 保证节点地址与名字指针在整个文档生命周期内稳定. */
     std::deque<std::string> names_;
+    /* 贴图路径同样放在容器里, 保证帧里的指针长期有效. */
+    std::deque<std::string> textures_;
     std::vector<std::unique_ptr<LayoutFrame>> pool_;
     LayoutFrame* root_ = nullptr;
     std::string error_;

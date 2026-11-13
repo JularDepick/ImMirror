@@ -23,7 +23,33 @@ struct Attributes {
     std::string relativeTo;
     std::string x;
     std::string y;
+    std::string r;
+    std::string g;
+    std::string b;
+    std::string a;
+    std::string file;
+    std::string level;
 };
+
+/* 图层名转枚举; 未知名按 artwork 处理. */
+LayerLevel ParseLayerLevel(const std::string& level) {
+    if (level == "background") {
+        return LayerLevel::kBackground;
+    }
+    if (level == "border") {
+        return LayerLevel::kBorders;
+    }
+    if (level == "artwork") {
+        return LayerLevel::kArtwork;
+    }
+    if (level == "overlay") {
+        return LayerLevel::kOverlay;
+    }
+    if (level == "highlight") {
+        return LayerLevel::kHighlight;
+    }
+    return LayerLevel::kArtwork;
+}
 
 /* 结构性元素: 只承载几何与层级, 自身不是帧. */
 bool IsStructural(const std::string& tag) {
@@ -106,6 +132,18 @@ Attributes ParseAttributes(const std::string& body) {
             attributes.x = value;
         } else if (key == "y") {
             attributes.y = value;
+        } else if (key == "r") {
+            attributes.r = value;
+        } else if (key == "g") {
+            attributes.g = value;
+        } else if (key == "b") {
+            attributes.b = value;
+        } else if (key == "a") {
+            attributes.a = value;
+        } else if (key == "file") {
+            attributes.file = value;
+        } else if (key == "level") {
+            attributes.level = value;
         }
     }
     return attributes;
@@ -152,6 +190,7 @@ LayoutFrame* LayoutDocument::Find(const char* name) const {
 
 bool LayoutDocument::Parse(const char* text, size_t length) {
     names_.clear();
+    textures_.clear();
     pool_.clear();
     root_ = nullptr;
     error_.clear();
@@ -163,6 +202,7 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
     /* 帧栈与标签栈: 帧栈决定父子关系, 标签栈用来判断 AbsDimension 归属. */
     std::vector<LayoutFrame*> frameStack;
     std::vector<std::string> tagStack;
+    std::vector<LayerLevel> layerStack;
     std::vector<std::pair<LayoutFrame*, RawAnchor>> pending;
     std::string current;
     size_t index = 0;
@@ -203,6 +243,9 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
         if (!body.empty() && body[0] == '/') {
             /* 结束标签: 弹栈. */
             const std::string tag = body.substr(1);
+            if (tag == "Layer" && !layerStack.empty()) {
+                layerStack.pop_back();
+            }
             if (!tagStack.empty()) {
                 tagStack.pop_back();
             }
@@ -244,6 +287,16 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
                     frameStack.back()->width = ToFloat(attributes.x);
                     frameStack.back()->height = ToFloat(attributes.y);
                 }
+            } else if (tag == "Color" && !frameStack.empty()) {
+                /* 颜色取最近一帧; 分量按 0 到 255 给出, 转成 0 到 1. */
+                LayoutFrame* painted = frameStack.back();
+                painted->hasColor = true;
+                painted->red = ToFloat(attributes.r) / 255.0f;
+                painted->green = ToFloat(attributes.g) / 255.0f;
+                painted->blue = ToFloat(attributes.b) / 255.0f;
+                painted->alpha = attributes.a.empty() ? 1.0f : ToFloat(attributes.a) / 255.0f;
+            } else if (tag == "Layer") {
+                layerStack.push_back(ParseLayerLevel(attributes.level));
             }
             if (!selfClosing) {
                 tagStack.push_back(tag);
@@ -264,6 +317,12 @@ bool LayoutDocument::Parse(const char* text, size_t length) {
         pool_.push_back(std::unique_ptr<LayoutFrame>(new LayoutFrame()));
         LayoutFrame* frame = pool_.back().get();
         frame->name = names_.back().c_str();
+        /* 所在图层决定绘制顺序; 贴图路径来自元素自身的 file 属性. */
+        frame->layer = layerStack.empty() ? LayerLevel::kArtwork : layerStack.back();
+        if (!attributes.file.empty()) {
+            textures_.push_back(attributes.file);
+            frame->texture = textures_.back().c_str();
+        }
         if (frameStack.empty()) {
             if (root_ == nullptr) {
                 root_ = frame;

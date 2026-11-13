@@ -45,7 +45,19 @@ struct LayoutAnchor {
     float offsetY = 0.0f;
 };
 
-/* 一帧: 名字, 父帧, 子帧, 锚点与尺寸. rect 是求解结果. */
+/* 图层顺序: 数值小的先画, 与布局里 background / artwork / overlay 一致. */
+enum class LayerLevel : uint8_t {
+    kBackground = 0,
+    kBorders = 1,
+    kArtwork = 2,
+    kOverlay = 3,
+    kHighlight = 4,
+};
+
+/*
+ * 一帧: 名字, 父帧, 子帧, 锚点, 尺寸与外观.
+ * rect 是求解结果; 颜色与贴图来自布局元素本身, 绘制阶段按图层顺序展开.
+ */
 struct LayoutFrame {
     const char* name = "";
     LayoutFrame* parent = nullptr;
@@ -55,6 +67,15 @@ struct LayoutFrame {
     float width = 0.0f;
     float height = 0.0f;
     LayoutRect rect;
+    /* 外观: 未给颜色时按不透明白处理, 贴图为空表示只画纯色. */
+    bool hasColor = false;
+    float red = 1.0f;
+    float green = 1.0f;
+    float blue = 1.0f;
+    float alpha = 1.0f;
+    /* 贴图相对路径, 空表示无贴图. */
+    const char* texture = nullptr;
+    LayerLevel layer = LayerLevel::kArtwork;
 
     void AddChild(LayoutFrame* child) {
         child->parent = this;
