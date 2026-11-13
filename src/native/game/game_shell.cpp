@@ -505,6 +505,27 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         smeltBaseline_ = -1;
         IM_LOGI(kTag, "world loaded from save, chunks=%d", world_->LoadedChunkCount());
     } else {
+        /*
+         * 读档失败但存档文件确实存在: 文件已损坏或格式不认识.
+         * 直接开新世界会在下一次自动存档时把原档覆盖掉, 因此先把原档改名留底,
+         * 再让玩家知道发生了什么, 否则世界会悄无声息地消失.
+         */
+        if (!savePath_.empty()) {
+            FILE* existing = std::fopen(savePath_.c_str(), "rb");
+            if (existing != nullptr) {
+                std::fclose(existing);
+                const std::string backup = savePath_ + ".broken";
+                FILE* occupied = std::fopen(backup.c_str(), "rb");
+                if (occupied != nullptr) {
+                    std::fclose(occupied);
+                } else if (std::rename(savePath_.c_str(), backup.c_str()) == 0) {
+                    IM_LOGE(kTag, "save unreadable, kept a copy at %s", backup.c_str());
+                    ShowTip("SAVE UNREADABLE");
+                } else {
+                    IM_LOGE(kTag, "save unreadable and could not be backed up");
+                }
+            }
+        }
         /* 先让中心区块生成地形, 再按地表高度放置玩家, 否则出生点会落在虚空. */
         world_->Update(core::Vec3{8.0f, 0.0f, 8.0f}, viewDistanceChunks_,
                        static_cast<uint8_t>(treeShape_ < 0 ? 1 : treeShape_));

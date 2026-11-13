@@ -47,6 +47,21 @@ g++ -std=c++17 -I "$ROOT/native" \
 echo "== 全量控件加载"
 "$OUT_DIR/widget_tree_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 
+echo "== 存档容错"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/save_load_test.cpp" \
+    "$ROOT/native/world/world.cpp" \
+    "$ROOT/native/world/world_time.cpp" \
+    "$ROOT/native/world/weather.cpp" \
+    "$ROOT/native/voxel/block_registry.cpp" \
+    "$ROOT/native/voxel/chunk_column.cpp" \
+    "$ROOT/native/voxel/chunk_mesher.cpp" \
+    "$ROOT/native/voxel/light_field.cpp" \
+    "$ROOT/native/voxel/terrain_generator.cpp" \
+    "$ROOT/scripts/tests/log_stub.cpp" \
+    -o "$OUT_DIR/save_load_test.exe" || exit 1
+"$OUT_DIR/save_load_test.exe" || STATUS=1
+
 echo "== 角色皮肤"
 g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/scripts/tests/skin_data_test.cpp" \
