@@ -297,6 +297,31 @@ def settings_coverage():
     return (len(used), len(keys))
 
 
+def settings_accessors():
+    """设置访问器: 定义在设置类里, 且在其它原生模块被调用过的数量.
+
+    只看键名出现与否会误判: 代码里用的是访问器方法而不是键字符串.
+    """
+    header = os.path.join(NATIVE_ROOT, "settings", "settings.h")
+    if not os.path.isfile(header):
+        return 0, 1
+    body = read_text(header)
+    pattern = r"^\s+(?:bool|int32_t|float|double|const char\*|std::string|void)\s+(\w+)\s*\("
+    methods = re.findall(pattern, body, re.M)
+    methods = [name for name in methods if not name.startswith("Set")]
+    # 排除设置模块自身: 否则定义本身就当成"被调用", 读数恒为满分.
+    parts = []
+    for root, dirs, files in os.walk(NATIVE_ROOT):
+        dirs[:] = [d for d in dirs if d not in ("generated", "build", "temp", "third_party")]
+        for name in files:
+            if not name.endswith((".h", ".cpp")) or name.startswith("settings"):
+                continue
+            parts.append(read_text(os.path.join(root, name)))
+    blob = "\n".join(parts)
+    used = [name for name in methods if re.search(r"\b" + name + r"\s*\(", blob)]
+    return len(used), len(methods) if methods else 1
+
+
 def settings_wired():
     """设置项接线: 目录里标记为已生效的条目数, 与登记总数对比."""
     catalog = read_text(os.path.join(JAVA_ROOT, "com", "julardepick", "immirror", "settings",
@@ -454,6 +479,7 @@ def main():
         ('接线', '界面链路环节', *ui_chain_coverage(), '布局/锚点/控件/求值/宿主/绘制/顶点'),
         ('接线', '离线断言组', *assertion_group_count(), '每条自查都能独立输出结论'),
         ('接线', '界面字符串', *string_table_size(), '界面文案查表条目'),
+        ('接线', '设置访问器', *settings_accessors(), '设置类里的取值方法被其它模块调用'),
         ('接线', '设置项接线', *settings_wired(), '目录里标记为已生效的设置'),
         ('接线', '设置项落地', *settings_coverage(), '设置目录登记项能在原生侧查到引用'),
         ('接线', 'JNI 声明落地', *jni_coverage(), 'Java native 声明能找到 C++ 导出'),
