@@ -418,32 +418,20 @@ describe("房间通道", () => {
     await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
 
     const patched = expectOk<{ room: RoomSummary }>(
-      await app.request({
-        method: "PATCH",
-        url: `/api/v1/rooms/${room.id}`,
-        payload: { name: "改名后的房间", maxPlayers: 6 },
-        headers: { authorization: `Bearer ${owner.token}` },
-      }),
+      await app.post(`/api/v1/rooms/${room.id}/update`,
+        { name: "改名后的房间", maxPlayers: 6 }, owner.token),
     );
     expect(patched.room.name).toBe("改名后的房间");
     expect(patched.room.maxPlayers).toBe(6);
 
     /* 客人不能改. */
-    const denied = await app.request({
-      method: "PATCH",
-      url: `/api/v1/rooms/${room.id}`,
-      payload: { name: "客人改的" },
-      headers: { authorization: `Bearer ${guest.token}` },
-    });
+    const denied = await app.post(`/api/v1/rooms/${room.id}/update`,
+      { name: "客人改的" }, guest.token);
     expect(denied.status).toBe(403);
 
     /* 人数不得少于在线人数 (当前 2 人). */
-    const tooFew = await app.request({
-      method: "PATCH",
-      url: `/api/v1/rooms/${room.id}`,
-      payload: { maxPlayers: 2 - 1 },
-      headers: { authorization: `Bearer ${owner.token}` },
-    });
+    const tooFew = await app.post(`/api/v1/rooms/${room.id}/update`,
+      { maxPlayers: 2 - 1 }, owner.token);
     expect(tooFew.status).toBe(400);
   });
 

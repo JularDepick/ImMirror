@@ -519,7 +519,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
   });
 
   /** 改房间信息: 只有房主可以改房间名与人数上限, 人数不得少于当前在线人数. */
-  app.patch("/api/v1/rooms/:id", { preHandler: guard }, async (request) => {
+  app.post("/api/v1/rooms/:id/update", { preHandler: guard }, async (request) => {
     const auth = request.auth;
     if (!auth) {
       throw new AppError("AUTH_UNAUTHORIZED");
