@@ -90,6 +90,13 @@ public:
     Widget* HitTest(float x, float y);
 
     int32_t WidgetCount() const { return static_cast<int32_t>(widgets_.size()); }
+
+    /* 按下标取控件, 越界返回空; 供只读遍历使用. */
+    Widget* WidgetAt(int32_t index) {
+        return index < 0 || index >= static_cast<int32_t>(widgets_.size())
+                   ? nullptr
+                   : widgets_[static_cast<size_t>(index)].get();
+    }
     const std::string& Error() const { return document_.Error(); }
 
 private:

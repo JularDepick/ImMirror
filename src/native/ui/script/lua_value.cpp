@@ -143,14 +143,21 @@ void Scope::Define(const std::string& name, const Value& value) {
 }
 
 void Scope::Assign(const std::string& name, const Value& value) {
+    /*
+     * 先在作用域链里找已声明的变量; 都没找到时写到最外层 (全局).
+     * 写成"落到当前块"会让块内首次赋值的名字在块结束时消失,
+     * 与脚本语言里"未声明赋值即全局"的语义不符.
+     */
+    Scope* outermost = this;
     for (Scope* scope = this; scope != nullptr; scope = scope->parent_.get()) {
         const auto found = scope->values_.find(name);
         if (found != scope->values_.end()) {
             found->second = value;
             return;
         }
+        outermost = scope;
     }
-    values_[name] = value;
+    outermost->values_[name] = value;
 }
 
 }  /* namespace immirror::ui::script */
