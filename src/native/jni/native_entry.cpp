@@ -155,6 +155,36 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeChooseWorldSeed(JNIEnv* 
     }
 }
 
+/* Java 侧低频入口: 导出当前生物快照, 供房主上行到房间. */
+JNIEXPORT jstring JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeCreatureSnapshot(JNIEnv* env,
+                                                                           jclass clazz) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return env->NewStringUTF("[]");
+    }
+    return env->NewStringUTF(shell->TakeCreatureSnapshot().c_str());
+}
+
+/* Java 侧低频入口: 应用房主下发的远端生物快照. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeApplyRemoteCreatures(JNIEnv* env,
+                                                                          jclass clazz,
+                                                                          jstring json) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr || json == nullptr) {
+        return;
+    }
+    const char* chars = env->GetStringUTFChars(json, nullptr);
+    const std::string text = chars != nullptr ? chars : "[]";
+    if (chars != nullptr) {
+        env->ReleaseStringUTFChars(json, chars);
+    }
+    shell->ApplyRemoteCreatures(text);
+}
+
 /*
  * Java 侧低频入口: 查询当前是否为游戏内白天.
  * 环境音按日相切换曲目, 由 PlayActivity 的轮询周期顺带拉取;

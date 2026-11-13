@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "audio/audio_engine.h"
 #include "core/vec3.h"
@@ -18,6 +19,7 @@
 #include "ui/hud_renderer.h"
 #include "voxel/block_registry.h"
 #include "game/remote_player.h"
+#include "render/creature_visual.h"
 #include "voxel/voxel_types.h"
 
 struct AAssetManager;
@@ -154,8 +156,24 @@ public:
      * 单次最多 24 格, 半径 3 格, 避免挖开一片水域时整片灌满.
      */
     void SettleFluidAt(int32_t x, int32_t y, int32_t z);
+
+    /*
+     * 生物快照导出: 把当前活体整理成 JSON 数组, 字段为
+     * id, kind (定义索引), x, y, z, yaw, hp. 供房主上行给房间.
+     */
+    std::string TakeCreatureSnapshot() const;
+
+    /*
+     * 远端生物快照: 客人侧把房主下发的活体列表写入渲染队列,
+     * 下一帧与本地生物同一批提交; 空数组表示清空.
+     */
+    void ApplyRemoteCreatures(const std::string& json);
     /* 上一轮下发的远端玩家数, 用于只在数量变化时打日志. */
     int32_t lastRemoteCount_ = -1;
+    /* 远端生物渲染队列, 由房主下发的快照填充. */
+    std::vector<render::creature::CreatureView> remoteCreatures_;
+    /* 上一轮下发的远端生物数, 只在数量变化时打日志. */
+    int32_t lastRemoteCreatureCount_ = -1;
     int32_t SelectedSlot() const { return selectedSlot_; }
     void SelectSlotPublic(int32_t index) { SelectSlot(index); }
 

@@ -254,7 +254,7 @@ public final class RoomApi {
      */
     public void sync(final Session session, final String roomId, final float x, final float y,
                      final float z, final float yaw, final float pitch, final String localEditsJson,
-                     final long sinceSeq, final StateCallback callback) {
+                     final String creaturesJson, final long sinceSeq, final StateCallback callback) {
         if (!usable(session) || roomId == null || roomId.isEmpty()) {
             callback.onFailure(new ApiException("AUTH_UNAUTHORIZED", "no session"));
             return;
@@ -271,6 +271,10 @@ public final class RoomApi {
                 final String edits = localEditsJson == null || localEditsJson.isEmpty()
                         ? "[]" : localEditsJson;
                 body.put("edits", new JSONArray(edits));
+                /* 只有房主会上报生物快照, 客人传空数组, 服务端按拒绝计数. */
+                if (creaturesJson != null && creaturesJson.length() > 2) {
+                    body.put("creatures", new JSONArray(creaturesJson));
+                }
                 final JSONObject data = request("POST", "/rooms/" + roomId + "/state", session, body);
                 final State state = new State(data.optLong("seq", 0L),
                         data.optInt("rejectedEdits", 0),

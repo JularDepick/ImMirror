@@ -86,6 +86,8 @@ public final class PlayActivity extends NativeActivity {
     public static final String EXTRA_ROOM_ID = "room_id";
     public static final String EXTRA_ROOM_CODE = "room_code";
     public static final String EXTRA_ROOM_SEED = "room_seed";
+    /* 本端是否为房主: 房主上行生物快照, 客人下行应用. */
+    public static final String EXTRA_ROOM_OWNER = "room_owner";
 
     /* 成就统计的上报周期. */
     private static final long PROGRESS_REPORT_INTERVAL_MS = 30000L;
@@ -101,6 +103,8 @@ public final class PlayActivity extends NativeActivity {
     private long roomSeq;
     /* 已应用的生物快照版本号, 与位置通道的序号分开记. */
     private long roomCreatureSeq = -1L;
+    /* 本端是否房主: 房主上行生物快照, 客人应用房主下发的快照. */
+    private boolean roomOwner;
     private AmbientAudioManager ambientManager;
     private Handler presenceHandler;
     private Runnable presenceRunnable;
@@ -129,6 +133,7 @@ public final class PlayActivity extends NativeActivity {
              */
             roomId = roomExtraId;
             roomCode = getIntent().getStringExtra(EXTRA_ROOM_CODE);
+            roomOwner = getIntent().getBooleanExtra(EXTRA_ROOM_OWNER, false);
             final String roomWorld = "room_" + (roomCode == null || roomCode.isEmpty()
                     ? roomExtraId : roomCode);
             NativeBridge.chooseWorldWithSeed(roomWorld, getIntent().getIntExtra(EXTRA_ROOM_SEED, 0));
@@ -320,7 +325,9 @@ public final class PlayActivity extends NativeActivity {
                 Log.w(TAG, "room pose parse failed: " + error);
             }
         }
-        roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, roomSeq,
+        /* 房主每轮导出本地生物, 客人传空数组只拉取. */
+        final String creatures = roomOwner ? NativeBridge.takeCreatureSnapshot() : "[]";
+        roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, creatures, roomSeq,
                 new RoomApi.StateCallback() {
                     @Override
                     public void onSuccess(RoomApi.State state) {
@@ -344,7 +351,10 @@ public final class PlayActivity extends NativeActivity {
                         if (state.rejectedCreatures > 0) {
                             Log.w(TAG, "room rejected local creatures=" + state.rejectedCreatures);
                         }
-                        /* 生物快照版本号变化时打一条, 供后续接入远端生物绘制时核对. */
+                        /* 客人应用房主下发的生物快照; 版本号变化时打一条便于核对. */
+                        if (!roomOwner) {
+                            NativeBridge.applyRemoteCreatures(state.creaturesJson);
+                        }
                         if (state.creatureSeq != roomCreatureSeq) {
                             roomCreatureSeq = state.creatureSeq;
                             Log.i(TAG, "room creatures seq=" + state.creatureSeq + " count="

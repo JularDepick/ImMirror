@@ -187,6 +187,22 @@ public final class NativeBridge {
         nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
     }
 
+    /* 生物快照导出: 房主侧每轮上报前调用, 返回 JSON 数组文本. */
+    public static String takeCreatureSnapshot() {
+        if (!ensureLoaded()) {
+            return "[]";
+        }
+        return nativeTakeCreatureSnapshot();
+    }
+
+    /* 远端生物快照: 客人侧收到房主下发的列表后调用. */
+    public static void applyRemoteCreatures(String json) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeApplyRemoteCreatures(json == null ? "[]" : json);
+    }
+
     /* 查询游戏内是否为白天, 供环境音按日相切换曲目. */
     public static boolean getDayPhase() {
         if (!ensureLoaded()) {
@@ -267,6 +283,10 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native String nativeTakeCreatureSnapshot();
+
+    private static native void nativeApplyRemoteCreatures(String json);
 
     private static native boolean nativeGetDayPhase();
 

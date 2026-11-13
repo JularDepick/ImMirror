@@ -302,6 +302,9 @@ public final class MultiplayerLobbyActivity extends Activity {
         intent.putExtra(PlayActivity.EXTRA_ROOM_ID, room.id);
         intent.putExtra(PlayActivity.EXTRA_ROOM_CODE, room.code);
         intent.putExtra(PlayActivity.EXTRA_ROOM_SEED, (int) room.seed);
+        /* 房主身份决定进局后是上行生物快照还是应用对方下发的快照. */
+        intent.putExtra(PlayActivity.EXTRA_ROOM_OWNER,
+                session != null && session.uid() != null && session.uid().equals(room.ownerUid));
         startActivity(intent);
         finish();
     }

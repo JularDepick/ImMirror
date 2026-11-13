@@ -992,6 +992,83 @@ void GameShell::ApplyRemoteBlockEdits(const std::string& json) {
     }
 }
 
+/*
+ * 生物快照导出.
+ * 只导出活体: 已被标记移除的不再上报. 字段与房间通道的 creatures 约定一致,
+ * kind 取生物表定义索引, 客人侧据此还原同一套体素形象.
+ */
+std::string GameShell::TakeCreatureSnapshot() const {
+    std::string out = "[";
+    bool first = true;
+    const entity::MonsterTable& table = entity::MonsterTable::Instance();
+    for (const auto& creature : entities_.Creatures()) {
+        if (creature == nullptr || creature->Removed()) {
+            continue;
+        }
+        const core::Vec3 pos = creature->Position();
+        char buffer[192];
+        std::snprintf(buffer, sizeof(buffer),
+                      "%s{\"id\":%u,\"kind\":%d,\"x\":%.2f,\"y\":%.2f,\"z\":%.2f,"
+                      "\"yaw\":%.3f,\"hp\":%.1f}",
+                      first ? "" : ",", static_cast<unsigned>(creature->Id()),
+                      table.IndexOfSourceId(creature->Definition().sourceId),
+                      static_cast<double>(pos.x), static_cast<double>(pos.y),
+                      static_cast<double>(pos.z), static_cast<double>(creature->Yaw()),
+                      static_cast<double>(creature->Health()));
+        out += buffer;
+        first = false;
+    }
+    out += "]";
+    return out;
+}
+
+/*
+ * 远端生物快照.
+ * 手写扫描与远端玩家同一套做法: 逐个对象取字段, 字段缺失按零处理;
+ * 解析失败时清空队列, 避免残留上一轮的形象. 死亡与受击不做插值,
+ * 由下发的 hp 比例折算一点提亮, 让客人能看出对方在打哪只.
+ */
+void GameShell::ApplyRemoteCreatures(const std::string& json) {
+    remoteCreatures_.clear();
+    const size_t begin = json.find('[');
+    if (begin == std::string::npos) {
+        return;
+    }
+    size_t cursor = begin + 1;
+    while (remoteCreatures_.size() < 64) {
+        const size_t open = json.find('{', cursor);
+        if (open == std::string::npos) {
+            break;
+        }
+        const size_t close = json.find('}', open);
+        if (close == std::string::npos) {
+            break;
+        }
+        const std::string obj = json.substr(open, close - open + 1);
+        cursor = close + 1;
+        const auto readNumber = [&obj](const char* key, float fallback) -> float {
+            const size_t pos = obj.find(key);
+            if (pos == std::string::npos) {
+                return fallback;
+            }
+            return std::strtof(obj.c_str() + pos + std::strlen(key), nullptr);
+        };
+        render::creature::CreatureView view;
+        view.x = readNumber("\"x\":", 0.0f);
+        view.y = readNumber("\"y\":", 0.0f);
+        view.z = readNumber("\"z\":", 0.0f);
+        view.yaw = readNumber("\"yaw\":", 0.0f);
+        view.defIndex = static_cast<int32_t>(readNumber("\"kind\":", 0.0f));
+        view.hurt = 0.0f;
+        view.death = 0.0f;
+        remoteCreatures_.push_back(view);
+    }
+    if (static_cast<int32_t>(remoteCreatures_.size()) != lastRemoteCreatureCount_) {
+        lastRemoteCreatureCount_ = static_cast<int32_t>(remoteCreatures_.size());
+        IM_LOGI(kTag, "remote creatures applied=%d", lastRemoteCreatureCount_);
+    }
+}
+
 void GameShell::ApplyRemotePlayers(const std::string& json) {
     /* 简化解析: 手写扫描 JSON 数组, 最多 256 个快照. */
     std::string uids[net::RemotePlayerManager::kMaxPlayers];
@@ -2184,6 +2261,12 @@ void GameShell::RenderScene() {
             views.push_back(view);
         }
         render::creature::Draw(views.data(), static_cast<int32_t>(views.size()), viewProjection);
+    }
+
+    /* 远端生物: 与本地生物同一批提交, 位置与朝向来自房主快照. */
+    if (!remoteCreatures_.empty() && render::creature::Initialize()) {
+        render::creature::Draw(remoteCreatures_.data(),
+                               static_cast<int32_t>(remoteCreatures_.size()), viewProjection);
     }
 
     if (remotePlayers_.Count() > 0) {
