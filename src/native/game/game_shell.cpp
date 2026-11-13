@@ -449,7 +449,7 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         player_->SetPose(core::Vec3{state.playerX, state.playerY, state.playerZ}, state.yaw, state.pitch);
         /* 容器文件与世界存档配套: 旧世界档没有容器文件时按空容器处理. */
         if (!containerPath_.empty()) {
-            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_);
+            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_, inventory_);
         }
         /* 世界时间: v3 早期档没有时间字段, 读出 0 按 0 点处理, 新档带时间. */
         worldTime_->SetTotalSeconds(state.timeOfDaySeconds);
@@ -564,7 +564,8 @@ void GameShell::SaveWorld() {
     /* 容器状态存独立文件: 世界存档格式归 world 模块, 本期不改动它的版本号. */
     bool containersSaved = false;
     if (!containerPath_.empty()) {
-        containersSaved = SaveContainersToFile(containerPath_.c_str(), furnaces_, chests_);
+        containersSaved =
+        SaveContainersToFile(containerPath_.c_str(), furnaces_, chests_, inventory_);
     }
     IM_LOGI(kTag, "world save %s, containers %s, path=%s", saved ? "ok" : "failed",
             containersSaved ? "ok" : "skipped", savePath_.c_str());
@@ -885,7 +886,7 @@ bool GameShell::SelectWorld(const std::string& name, uint32_t seed) {
         player_->SetPose(core::Vec3{state.playerX, state.playerY, state.playerZ}, state.yaw,
                          state.pitch);
         if (!containerPath_.empty()) {
-            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_);
+            LoadContainersFromFile(containerPath_.c_str(), furnaces_, chests_, inventory_);
         }
         worldTime_->SetTotalSeconds(state.timeOfDaySeconds);
         /* 换世界读档后基线同样重采样. */

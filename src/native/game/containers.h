@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "game/furnace.h"
+#include "game/inventory.h"
 #include "game/item/item_def.h"
 
 namespace immirror::game {
@@ -40,7 +41,14 @@ using ChestMap = std::unordered_map<uint64_t, ChestState>;
  * 与世界存档配套读写, 文件缺失或版本不符时按空容器处理, 向后兼容.
  * 返回 false 表示文件存在但无法解析, 调用方记日志即可, 不阻断进世界.
  */
-bool SaveContainersToFile(const char* path, const FurnaceMap& furnaces, const ChestMap& chests);
-bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& chests);
+bool SaveContainersToFile(const char* path, const FurnaceMap& furnaces, const ChestMap& chests,
+                          const Inventory& inventory);
+
+/*
+ * 读回容器与物品栏. 早期版本的文件没有物品栏节, 此时物品栏保持调用方给的初值,
+ * 不视为错误. 返回 false 表示文件存在但无法解析.
+ */
+bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& chests,
+                            Inventory& inventory);
 
 }  /* namespace immirror::game */

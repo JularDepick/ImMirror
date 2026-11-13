@@ -9,11 +9,23 @@ namespace {
 /*
  * 容器存档格式: 魔数与版本头, 熔炉节, 箱子节, 全部小端.
  * 版本 2: 首个容器版本, 箱子 27 格.
- * 版本 3: 箱子按storagebox.lua 扩到 60 格; 读 v2 时按 27 格还原旧档数据.
+ * 版本 3: 箱子扩到 60 格; 读 v2 时按 27 格还原旧档数据.
+ * 版本 4: 末尾追加物品栏节 (45 格), 每格多记耐久与附魔; 读 v2 与 v3 时不读该节,
+ * 物品栏保持初始状态, 旧档照样能进世界.
  */
 constexpr char kContainerMagic[4] = {'I', 'M', 'C', 'F'};
-constexpr uint32_t kContainerVersion = 3;
+constexpr uint32_t kContainerVersion = 4;
 constexpr uint32_t kLegacyChestSlots = 27;
+
+/* 物品栏单格的落盘形式: 数量之外还要记耐久与附魔, 否则读档会丢工具状态. */
+struct InventoryRecord {
+    uint16_t item;
+    int32_t count;
+    int16_t durability;
+    uint16_t enchantId;
+    uint8_t enchantLevel;
+    uint8_t reserved;
+};
 
 /* 单格堆叠的落盘形式: 物品 id 与数量. */
 struct StackRecord {
@@ -57,7 +69,41 @@ int32_t ChestState::ClampIndex(int32_t index) {
     return index >= kSlots ? kSlots - 1 : index;
 }
 
-bool SaveContainersToFile(const char* path, const FurnaceMap& furnaces, const ChestMap& chests) {
+namespace {
+
+/*
+ * 物品栏单格读写. 空格写成全 0, 读出时按空处理, 与箱子堆叠同一口径.
+ */
+bool WriteInventoryStack(FILE* file, const ItemStack& stack) {
+    InventoryRecord record{stack.item, stack.count, stack.durability, stack.enchantId,
+                           stack.enchantLevel, 0};
+    if (stack.Empty()) {
+        record = InventoryRecord{0, 0, -1, 0, 0, 0};
+    }
+    return std::fwrite(&record, sizeof(record), 1, file) == 1;
+}
+
+bool ReadInventoryStack(FILE* file, ItemStack& stack) {
+    InventoryRecord record{};
+    if (std::fread(&record, sizeof(record), 1, file) != 1) {
+        return false;
+    }
+    stack.Clear();
+    if (record.item == 0 || record.count <= 0) {
+        return true;
+    }
+    stack.item = record.item;
+    stack.count = record.count;
+    stack.durability = record.durability;
+    stack.enchantId = record.enchantId;
+    stack.enchantLevel = record.enchantLevel;
+    return true;
+}
+
+}  /* namespace */
+
+bool SaveContainersToFile(const char* path, const FurnaceMap& furnaces, const ChestMap& chests,
+                          const Inventory& inventory) {
     if (path == nullptr) {
         return false;
     }
@@ -109,11 +155,20 @@ bool SaveContainersToFile(const char* path, const FurnaceMap& furnaces, const Ch
         }
     }
 
+    /* 物品栏节: 固定 45 格, 逐格写物品 id, 数量, 耐久与附魔. */
+    for (int32_t index = 0; index < Inventory::kSlotCount; ++index) {
+        if (!WriteInventoryStack(file, inventory.Slot(index))) {
+            std::fclose(file);
+            return false;
+        }
+    }
+
     std::fclose(file);
     return true;
 }
 
-bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& chests) {
+bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& chests,
+                           Inventory& inventory) {
     if (path == nullptr) {
         return false;
     }
@@ -132,7 +187,7 @@ bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& ch
         return false;
     }
     if (std::fread(&version, sizeof(version), 1, file) != 1 ||
-        (version != 2 && version != kContainerVersion)) {
+        (version < 2 || version > kContainerVersion)) {
         /* 未知版本按空容器处理, 保持向后兼容, 不阻断进世界. */
         std::fclose(file);
         return true;
@@ -175,6 +230,21 @@ bool LoadContainersFromFile(const char* path, FurnaceMap& furnaces, ChestMap& ch
             }
         }
         chests.emplace(key, chest);
+    }
+
+    /*
+     * 物品栏节只在版本 4 起存在; 更早的文件读到这里已经到末尾,
+     * 此时保留调用方的物品栏初值, 不算错误.
+     */
+    if (version >= 4) {
+        for (int32_t index = 0; index < Inventory::kSlotCount; ++index) {
+            ItemStack stack;
+            if (!ReadInventoryStack(file, stack)) {
+                std::fclose(file);
+                return false;
+            }
+            inventory.SetSlot(index, stack);
+        }
     }
 
     std::fclose(file);
