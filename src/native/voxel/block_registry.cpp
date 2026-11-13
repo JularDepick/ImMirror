@@ -285,6 +285,7 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.hardness = entry.hardness;
         info.tool = ToolOf(entry.tool);
         info.material = MaterialOf(entry.material);
+        info.toolLevel = entry.toolLevel;
         filled[index] = true;
     }
     return info;

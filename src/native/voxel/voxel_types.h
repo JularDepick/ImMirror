@@ -132,6 +132,11 @@ struct BlockInfo {
     uint8_t coverMode = 1;
     /* 渲染形状只影响网格几何, 放在末尾以免打乱既有字段的初始化顺序. */
     BlockShape shape = BlockShape::kCube;
+    /*
+     * 采集所需工具等级, 0 表示不限. 手持工具等级低于该值时采不到掉落物,
+     * 挖掘速度也按等级不足折算. 兼容段保持 0, 兼容段的字段属存档兼容面.
+     */
+    uint8_t toolLevel = 0;
 };
 
 }  /* namespace immirror::voxel */

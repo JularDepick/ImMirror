@@ -587,6 +587,7 @@ def render_header(entries, legacy_rows, segments):
         "    float hardness;          /* 硬度, -1 表示不可破坏 */",
         "    uint8_t tool;            /* 采集工具, 与 voxel::HarvestTool 对齐 */",
         "    uint8_t material;        /* 采集材质族, 与 voxel::HarvestMaterial 对齐 */",
+        "    uint8_t toolLevel;       /* 采集所需工具等级, 0 表示不限 */",
         "    const char* digSound;    /* 挖掘音名, 空串表示没有 */",
         "    const char* placeSound;  /* 放置音名, 空串表示没有 */",
         "    const char* walkSound;   /* 行走音名, 空串表示没有 */",
@@ -599,12 +600,12 @@ def render_header(entries, legacy_rows, segments):
         "constexpr RegistryEntry kRegistryEntries[kRegistryEntryCount] = {",
     ]
     for entry in entries:
-        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, "%s", "%s", "%s", "%s", %du},'
+        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, %du, "%s", "%s", "%s", "%s", %du},'
                      % (entry["client_id"], escape(entry["key"]),
                         "true" if entry["solid"] else "false",
                         "true" if entry["opaque"] else "false",
                         format_float(entry["hardness"]), entry["tool"],
-                        entry["material"], escape(entry["dig_sound"]),
+                        entry["material"], entry["tool_level"], escape(entry["dig_sound"]),
                         escape(entry["place_sound"]), escape(entry["walk_sound"]),
                         escape(entry["texture"]),
                         SHAPE_INDEX.get(entry["shape"], 0)))

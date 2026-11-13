@@ -1487,7 +1487,9 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
  *
  * 规则: 空手为 1.0; 工具族与方块要求的采集工具族一致时按工具效率折算
  * (效率 50 表示比徒手快一倍); 族不一致按三分之一速度, 比徒手还慢,
- * 让玩家有动力换对应工具. 工具等级当前不参与折算: 方块表未把等级带进运行时.
+ * 让玩家有动力换对应工具.
+ * 工具等级低于方块要求时再乘十分之一: 硬采得下来, 但慢到不划算,
+ * 同时掉落会被 CollectDrop 拦下, 等价于原版的"需要更高级工具".
  */
 float GameShell::MiningSpeedAgainst(voxel::BlockId block) const {
     const item::ItemId held = inventory_.ItemAt(selectedSlot_);
@@ -1506,6 +1508,15 @@ float GameShell::MiningSpeedAgainst(voxel::BlockId block) const {
     float speed = static_cast<float>(tool.efficiency) / 100.0f;
     if (!familyMatches) {
         speed *= 0.33f;
+    }
+    /*
+     * 等级不足: 只降速, 掉落由 CollectDrop 按同一规则拦下.
+     * 只有要求工具族的方块才看等级: 徒手可采的方块 (花草, 羊毛一类)
+     * 数据表里也带等级列, 但那一列对手采没有意义.
+     */
+    const int32_t requiredLevel = static_cast<int32_t>(info.toolLevel);
+    if (required > 0 && requiredLevel > 0 && static_cast<int32_t>(tool.level) < requiredLevel) {
+        speed *= 0.1f;
     }
     return speed > 0.05f ? speed : 0.05f;
 }
@@ -1540,10 +1551,18 @@ bool GameShell::BeginEditMining() {
      * 起手日志记录硬度与所需秒数, 同一行里的 need 就是 kSecondsPerHardness 的换算结果,
      * 实测时与完成日志的 elapsed 对照即可确认进度确实按硬度累计.
      */
-    IM_LOGI(kTag, "mine begin block=%s hardness=%.2f material=%d need=%.2fs dig=%d", info.name,
-            static_cast<double>(info.hardness), static_cast<int32_t>(info.material),
+    item::ItemTable::ToolInfo heldTool;
+    const item::ItemId heldId = inventory_.ItemAt(selectedSlot_);
+    const bool hasHeldTool =
+        heldId != item::kNone && item::ItemTable::Instance().ToolOf(heldId, heldTool);
+    /* 等级两列一并打出来: 等级不足时速度按十分之一折算, 掉落也会被拦下. */
+    IM_LOGI(kTag,
+            "mine begin block=%s hardness=%.2f material=%d need=%.2fs dig=%d needLevel=%u heldLevel=%d",
+            info.name, static_cast<double>(info.hardness), static_cast<int32_t>(info.material),
             static_cast<double>(player_->MiningDuration()),
-            static_cast<int32_t>(DigSoundOf(info.material)));
+            static_cast<int32_t>(DigSoundOf(info.material)),
+            static_cast<unsigned>(info.toolLevel),
+            hasHeldTool ? static_cast<int32_t>(heldTool.level) : 0);
     return true;
 }
 
@@ -1688,6 +1707,23 @@ void GameShell::CollectCreatureDrops() {
 }
 
 void GameShell::CollectDrop(voxel::BlockId brokenBlock) {
+    /*
+     * 工具等级门槛: 等级不足时采下来也不掉落, 与挖掘速度的等级折算同一口径.
+     * 判定只读方块表与手持工具, 不影响破坏本身与进度统计.
+     */
+    const voxel::BlockInfo& broken = voxel::BlockRegistry::Instance().Info(brokenBlock);
+    /* 徒手可采的方块不受等级列约束, 只对要求工具族的方块判等级. */
+    if (broken.tool != voxel::HarvestTool::kHand && broken.toolLevel > 0) {
+        item::ItemTable::ToolInfo held;
+        const item::ItemId heldId = inventory_.ItemAt(selectedSlot_);
+        const bool hasTool = heldId != item::kNone && item::ItemTable::Instance().ToolOf(heldId, held);
+        if (!hasTool || held.level < broken.toolLevel) {
+            IM_LOGI(kTag, "drop blocked, need tool level %u block=%s held=%d",
+                    static_cast<unsigned>(broken.toolLevel), broken.name,
+                    static_cast<int32_t>(heldId));
+            return;
+        }
+    }
     /* 方块掉落规则在物品表里统一折算: 方块 -> 掉落方块 -> 掉落物品, 只此一份. */
     const item::ItemTable& items = item::ItemTable::Instance();
     const item::ItemId dropItem = items.DropOfBlock(brokenBlock);
