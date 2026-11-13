@@ -550,6 +550,30 @@ describe("房间通道", () => {
     expect(changed.contentSeq).toBeGreaterThan(first.contentSeq);
   });
 
+  it("房主离开后身份移交给在线成员, 状态里能看到新的房主标记", async () => {
+    const owner = await registerCasePlayer("handover", 1);
+    const guest = await registerCasePlayer("handover", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    /* 移交前: 房主看到自己是房主, 客人看到自己不是. */
+    const before = expectOk<{ owner: boolean }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, owner.token),
+    );
+    expect(before.owner).toBe(true);
+    const guestBefore = expectOk<{ owner: boolean }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(guestBefore.owner).toBe(false);
+
+    /* 房主离房后, 客人成为房主. */
+    await app.post(`/api/v1/rooms/${room.id}/leave`, undefined, owner.token);
+    const guestAfter = expectOk<{ owner: boolean }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(guestAfter.owner).toBe(true);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);

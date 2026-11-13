@@ -890,6 +890,8 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     return ok({
       seq: room.nextSeq - 1,
       players: othersOf(room, auth.user.id),
+      /* 请求者当前是否房主: 房主移交后客人需要据此切换上报身份. */
+      owner: room.ownerUserId === auth.user.id,
       edits: editsSince(room, since > 0 ? since : 0),
       contentSeq: room.contentSeq,
       contentChanged,
@@ -938,6 +940,8 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     return ok({
       seq: room.nextSeq - 1,
       players: othersOf(room, auth.user.id),
+      /* 请求者当前是否房主: 房主移交后客人需要据此切换上报身份. */
+      owner: room.ownerUserId === auth.user.id,
       edits: editsSince(room, base),
       contentSeq: room.contentSeq,
       contentChanged,
