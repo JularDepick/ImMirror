@@ -238,6 +238,13 @@ public:
     /* 掉落概率用的轻量伪随机状态, 与其它模块同一套 xorshift. */
     uint32_t dropRandom_ = 0x9e3779b9u;
 
+    /*
+     * 进度中心的逐帧驱动: 在线时长与行走距离在 Tick 里累计,
+     * 缺最后一次位置时只推进时间, 不做位移累计, 避免瞬移被算成走路.
+     */
+    core::Vec3 lastProgressPos_;
+    bool hasProgressPos_ = false;
+
     /* 战斗框目标: 最近攻击过的生物标识与显示截止时刻. */
     entity::EntityId battleTargetId_ = 0;
     double battleTargetUntil_ = 0.0;

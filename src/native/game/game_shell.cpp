@@ -1997,6 +1997,23 @@ void GameShell::UpdateEntities(double deltaSeconds) {
      * 环境伤害与生物伤害同一帧结算: 岩浆每秒 4 点, 头部入水超过 15 秒后
      * 每秒 2 点. 判定取脚下方块与头部方块, 与水下滤镜同一取块方式.
      */
+    /*
+     * 进度中心逐帧驱动: 在线时长与行走距离都在这里累计, 跨日处理与
+     * 低频落盘也由它负责. 缺上一次位置时只推进时间, 不把首帧位移算成走路.
+     */
+    {
+        const core::Vec3 now = player_->Position();
+        double distance = 0.0;
+        if (hasProgressPos_) {
+            const double dx = static_cast<double>(now.x) - static_cast<double>(lastProgressPos_.x);
+            const double dz = static_cast<double>(now.z) - static_cast<double>(lastProgressPos_.z);
+            distance = std::sqrt(dx * dx + dz * dz);
+        }
+        lastProgressPos_ = now;
+        hasProgressPos_ = true;
+        progress::ProgressHub::Instance().Tick(deltaSeconds, static_cast<float>(distance));
+    }
+
     UpdateEnvironmentDamage(deltaSeconds);
     if (stats.playerDamage > 0.0f) {
         player_->ApplyDamage(stats.playerDamage);
@@ -2458,6 +2475,9 @@ void GameShell::UpdateDrops(double deltaSeconds) {
         if (near && inventory_.RoomFor(drop.item) > 0) {
             const int32_t added = inventory_.Add(drop.item, drop.count);
             if (added > 0) {
+                /* 本地进度: 拾取推进采集类成就与当日任务. */
+                progress::ProgressHub::Instance().OnItemPicked(
+                    static_cast<uint32_t>(item::ItemTable::Instance().BlockOf(drop.item)), added);
                 render::particle::RemoveDrop(drop.id);
                 /* 拾取音: 事件编码 5, 由 Java 侧取走后播放. */
                 uiEvents_.push_back(5);
@@ -2544,6 +2564,8 @@ void GameShell::CollectDrop(voxel::BlockId brokenBlock, const voxel::BlockPos& p
         }
     }
     CountProgressEvent(1);
+    /* 本地进度: 破坏方块推进对应成就与当日任务. */
+    progress::ProgressHub::Instance().OnBlockBroken(brokenBlock);
     /*
      * 掉落物落到破坏点上方一点点, 带一点水平初速, 走近再拾取.
      * 计数与进度在破坏时已结算, 拾取只负责把物品放进物品栏.
@@ -2693,6 +2715,8 @@ bool GameShell::TryPlaceSelectedBlock() {
     }
     inventory_.Consume(selectedSlot_, 1);
     CountProgressEvent(2);
+    /* 本地进度: 放置方块推进对应成就与当日任务. */
+    progress::ProgressHub::Instance().OnBlockPlaced(block);
     {
         const voxel::BlockPos placed = player_->LastPlacedPos();
         SettleGravityAt(placed.x, placed.y, placed.z);
