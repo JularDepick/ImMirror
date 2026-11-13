@@ -155,7 +155,76 @@ const crafting::RecipeInfo* InventoryScreen::CurrentRecipe() {
     return candidates_.At(candidateIndex_);
 }
 
+/*
+ * 修复.
+ * 原版的修复是把两件同名工具合成一件, 耐久相加. 这里把它做成合成动作的
+ * 一个前置分支: 网格里恰好两格、同一种物品、都带耐久时直接合并,
+ * 其余情况交回配方匹配. 成品放进物品栏第一个空槽, 没有空槽则拒绝.
+ */
+bool InventoryScreen::TryRepair(Inventory& inventory) {
+    int32_t first = -1;
+    int32_t second = -1;
+    for (int32_t index = 0; index < crafting::kGridSlotCount; ++index) {
+        if (grid_.Slot(index).Empty()) {
+            continue;
+        }
+        if (first < 0) {
+            first = index;
+            continue;
+        }
+        if (second < 0) {
+            second = index;
+            continue;
+        }
+        /* 三件及以上不按修复处理. */
+        return false;
+    }
+    if (first < 0 || second < 0) {
+        return false;
+    }
+    const ItemStack left = grid_.Slot(first);
+    const ItemStack right = grid_.Slot(second);
+    if (left.item != right.item || left.durability < 0 || right.durability < 0) {
+        return false;
+    }
+    item::ItemTable::ToolInfo tool;
+    if (!item::ItemTable::Instance().ToolOf(left.item, tool) || tool.durability == 0) {
+        return false;
+    }
+    int32_t target = -1;
+    for (int32_t slot = 0; slot < Inventory::kSlotCount; ++slot) {
+        if (inventory.Empty(slot)) {
+            target = slot;
+            break;
+        }
+    }
+    if (target < 0) {
+        IM_LOGW(kTag, "repair rejected, bag full item=%u", static_cast<uint32_t>(left.item));
+        return false;
+    }
+    /* 耐久相加并封顶到满耐久; 两件都满耐久时合并后仍是满耐久. */
+    int32_t merged = static_cast<int32_t>(left.durability) + static_cast<int32_t>(right.durability);
+    if (merged > static_cast<int32_t>(tool.durability)) {
+        merged = static_cast<int32_t>(tool.durability);
+    }
+    ItemStack result;
+    result.item = left.item;
+    result.count = 1;
+    result.durability = static_cast<int16_t>(merged);
+    inventory.SetSlot(target, result);
+    grid_.SetSlot(first, ItemStack{});
+    grid_.SetSlot(second, ItemStack{});
+    IM_LOGI(kTag, "repair ok item=%u durability=%d slot=%d", static_cast<uint32_t>(left.item), merged,
+            target);
+    gridDirty_ = true;
+    return true;
+}
+
 bool InventoryScreen::CraftOnce(Inventory& inventory) {
+    /* 修复优先于配方匹配: 两件同种工具在网格里没有对应配方. */
+    if (TryRepair(inventory)) {
+        return true;
+    }
     const crafting::RecipeInfo* recipe = CurrentRecipe();
     if (recipe == nullptr) {
         return false;
@@ -230,14 +299,31 @@ bool InventoryScreen::FillNextCraftable(Inventory& inventory) {
 }
 
 void InventoryScreen::ReturnAllToInventory(Inventory& inventory) {
-    for (int32_t index = 0; index < crafting::kGridSlotCount; ++index) {
-        ItemStack stack = grid_.Take(index);
-        if (!stack.Empty()) {
-            inventory.Add(stack.item, stack.count);
+    /*
+     * 带耐久的工具不能走数量合并: Add 只按物品 id 入包, 会把耐久重置成满值,
+     * 等于凭空修好一件工具. 这类堆叠直接占一个空槽, 原样放回.
+     */
+    const auto returnStack = [&inventory](const ItemStack& stack) {
+        if (stack.Empty()) {
+            return;
         }
+        if (stack.durability < 0) {
+            inventory.Add(stack.item, stack.count);
+            return;
+        }
+        for (int32_t slot = 0; slot < Inventory::kSlotCount; ++slot) {
+            if (inventory.Empty(slot)) {
+                inventory.SetSlot(slot, stack);
+                return;
+            }
+        }
+        IM_LOGW(kTag, "return rejected, bag full item=%u", static_cast<uint32_t>(stack.item));
+    };
+    for (int32_t index = 0; index < crafting::kGridSlotCount; ++index) {
+        returnStack(grid_.Take(index));
     }
     if (!carry_.Empty()) {
-        inventory.Add(carry_.item, carry_.count);
+        returnStack(carry_);
         carry_.Clear();
     }
     gridDirty_ = true;

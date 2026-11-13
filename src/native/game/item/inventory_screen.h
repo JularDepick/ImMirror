@@ -66,6 +66,12 @@ public:
     }
 
 private:
+    /*
+     * 修复: 网格里恰好两件同种带耐久的工具时合并成一件, 耐久相加并封顶.
+     * 命中时清空两格并把成品放进物品栏空槽, 返回 true.
+     */
+    bool TryRepair(Inventory& inventory);
+
     /* 网格变化后重算候选; 候选顺序与配方表顺序一致. */
     void EnsureCandidates();
 
