@@ -258,12 +258,22 @@ int64_t ProgressHub::StatTotal(const char* key) const {
         const char* name;
         StatKind kind;
     };
+    /*
+     * 同一项统计允许两种写法: 落盘与上报用的下划线键名, 以及界面里常用的简写.
+     * 界面脚本由内容侧编写, 两种写法都出现过, 这里一并接受, 免得读到 0.
+     */
     static const Entry kEntries[] = {
-        {"breakBlocks", StatKind::kBlockBreak},   {"placeBlocks", StatKind::kBlockPlace},
-        {"pickItems", StatKind::kItemPick},       {"walkDistance", StatKind::kWalkDistance},
-        {"onlineSeconds", StatKind::kOnlineSeconds}, {"checkin", StatKind::kCheckin},
-        {"onlineDays", StatKind::kOnlineDays},    {"craft", StatKind::kCraft},
-        {"smelt", StatKind::kSmelt},              {"kill", StatKind::kKill},
+        {"break_block", StatKind::kBlockBreak},   {"breakBlocks", StatKind::kBlockBreak},
+        {"place_block", StatKind::kBlockPlace},   {"placeBlocks", StatKind::kBlockPlace},
+        {"pick_item", StatKind::kItemPick},       {"pickItems", StatKind::kItemPick},
+        {"walk_distance", StatKind::kWalkDistance},
+        {"walkDistance", StatKind::kWalkDistance},
+        {"online", StatKind::kOnlineSeconds},     {"onlineSeconds", StatKind::kOnlineSeconds},
+        {"checkin", StatKind::kCheckin},
+        {"online_days", StatKind::kOnlineDays},   {"onlineDays", StatKind::kOnlineDays},
+        {"craft_item", StatKind::kCraft},         {"craft", StatKind::kCraft},
+        {"smelt_item", StatKind::kSmelt},         {"smelt", StatKind::kSmelt},
+        {"kill_creature", StatKind::kKill},       {"kill", StatKind::kKill},
     };
     for (const Entry& entry : kEntries) {
         if (std::strcmp(entry.name, key) == 0) {
