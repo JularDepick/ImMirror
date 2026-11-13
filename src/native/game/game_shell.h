@@ -241,6 +241,18 @@ public:
     /* 战斗框目标: 最近攻击过的生物标识与显示截止时刻. */
     entity::EntityId battleTargetId_ = 0;
     double battleTargetUntil_ = 0.0;
+    /*
+     * 暂停菜单: 打开期间世界时间, 天气, 世界与玩家推进全部冻结,
+     * 只保留面板按钮的指针处理. 由 Java 侧返回键触发切换.
+     */
+    void TogglePauseMenu() { pauseMenuOpen_ = !pauseMenuOpen_; }
+    bool PauseMenuOpen() const { return pauseMenuOpen_; }
+
+    /* 暂停面板的指针处理: 命中"继续"关闭面板, 命中"退出"发一条退出事件. */
+    void UpdatePauseMenu(platform::InputSnapshot& input);
+
+    bool pauseMenuOpen_ = false;
+
     /* 伤害飘字: 文案与剩余显示秒数; 受设置里的"伤害数值显示"开关控制. */
     char damageText_[16] = {};
     float damagePopupSeconds_ = 0.0f;

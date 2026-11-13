@@ -187,6 +187,14 @@ public final class NativeBridge {
         nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
     }
 
+    /* 切换暂停菜单; 由返回键触发, 世界推进随之冻结或恢复. */
+    public static void togglePauseMenu() {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeTogglePauseMenu();
+    }
+
     /* 取走原生界面事件: 逗号分隔的编码, 空串表示没有事件. */
     public static String takeUiEvents() {
         if (!ensureLoaded()) {
@@ -339,6 +347,8 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native void nativeTogglePauseMenu();
 
     private static native String nativeTakeUiEvents();
 

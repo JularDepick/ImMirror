@@ -634,6 +634,16 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     SyncVisualSettings();
     ApplyControlSettings();
 
+    /*
+     * 暂停: 只处理面板按钮, 世界时间, 天气, 世界与玩家推进全部跳过.
+     * 指针位图在这里更新, 恢复时不会把暂停期间的按下当成新按下.
+     */
+    if (pauseMenuOpen_) {
+        UpdatePauseMenu(lastInput_);
+        previousDownMask_ = lastInput_.downMask;
+        return;
+    }
+
     /* 世界时间先行推进, 光照与环境音都取本帧的昼夜状态. */
     worldTime_->Tick(static_cast<float>(deltaSeconds));
 
@@ -1349,6 +1359,38 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
  * 命中面板交给背包界面处理, 点在面板以外则关闭面板并把合成材料退回物品栏;
  * 无论哪种情况都标记认领, 避免同一次点击又落到挖掘或放置上.
  */
+void GameShell::UpdatePauseMenu(platform::InputSnapshot& input) {
+    const uint64_t pressed = input.downMask & ~previousDownMask_;
+    if (pressed == 0ull) {
+        return;
+    }
+    /*
+     * 只处理本帧刚按下的指针, 其余指针一律认领,
+     * 保证暂停期间的触摸不会漏到世界的挖掘与放置手势上.
+     */
+    for (platform::PointerState& pointer : input.pointers) {
+        if (!pointer.down) {
+            continue;
+        }
+        pointer.uiClaimed = true;
+        if ((pressed & BitOf(pointer.id)) == 0ull) {
+            continue;
+        }
+        const int32_t hit = hud_.HitTestPauseMenu(pointer.x, pointer.y);
+        if (hit == 1) {
+            pauseMenuOpen_ = false;
+            IM_LOGI(kTag, "pause menu closed");
+            return;
+        }
+        if (hit == 2) {
+            /* 退出事件交给 Java 侧收尾, 原生只表达意图. */
+            uiEvents_.push_back(9);
+            IM_LOGI(kTag, "pause menu exit requested");
+            return;
+        }
+    }
+}
+
 void GameShell::UpdateInventoryPanel(platform::InputSnapshot& input) {
     const uint64_t pressed = input.downMask & ~previousDownMask_;
 
@@ -2972,6 +3014,7 @@ void GameShell::RenderScene() {
      * 经典模式的底座常驻显示, 锚点固定在设置给定的底座中心.
      */
     ui::HudFrame frame;
+    frame.pauseMenuVisible = pauseMenuOpen_;
     frame.selectedSlot = selectedSlot_;
     frame.stick = player_->GetStickVisual();
     frame.jumpPressed = jumpHeld_;

@@ -155,6 +155,18 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeChooseWorldSeed(JNIEnv* 
     }
 }
 
+/* Java 侧低频入口: 切换暂停菜单, 由返回键触发. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeTogglePauseMenu(JNIEnv* env,
+                                                                       jclass clazz) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return;
+    }
+    shell->TogglePauseMenu();
+}
+
 /* Java 侧低频入口: 取走原生界面事件队列, 编码用逗号分隔. */
 JNIEXPORT jstring JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeUiEvents(JNIEnv* env, jclass clazz) {

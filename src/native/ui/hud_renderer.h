@@ -164,6 +164,9 @@ struct HudFrame {
     float damageAnchorX = 0.5f;
     float damageAnchorY = 0.30f;
 
+    /* 暂停面板: 为真时整屏压暗并显示两个按钮, 世界推进由总装冻结. */
+    bool pauseMenuVisible = false;
+
     /* 左上角状态图标上限, 与 BuffState::kMaxActive 一致. */
     static constexpr int32_t kMaxBuffIcons = 8;
     /* 当前挂着的状态效果: 编号与剩余秒数, 图标底部按剩余时间画进度条. */
@@ -244,6 +247,12 @@ public:
 
     /* 判断触点是否落在背包按钮内, 按钮位于右上角, 面板打开时同样可点. */
     bool HitTestBag(float normalizedX, float normalizedY) const;
+
+    /*
+     * 暂停面板的命中判定: 0 未命中, 1 继续游戏, 2 退出到大厅.
+     * 坐标与绘制共用一按钮矩形, 不会错位.
+     */
+    int32_t HitTestPauseMenu(float normalizedX, float normalizedY) const;
 
     /* 判断触点是否落在背包面板底板范围内. */
     bool HitTestInventoryPanel(float normalizedX, float normalizedY) const;

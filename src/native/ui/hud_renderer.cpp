@@ -1527,6 +1527,51 @@ void DrawDamagePopup(float* out, int32_t& offset, const HudLayout& layout, const
 }
 
 /*
+ * 暂停面板的按钮矩形, 设计坐标 (原点屏幕中心, 纵轴向上).
+ * 绘制与命中判定共用这一份, 两边不会错位.
+ */
+struct PauseButtonRect {
+    float centerX;
+    float centerY;
+    float halfWidth;
+    float halfHeight;
+};
+
+constexpr PauseButtonRect kPauseResumeButton = {0.0f, 0.04f, 0.32f, 0.075f};
+constexpr PauseButtonRect kPauseQuitButton = {0.0f, -0.13f, 0.32f, 0.075f};
+
+/* 暂停面板: 整屏压暗, 中间一块底板与两个按钮, 文字用点阵字. */
+void DrawPauseMenu(float* out, int32_t& offset, const HudLayout& layout, float scale) {
+    if (!(scale > 0.0f)) {
+        return;
+    }
+    /* 整屏压暗: 设计坐标的半宽取自缩放系数的倒数, 覆盖整个视口. */
+    const float dim[4] = {0.0f, 0.0f, 0.0f, 0.55f};
+    PushRect(out, offset, 0.0f, 0.0f, 1.0f / scale, 1.0f, scale, dim);
+
+    const float panelHalfW = 0.46f;
+    const float panelHalfH = 0.28f;
+    const float board[4] = {0.10f, 0.12f, 0.18f, 0.92f};
+    PushRect(out, offset, 0.0f, 0.0f, panelHalfW, panelHalfH, scale, board);
+
+    const float title[4] = {1.0f, 1.0f, 1.0f, 0.95f};
+    PushCenteredText(out, offset, 0.0f, 0.17f, 0.022f, "PAUSED", scale, title);
+
+    const float buttonFill[4] = {0.22f, 0.42f, 0.58f, 0.95f};
+    const float buttonText[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    PushRect(out, offset, kPauseResumeButton.centerX, kPauseResumeButton.centerY,
+             kPauseResumeButton.halfWidth, kPauseResumeButton.halfHeight, scale, buttonFill);
+    PushCenteredText(out, offset, kPauseResumeButton.centerX, kPauseResumeButton.centerY, 0.016f,
+                     "RESUME", scale, buttonText);
+
+    const float quitFill[4] = {0.52f, 0.24f, 0.24f, 0.95f};
+    PushRect(out, offset, kPauseQuitButton.centerX, kPauseQuitButton.centerY,
+             kPauseQuitButton.halfWidth, kPauseQuitButton.halfHeight, scale, quitFill);
+    PushCenteredText(out, offset, kPauseQuitButton.centerX, kPauseQuitButton.centerY, 0.016f,
+                     "QUIT", scale, buttonText);
+}
+
+/*
  * 状态效果图标.
  * 左上角血条下方一排小方块: 底色按效果编号折算固定色调, 同一效果每次同色;
  * 图标底部一条剩余时间进度条, 6 秒内线性缩短, 超过 6 秒按满格显示.
@@ -1986,6 +2031,11 @@ void HudRenderer::Render(const HudFrame& frame) {
         glBindTexture(GL_TEXTURE_2D, uiAtlasTexture_);
         glUniform1i(uniformSpriteLocation_, 1);
     }
+    /* 暂停面板最后画: 压在所有 HUD 之上, 与命中判定共用同一份按钮矩形. */
+    if (frame.pauseMenuVisible) {
+        DrawPauseMenu(vertices, offset, layout_, scale);
+    }
+
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glBufferSubData(GL_ARRAY_BUFFER, 0,
@@ -2128,6 +2178,30 @@ bool HudRenderer::HitTestBag(float normalizedX, float normalizedY) const {
     const float x = layout_.DesignX(normalizedX);
     const float y = layout_.DesignY(normalizedY);
     return InsideBox(x, y, geometry.bagX, geometry.bagY, geometry.bagHalf, geometry.bagHalf);
+}
+
+int32_t HudRenderer::HitTestPauseMenu(float normalizedX, float normalizedY) const {
+    if (!layout_.Valid()) {
+        return 0;
+    }
+    const float x = normalizedX * 2.0f - 1.0f;
+    const float y = 1.0f - normalizedY * 2.0f;
+    /* 按钮矩形是设计坐标: 归一化坐标先乘 2 减 1 再按缩放系数折算横向. */
+    const float designX = layout_.Scale() > 0.0001f ? x / layout_.Scale() : x;
+    const float designY = y;
+    const auto inside = [designX, designY](const PauseButtonRect& rect) {
+        return designX >= rect.centerX - rect.halfWidth &&
+               designX <= rect.centerX + rect.halfWidth &&
+               designY >= rect.centerY - rect.halfHeight &&
+               designY <= rect.centerY + rect.halfHeight;
+    };
+    if (inside(kPauseResumeButton)) {
+        return 1;
+    }
+    if (inside(kPauseQuitButton)) {
+        return 2;
+    }
+    return 0;
 }
 
 bool HudRenderer::HitTestInventoryPanel(float normalizedX, float normalizedY) const {

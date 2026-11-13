@@ -183,6 +183,16 @@ public final class PlayActivity extends NativeActivity {
         NativeBridge.start();
     }
 
+    /*
+     * 返回键: 交给原生侧的暂停面板, 连续按两次即开与关.
+     * 真正退出对局走面板里的退出按钮, 避免误触直接丢局.
+     */
+    @Override
+    public void onBackPressed() {
+        NativeBridge.togglePauseMenu();
+        drainUiEvents();
+    }
+
     @Override
     protected void onPause() {
         /* 设置由原生侧异步落盘, 进入后台时强制写一次, 避免进程被回收丢改动. */
@@ -291,6 +301,10 @@ public final class PlayActivity extends NativeActivity {
                 com.julardepick.immirror.ui.UiSound.eat(this);
             } else if ("8".equals(code)) {
                 com.julardepick.immirror.ui.UiSound.hurt(this);
+            } else if ("9".equals(code)) {
+                /* 暂停面板的退出按钮: 结束本局, 回到大厅. */
+                Log.i(TAG, "pause menu exit requested");
+                finish();
             } else {
                 Log.w(TAG, "unknown ui event " + code);
             }
