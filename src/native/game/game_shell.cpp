@@ -35,6 +35,7 @@
 #include "render/particle_system.h"
 #include "settings/settings.h"
 #include "settings/settings_tuning.h"
+#include "ui/generated/item_icon_atlas_gen.h"
 #include "ui/hud_renderer.h"
 #include "ui/hud_slots.h"
 #include "audio/audio_engine.h"
@@ -4281,6 +4282,7 @@ void GameShell::RenderScene() {
             }
             frame.buffIds[frame.buffCount] = buffId;
             frame.buffRemaining[frame.buffCount] = remaining;
+            frame.buffIconCell[frame.buffCount] = ui::gen::BuffIconSlot(buffId);
             frame.buffCount += 1;
         }
     }

@@ -10,6 +10,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_ROOT = os.path.dirname(SCRIPT_DIR)
 ASSETS = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "project"))
 MANIFEST = os.path.join(SRC_ROOT, "native", "ui", "generated", "item_icon_manifest.json")
+BUFF_MANIFEST = os.path.join(SRC_ROOT, "native", "ui", "generated", "buff_icon_manifest.json")
 OUT_DIR = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "generated"))
 GEN_PATH = os.path.join(SRC_ROOT, "native", "ui", "generated", "item_icon_atlas_gen.h")
 
@@ -29,8 +30,13 @@ def main():
         return 1
     capacity = GRID * GRID
     ordered = sorted(items.items(), key=lambda pair: int(pair[0]))
-    if len(ordered) > capacity:
-        print("图标数量 %d 超过图集容量 %d" % (len(ordered), capacity))
+    # 效果图标并入同一张图集: 图集格位还有富余, 分两张纹理反而多一次绑定.
+    buffs = {}
+    if os.path.isfile(BUFF_MANIFEST):
+        buffs = json.load(open(BUFF_MANIFEST, encoding="utf-8")).get("buffs", {})
+    buff_ordered = sorted(buffs.items(), key=lambda pair: int(pair[0]))
+    if len(ordered) + len(buff_ordered) > capacity:
+        print("图标数量 %d 超过图集容量 %d" % (len(ordered) + len(buff_ordered), capacity))
         return 1
 
     atlas = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
@@ -51,6 +57,24 @@ def main():
         col, row = slot % GRID, slot // GRID
         atlas.paste(image, (col * CELL, row * CELL))
         slots[int(item_id)] = slot
+        drawn += 1
+
+    buff_slots = {}
+    for offset, (buff_id, relative) in enumerate(buff_ordered):
+        slot = len(ordered) + offset
+        source = os.path.join(ASSETS, relative)
+        if not os.path.isfile(source):
+            continue
+        try:
+            image = Image.open(source).convert("RGBA")
+        except Exception:
+            continue
+        if image.height > image.width:
+            image = image.crop((0, 0, image.width, image.width))
+        image = image.resize((CELL, CELL), Image.LANCZOS)
+        col, row = slot % GRID, slot // GRID
+        atlas.paste(image, (col * CELL, row * CELL))
+        buff_slots[int(buff_id)] = slot
         drawn += 1
 
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -96,6 +120,34 @@ def main():
         "            return kItemIcons[mid].slot;",
         "        }",
         "        if (kItemIcons[mid].item < item) {",
+        "            low = mid + 1;",
+        "        } else {",
+        "            high = mid - 1;",
+        "        }",
+        "    }",
+        "    return -1;",
+        "}",
+        "",
+        "constexpr int32_t kBuffIconCount = %d;" % len(buff_slots),
+        "constexpr ItemIconEntry kBuffIcons[kBuffIconCount == 0 ? 1 : kBuffIconCount] = {",
+    ]
+    for buff_id in sorted(buff_slots):
+        lines.append("    {%du, %d}," % (buff_id, buff_slots[buff_id]))
+    if not buff_slots:
+        lines.append("    {0u, -1},")
+    lines += [
+        "};",
+        "",
+        "/* 按效果编号取图标格序号, 没有图标返回 -1. 表内按编号升序, 用二分查找. */",
+        "inline int32_t BuffIconSlot(uint32_t buff) {",
+        "    int32_t low = 0;",
+        "    int32_t high = kBuffIconCount - 1;",
+        "    while (low <= high) {",
+        "        const int32_t mid = (low + high) / 2;",
+        "        if (kBuffIcons[mid].item == buff) {",
+        "            return kBuffIcons[mid].slot;",
+        "        }",
+        "        if (kBuffIcons[mid].item < buff) {",
         "            low = mid + 1;",
         "        } else {",
         "            high = mid - 1;",

@@ -202,6 +202,8 @@ struct HudFrame {
     int32_t buffCount = 0;
     uint32_t buffIds[kMaxBuffIcons] = {};
     float buffRemaining[kMaxBuffIcons] = {};
+    /* 效果图标在图标图集里的格序号, 负数表示没有图标, 退回按编号取色的方块. */
+    int32_t buffIconCell[kMaxBuffIcons] = {};
 
     /* 每格剩余数量, 由物品栏逐帧填入; 数量为 0 时该格变暗, 数字仍显示 0. */
     int32_t slotCounts[kHudSlotCount] = {};

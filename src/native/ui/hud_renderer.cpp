@@ -1776,13 +1776,20 @@ void DrawBuffIcons(float* out, int32_t& offset, const HudLayout& layout, const H
         const float y = layout.DesignY(kCenterYNorm);
         const float half = layout.DesignLength(kHalfNorm);
         const uint32_t id = frame.buffIds[index];
+        /* 有图标就用图标, 没有图标才退回按编号取色的方块. */
+        if (frame.buffIconCell[index] >= 0) {
+            const float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+            PushItemIcon(out, offset, x, y, half, scale, frame.buffIconCell[index], white);
+        }
         const float tint[4] = {
             0.35f + 0.12f * static_cast<float>(id % 3u),
             0.45f + 0.10f * static_cast<float>((id / 3u) % 3u),
             0.55f + 0.08f * static_cast<float>((id / 9u) % 3u),
             0.92f,
         };
-        PushRect(out, offset, x, y, half, half, scale, tint);
+        if (frame.buffIconCell[index] < 0) {
+            PushRect(out, offset, x, y, half, half, scale, tint);
+        }
         /* 剩余时间条: 底部一条, 6 秒封顶. */
         const float remaining = frame.buffRemaining[index];
         const float ratio = remaining <= 0.0f ? 0.0f : (remaining >= 6.0f ? 1.0f : remaining / 6.0f);
