@@ -377,7 +377,8 @@ def render_server_catalog(entries, templates):
                      "coinReward: %d },"
                      % (entry["id"], json.dumps(entry["name"], ensure_ascii=False),
                         json.dumps(entry["description"], ensure_ascii=False), entry["category"],
-                        kind_names[entry["kind"]], entry["target"], entry["coin_reward"]))
+                        "EVENT_KIND." + kind_names[entry["kind"]], entry["target"],
+                        entry["coin_reward"]))
     lines += [
         "];",
         "",
@@ -390,7 +391,7 @@ def render_server_catalog(entries, templates):
     ]
     for item in templates:
         lines.append("  { id: %d, kind: %s, subject: %d, target: %d, coinReward: %d, name: %s },"
-                     % (item[0], kind_names[item[1]], item[2], item[3], item[4],
+                     % (item[0], "EVENT_KIND." + kind_names[item[1]], item[2], item[3], item[4],
                         json.dumps(item[5], ensure_ascii=False)))
     lines += [
         "];",

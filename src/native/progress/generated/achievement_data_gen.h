@@ -9,21 +9,21 @@ namespace immirror::progress::gen {
 
 /* 单条成就定义, 字段顺序与 AchievementCatalog 的读取顺序一致. */
 struct AchievementData {
-    uint32_t id;             /* 原版 achievement 表的 ID */
-    const char* name;        /* 原版中文名, UTF-8 编码 */
-    const char* description; /* 原版中文描述, 已折叠换行并截断 */
+    uint32_t id;             /* achievement 表的 ID */
+    const char* name;        /* 中文名, UTF-8 编码 */
+    const char* description; /* 中文描述, 已折叠换行并截断 */
     uint8_t category;        /* 1 新手, 2 主线, 3 生产, 4 战斗, 5 其他, 6 极限 */
     uint8_t eventKind;       /* 本地事件类型, 取值见 progress_event.h */
     int32_t target;          /* 达成所需的事件累计量 */
-    uint8_t sourceGoal;      /* 原版目标类型 1..37 */
-    uint32_t sourceGoalId;   /* 原版目标对象 id */
-    uint8_t point;           /* 原版成就点数 */
+    uint8_t sourceGoal;      /* 目标类型 1..37 */
+    uint32_t sourceGoalId;   /* 目标对象 id */
+    uint8_t point;           /* 成就点数 */
     int32_t coinReward;      /* 完成时下发的镜币 */
 };
 
 constexpr int32_t kAchievementDataCount = 142;
 
-/* 条目按原版 ID 升序排列, 越界索引由 AchievementCatalog 回落到首条. */
+/* 条目按ID 升序排列, 越界索引由 AchievementCatalog 回落到首条. */
 constexpr AchievementData kAchievementData[kAchievementDataCount] = {
     {1000u, "我需要些木头", "采集树木，获得一个木头方块 （长按树干采集）", 2, 1, 1, 6, 200u, 1, 50},
     {1001u, "手艺活！", "用任意木头合成木板，用4个木板制作1个工具箱 （先打开背包，左边标签选择合成）", 2, 7, 1, 2, 800u, 1, 50},
