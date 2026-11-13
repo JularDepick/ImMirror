@@ -2361,9 +2361,9 @@ void GameShell::CollectCreatureDrops() {
             IM_LOGW(kTag, "creature drop has no item, block=%s", name);
             continue;
         }
-        /* 生物掉落同样先落地, 走近再拾取, 与方块掉落一致. */
-        const core::Vec3 at = player_->Position();
-        SpawnDrop(itemId, drop.count, drop.block, at.x, at.y + 0.6f, at.z);
+        /* 生物掉落从死亡点落地, 走近再拾取, 与方块掉落一致. */
+        SpawnDrop(itemId, drop.count, drop.block, drop.position.x, drop.position.y + 0.6f,
+                  drop.position.z);
         IM_LOGI(kTag, "creature drop spawned block=%s item=%u count=%d", name,
                 static_cast<uint32_t>(itemId), drop.count);
     }

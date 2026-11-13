@@ -288,7 +288,7 @@ void EntityManager::QueueLoot(const CreatureEntity& creature) {
     if (def.lootBlock == 0 || def.lootCount <= 0) {
         return;
     }
-    drops_.push_back(EntityDrop{def.lootBlock, def.lootCount});
+    drops_.push_back(EntityDrop{def.lootBlock, def.lootCount, creature.Position()});
 }
 
 float EntityManager::NextUnit() {

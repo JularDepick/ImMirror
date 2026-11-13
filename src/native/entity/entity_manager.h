@@ -19,6 +19,8 @@ namespace immirror::entity {
 struct EntityDrop {
     voxel::BlockId block = 0;
     int32_t count = 0;
+    /* 死亡点坐标: 掉落物从这里落地, 而不是从玩家脚下冒出. */
+    core::Vec3 position;
 };
 
 /* 一帧的统计: 对玩家的伤害合计, 以及生成, 死亡与回收数量. */
