@@ -3178,7 +3178,13 @@ std::string GameShell::TakeChestSnapshot() const {
     bool firstChest = true;
     int32_t chests = 0;
     for (const auto& entry : chests_) {
+        /*
+         * 同步内容有上限, 超出部分不进快照. 这里打一条提示,
+         * 否则多人联机时玩家只会看到"有些箱子是空的", 无从判断原因.
+         */
         if (chests >= 8) {
+            IM_LOGI(kTag, "chest sync truncated, %d chests in world, only 8 sent",
+                    static_cast<int32_t>(chests_.size()));
             break;
         }
         std::string slots;
