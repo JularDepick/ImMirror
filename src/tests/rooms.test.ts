@@ -167,6 +167,29 @@ describe("房间通道", () => {
     expect(guestView.edits.map((edit) => edit.block).sort()).toEqual([3, 5]);
   });
 
+  it("改动超出上限时丢弃最早的格并计数", async () => {
+    const owner = await registerCasePlayer("trim", 1);
+    const room = await createRoom(owner.token);
+    /*
+     * 单次上报有批量上限, 因此分多轮把改动表灌满:
+     * 每格坐标不同, 去重不会合并, 最终必然触发裁剪.
+     */
+    const perBatch = 100;
+    for (let round = 0; round < 60; round += 1) {
+      const edits = [];
+      for (let index = 0; index < perBatch; index += 1) {
+        const cell = round * perBatch + index;
+        edits.push({ x: cell, y: 64, z: 0, block: 1 });
+      }
+      await app.post(`/api/v1/rooms/${room.id}/state`, { edits }, owner.token);
+    }
+    const state = expectOk<{ droppedEdits: number }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, owner.token),
+    );
+    /* 6000 格超过 4096 上限, 差额应被记为丢弃. */
+    expect(state.droppedEdits).toBeGreaterThan(0);
+  });
+
   it("增量拉取按序号过滤, 同一格只保留最新改动", async () => {
     const owner = await registerCasePlayer("since", 1);
     const room = await createRoom(owner.token);

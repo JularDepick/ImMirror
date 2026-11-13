@@ -70,6 +70,8 @@ interface Room {
   furnaces: RoomFurnace[];
   /* 内容版本: 生物, 掉落物, 储物箱与熔炉任一变化时递增, 客人据此判断是否需要整份内容. */
   contentSeq: number;
+  /* 因超出改动上限而被丢弃的格数, 大于零说明部分较早改动已不可见. */
+  droppedEdits: number;
   /* 世界时间总秒数: 房主上行, 客人据此对齐昼夜, 0 表示尚未上报. */
   timeOfDay: number;
   /* 天气编号与强度: 房主上行, 客人据此对齐降水与天色. */
@@ -238,6 +240,11 @@ function appendEdit(room: Room, x: number, y: number, z: number, block: number, 
   room.nextSeq += 1;
   room.edits.push(edit);
   room.latestByCell.set(key, edit);
+  /*
+   * 改动表按格去重后仍可能超上限: 超出时丢弃最早的一条.
+   * 丢弃意味着该格对后加入的成员不再可见 (会回落到地形生成结果),
+   * 因此计数并随状态下发, 让客户端能提示"改动过多, 部分较早改动已不可见".
+   */
   while (room.edits.length > MAX_EDITS) {
     const dropped = room.edits.shift();
     if (dropped) {
@@ -245,6 +252,7 @@ function appendEdit(room: Room, x: number, y: number, z: number, block: number, 
       if (room.latestByCell.get(droppedKey) === dropped) {
         room.latestByCell.delete(droppedKey);
       }
+      room.droppedEdits += 1;
     }
   }
 }
@@ -429,6 +437,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       chests: [],
       furnaces: [],
       contentSeq: 1,
+      droppedEdits: 0,
       timeOfDay: 0,
       weatherKind: 0,
       weatherIntensity: 0,
@@ -933,6 +942,8 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       timeOfDay: room.timeOfDay,
       weatherKind: room.weatherKind,
       weatherIntensity: room.weatherIntensity,
+      /* 改动被裁剪过就大于零, 客户端据此提示部分较早改动已不可见. */
+      droppedEdits: room.droppedEdits,
       rejectedEdits,
       rejectedCreatures,
       rejectedDrops,
@@ -983,6 +994,8 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       timeOfDay: room.timeOfDay,
       weatherKind: room.weatherKind,
       weatherIntensity: room.weatherIntensity,
+      /* 改动被裁剪过就大于零, 客户端据此提示部分较早改动已不可见. */
+      droppedEdits: room.droppedEdits,
       serverTime: now,
     });
   });
