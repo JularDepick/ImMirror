@@ -303,6 +303,36 @@ void EmitBlockBreak(voxel::BlockId block, float centerX, float centerY, float ce
             static_cast<double>(red), static_cast<double>(green), static_cast<double>(blue), gCount);
 }
 
+void EmitColored(float red, float green, float blue, float centerX, float centerY, float centerZ,
+                 int32_t count) {
+    if (!gInitialized || count <= 0) {
+        return;
+    }
+    if (count > kParticlesPerBreak) {
+        count = kParticlesPerBreak;
+    }
+    for (int32_t i = 0; i < count; ++i) {
+        if (gCount >= kMaxParticles) {
+            /* 满了就覆盖最老的一个, 与方块碎屑同一策略. */
+            gParticles[0] = gParticles[gCount - 1];
+            gCount = kMaxParticles - 1;
+        }
+        Particle& particle = gParticles[gCount];
+        particle.x = centerX + NextSigned() * 0.35f;
+        particle.y = centerY + NextUnit() * 0.6f;
+        particle.z = centerZ + NextSigned() * 0.35f;
+        particle.vx = NextSigned() * kSpeedHorizontal;
+        particle.vy = kSpeedUp * (0.6f + NextUnit() * 0.6f);
+        particle.vz = NextSigned() * kSpeedHorizontal;
+        particle.age = 0.0f;
+        const float jitter = 0.85f + NextUnit() * 0.3f;
+        particle.red = red * jitter > 1.0f ? 1.0f : red * jitter;
+        particle.green = green * jitter > 1.0f ? 1.0f : green * jitter;
+        particle.blue = blue * jitter > 1.0f ? 1.0f : blue * jitter;
+        ++gCount;
+    }
+}
+
 void Update(double deltaSeconds) {
     if (!(deltaSeconds > 0.0)) {
         return;

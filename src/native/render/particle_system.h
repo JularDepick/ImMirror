@@ -23,6 +23,13 @@ void Shutdown();
  */
 void EmitBlockBreak(voxel::BlockId block, float centerX, float centerY, float centerZ);
 
+/*
+ * 在指定点撒一组指定颜色的小碎块, 用于生物死亡一类的非方块事件.
+ * 颜色分量取 0 到 1, 数量上限与方块破碎同一通道.
+ */
+void EmitColored(float red, float green, float blue, float centerX, float centerY, float centerZ,
+                 int32_t count);
+
 /* 推进生命周期: 位移, 重力, 落地, 淡出. */
 void Update(double deltaSeconds);
 

@@ -1906,6 +1906,12 @@ bool GameShell::TryAttackCreature() {
     damageAnchor_ = core::Vec3{hitPos.x, hitPos.y + target->BoundsHeight() * 0.85f, hitPos.z};
     const bool killed = entities_.Damage(target->Id(), damage);
     if (killed) {
+        /* 击败特效: 在尸体位置撒一组暗红碎块, 与碎屑共用同一粒子通道. */
+        const core::Vec3 deathPos = target->Position();
+        render::particle::EmitColored(0.62f, 0.10f, 0.12f, deathPos.x, deathPos.y + 0.5f, deathPos.z,
+                                      6);
+    }
+    if (killed) {
         /* 致死一击计一次击败事件, 并入上报增量与本地成就进度. */
         progressCounters_.kills += 1;
         progress::ProgressHub::Instance().OnKill(1);
