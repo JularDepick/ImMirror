@@ -3,15 +3,19 @@
  * 成就与每日任务服务
  *
  * 客户端上报增量统计 (破坏方块, 放置方块, 采集物品, 行走距离, 在线时长, 签到, 在线天数),
- * 服务端按同键累加到每个用户自己的成就进度与当日任务进度, 首次达标时发放镜币.
- * 成就是一次性奖励, 完成时刻写入后不再改; 每日任务按自然日重置, 只保留当日行.
+ * 服务端按同键累加到每个用户自己的成就进度与当日任务进度.
+ * 成就是一次性进度, 完成时刻写入后不再改; 每日任务按自然日重置, 只保留当日行.
+ *
+ * 完成与领取分离: 上报只推进进度并记录完成时刻, 镜币由领取接口按条入账,
+ * 这样客户端可以逐条点领取, 也避免完成瞬间一次性发一堆币.
  *
  * 镜币发放复用钱包仓储 (wallets 余额 + wallet_ledger 流水), 与签到服务同一条记账路径,
- * 记账原因分别为 achievement 与 daily_task; 整次上报在一个事务内完成,
- * 进度写入与奖励发放不会出现只落一半的情况.
+ * 记账原因分别为 achievement 与 daily_task; 领取在一个事务内完成,
+ * 标记领取与奖励入账不会出现只落一半的情况.
  */
 
 import {
+  ACHIEVEMENT_BY_ID,
   ACHIEVEMENT_CATALOG,
   CATEGORY_NAMES,
   DAILY_TASK_COUNT,
@@ -23,6 +27,7 @@ import {
 import type { DailyTaskTemplate, StatKey } from "../api/v1/achievements/definitions";
 import type { SqliteDatabase } from "../db/client";
 import {
+  claimDailyTask,
   deleteDailyTasksBefore,
   insertDailyTask,
   listDailyTasks,
@@ -30,6 +35,7 @@ import {
 } from "../db/repositories/user-daily-tasks";
 import type { UserDailyTaskRow } from "../db/repositories/user-daily-tasks";
 import {
+  claimUserAchievement,
   findUserAchievement,
   listUserAchievements,
   upsertUserAchievement,
@@ -68,12 +74,17 @@ export interface AchievementProgressView {
   value: number;
   completed: boolean;
   completedAt: number | null;
+  /* 奖励是否已领取: 完成与领取分离, 领取后才入账. */
+  claimed: boolean;
+  claimedAt: number | null;
   coinReward: number;
 }
 
 export interface AchievementSummary {
   completed: number;
   total: number;
+  /* 已领取条数与已入账镜币, 与完成数分开统计. */
+  claimed: number;
   coins: number;
 }
 
@@ -88,6 +99,8 @@ export interface DailyTaskView {
   value: number;
   completed: boolean;
   completedAt: number | null;
+  claimed: boolean;
+  claimedAt: number | null;
   coinReward: number;
 }
 
@@ -95,6 +108,7 @@ export interface DailyBoard {
   date: string;
   tasks: DailyTaskView[];
   completed: number;
+  claimed: number;
   coins: number;
 }
 
@@ -114,6 +128,12 @@ export interface AchievementStatus {
 }
 
 export interface ReportResult extends AchievementStatus {
+  /* 本次上报新完成的条目, 完成不等于入账, 入账由领取接口完成. */
+  granted: GrantRecord[];
+}
+
+/* 领取结果: 领取后的余额与最新视图, granted 为本次入账的那一条. */
+export interface ClaimResult extends AchievementStatus {
   granted: GrantRecord[];
 }
 
@@ -265,6 +285,8 @@ export class AchievementService {
         value,
         completed: completedAt !== null,
         completedAt,
+        claimed: row ? row.claimed_at !== null : false,
+        claimedAt: row ? row.claimed_at : null,
         coinReward: definition.coinReward,
       };
     });
@@ -272,24 +294,33 @@ export class AchievementService {
 
   static summarize(achievements: readonly AchievementProgressView[]): AchievementSummary {
     let completed = 0;
+    let claimed = 0;
     let coins = 0;
     for (const item of achievements) {
       if (item.completed) {
         completed += 1;
+      }
+      /* 镜币只统计已领取的条目, 完成但未领取的奖励还没有入账. */
+      if (item.claimed) {
+        claimed += 1;
         coins += item.coinReward;
       }
     }
-    return { completed, total: achievements.length, coins };
+    return { completed, total: achievements.length, claimed, coins };
   }
 
   dailyBoard(userId: number, date: string = this.todayKey()): DailyBoard {
     const rows = this.ensureDailyTasks(userId, date);
     let completed = 0;
+    let claimed = 0;
     let coins = 0;
     const tasks = rows.map((row) => {
       const template = DAILY_TEMPLATE_BY_ID.get(row.template_id);
       if (row.completed_at !== null) {
         completed += 1;
+      }
+      if (row.claimed_at !== null) {
+        claimed += 1;
         coins += row.reward;
       }
       return {
@@ -303,10 +334,12 @@ export class AchievementService {
         value: Math.min(row.value, row.target),
         completed: row.completed_at !== null,
         completedAt: row.completed_at,
+        claimed: row.claimed_at !== null,
+        claimedAt: row.claimed_at,
         coinReward: row.reward,
       };
     });
-    return { date, tasks, completed, coins };
+    return { date, tasks, completed, claimed, coins };
   }
 
   /* 只读查询: 成就, 汇总与当日任务, 余额取自钱包. */
@@ -331,7 +364,7 @@ export class AchievementService {
     const run = this.db.transaction((): { granted: GrantRecord[]; balance: number } => {
       this.ensureDailyTasks(userId, date);
       const granted: GrantRecord[] = [];
-      let balance = ensureWallet(this.db, userId, now).balance;
+      const balance = ensureWallet(this.db, userId, now).balance;
       const dailyRows = listDailyTasks(this.db, userId, date);
 
       for (const [kind, delta] of increments) {
@@ -357,8 +390,8 @@ export class AchievementService {
             completedAt,
             now,
           });
+          /* 完成只记账不发放, 镜币由领取接口按条入账. */
           if (completedAt !== null) {
-            balance = this.grantCoins(userId, definition.coinReward, REASON_ACHIEVEMENT, String(definition.id), now, balance);
             granted.push({
               source: "achievement",
               id: definition.id,
@@ -377,7 +410,6 @@ export class AchievementService {
           updateDailyTaskProgress(this.db, { userId, date, slot: task.slot, value: next, completedAt });
           if (completedAt !== null) {
             const template = DAILY_TEMPLATE_BY_ID.get(task.template_id);
-            balance = this.grantCoins(userId, task.reward, REASON_DAILY_TASK, `${date}#${task.slot}`, now, balance);
             granted.push({
               source: "daily_task",
               id: task.template_id,
@@ -395,6 +427,92 @@ export class AchievementService {
     return {
       balance,
       granted,
+      achievements,
+      summary: AchievementService.summarize(achievements),
+      daily: this.dailyBoard(userId, date),
+    };
+  }
+
+  /**
+   * 领取一条成就奖励.
+   * 只对已完成且未领取的条目生效; 入账与标记领取在同一事务内,
+   * 未完成返回 ACHIEVEMENT_NOT_COMPLETED, 重复领取返回 ACHIEVEMENT_ALREADY_CLAIMED.
+   */
+  claimAchievement(userId: number, achievementId: number): ClaimResult {
+    const definition = ACHIEVEMENT_BY_ID.get(achievementId);
+    if (!definition) {
+      throw new AppError("ACHIEVEMENT_NOT_FOUND");
+    }
+    const now = this.now();
+    const run = this.db.transaction((): number => {
+      const row = findUserAchievement(this.db, userId, achievementId);
+      if (!row || row.completed_at === null) {
+        throw new AppError("ACHIEVEMENT_NOT_COMPLETED");
+      }
+      if (row.claimed_at !== null) {
+        throw new AppError("ACHIEVEMENT_ALREADY_CLAIMED");
+      }
+      /* 标记与入账同事务: 标记失败说明并发下已被别的请求领走, 直接按已领取报错. */
+      if (claimUserAchievement(this.db, userId, achievementId, now) === 0) {
+        throw new AppError("ACHIEVEMENT_ALREADY_CLAIMED");
+      }
+      const balance = ensureWallet(this.db, userId, now).balance;
+      return this.grantCoins(userId, definition.coinReward, REASON_ACHIEVEMENT,
+        String(achievementId), now, balance);
+    });
+    const balance = run();
+    const achievements = this.listAchievements(userId);
+    return {
+      balance,
+      granted: [{
+        source: "achievement",
+        id: achievementId,
+        name: definition.name,
+        coins: definition.coinReward,
+      }],
+      achievements,
+      summary: AchievementService.summarize(achievements),
+      daily: this.dailyBoard(userId),
+    };
+  }
+
+  /**
+   * 领取一条每日任务奖励.
+   * 日期缺省为今天, 与每日任务板的生成口径一致.
+   */
+  claimDaily(userId: number, slot: number, date: string = this.todayKey()): ClaimResult {
+    const now = this.now();
+    const run = this.db.transaction((): { balance: number; task: UserDailyTaskRow } => {
+      this.ensureDailyTasks(userId, date);
+      const task = listDailyTasks(this.db, userId, date).find((row) => row.slot === slot);
+      if (!task) {
+        throw new AppError("DAILY_TASK_NOT_FOUND");
+      }
+      if (task.completed_at === null) {
+        throw new AppError("ACHIEVEMENT_NOT_COMPLETED", "任务尚未完成");
+      }
+      if (task.claimed_at !== null) {
+        throw new AppError("ACHIEVEMENT_ALREADY_CLAIMED", "任务奖励已领取");
+      }
+      if (claimDailyTask(this.db, userId, date, slot, now) === 0) {
+        throw new AppError("ACHIEVEMENT_ALREADY_CLAIMED", "任务奖励已领取");
+      }
+      const balance = ensureWallet(this.db, userId, now).balance;
+      const next = this.grantCoins(userId, task.reward, REASON_DAILY_TASK,
+        `${date}#${slot}`, now, balance);
+      return { balance: next, task };
+    });
+    const { balance, task } = run();
+    const template = DAILY_TEMPLATE_BY_ID.get(task.template_id);
+    const achievements = this.listAchievements(userId);
+    return {
+      balance,
+      granted: [{
+        source: "daily_task",
+        id: task.template_id,
+        name: template ? template.name : `任务 ${task.template_id}`,
+        coins: task.reward,
+      }],
       achievements,
       summary: AchievementService.summarize(achievements),
       daily: this.dailyBoard(userId, date),

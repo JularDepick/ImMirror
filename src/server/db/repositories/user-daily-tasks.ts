@@ -17,6 +17,7 @@ export interface UserDailyTaskRow {
   value: number;
   reward: number;
   completed_at: number | null;
+  claimed_at: number | null;
   created_at: number;
 }
 
@@ -65,6 +66,27 @@ export function updateDailyTaskProgress(
            completed_at = COALESCE(completed_at, ?)
      WHERE user_id = ? AND date = ? AND slot = ?`,
   ).run(input.value, input.completedAt, input.userId, input.date, input.slot);
+}
+
+/**
+ * 标记一条每日任务已领取. 只对已完成且未领取的行生效,
+ * 返回受影响行数: 0 表示已被领取或尚未完成.
+ */
+export function claimDailyTask(
+  db: SqliteDatabase,
+  userId: number,
+  date: string,
+  slot: number,
+  now: number,
+): number {
+  const result = db
+    .prepare(
+      `UPDATE user_daily_tasks
+          SET claimed_at = ?
+        WHERE user_id = ? AND date = ? AND slot = ? AND completed_at IS NOT NULL AND claimed_at IS NULL`,
+    )
+    .run(now, userId, date, slot);
+  return result.changes;
 }
 
 /**

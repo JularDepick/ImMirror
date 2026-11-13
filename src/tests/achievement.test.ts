@@ -37,7 +37,7 @@ interface AchievementItem {
 
 interface AchievementList {
   balance: number;
-  summary: { completed: number; total: number; coins: number };
+  summary: { completed: number; total: number; claimed: number; coins: number };
   achievements: AchievementItem[];
 }
 
@@ -83,7 +83,12 @@ describe("成就查询", () => {
     const data = expectOk<AchievementList>(response);
     expect(data.achievements.length).toBe(ACHIEVEMENT_CATALOG.length);
     expect(ACHIEVEMENT_CATALOG.length).toBeGreaterThanOrEqual(50);
-    expect(data.summary).toEqual({ completed: 0, total: ACHIEVEMENT_CATALOG.length, coins: 0 });
+    expect(data.summary).toEqual({
+      completed: 0,
+      total: ACHIEVEMENT_CATALOG.length,
+      claimed: 0,
+      coins: 0,
+    });
     expect(data.balance).toBe(0);
     for (const item of data.achievements) {
       expect(item.value).toBe(0);
@@ -119,7 +124,7 @@ describe("成就查询", () => {
 });
 
 describe("成就上报", () => {
-  it("首次上报即完成的成就立即发放镜币", async () => {
+  it("首次上报完成成就, 逐条领取后入账", async () => {
     const user = await registerUser(app);
     const ids = targetOneIds("break_block");
     expect(ids.length).toBeGreaterThan(0);
@@ -131,11 +136,26 @@ describe("成就上报", () => {
     const grantedIds = data.granted.filter((item) => item.source === "achievement").map((item) => item.id);
     expect(grantedIds.sort()).toEqual([...ids].sort());
     expect(data.summary.completed).toBe(ids.length);
-    expect(data.balance).toBe(coinsOf(ids));
+    /* 完成不等于入账: 未领取时余额与已领取数都是零. */
+    expect(data.summary.claimed).toBe(0);
+    expect(data.balance).toBe(0);
     expect(data.granted.every((item) => item.coins > 0)).toBe(true);
+
+    let balance = 0;
+    for (const id of ids) {
+      const claimed = expectOk<ReportResult>(
+        await app.post("/api/v1/achievements/claim", { id }, user.token),
+      );
+      balance += claimed.granted[0]?.coins ?? 0;
+      expect(claimed.balance).toBe(balance);
+    }
+    expect(balance).toBe(coinsOf(ids));
 
     const wallet = await app.get("/api/v1/wallet", user.token);
     expect(expectOk<{ balance: number }>(wallet).balance).toBe(coinsOf(ids));
+    const listed = expectOk<AchievementList>(await app.get("/api/v1/achievements", user.token));
+    expect(listed.summary.claimed).toBe(ids.length);
+    expect(listed.summary.coins).toBe(coinsOf(ids));
   });
 
   it("重复上报同一事件不再重复发币", async () => {
@@ -209,17 +229,20 @@ describe("成就上报", () => {
     expect(item?.value).toBe(7);
   });
 
-  it("完成成就写入钱包流水, 记账原因为 achievement", async () => {
+  it("领取成就写入钱包流水, 记账原因为 achievement", async () => {
     const user = await registerUser(app);
     const ids = targetOneIds("pick_item");
-    const data = expectOk<ReportResult>(
+    expectOk<ReportResult>(
       await app.post("/api/v1/achievements/report", { stats: { pick_item: 1 } }, user.token),
     );
+    for (const id of ids) {
+      expectOk(await app.post("/api/v1/achievements/claim", { id }, user.token));
+    }
     const row = app.ctx.db.prepare("SELECT id FROM users WHERE email = ?").get(user.email) as { id: number };
     const ledger = app.ctx.wallet.listLedger(row.id, 50);
     expect(ledger.length).toBe(ids.length);
     expect(ledger.every((item) => item.reason === "achievement")).toBe(true);
-    expect(ledger.reduce((total, item) => total + item.delta, 0)).toBe(data.balance);
+    expect(ledger.reduce((total, item) => total + item.delta, 0)).toBe(coinsOf(ids));
   });
 
   it("多账号进度互相隔离", async () => {
@@ -292,7 +315,12 @@ describe("合成熔炼击败事件", () => {
     );
     const grantedIds = data.granted.filter((item) => item.source === "achievement").map((item) => item.id);
     expect(grantedIds.sort()).toEqual([...ids].sort());
-    expect(data.balance).toBe(coinsOf(ids));
+    expect(data.balance).toBe(0);
+    for (const id of ids) {
+      expectOk(await app.post("/api/v1/achievements/claim", { id }, user.token));
+    }
+    const after = expectOk<{ balance: number }>(await app.get("/api/v1/achievements", user.token));
+    expect(after.balance).toBe(coinsOf(ids));
   });
 
   it("smelt_item 键被接受且不影响其他统计", async () => {

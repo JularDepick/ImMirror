@@ -49,4 +49,31 @@ export function registerAchievementRoutes(app: FastifyInstance, ctx: AppContext)
     const increments = parseReportStats(requestBody(request));
     return ok(service.report(user.id, increments));
   });
+
+  /* 领取单条成就奖励: 完成与领取分离, 只有已完成的条目可领. */
+  app.post("/api/v1/achievements/claim", { preHandler: guard }, async (request) => {
+    const user = requireAuth(request);
+    const id = readInteger(requestBody(request), "id");
+    return ok(service.claimAchievement(user.id, id));
+  });
+
+  /* 领取单条每日任务奖励: 槽位取当日任务板, 日期按服务端时区当天. */
+  app.post("/api/v1/achievements/daily/claim", { preHandler: guard }, async (request) => {
+    const user = requireAuth(request);
+    const slot = readInteger(requestBody(request), "slot");
+    return ok(service.claimDaily(user.id, slot));
+  });
+}
+
+/**
+ * 取整数字段: 允许数字或数字字符串, 缺失与非数字一律 BAD_REQUEST.
+ * 客户端统一以字符串下发, 因此两种形式都要接受.
+ */
+function readInteger(body: { [key: string]: unknown }, key: string): number {
+  const raw = body[key];
+  const value = typeof raw === "number" ? raw : typeof raw === "string" ? Number.parseInt(raw, 10) : Number.NaN;
+  if (!Number.isFinite(value)) {
+    throw new AppError("BAD_REQUEST", `${key} 必须为整数`);
+  }
+  return Math.trunc(value);
 }

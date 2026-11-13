@@ -11,6 +11,7 @@ export interface UserAchievementRow {
   value: number;
   target: number;
   completed_at: number | null;
+  claimed_at: number | null;
   updated_at: number;
 }
 
@@ -53,6 +54,26 @@ export function upsertUserAchievement(db: SqliteDatabase, input: UpsertAchieveme
        completed_at = COALESCE(user_achievements.completed_at, excluded.completed_at),
        updated_at = excluded.updated_at`,
   ).run(input.userId, input.achievementId, input.value, input.target, input.completedAt, input.now);
+}
+
+/**
+ * 标记一条成就已领取. 只对已完成且未领取的行生效,
+ * 返回受影响行数: 0 表示已被领取或尚未完成, 由调用方决定报错口径.
+ */
+export function claimUserAchievement(
+  db: SqliteDatabase,
+  userId: number,
+  achievementId: number,
+  now: number,
+): number {
+  const result = db
+    .prepare(
+      `UPDATE user_achievements
+          SET claimed_at = ?
+        WHERE user_id = ? AND achievement_id = ? AND completed_at IS NOT NULL AND claimed_at IS NULL`,
+    )
+    .run(now, userId, achievementId);
+  return result.changes;
 }
 
 export function countCompleted(db: SqliteDatabase, userId: number): number {
