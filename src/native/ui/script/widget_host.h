@@ -52,6 +52,12 @@ public:
      */
     void BindDataSource(UiDataSource* source);
 
+    /*
+     * 提示出口: 脚本调用 ShowGameTips 时把文案交给这里, 由调用方决定怎么显示.
+     * 未设置时只写日志.
+     */
+    void SetTipSink(std::function<void(const std::string&)> sink) { tipSink_ = std::move(sink); }
+
     /* 某事件当前有多少个控件订阅, 供统计与调试. */
     int32_t SubscriberCount(const std::string& name) const;
 
@@ -68,6 +74,8 @@ private:
     /* 控件到表的缓存, 保证同一控件始终是同一张表. */
     std::map<const Widget*, std::shared_ptr<Table>> cache_;
     /* 事件名到订阅控件的列表; 同一控件重复订阅同一事件只记一次. */
+    /* 脚本提示的出口, 未设置时只写日志. */
+    std::function<void(const std::string&)> tipSink_;
     std::map<std::string, std::vector<Widget*>> subscriptions_;
     /* 订阅条目总数, 供统计. */
     int32_t subscriptionTotal_ = 0;

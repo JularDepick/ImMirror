@@ -31,6 +31,7 @@ g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/native/ui/layout_xml.cpp" \
     "$ROOT/native/ui/layout_draw.cpp" \
     "$ROOT/native/ui/widget_tree.cpp" \
+    "$ROOT/scripts/tests/log_stub.cpp" \
     -o "$OUT_DIR/widget_tree_test.exe" || exit 1
 "$OUT_DIR/widget_tree_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
 
@@ -74,6 +75,7 @@ g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/native/ui/layout_xml.cpp" \
     "$ROOT/native/ui/layout_draw.cpp" \
     "$ROOT/native/ui/widget_tree.cpp" \
+    "$ROOT/scripts/tests/log_stub.cpp" \
     -o "$OUT_DIR/widget_host_test.exe" || exit 1
 "$OUT_DIR/widget_host_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
 
@@ -89,8 +91,25 @@ g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/native/ui/layout_xml.cpp" \
     "$ROOT/native/ui/layout_draw.cpp" \
     "$ROOT/native/ui/widget_tree.cpp" \
+    "$ROOT/scripts/tests/log_stub.cpp" \
     -o "$OUT_DIR/event_test.exe" || exit 1
 "$OUT_DIR/event_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
+
+echo "== 界面全局"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/ui_globals_test.cpp" \
+    "$ROOT/native/ui/script/lua_lexer.cpp" \
+    "$ROOT/native/ui/script/lua_parser.cpp" \
+    "$ROOT/native/ui/script/lua_value.cpp" \
+    "$ROOT/native/ui/script/lua_vm.cpp" \
+    "$ROOT/native/ui/script/widget_host.cpp" \
+    "$ROOT/native/ui/layout_frame.cpp" \
+    "$ROOT/native/ui/layout_xml.cpp" \
+    "$ROOT/native/ui/layout_draw.cpp" \
+    "$ROOT/native/ui/widget_tree.cpp" \
+    "$ROOT/scripts/tests/log_stub.cpp" \
+    -o "$OUT_DIR/ui_globals_test.exe" || exit 1
+"$OUT_DIR/ui_globals_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
 
 echo "== 数据绑定"
 g++ -std=c++17 -I "$ROOT/native" \
@@ -104,6 +123,7 @@ g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/native/ui/layout_xml.cpp" \
     "$ROOT/native/ui/layout_draw.cpp" \
     "$ROOT/native/ui/widget_tree.cpp" \
+    "$ROOT/scripts/tests/log_stub.cpp" \
     -o "$OUT_DIR/data_binding_test.exe" || exit 1
 "$OUT_DIR/data_binding_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
 
@@ -119,6 +139,7 @@ g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/native/ui/layout_xml.cpp" \
     "$ROOT/native/ui/layout_draw.cpp" \
     "$ROOT/native/ui/widget_tree.cpp" \
+    "$ROOT/scripts/tests/log_stub.cpp" \
     -o "$OUT_DIR/ui_batch.exe" || exit 1
 "$OUT_DIR/ui_batch.exe" "$ROOT/../../assets/project/data/xml/ui/mobile" \
     "$ROOT/../../assets/project/ui/mobile" || STATUS=1

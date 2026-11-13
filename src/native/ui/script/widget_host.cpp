@@ -2,6 +2,9 @@
 
 #include <cstring>
 
+#include "core/log.h"
+#include "ui/generated/string_data_gen.h"
+
 namespace immirror::ui::script {
 namespace {
 
@@ -104,6 +107,45 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
         }
         Widget* widget = tree_.Find(args[0].text.c_str());
         return std::vector<Value>{widget == nullptr ? Value() : TableOf(widget)};
+    });
+    /*
+     * 脚本侧常用全局:
+     *   GetS(id)          字符串表查表, 界面文案几乎全部经它取
+     *   Log(text)         写日志
+     *   ShowGameTips(text) 给玩家一条提示
+     *   GetInst(name)     取管理器单例; 返回空表, 方法调用自然得到空值而不报错
+     */
+    vm_.RegisterNative("GetS", [](const std::vector<Value>& args) {
+        if (args.empty()) {
+            return std::vector<Value>{Value::Str("")};
+        }
+        const int32_t id = static_cast<int32_t>(PlainNumberAt(args, 0, 0.0));
+        const char* text = gen::StringOf(static_cast<uint32_t>(id));
+        return std::vector<Value>{Value::Str(text == nullptr ? "" : text)};
+    });
+    vm_.RegisterNative("Log", [](const std::vector<Value>& args) {
+        std::string line;
+        for (size_t index = 0; index < args.size(); ++index) {
+            if (index > 0) {
+                line += " ";
+            }
+            line += args[index].ToText();
+        }
+        IM_LOGI("UiScript", "%s", line.c_str());
+        return std::vector<Value>();
+    });
+    vm_.RegisterNative("ShowGameTips", [this](const std::vector<Value>& args) {
+        const std::string text = PlainArgAt(args, 0).ToText();
+        if (tipSink_) {
+            tipSink_(text);
+        } else {
+            IM_LOGI("UiScript", "tip: %s", text.c_str());
+        }
+        return std::vector<Value>();
+    });
+    vm_.RegisterNative("GetInst", [](const std::vector<Value>&) {
+        /* 管理器单例在界面侧只需要"能取到东西", 具体方法暂未接. */
+        return std::vector<Value>{Value::Of(std::shared_ptr<Table>(new Table()))};
     });
     return true;
 }

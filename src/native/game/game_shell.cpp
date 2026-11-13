@@ -1464,6 +1464,8 @@ void GameShell::BindUiDataSource(ui::script::WidgetHost& host) {
     }
     uiDataSource_->SetWorldName(worldName_);
     host.BindDataSource(uiDataSource_.get());
+    /* 脚本的提示出口接 HUD: ShowGameTips 因此能真的弹一条提示. */
+    host.SetTipSink([this](const std::string& text) { ShowTip(text.c_str()); });
 }
 
 float GameShell::WorldTimeSeconds() const {
