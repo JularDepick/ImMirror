@@ -43,7 +43,13 @@ public final class UiSound {
     /* 合成失败音: 物品栏放不下时播放. */
     private static final String CRAFT_FAIL_ASSET = "sounds/ui_info_crafting_error.ogg";
     /* 进食音. */
+    /*
+     * 进食音: 两种咀嚼声交替播放, 连续吃同一种食物时不会听到完全一样的重复音.
+     */
     private static final String EAT_ASSET = "sounds/misc_eat1.ogg";
+    private static final String EAT_ASSET_ALT = "sounds/misc_eat2.ogg";
+    /* 交替状态: 每次进食翻转, 不需要随机源. */
+    private static boolean eatAlternate;
     /* 受伤音. */
     private static final String HURT_ASSET = "sounds/buff_buff_damaged_1.ogg";
     /* 界面音并发上限: 连点也不会互相打断. */
@@ -146,7 +152,8 @@ public final class UiSound {
 
     /* 进食音: 吃下食物时调用. */
     public static void eat(Context context) {
-        play(context, EAT_ASSET);
+        eatAlternate = !eatAlternate;
+        play(context, eatAlternate ? EAT_ASSET_ALT : EAT_ASSET);
     }
 
     /* 受伤音: 血量下降时调用. */

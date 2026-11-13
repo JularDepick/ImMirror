@@ -36,35 +36,35 @@ public final class AmbientAudioManager {
      * 属于水组, 其余按字面语义归组.
      */
     private static final String[] AMBIENT_TRACKS_JUNGLE = {
-        "sounds/env/env_Jungleday.ogg",
-        "sounds/env/env_Junglenight.ogg",
+        "sounds/env_jungleday.ogg",
+        "sounds/env_junglenight.ogg",
     };
     private static final String[] AMBIENT_TRACKS_RAIN = {
-        "sounds/env/env_rain1.ogg",
-        "sounds/env/env_rain2.ogg",
-        "sounds/env/env_rain3.ogg",
-        "sounds/env/env_rain4.ogg",
-        "sounds/env/env_rainfadein.ogg",
-        "sounds/env/env_thunder.ogg",
+        "sounds/env_rain1.ogg",
+        "sounds/env_rain2.ogg",
+        "sounds/env_rain3.ogg",
+        "sounds/env_rain4.ogg",
+        "sounds/env_rainfadein.ogg",
+        "sounds/env_thunder.ogg",
     };
     private static final String[] AMBIENT_TRACKS_WATER = {
-        "sounds/env/env_splash.ogg",
-        "sounds/env/env_swim1.ogg",
-        "sounds/env/env_swim2.ogg",
-        "sounds/env/env_swim3.ogg",
-        "sounds/env/env_swim4.ogg",
-        "sounds/env/env_underwater.ogg",
-        "sounds/env/env_water.ogg",
+        "sounds/env_splash.ogg",
+        "sounds/env_swim1.ogg",
+        "sounds/env_swim2.ogg",
+        "sounds/env_swim3.ogg",
+        "sounds/env_swim4.ogg",
+        "sounds/env_underwater.ogg",
+        "sounds/env_water.ogg",
     };
     private static final String[] AMBIENT_TRACKS_LAVA = {
-        "sounds/env/env_lava.ogg",
-        "sounds/env/env_lavapop.ogg",
+        "sounds/env_lava.ogg",
+        "sounds/env_lavapop.ogg",
     };
     private static final String[] AMBIENT_TRACKS_PORTAL = {
-        "sounds/env/env_portal.ogg",
+        "sounds/env_portal.ogg",
     };
     private static final String[] AMBIENT_TRACKS_TRANSFER = {
-        "sounds/env/env_transfer.ogg",
+        "sounds/env_transfer.ogg",
     };
 
     /*
@@ -73,40 +73,40 @@ public final class AmbientAudioManager {
      * 分组未接线或未命中时段表时从通用表随机取曲.
      */
     private static final String[] MUSIC_TRACKS_DAY = {
-        "sounds/music/music_bgm_day_1.ogg",
-        "sounds/music/music_bgm_day_2.ogg",
-        "sounds/music/music_bgm_day_3.ogg",
-        "sounds/music/music_bgm_day_4.ogg",
+        "sounds/music_bgm_day_1.ogg",
+        "sounds/music_bgm_day_2.ogg",
+        "sounds/music_bgm_day_3.ogg",
+        "sounds/music_bgm_day_4.ogg",
     };
     private static final String[] MUSIC_TRACKS_NIGHT = {
-        "sounds/music/music_bgm_night_1.ogg",
-        "sounds/music/music_bgm_night_2.ogg",
-        "sounds/music/music_bgm_night_3.ogg",
-        "sounds/music/music_bgm_night_4.ogg",
+        "sounds/music_bgm_night_1.ogg",
+        "sounds/music_bgm_night_2.ogg",
+        "sounds/music_bgm_night_3.ogg",
+        "sounds/music_bgm_night_4.ogg",
     };
     private static final String[] MUSIC_TRACKS_COMMON = {
-        "sounds/music/music_bgm1.ogg",
-        "sounds/music/music_bgm2.ogg",
-        "sounds/music/music_bgm3.ogg",
-        "sounds/music/music_bgm4.ogg",
-        "sounds/music/music_bgm5.ogg",
-        "sounds/music/music_bgm6.ogg",
-        "sounds/music/music_bgm7.ogg",
-        "sounds/music/music_bgm8.ogg",
-        "sounds/music/music_theme1.ogg",
+        "sounds/music_bgm1.ogg",
+        "sounds/music_bgm2.ogg",
+        "sounds/music_bgm3.ogg",
+        "sounds/music_bgm4.ogg",
+        "sounds/music_bgm5.ogg",
+        "sounds/music_bgm6.ogg",
+        "sounds/music_bgm7.ogg",
+        "sounds/music_bgm8.ogg",
+        "sounds/music_theme1.ogg",
         /*
          * 星球与星空曲目并入通用池: 客户端还没有维度划分, 这些曲子
          * 只作为氛围变化参与轮播; 首领曲 (earthcore_boss, star_bossmusic_final)
          * 不进通用池, 等战斗场景接线后再单独成组.
          */
-        "sounds/music/music_bgm_planet_day_1.ogg",
-        "sounds/music/music_bgm_planet_day_2.ogg",
-        "sounds/music/music_bgm_planet_day_3.ogg",
-        "sounds/music/music_bgm_planet_land.ogg",
-        "sounds/music/music_bgm_planet_night_1.ogg",
-        "sounds/music/music_bgm_planet_night_2.ogg",
-        "sounds/music/music_bgm_planet_night_3.ogg",
-        "sounds/music/music_star_bgm.ogg",
+        "sounds/music_bgm_planet_day_1.ogg",
+        "sounds/music_bgm_planet_day_2.ogg",
+        "sounds/music_bgm_planet_day_3.ogg",
+        "sounds/music_bgm_planet_land.ogg",
+        "sounds/music_bgm_planet_night_1.ogg",
+        "sounds/music_bgm_planet_night_2.ogg",
+        "sounds/music_bgm_planet_night_3.ogg",
+        "sounds/music_star_bgm.ogg",
     };
 
     private final Context context;

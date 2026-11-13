@@ -341,7 +341,7 @@ bool GameShell::TryAutoEat() {
                 audio::AudioEngine::Instance().PlayCreatureAsset(buffSound);
             }
         }
-        /* 使用音: 食物物品若配了使用音则播它, 否则交给界面事件走通用进食音. */
+        /* 使用音: 食物物品若配了使用音则播它, 否则交给界面事件走进食音. */
         {
             item::ToolCombat foodTool;
             if (item::ToolTable::Instance().Find(stack.item, foodTool) &&
