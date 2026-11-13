@@ -1267,6 +1267,8 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
                 bagPointerId_ = pointer.id;
                 bagHeld_ = true;
                 inventoryScreen_.SetOpen(true, inventory_);
+                /* 背包开合音: 事件编码 2 开, 3 关. */
+                uiEvents_.push_back(2);
                 continue;
             }
             const int32_t slot = hud_.HitTestSlot(pointer.x, pointer.y);
@@ -1341,6 +1343,7 @@ void GameShell::UpdateInventoryPanel(platform::InputSnapshot& input) {
             const ui::InventoryHit hit = hud_.HitTestInventory(pointer.x, pointer.y);
             if (hit.region == ui::InventoryRegion::kNone) {
                 inventoryScreen_.SetOpen(false, inventory_);
+                uiEvents_.push_back(3);
                 continue;
             }
             inventoryScreen_.SetCarryPosition(pointer.x, pointer.y);
