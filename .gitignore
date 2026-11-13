@@ -10,6 +10,9 @@ build-source/
 reports/project-index.jsonl
 reports/*.jsonl
 
+# 图集等派生产物, 由管线按需重生成
+generated/
+
 # 临时目录与日志
 temp/
 tmp/
