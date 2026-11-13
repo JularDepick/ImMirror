@@ -99,8 +99,11 @@ public:
     void DetachCreatureBank(JNIEnv* env);
 
     /* 按资源路径播放一次生物音效; 句柄为 0 或路径为空时静默跳过. */
-    /* scale 为额外的音量系数, 用于按距离衰减; 1 表示原音量. */
-    void PlayCreatureAsset(const char* assetPath, float scale = 1.0f);
+    /*
+     * scale 为额外的音量系数, 用于按距离衰减; 1 表示原音量.
+     * pan 为左右声像, 负值偏左, 正值偏右, 0 居中.
+     */
+    void PlayCreatureAsset(const char* assetPath, float scale = 1.0f, float pan = 0.0f);
 
 private:
     /* 播放需要 JNIEnv, 原生线程首次使用时附加到虚拟机. */

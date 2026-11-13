@@ -217,7 +217,7 @@ void AudioEngine::DetachCreatureBank(JNIEnv* env) {
     creatureHandleMethod_ = nullptr;
 }
 
-void AudioEngine::PlayCreatureAsset(const char* assetPath, float scale) {
+void AudioEngine::PlayCreatureAsset(const char* assetPath, float scale, float pan) {
     if (assetPath == nullptr || assetPath[0] == '\0') {
         return;
     }
@@ -251,8 +251,15 @@ void AudioEngine::PlayCreatureAsset(const char* assetPath, float scale) {
     if (attenuated <= 0.001f) {
         return;
     }
-    const jint stream =
-        env->CallIntMethod(soundPool_, playMethod_, handle, attenuated, attenuated, 1, 0, 1.0f);
+    /*
+     * 左右声像: 把居中音量按声像拆成两路, 声像越偏向一侧,
+     * 另一侧衰减越多; 极端值退化为单侧发声.
+     */
+    const float clampedPan = pan < -1.0f ? -1.0f : (pan > 1.0f ? 1.0f : pan);
+    const float leftVolume = attenuated * (clampedPan > 0.0f ? 1.0f - clampedPan : 1.0f);
+    const float rightVolume = attenuated * (clampedPan < 0.0f ? 1.0f + clampedPan : 1.0f);
+    const jint stream = env->CallIntMethod(soundPool_, playMethod_, handle, leftVolume, rightVolume,
+                                           1, 0, 1.0f);
     if (env->ExceptionCheck()) {
         env->ExceptionClear();
         return;

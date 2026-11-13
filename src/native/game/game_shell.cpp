@@ -2177,18 +2177,35 @@ void GameShell::UpdateEntities(double deltaSeconds) {
              * 因此远处的战斗声不会盖过身边的声音.
              */
             float scale = 1.0f;
+            float pan = 0.0f;
             {
                 const core::Vec3 feet = player_->Position();
                 const core::Vec3 eye = core::Vec3{feet.x, feet.y + 1.62f, feet.z};
-                const float distance = (event.position - eye).Length();
+                const core::Vec3 offset = event.position - eye;
+                const float distance = offset.Length();
                 constexpr float kNear = 8.0f;
                 constexpr float kFar = 48.0f;
                 scale = distance <= kNear
                             ? 1.0f
                             : (distance >= kFar ? 0.0f
                                                 : 1.0f - (distance - kNear) / (kFar - kNear));
+                /*
+                 * 左右声像: 取声源在玩家右方向上的投影占水平距离的比例,
+                 * 正右为 +1, 正左为 -1; 声源与玩家重合时居中.
+                 */
+                if (distance > 0.01f) {
+                    const core::Vec3 forward = player_->LookDirection();
+                    /* 水平右向量 = 前向量绕纵轴旋转 90 度. */
+                    const core::Vec3 right = core::Vec3{-forward.z, 0.0f, forward.x};
+                    const core::Vec3 flat = core::Vec3{offset.x, 0.0f, offset.z};
+                    const float flatLength = flat.Length();
+                    if (flatLength > 0.01f) {
+                        pan = (flat.x * right.x + flat.z * right.z) / flatLength;
+                        pan = pan < -1.0f ? -1.0f : (pan > 1.0f ? 1.0f : pan);
+                    }
+                }
             }
-            audio::AudioEngine::Instance().PlayCreatureAsset(path, scale);
+            audio::AudioEngine::Instance().PlayCreatureAsset(path, scale, pan);
         }
     }
 
