@@ -151,7 +151,11 @@ void main() {
 )glsl";
 
 const char* const kSkyFragmentShaderSource = R"glsl(#version 300 es
-precision mediump float;
+/*
+ * 天空片元用高精度: 星空按视线方向量化成格子取哈希, 中精度在 260 倍放大量级
+ * 上分辨不出单颗星, 会退化成整片亮斑. GLES 3.0 起片元着色器必须支持 highp.
+ */
+precision highp float;
 
 /* 昼夜两套天空配色: 天顶与地平线各一组, 由 uSkyFactor 线性混合. */
 const vec3 kDayTop = vec3(0.38, 0.62, 0.92);
@@ -228,6 +232,31 @@ void main() {
         float fade = smoothstep(0.015, 0.18, up);
         vec3 cloudColor = mix(vec3(0.62, 0.66, 0.72), vec3(1.0, 0.99, 0.96), factor);
         color = mix(color, cloudColor, coverage * fade * 0.85);
+    }
+
+    /*
+     * 月亮: 与太阳反方向的盘面, 夜间可见, 带一圈很淡的光晕.
+     * 降水时按强度压掉, 阴天不该看见月亮.
+     */
+    if (up > 0.0) {
+        float moonDot = dot(direction, -normalize(uSunDirection));
+        float moonDisc = smoothstep(0.9970, 0.9988, moonDot);
+        float moonHalo = pow(max(moonDot, 0.0), 220.0) * 0.20;
+        float moonVisible = (1.0 - factor) * (1.0 - clamp(uWeatherIntensity, 0.0, 1.0));
+        color = mix(color, vec3(0.88, 0.91, 0.96), (moonDisc + moonHalo) * moonVisible);
+    }
+
+    /*
+     * 星空: 把视线方向量化成格子后取哈希, 少数格子点亮成星.
+     * 只用方向决定, 因此转动视角时星点固定不闪烁; 夜间且高处才可见.
+     */
+    float night = 1.0 - factor;
+    if (night > 0.12 && up > 0.02) {
+        vec3 cell = floor(direction * 260.0);
+        float seedValue = hash(vec2(cell.x + cell.z * 31.0, cell.y - cell.z * 17.0));
+        float star = smoothstep(0.9972, 0.9995, seedValue);
+        float skyClear = 1.0 - clamp(uWeatherIntensity, 0.0, 1.0);
+        color += vec3(0.86, 0.90, 1.0) * star * night * skyClear * smoothstep(0.02, 0.25, up);
     }
 
     /* 太阳: 实心盘面加热晕, 夜间由天光因子压掉, 落到地平线以下不画. */
