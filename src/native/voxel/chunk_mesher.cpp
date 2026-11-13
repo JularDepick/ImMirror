@@ -458,6 +458,16 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                 const bool tintGrassTop =
                     blockName != nullptr && std::strstr(blockName, "grass") != nullptr;
 
+                /*
+                 * 液体表面: 上方是空气时把这一格整体压到八成七高,
+                 * 水面因此低于方块顶沿, 看起来是液面而不是一整块实心方块.
+                 */
+                float liquidScale = 1.0f;
+                if (isLiquid(id) && y + 1 < kWorldHeight &&
+                    blocks[index + kLayerStride] == block::Air) {
+                    liquidScale = 0.875f;
+                }
+
                 for (int32_t face = 0; face < kFaceCount; ++face) {
                     if (!needFace[face]) {
                         continue;
@@ -476,7 +486,7 @@ void ChunkMesher::BuildWithNeighbors(const ChunkColumn& column, ChunkCoord coord
                     for (int32_t corner = 0; corner < 4; ++corner) {
                         Vertex vertex;
                         vertex.px = originX + layout.cornerX[corner];
-                        vertex.py = originY + layout.cornerY[corner];
+                        vertex.py = originY + layout.cornerY[corner] * liquidScale;
                         vertex.pz = originZ + layout.cornerZ[corner];
                         vertex.u = tileU + ((corner == 1 || corner == 2) ? kTileExtent : 0.0f);
                         vertex.v = tileV + (corner >= 2 ? kTileExtent : 0.0f);
