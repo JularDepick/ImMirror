@@ -44,9 +44,11 @@ public final class RoomApi {
         public final int maxPlayers;
         public final int memberCount;
         public final long seed;
+        /* 是否有房间密码: 有密码的房间加入前要先输密码. */
+        public final boolean hasPassword;
 
         Room(String id, String code, String name, String ownerUid, String worldName,
-             int maxPlayers, int memberCount, long seed) {
+             int maxPlayers, int memberCount, long seed, boolean hasPassword) {
             this.id = id;
             this.code = code;
             this.name = name;
@@ -55,6 +57,7 @@ public final class RoomApi {
             this.maxPlayers = maxPlayers;
             this.memberCount = memberCount;
             this.seed = seed;
+            this.hasPassword = hasPassword;
         }
     }
 
@@ -148,6 +151,12 @@ public final class RoomApi {
     /* 建房; 房主即创建者, 房间号由服务端分配. */
     public void create(final Session session, final String name, final int maxPlayers,
                        final RoomCallback callback) {
+        create(session, name, maxPlayers, "", callback);
+    }
+
+    /* 建房并设置房间密码; 密码为空表示无密码房间. */
+    public void create(final Session session, final String name, final int maxPlayers,
+                       final String password, final RoomCallback callback) {
         if (!usable(session)) {
             callback.onFailure(new ApiException("AUTH_UNAUTHORIZED", "no session"));
             return;
@@ -157,6 +166,9 @@ public final class RoomApi {
                 final JSONObject body = new JSONObject();
                 body.put("name", name == null ? "" : name);
                 body.put("maxPlayers", maxPlayers);
+                if (password != null && !password.isEmpty()) {
+                    body.put("password", password);
+                }
                 final JSONObject data = request("POST", "/rooms", session, body);
                 final JSONObject raw = data.optJSONObject("room");
                 if (raw == null) {
@@ -175,6 +187,12 @@ public final class RoomApi {
 
     /* 按房间号加入; 房间号不区分大小写. */
     public void join(final Session session, final String code, final JoinCallback callback) {
+        join(session, code, "", callback);
+    }
+
+    /* 按房间号加入带密码的房间; 无密码房间传空串. */
+    public void join(final Session session, final String code, final String password,
+                     final JoinCallback callback) {
         if (!usable(session)) {
             callback.onFailure(new ApiException("AUTH_UNAUTHORIZED", "no session"));
             return;
@@ -183,6 +201,9 @@ public final class RoomApi {
             try {
                 final JSONObject body = new JSONObject();
                 body.put("code", code == null ? "" : code.trim());
+                if (password != null && !password.isEmpty()) {
+                    body.put("password", password);
+                }
                 final JSONObject data = request("POST", "/rooms/join", session, body);
                 final JSONObject raw = data.optJSONObject("room");
                 if (raw == null) {
@@ -269,7 +290,8 @@ public final class RoomApi {
                 raw.optString("worldName", ""),
                 raw.optInt("maxPlayers", 0),
                 raw.optInt("memberCount", 0),
-                raw.optLong("seed", 0L));
+                raw.optLong("seed", 0L),
+                raw.optBoolean("hasPassword", false));
     }
 
     /* 取数组字段的文本形式; 缺失时给空数组, 避免调用方判空. */

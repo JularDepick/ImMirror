@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -49,6 +50,8 @@ public final class MultiplayerLobbyActivity extends Activity {
     private Button createButton;
     private boolean createConfirmPending;
     private boolean busy;
+    /* 带密码房间的输入框: 平时隐藏, 点到有密码的房间时展开. */
+    private EditText passwordField;
 
     /* 最近一次拉取到的房间, 供列表重绘与加入时取房间号. */
     private final List<RoomApi.Room> rooms = new ArrayList<>();
@@ -95,6 +98,11 @@ public final class MultiplayerLobbyActivity extends Activity {
         roomListHost.setOrientation(LinearLayout.VERTICAL);
         roomListHost.addView(roomEmptyView);
         column.addView(roomListHost, AccountTheme.block(this, 12f));
+
+        passwordField = AccountTheme.field(this, getString(R.string.lobby_room_password_hint),
+                AccountTheme.TEXT_SIZE_BODY);
+        passwordField.setVisibility(View.GONE);
+        column.addView(passwordField, AccountTheme.block(this, 8f));
 
         final LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
@@ -179,9 +187,12 @@ public final class MultiplayerLobbyActivity extends Activity {
         final TextView name = AccountTheme.label(this, room.name);
         card.addView(name);
 
-        final String codeLine = getString(R.string.lobby_room_code_format, room.code)
+        String codeLine = getString(R.string.lobby_room_code_format, room.code)
                 + "  " + getString(R.string.lobby_room_players_format, room.memberCount,
                 room.maxPlayers);
+        if (room.hasPassword) {
+            codeLine += "  " + getString(R.string.lobby_room_locked);
+        }
         final TextView meta = AccountTheme.body(this, codeLine,
                 AccountTheme.COLOR_TEXT_MUTED, AccountTheme.TEXT_SIZE_SUB);
         card.addView(meta, AccountTheme.block(this, 4f));
@@ -200,9 +211,24 @@ public final class MultiplayerLobbyActivity extends Activity {
         if (busy) {
             return;
         }
+        /*
+         * 有密码的房间先要密码: 第一次点击只展开输入框并提示,
+         * 输入后再点同一个房间才真正加入.
+         */
+        String password = "";
+        if (room.hasPassword) {
+            password = passwordField.getText().toString().trim();
+            if (password.isEmpty()) {
+                passwordField.setVisibility(View.VISIBLE);
+                passwordField.requestFocus();
+                showNotice(getString(R.string.lobby_room_password_required),
+                        AccountTheme.COLOR_WARNING);
+                return;
+            }
+        }
         busy = true;
         showNotice(getString(R.string.lobby_room_joining));
-        roomApi.join(session, room.code, new RoomApi.JoinCallback() {
+        roomApi.join(session, room.code, password, new RoomApi.JoinCallback() {
             @Override
             public void onSuccess(RoomApi.Room joined, long seq) {
                 busy = false;
@@ -214,9 +240,17 @@ public final class MultiplayerLobbyActivity extends Activity {
             public void onFailure(ApiException error) {
                 busy = false;
                 Log.w(TAG, "room join failed: " + error.code() + " " + error.detail());
-                final String message = "ROOM_FULL".equals(error.code())
-                        ? getString(R.string.lobby_room_full)
-                        : getString(R.string.lobby_room_join_failed);
+                String message = getString(R.string.lobby_room_join_failed);
+                if ("ROOM_FULL".equals(error.code())) {
+                    message = getString(R.string.lobby_room_full);
+                } else if ("ROOM_PASSWORD_INVALID".equals(error.code())) {
+                    message = getString(R.string.lobby_room_password_invalid);
+                    passwordField.setText("");
+                    passwordField.setVisibility(View.VISIBLE);
+                } else if ("ROOM_PASSWORD_REQUIRED".equals(error.code())) {
+                    message = getString(R.string.lobby_room_password_required);
+                    passwordField.setVisibility(View.VISIBLE);
+                }
                 showNotice(message, AccountTheme.COLOR_WARNING);
             }
         });

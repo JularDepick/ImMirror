@@ -71,6 +71,10 @@
     <string name="lobby_room_list_failed">房间列表读取失败</string>
     <string name="lobby_room_count_format">共 %1$d 个房间</string>
     <string name="lobby_create_confirm">再按一次创建</string>
+    <string name="lobby_room_locked">有密码</string>
+    <string name="lobby_room_password_hint">房间密码</string>
+    <string name="lobby_room_password_required">该房间需要密码, 输入后再次点击加入</string>
+    <string name="lobby_room_password_invalid">房间密码不正确</string>
     <string name="lobby_room_joinable">可加入</string>
     <string name="lobby_room_full">已满员</string>
     <string name="lobby_create_name_hint">房间名</string>
