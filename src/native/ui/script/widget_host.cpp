@@ -76,6 +76,13 @@ const Value& PlainArgAt(const std::vector<Value>& args, size_t index) {
     return index < args.size() ? args[index] : kEmpty;
 }
 
+/* 把一个宿主函数包成可放进表里的值. */
+Value MakeNative(Closure::NativeFn fn) {
+    std::shared_ptr<Closure> closure(new Closure());
+    closure->native = std::move(fn);
+    return Value::Of(closure);
+}
+
 }  /* namespace */
 
 bool WidgetHost::Load(const char* layoutText, size_t length) {
@@ -143,9 +150,56 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
         }
         return std::vector<Value>();
     });
-    vm_.RegisterNative("GetInst", [](const std::vector<Value>&) {
-        /* 管理器单例在界面侧只需要"能取到东西", 具体方法暂未接. */
-        return std::vector<Value>{Value::Of(std::shared_ptr<Table>(new Table()))};
+    /*
+     * 管理器单例: 按名字给出带常用方法的表.
+     * 只接有确定语义的方法 (平台判定, 版本, 字符串表查询, 播放音效);
+     * 其余方法取到空值即可, 脚本的判空写法本来就会跳过它们.
+     */
+    vm_.RegisterNative("GetInst", [this](const std::vector<Value>& args) {
+        const std::string name = PlainArgAt(args, 0).ToText();
+        std::shared_ptr<Table> table(new Table());
+        if (name == "ClientMgr") {
+            /* 平台判定: 客户端只跑移动端, 因此 isPC 恒假, isMobile 恒真. */
+            table->Set(Value::Str("isPC"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Bool(false)};
+            }));
+            table->Set(Value::Str("isMobile"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Bool(true)};
+            }));
+            table->Set(Value::Str("getApiId"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
+            }));
+            table->Set(Value::Str("clientVersion"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Str("0.1.0")};
+            }));
+            table->Set(Value::Str("clientVersionFromStr"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
+            }));
+            /* 二维音效: 界面点击音一类, 直接交给音频引擎. */
+            table->Set(Value::Str("playSound2D"), MakeNative([this](const std::vector<Value>& call) {
+                const std::string path = ArgAt(call, 0).ToText();
+                if (path.empty()) {
+                    return std::vector<Value>();
+                }
+                if (soundSink_) {
+                    soundSink_(path);
+                } else {
+                    IM_LOGI("UiScript", "sound: %s", path.c_str());
+                }
+                return std::vector<Value>();
+            }));
+        } else if (name == "DefMgr") {
+            /* 字符串表查询: 与全局 GetS 同一张表. */
+            table->Set(Value::Str("getStringDef"), MakeNative([](const std::vector<Value>& call) {
+                const int32_t id = static_cast<int32_t>(NumberAt(call, 0, 0.0));
+                const char* text = gen::StringOf(static_cast<uint32_t>(id));
+                return std::vector<Value>{Value::Str(text == nullptr ? "" : text)};
+            }));
+            table->Set(Value::Str("filterString"), MakeNative([](const std::vector<Value>& call) {
+                return std::vector<Value>{Value::Str(ArgAt(call, 0).ToText())};
+            }));
+        }
+        return std::vector<Value>{Value::Of(table)};
     });
     return true;
 }

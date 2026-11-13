@@ -63,6 +63,27 @@ int main(int argc, char** argv) {
     check("管理器单例非空", host.Vm().GetGlobal("InstOk").number == 1.0);
     check("提示出口收到文案", lastTip == "TIP-OK");
 
+    /* 管理器方法: 平台判定, 版本, 字符串查询与音效出口. */
+    std::string lastSound;
+    host.SetSoundSink([&lastSound](const std::string& path) { lastSound = path; });
+    const char* managerScript =
+        "local mgr = GetInst(\"ClientMgr\") "
+        "IsPC = mgr:isPC() and 1 or 0 "
+        "IsMobile = mgr:isMobile() and 1 or 0 "
+        "Version = mgr:clientVersion() "
+        "mgr:playSound2D(\"sounds/ui_click.ogg\") "
+        "local def = GetInst(\"DefMgr\") "
+        "Str = def:getStringDef(1) "
+        "Other = GetInst(\"NoSuchMgr\") "
+        "OtherOk = (Other ~= nil) and 1 or 0 ";
+    check("执行管理器脚本", host.RunScript(managerScript, std::strlen(managerScript), screen));
+    check("平台判定为移动端", host.Vm().GetGlobal("IsPC").number == 0.0 &&
+                                   host.Vm().GetGlobal("IsMobile").number == 1.0);
+    check("版本号非空", host.Vm().GetGlobal("Version").text.size() > 0);
+    check("音效出口收到路径", lastSound == "sounds/ui_click.ogg");
+    check("字符串查询可用", host.Vm().GetGlobal("Str").text.size() > 0);
+    check("未知管理器也非空", host.Vm().GetGlobal("OtherOk").number == 1.0);
+
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;
 }

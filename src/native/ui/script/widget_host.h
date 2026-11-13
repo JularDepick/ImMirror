@@ -58,6 +58,14 @@ public:
      */
     void SetTipSink(std::function<void(const std::string&)> sink) { tipSink_ = std::move(sink); }
 
+    /*
+     * 音效出口: 脚本调用管理器播放二维音效时把资源路径交给这里.
+     * 未设置时只写日志, 因此宿主断言不依赖音频引擎.
+     */
+    void SetSoundSink(std::function<void(const std::string&)> sink) {
+        soundSink_ = std::move(sink);
+    }
+
     /* 某事件当前有多少个控件订阅, 供统计与调试. */
     int32_t SubscriberCount(const std::string& name) const;
 
@@ -74,8 +82,9 @@ private:
     /* 控件到表的缓存, 保证同一控件始终是同一张表. */
     std::map<const Widget*, std::shared_ptr<Table>> cache_;
     /* 事件名到订阅控件的列表; 同一控件重复订阅同一事件只记一次. */
-    /* 脚本提示的出口, 未设置时只写日志. */
+    /* 脚本提示与音效的出口, 未设置时只写日志. */
     std::function<void(const std::string&)> tipSink_;
+    std::function<void(const std::string&)> soundSink_;
     std::map<std::string, std::vector<Widget*>> subscriptions_;
     /* 订阅条目总数, 供统计. */
     int32_t subscriptionTotal_ = 0;

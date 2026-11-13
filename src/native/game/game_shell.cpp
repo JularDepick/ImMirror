@@ -1466,6 +1466,10 @@ void GameShell::BindUiDataSource(ui::script::WidgetHost& host) {
     host.BindDataSource(uiDataSource_.get());
     /* 脚本的提示出口接 HUD: ShowGameTips 因此能真的弹一条提示. */
     host.SetTipSink([this](const std::string& text) { ShowTip(text.c_str()); });
+    /* 脚本的音效出口接音频引擎: 界面点击音一类. */
+    host.SetSoundSink([](const std::string& path) {
+        audio::AudioEngine::Instance().PlayCreatureAsset(path.c_str());
+    });
 }
 
 float GameShell::WorldTimeSeconds() const {
