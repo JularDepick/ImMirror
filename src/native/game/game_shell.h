@@ -142,6 +142,12 @@ public:
      */
     int32_t AmbientContext() const;
     void ApplyRemotePlayers(const std::string& json);
+
+    /*
+     * 重力沉降: 方块表重力方式为 1 的方块 (沙, 砂砾) 悬空时向下落,
+     * 每次方块改动后按改动点上方一列处理, 只落不改其它方块.
+     */
+    void SettleGravityAt(int32_t x, int32_t y, int32_t z);
     /* 上一轮下发的远端玩家数, 用于只在数量变化时打日志. */
     int32_t lastRemoteCount_ = -1;
     int32_t SelectedSlot() const { return selectedSlot_; }

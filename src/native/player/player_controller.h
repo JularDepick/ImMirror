@@ -222,6 +222,9 @@ public:
     /* 当前挖掘目标的方块 id, 未挖掘时为空气. */
     voxel::BlockId MiningBlock() const { return mine_.active ? mine_.id : 0; }
 
+    /* 最近一次成功放置的方块坐标, 供总装做重力沉降等后处理. */
+    voxel::BlockPos LastPlacedPos() const { return lastPlacedPos_; }
+
     /* 当前挖掘所需的总秒数, 未挖掘时为 0. */
     float MiningDuration() const { return mine_.active ? mine_.duration : 0.0f; }
 
@@ -391,6 +394,8 @@ private:
     void QueueBlockEdit(int32_t x, int32_t y, int32_t z, voxel::BlockId block);
     /* 挖掘速度系数, 1.0 为徒手基准. */
     float miningSpeed_ = 1.0f;
+    /* 最近一次成功放置的方块坐标, 默认零值表示尚未放置. */
+    voxel::BlockPos lastPlacedPos_{};
     CameraMode cameraMode_ = CameraMode::kFirstPerson;
     /* 最近一次 Update 的世界, 相机后撤的碰撞回收在渲染期按同帧数据判定. */
     const world::World* worldRef_ = nullptr;

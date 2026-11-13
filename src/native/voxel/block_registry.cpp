@@ -248,7 +248,18 @@ const BlockRegistry& BlockRegistry::Instance() {
 
 const BlockInfo& BlockRegistry::Info(BlockId id) const {
     if (id < block::LegacyCount) {
-        return kLegacyBlockTable[id];
+        /*
+         * 兼容段表的字段属存档兼容面, 表本身保持不动; 重力一列由生成表叠加,
+         * 避免把数据表口径手抄进兼容段. 叠加结果按 id 缓存, 只算一次.
+         */
+        static BlockInfo legacyCache[block::LegacyCount];
+        static bool legacyFilled[block::LegacyCount] = {};
+        if (!legacyFilled[id]) {
+            legacyCache[id] = kLegacyBlockTable[id];
+            legacyCache[id].gravity = gen::BlockEntryOf(id).gravity;
+            legacyFilled[id] = true;
+        }
+        return legacyCache[id];
     }
     const int32_t index = static_cast<int32_t>(id) - static_cast<int32_t>(block::LegacyCount);
     if (index >= gen::kRegistryEntryCount) {
@@ -286,6 +297,7 @@ const BlockInfo& BlockRegistry::Info(BlockId id) const {
         info.tool = ToolOf(entry.tool);
         info.material = MaterialOf(entry.material);
         info.toolLevel = entry.toolLevel;
+        info.gravity = entry.gravity;
         filled[index] = true;
     }
     return info;

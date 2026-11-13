@@ -337,6 +337,7 @@ bool PlayerController::PlaceBlock(world::World& world, voxel::BlockId id) {
         return false;
     }
     QueueBlockEdit(target.x, target.y, target.z, id);
+    lastPlacedPos_ = target;
     return true;
 }
 

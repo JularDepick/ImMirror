@@ -317,6 +317,10 @@ def build_extension_entry(client_id, source_id, row, used_keys):
     tool_level = to_int(row.get("ToolLevel"))
     if not 0 <= tool_level <= 15:
         tool_level = 0
+    # 重力方式: 0 不影响, 1 沙子下坠, 2 流体流动, 3 花草破坏; 客户端只消费 1
+    gravity = to_int(row.get("GravityEffect"))
+    if not 0 <= gravity <= 3:
+        gravity = 0
 
     dig_family, dig_name = sound_family(row.get("DigSound"))
     _, place_name = sound_family(row.get("PlaceSound"))
@@ -342,6 +346,7 @@ def build_extension_entry(client_id, source_id, row, used_keys):
         "hardness": hardness,
         "tool": tool,
         "tool_level": tool_level,
+        "gravity": gravity,
         "dig_sound": dig_name,
         "place_sound": place_name,
         "walk_sound": walk_name,
@@ -394,7 +399,10 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
     hardness = to_float(data.get("Hardness"), -1.0)
     if not HARDNESS_MIN <= hardness <= HARDNESS_MAX:
         hardness = -1.0
-    return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du},'
+    gravity = to_int(data.get("GravityEffect"))
+    if not 0 <= gravity <= 3:
+        gravity = 0
+    return ('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du},'
             "  /* %s */"
             % (source_id, client_id, escape(name),
                escape(data.get("Name", "").strip()),
@@ -404,7 +412,7 @@ def render_legacy_row(client_id, name, source_id, data, drop_source, drop_field,
                escape(data.get("PlaceSound", "").strip()),
                escape(data.get("WalkSound", "").strip()),
                escape(data.get("Texture1", "").strip()),
-               drop_source, comment))
+               drop_source, gravity, comment))
 
 
 def render_header(entries, legacy_rows, segments):
@@ -469,6 +477,7 @@ def render_header(entries, legacy_rows, segments):
         "    const char* walkSound;   /* 行走音名, 空串表示没有 */",
         "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
         "    uint32_t dropSourceId;   /* 掉落物物品 id, 0 表示无掉落 */",
+        "    uint8_t gravity;         /* 重力方式: 0 不影响, 1 下坠 */",
         "};",
         "",
         "/* 条目按客户端 id 升序排列, 下标即客户端 id, 越界回落到首条 (空气). */",
@@ -485,7 +494,7 @@ def render_header(entries, legacy_rows, segments):
     for entry in entries:
         comment = "%s, 掉落字段 %s" % (entry["category"] or "无类别",
                                      entry["drop_field"] or "无")
-        lines.append('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du},'
+        lines.append('    {%du, %du, "%s", "%s", "%s", %du, %s, %du, %du, "%s", "%s", "%s", "%s", %du, %du},'
                      "  /* %s */"
                      % (entry["source_id"], entry["client_id"], escape(entry["key"]),
                         escape(entry["display_name"]), escape(entry["category"]),
@@ -493,7 +502,7 @@ def render_header(entries, legacy_rows, segments):
                         entry["tool"], entry["tool_level"],
                         escape(entry["dig_sound"]), escape(entry["place_sound"]),
                         escape(entry["walk_sound"]), escape(entry["texture"]),
-                        entry["drop_source"], comment))
+                        entry["drop_source"], entry["gravity"], comment))
     lines += [
         "};",
         "",
@@ -593,6 +602,7 @@ def render_header(entries, legacy_rows, segments):
         "    const char* walkSound;   /* 行走音名, 空串表示没有 */",
         "    const char* texture;     /* 贴图1 名, 空串表示没有 */",
         "    uint8_t shape;           /* 渲染形状, 与 voxel::BlockShape 对齐 */",
+        "    uint8_t gravity;         /* 重力方式: 0 不影响, 1 下坠 */",
         "};",
         "",
         "constexpr int32_t kRegistryEntryCount = kBlockEntryCount - kLegacyBlockCount;",
@@ -600,7 +610,7 @@ def render_header(entries, legacy_rows, segments):
         "constexpr RegistryEntry kRegistryEntries[kRegistryEntryCount] = {",
     ]
     for entry in entries:
-        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, %du, "%s", "%s", "%s", "%s", %du},'
+        lines.append('    {%du, "%s", %s, %s, %s, %du, %du, %du, "%s", "%s", "%s", "%s", %du, %du},'
                      % (entry["client_id"], escape(entry["key"]),
                         "true" if entry["solid"] else "false",
                         "true" if entry["opaque"] else "false",
@@ -608,7 +618,7 @@ def render_header(entries, legacy_rows, segments):
                         entry["material"], entry["tool_level"], escape(entry["dig_sound"]),
                         escape(entry["place_sound"]), escape(entry["walk_sound"]),
                         escape(entry["texture"]),
-                        SHAPE_INDEX.get(entry["shape"], 0)))
+                        SHAPE_INDEX.get(entry["shape"], 0), entry["gravity"]))
     lines += [
         "};",
         "",

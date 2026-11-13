@@ -982,6 +982,8 @@ void GameShell::ApplyRemoteBlockEdits(const std::string& json) {
         }
         if (world_->SetBlock(x, y, z, static_cast<voxel::BlockId>(block))) {
             ++applied;
+            /* 远端改动同样触发沉降: 别人挖掉沙下的方块时, 沙子也要落. */
+            SettleGravityAt(x, y, z);
         }
     }
     if (applied > 0) {
@@ -1584,6 +1586,8 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
                                      static_cast<float>(tick.blockPos.y) + 0.5f,
                                      static_cast<float>(tick.blockPos.z) + 0.5f);
     CollectDrop(tick.block);
+    /* 破坏点上方若有重力方块, 失去支撑后落下来. */
+    SettleGravityAt(tick.blockPos.x, tick.blockPos.y, tick.blockPos.z);
     /*
      * 挖掉一格扣一次手持工具耐久, 耗尽时工具消失并提示.
      * 徒手与方块类手持物不带耐久, 这里会直接返回 false.
@@ -1747,6 +1751,53 @@ void GameShell::CollectDrop(voxel::BlockId brokenBlock) {
     ShowTip("BAG FULL");
 }
 
+/*
+ * 重力沉降.
+ * 方块改动后, 从改动点上方一列向上扫: 遇到重力方块且下方为空就把它落到
+ * 最近的非空格之上. 单次最多处理 64 格, 避免一次改动引发长链开销;
+ * 沉降只搬方块, 不改其它格子的内容, 也不触发掉落.
+ */
+void GameShell::SettleGravityAt(int32_t x, int32_t y, int32_t z) {
+    constexpr int32_t kMaxFall = 64;
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    int32_t settled = 0;
+    const int32_t top = y + 1 + kMaxFall < voxel::kWorldHeight ? y + 1 + kMaxFall : voxel::kWorldHeight;
+    for (int32_t columnY = y + 1; columnY < top; ++columnY) {
+        const voxel::BlockId id = world_->GetBlock(x, columnY, z);
+        if (id == voxel::block::Air) {
+            continue;
+        }
+        const voxel::BlockInfo& info = registry.Info(id);
+        /*
+         * 花草失去支撑即破坏: 只对非实心的重力方式 3 生效,
+         * 避免把浮空的实心方块 (如雪) 误删.
+         */
+        if (info.gravity == 3 && !info.solid) {
+            if (world_->GetBlock(x, columnY - 1, z) == voxel::block::Air) {
+                world_->SetBlock(x, columnY, z, voxel::block::Air);
+                ++settled;
+            }
+            continue;
+        }
+        if (info.gravity != 1) {
+            continue;
+        }
+        int32_t target = columnY;
+        while (target > 0 && world_->GetBlock(x, target - 1, z) == voxel::block::Air) {
+            target -= 1;
+        }
+        if (target == columnY) {
+            continue;
+        }
+        world_->SetBlock(x, columnY, z, voxel::block::Air);
+        world_->SetBlock(x, target, z, id);
+        ++settled;
+    }
+    if (settled > 0) {
+        IM_LOGI(kTag, "gravity settled=%d at %d,%d,%d", settled, x, y, z);
+    }
+}
+
 bool GameShell::TryPlaceSelectedBlock() {
     const item::ItemTable& items = item::ItemTable::Instance();
     const item::ItemStack stack = inventory_.Slot(selectedSlot_);
@@ -1771,6 +1822,10 @@ bool GameShell::TryPlaceSelectedBlock() {
     }
     inventory_.Consume(selectedSlot_, 1);
     CountProgressEvent(2);
+    {
+        const voxel::BlockPos placed = player_->LastPlacedPos();
+        SettleGravityAt(placed.x, placed.y, placed.z);
+    }
     IM_LOGI(kTag, "block placed slot=%d item=%s block=%s remain=%d", selectedSlot_,
             items.Info(stack.item).key, voxel::BlockRegistry::Instance().Info(block).name,
             inventory_.Count(selectedSlot_));
