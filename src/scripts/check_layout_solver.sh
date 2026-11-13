@@ -34,6 +34,9 @@ g++ -std=c++17 -I "$ROOT/native" \
     -o "$OUT_DIR/widget_tree_test.exe" || exit 1
 "$OUT_DIR/widget_tree_test.exe" "$ROOT/../../assets/project/data/xml/ui/mobile/account.xml" || STATUS=1
 
+echo "== 全量控件加载"
+"$OUT_DIR/widget_tree_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
+
 echo "== 全量布局解析"
 "$OUT_DIR/layout_xml_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 

@@ -1,6 +1,7 @@
 /* 控件绑定层的离线断言: 加载真实布局后逐个验证脚本侧常用动作. */
 #include <cmath>
 #include <cstdio>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -40,7 +41,61 @@ static bool ReadFile(const char* path, std::string& out) {
     return true;
 }
 
+/* 批量模式: 逐个加载布局, 解算并展开绘制命令, 统计规模与异常. */
+static int Batch(const char* directory) {
+    int files = 0;
+    int loaded = 0;
+    int skipped = 0;
+    int failed = 0;
+    int widgets = 0;
+    int commands = 0;
+    int hiddenOnly = 0;
+    std::vector<std::string> failures;
+    const LayoutRect screen{0.0f, 0.0f, 1280.0f, 720.0f};
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(directory)) {
+        if (!entry.is_regular_file() || entry.path().extension() != ".xml") {
+            continue;
+        }
+        files += 1;
+        std::string text;
+        if (!ReadFile(entry.path().string().c_str(), text)) {
+            failed += 1;
+            failures.push_back(entry.path().filename().string());
+            continue;
+        }
+        WidgetTree tree;
+        if (!tree.Load(text.data(), text.size())) {
+            /* 没有帧的 XML 是资源清单一类, 不计失败. */
+            if (tree.Error() == "没有帧节点") {
+                skipped += 1;
+            } else {
+                failed += 1;
+                failures.push_back(entry.path().filename().string() + " :: " + tree.Error());
+            }
+            continue;
+        }
+        tree.Resolve(screen);
+        std::vector<LayoutDrawCommand> out;
+        tree.CollectDrawCommands(out);
+        loaded += 1;
+        widgets += tree.WidgetCount();
+        commands += static_cast<int>(out.size());
+        if (out.empty()) {
+            hiddenOnly += 1;
+        }
+    }
+    std::printf("XML 文件 %d, 加载成功 %d, 非布局 %d, 失败 %d\n", files, loaded, skipped, failed);
+    std::printf("控件总计 %d, 绘制命令总计 %d, 无命令的布局 %d\n", widgets, commands, hiddenOnly);
+    for (size_t index = 0; index < failures.size() && index < 8; ++index) {
+        std::printf("  失败 %s\n", failures[index].c_str());
+    }
+    return failures.empty() ? 0 : 1;
+}
+
 int main(int argc, char** argv) {
+    if (argc > 2 && std::string(argv[1]) == "--batch") {
+        return Batch(argv[2]);
+    }
     const char* path = argc > 1 ? argv[1] : "../../assets/project/data/xml/ui/mobile/account.xml";
     std::string text;
     if (!ReadFile(path, text)) {
