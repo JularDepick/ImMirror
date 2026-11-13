@@ -38,6 +38,8 @@ public final class UiSound {
     private static final String BAG_TOGGLE_ASSET = "sounds/ui_bp_bpsound2.ogg";
     /* 附魔成功音. */
     private static final String ENCHANT_ASSET = "sounds/ui_info_book_unlock.ogg";
+    /* 拾取音: 地面掉落物入包时播放. */
+    private static final String PICKUP_ASSET = "sounds/ui_info_experience_star.ogg";
     /* 界面音并发上限: 连点也不会互相打断. */
     private static final int MAX_STREAMS = 4;
 
@@ -124,6 +126,11 @@ public final class UiSound {
     /* 附魔成功音. */
     public static void enchant(Context context) {
         play(context, ENCHANT_ASSET);
+    }
+
+    /* 拾取音: 掉落物入包时调用. */
+    public static void pickup(Context context) {
+        play(context, PICKUP_ASSET);
     }
 
     /*

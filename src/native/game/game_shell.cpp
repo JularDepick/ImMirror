@@ -2332,6 +2332,8 @@ void GameShell::UpdateDrops(double deltaSeconds) {
             const int32_t added = inventory_.Add(drop.item, drop.count);
             if (added > 0) {
                 render::particle::RemoveDrop(drop.id);
+                /* 拾取音: 事件编码 5, 由 Java 侧取走后播放. */
+                uiEvents_.push_back(5);
                 IM_LOGI(kTag, "drop picked item=%u count=%d", static_cast<uint32_t>(drop.item),
                         added);
                 keep = false;
