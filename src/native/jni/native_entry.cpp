@@ -219,6 +219,32 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetWeatherState(JNIEnv* 
     shell->SetWeatherState(static_cast<int32_t>(kind), static_cast<float>(intensity));
 }
 
+/* Java 侧低频入口: 取走客人侧的拾取申报, 逗号分隔的掉落物标识. */
+JNIEXPORT jstring JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakePickupRequests(JNIEnv* env,
+                                                                         jclass clazz) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return env->NewStringUTF("");
+    }
+    return env->NewStringUTF(shell->TakePickupRequests().c_str());
+}
+
+/* Java 侧低频入口: 服务端裁定后把结果交回原生. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeApplyPickupResult(JNIEnv* env, jclass clazz,
+                                                                        jint dropId,
+                                                                        jint blockId) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return;
+    }
+    shell->ApplyPickupResult(static_cast<int32_t>(dropId), static_cast<int32_t>(blockId));
+}
+
 /* Java 侧低频入口: 当前是否潜水, 供环境音压减. */
 JNIEXPORT jboolean JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeIsUnderwater(JNIEnv* env, jclass clazz) {

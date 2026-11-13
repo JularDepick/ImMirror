@@ -284,6 +284,15 @@ public:
     /* 供界面层查询当前是否潜水: 环境音压减按它判断. */
     bool IsUnderwater() const { return wasInWater_; }
 
+    /*
+     * 客人侧拾取申报: 掉落物由房主维护, 客人只能申报"我要捡这个",
+     * 由服务端裁定归属. 取走后返回逗号分隔的掉落物标识.
+     */
+    std::string TakePickupRequests();
+
+    /* 服务端裁定成功后, 把物品放进本地背包. */
+    void ApplyPickupResult(int32_t dropId, int32_t blockId);
+
     /* 把游戏状态接到界面宿主上; 界面脚本因此能读到背包与玩家数据. */
     void BindUiDataSource(ui::script::WidgetHost& host);
 
@@ -482,6 +491,8 @@ private:
     std::unique_ptr<GameUiDataSource> uiDataSource_;
     /* 当前世界名, 界面显示与数据源都用它. */
     std::string worldName_ = "default";
+    /* 待申报的掉落物标识, 由客人侧在走到掉落物上时填入. */
+    std::vector<int32_t> pendingPickups_;
     /* 天气状态机: 按玩家所在群系的权重周期重抽, 结果下发给渲染侧. */
     world::Weather weather_;
     world::WeatherKind lastWeatherKind_ = world::WeatherKind::kClear;

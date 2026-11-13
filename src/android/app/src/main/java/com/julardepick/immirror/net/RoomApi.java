@@ -286,6 +286,37 @@ public final class RoomApi {
         });
     }
 
+    /* 掉落物拾取申报: 服务端裁定归属, 先到先得. */
+    public void pickup(final Session session, final String roomId, final int dropId,
+                       final PickupCallback callback) {
+        if (!usable(session) || roomId == null || roomId.isEmpty()) {
+            callback.onFailure(new ApiException("AUTH_UNAUTHORIZED", "no session"));
+            return;
+        }
+        executor.execute(() -> {
+            try {
+                final JSONObject body = new JSONObject();
+                body.put("dropId", dropId);
+                final JSONObject data = request("POST", "/rooms/" + roomId + "/pickup", session, body);
+                final boolean picked = data.optBoolean("picked", false);
+                final int block = data.optInt("block", 0);
+                mainHandler.post(() -> callback.onResult(picked, block));
+            } catch (ApiException error) {
+                mainHandler.post(() -> callback.onFailure(error));
+            } catch (JSONException | RuntimeException error) {
+                mainHandler.post(() -> callback.onFailure(
+                        new ApiException(ApiException.CODE_PROTOCOL, String.valueOf(error))));
+            }
+        });
+    }
+
+    /* 拾取回调: 成功时 picked 表示是否抢到, block 为掉落方块编号. */
+    public interface PickupCallback {
+        void onResult(boolean picked, int block);
+
+        void onFailure(ApiException error);
+    }
+
     /* 离房; 房主离开时服务端把房主身份移交给最早加入的在线成员. */
     public void leave(final Session session, final String roomId, final SimpleCallback callback) {
         if (!usable(session) || roomId == null || roomId.isEmpty()) {

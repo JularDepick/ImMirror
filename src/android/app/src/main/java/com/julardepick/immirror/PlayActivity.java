@@ -515,6 +515,41 @@ public final class PlayActivity extends NativeActivity {
                 });
     }
 
+    /* 客人侧拾取申报: 取走原生侧的申报列表, 逐条提交给服务端裁定. */
+    private void pickupTick(final Session session) {
+        if (roomId == null || roomId.isEmpty()) {
+            return;
+        }
+        final String requests = NativeBridge.takePickupRequests();
+        if (requests == null || requests.isEmpty()) {
+            return;
+        }
+        for (String piece : requests.split(",")) {
+            if (piece.isEmpty()) {
+                continue;
+            }
+            final int dropId;
+            try {
+                dropId = Integer.parseInt(piece.trim());
+            } catch (NumberFormatException error) {
+                continue;
+            }
+            roomApi.pickup(session, roomId, dropId, new RoomApi.PickupCallback() {
+                @Override
+                public void onResult(boolean picked, int block) {
+                    /* 无论抢到与否都把结果交回原生: 没抢到也要移除本地视图. */
+                    NativeBridge.applyPickupResult(dropId, picked ? block : 0);
+                    Log.i(TAG, "pickup drop=" + dropId + " picked=" + picked);
+                }
+
+                @Override
+                public void onFailure(com.julardepick.immirror.account.ApiException error) {
+                    Log.w(TAG, "pickup failed: " + error.code() + " " + error.detail());
+                }
+            });
+        }
+    }
+
     private void presenceTick(final Session session) {
         /* 日相与环境音: 顺带查询游戏内昼夜, 切换昼/夜环境音轨. */
         if (ambientManager != null) {
@@ -529,6 +564,10 @@ public final class PlayActivity extends NativeActivity {
          */
         if (roomId != null && !roomId.isEmpty()) {
             roomSyncTick(session);
+            /* 客人侧拾取申报与房间同步同节拍推进. */
+            if (!roomOwner) {
+                pickupTick(session);
+            }
             return;
         }
         /* 位置与方块同一节拍推进, 两条通道互不阻塞. */

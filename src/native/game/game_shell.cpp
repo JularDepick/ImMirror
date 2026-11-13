@@ -1420,6 +1420,43 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
  * 命中面板交给背包界面处理, 点在面板以外则关闭面板并把合成材料退回物品栏;
  * 无论哪种情况都标记认领, 避免同一次点击又落到挖掘或放置上.
  */
+std::string GameShell::TakePickupRequests() {
+    if (pendingPickups_.empty()) {
+        return std::string();
+    }
+    std::string out;
+    for (size_t index = 0; index < pendingPickups_.size(); ++index) {
+        if (index > 0) {
+            out += ",";
+        }
+        out += std::to_string(pendingPickups_[index]);
+    }
+    pendingPickups_.clear();
+    return out;
+}
+
+void GameShell::ApplyPickupResult(int32_t dropId, int32_t blockId) {
+    /*
+     * 裁定成功: 物品进背包, 本地掉落物视图移除.
+     * 裁定失败 (blockId 为 0) 时只移除本地视图, 因为已经被别人捡走.
+     */
+    render::particle::RemoveDrop(static_cast<uint32_t>(dropId));
+    if (blockId == 0) {
+        IM_LOGI(kTag, "pickup rejected by server, drop=%d", dropId);
+        return;
+    }
+    const item::ItemId itemId = item::ItemTable::Instance().ItemOfBlock(
+        static_cast<voxel::BlockId>(blockId));
+    if (itemId == item::kNone) {
+        return;
+    }
+    if (inventory_.Add(itemId, 1) > 0) {
+        CountProgressEvent(3);
+        progress::ProgressHub::Instance().OnItemPicked(static_cast<uint32_t>(blockId), 1);
+        IM_LOGI(kTag, "pickup granted drop=%d block=%d", dropId, blockId);
+    }
+}
+
 void GameShell::BindUiDataSource(ui::script::WidgetHost& host) {
     if (uiDataSource_ == nullptr) {
         uiDataSource_.reset(
@@ -3185,6 +3222,14 @@ void GameShell::UpdateDrops(double deltaSeconds) {
                 keep = false;
                 continue;
             }
+        }
+        /*
+         * 客人侧: 掉落物由房主维护, 本地不直接拾取, 而是记一条申报请求,
+         * 由服务端裁定归属后再入背包, 避免两人同时捡到同一件.
+         */
+        if (near && !blocksEditable_) {
+            pendingPickups_.push_back(static_cast<int32_t>(drop.id));
+            continue;
         }
         if (near && inventory_.RoomFor(drop.item) > 0) {
             const int32_t added = inventory_.Add(drop.item, drop.count);

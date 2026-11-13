@@ -187,6 +187,22 @@ public final class NativeBridge {
         nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
     }
 
+    /* 取走客人侧的拾取申报, 逗号分隔的掉落物标识; 空串表示没有. */
+    public static String takePickupRequests() {
+        if (!ensureLoaded()) {
+            return "";
+        }
+        return nativeTakePickupRequests();
+    }
+
+    /* 服务端裁定后把结果交回原生: blockId 为 0 表示没抢到. */
+    public static void applyPickupResult(int dropId, int blockId) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeApplyPickupResult(dropId, blockId);
+    }
+
     /* 当前是否潜水: 环境音与音乐按它压减. */
     public static boolean isUnderwater() {
         if (!ensureLoaded()) {
@@ -411,6 +427,10 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native String nativeTakePickupRequests();
+
+    private static native void nativeApplyPickupResult(int dropId, int blockId);
 
     private static native boolean nativeIsUnderwater();
 
