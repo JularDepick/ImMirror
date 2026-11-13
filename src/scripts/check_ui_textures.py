@@ -21,7 +21,8 @@ LAYOUT_ROOT = os.path.join(PROJECT, "data", "xml", "ui", "mobile")
 
 SPRITE = re.compile(r'<sprite\s+n="([^"]+)"\s+x="(\d+)"\s+y="(\d+)"\s+w="(\d+)"\s+h="(\d+)"')
 ATLAS_HEAD = re.compile(r'<TextureAtlas\s+imagePath="([^"]+)"\s+width="(\d+)"\s+height="(\d+)"')
-ELEMENT = re.compile(r'<(?:Texture|Frame|Button|FontString)\s+([^>]*)>')
+# 模板可能定义在任何元素上, 因此不限标签名.
+ELEMENT = re.compile(r'<([A-Za-z]+)\s+([^>]*)>')
 
 
 def read(path):
@@ -57,9 +58,8 @@ def load_templates():
     table = {}
     for path in layout_files():
         for match in ELEMENT.finditer(read(path)):
-            head = match.group(1)
-            if 'virtual="true"' not in head:
-                continue
+            head = match.group(2)
+            # 模板不一定标 virtual: 被别处继承的元素本身就起模板作用.
             label = re.search(r'name="([^"]+)"', head)
             if label is None:
                 continue
