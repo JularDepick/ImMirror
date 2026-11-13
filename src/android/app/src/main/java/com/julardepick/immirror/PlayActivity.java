@@ -139,6 +139,8 @@ public final class PlayActivity extends NativeActivity {
             roomId = roomExtraId;
             roomCode = getIntent().getStringExtra(EXTRA_ROOM_CODE);
             roomOwner = getIntent().getBooleanExtra(EXTRA_ROOM_OWNER, false);
+            /* 客人侧关闭本地自然生成: 生物以房主上报的快照为准. */
+            NativeBridge.setGuestMode(!roomOwner);
             final String roomWorld = "room_" + (roomCode == null || roomCode.isEmpty()
                     ? roomExtraId : roomCode);
             NativeBridge.chooseWorldWithSeed(roomWorld, getIntent().getIntExtra(EXTRA_ROOM_SEED, 0));

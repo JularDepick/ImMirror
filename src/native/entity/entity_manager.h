@@ -61,6 +61,15 @@ public:
      */
     void SetHostileSpawnAllowed(bool allowed) { hostileSpawnAllowed_ = allowed; }
 
+    /*
+     * 是否允许自然生成. 作为房间客人时关闭: 世界里的生物由房主上报,
+     * 本地再生成一份会出现同一只生物被画两遍.
+     */
+    void SetSpawnEnabled(bool enabled) { spawnEnabled_ = enabled; }
+
+    /* 清空全部生物与待处理事件, 切到客人模式时调用. */
+    void DespawnAll();
+
     /* 推进全部生物并补充生成, 返回本帧统计. */
     EntityFrameStats Update(double dt, const world::World& world, const PlayerProbe& player);
 
@@ -117,6 +126,8 @@ private:
     int32_t deathsPending_ = 0;
     float spawnMaxRadius_ = tuning::kSpawnMaxRadius;
     bool hostileSpawnAllowed_ = true;
+    /* 自然生成总开关, 客人模式下关闭. */
+    bool spawnEnabled_ = true;
 };
 
 }  /* namespace immirror::entity */

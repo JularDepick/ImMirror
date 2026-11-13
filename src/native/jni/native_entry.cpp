@@ -155,6 +155,18 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeChooseWorldSeed(JNIEnv* 
     }
 }
 
+/* Java 侧低频入口: 设置房间客人模式, 关闭本地自然生成. */
+JNIEXPORT void JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetGuestMode(JNIEnv* env, jclass clazz,
+                                                                    jboolean guest) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return;
+    }
+    shell->SetGuestMode(guest == JNI_TRUE);
+}
+
 /* Java 侧低频入口: 切换暂停菜单, 由返回键触发. */
 JNIEXPORT void JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeTogglePauseMenu(JNIEnv* env,

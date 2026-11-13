@@ -232,6 +232,10 @@ void EntityManager::RemoveGone() {
 
 void EntityManager::TrySpawn(const world::World& world, const PlayerProbe& player,
                              EntityFrameStats& stats) {
+    /* 客人模式下不自然生成: 生物由房主上报, 本地再生成一份会画成两只. */
+    if (!spawnEnabled_) {
+        return;
+    }
     const MonsterTable& table = MonsterTable::Instance();
     if (!(table.TotalSpawnWeight() > 0.0f)) {
         return;
@@ -281,6 +285,13 @@ void EntityManager::TrySpawn(const world::World& world, const PlayerProbe& playe
     IM_LOGD(kTag, "spawn id=%u name=%s kind=%d at %.1f,%.1f,%.1f", static_cast<uint32_t>(id),
             def.name, static_cast<int32_t>(def.type), static_cast<double>(spawn.x),
             static_cast<double>(spawn.y), static_cast<double>(spawn.z));
+}
+
+void EntityManager::DespawnAll() {
+    creatures_.clear();
+    awake_ = 0;
+    drops_.clear();
+    soundEvents_.clear();
 }
 
 void EntityManager::QueueLoot(const CreatureEntity& creature) {

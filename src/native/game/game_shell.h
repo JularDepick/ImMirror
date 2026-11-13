@@ -245,6 +245,12 @@ public:
      * 暂停菜单: 打开期间世界时间, 天气, 世界与玩家推进全部冻结,
      * 只保留面板按钮的指针处理. 由 Java 侧返回键触发切换.
      */
+    /*
+     * 房间客人模式: 关掉本地自然生成并清空现有生物, 世界里的生物改由
+     * 房主上报的快照驱动, 否则同一只生物会被本地与远端各画一遍.
+     */
+    void SetGuestMode(bool guest);
+
     void TogglePauseMenu() { pauseMenuOpen_ = !pauseMenuOpen_; }
     bool PauseMenuOpen() const { return pauseMenuOpen_; }
 

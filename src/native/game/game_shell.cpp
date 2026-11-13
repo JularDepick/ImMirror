@@ -1359,6 +1359,14 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
  * 命中面板交给背包界面处理, 点在面板以外则关闭面板并把合成材料退回物品栏;
  * 无论哪种情况都标记认领, 避免同一次点击又落到挖掘或放置上.
  */
+void GameShell::SetGuestMode(bool guest) {
+    entities_.SetSpawnEnabled(!guest);
+    if (guest) {
+        entities_.DespawnAll();
+    }
+    IM_LOGI(kTag, "guest mode %s", guest ? "on" : "off");
+}
+
 void GameShell::UpdatePauseMenu(platform::InputSnapshot& input) {
     const uint64_t pressed = input.downMask & ~previousDownMask_;
     if (pressed == 0ull) {

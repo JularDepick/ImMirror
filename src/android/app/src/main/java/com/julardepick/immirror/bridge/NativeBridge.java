@@ -187,6 +187,14 @@ public final class NativeBridge {
         nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
     }
 
+    /* 设置房间客人模式: 客人侧不再本地生成生物, 生物由房主上报驱动. */
+    public static void setGuestMode(boolean guest) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeSetGuestMode(guest);
+    }
+
     /* 切换暂停菜单; 由返回键触发, 世界推进随之冻结或恢复. */
     public static void togglePauseMenu() {
         if (!ensureLoaded()) {
@@ -347,6 +355,8 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native void nativeSetGuestMode(boolean guest);
 
     private static native void nativeTogglePauseMenu();
 
