@@ -925,6 +925,16 @@ void PushInventorySlot(float* out, int32_t& offset, float centerX, float centerY
             PushRect(out, offset, left, barY, filledHalf, barThickness, scale, color);
         }
     }
+    /*
+     * 附魔标记: 带附魔的物品在右上角点一个亮色小方块,
+     * 在格子层面就能与普通物品区分, 不必打开说明.
+     */
+    if (view.hasItem && view.enchanted) {
+        const float markHalf = half * 0.16f;
+        const float markColor[4] = {0.55f, 0.90f, 0.98f, 0.95f};
+        PushRect(out, offset, centerX + half * 0.70f, centerY + half * 0.70f, markHalf, markHalf,
+                 scale, markColor);
+    }
     if (view.hasItem && view.count > 1) {
         char countText[8];
         std::snprintf(countText, sizeof(countText), "%d", view.count);
@@ -1784,6 +1794,14 @@ void HudRenderer::Render(const HudFrame& frame) {
                      slotBorder);
             PushRect(vertices, offset, centerX + slotHalf, slotCenterY, edge, slotHalf, scale,
                      slotBorder);
+        }
+
+        /* 附魔标记: 与背包面板同一套右上角亮点. */
+        if (frame.slotEnchanted[slot]) {
+            const float markHalf = slotHalf * 0.16f;
+            const float markColor[4] = {0.55f, 0.90f, 0.98f, 0.95f};
+            PushRect(vertices, offset, centerX + slotHalf * 0.70f, slotCenterY + slotHalf * 0.70f,
+                     markHalf, markHalf, scale, markColor);
         }
 
         /*

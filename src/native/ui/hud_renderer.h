@@ -49,6 +49,8 @@ struct InventorySlotView {
     uint8_t tone = 0;
     int32_t count = 0;
     bool highlight = false;
+    /* 该格物品带附魔: 格子上画一个小标记, 与普通物品区分. */
+    bool enchanted = false;
     /*
      * 耐久: 只对带耐久的工具生效. maxDurability 为 0 表示不画耐久条,
      * 否则按 durability / maxDurability 在格子底部画一条由绿转红的细条.
@@ -170,6 +172,8 @@ struct HudFrame {
     /* 每格剩余耐久与上限, 上限为 0 时不画耐久条. */
     int32_t slotDurability[kHudSlotCount] = {};
     int32_t slotMaxDurability[kHudSlotCount] = {};
+    /* 该格物品是否带附魔, 与背包面板同一套标记. */
+    bool slotEnchanted[kHudSlotCount] = {};
     /* 长按显示的名称, 空指针回落到方块栏共享表的方块名. */
     const char* nameText = nullptr;
     /* 背包按钮按下中, 用于视觉反馈. */

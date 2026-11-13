@@ -27,6 +27,7 @@ void FillSlotView(ui::InventorySlotView& view, const ItemStack& stack) {
     view.initial = table.Initial(stack.item);
     view.tone = static_cast<uint8_t>(info.category);
     view.count = stack.count;
+    view.enchanted = stack.enchantId != 0;
     /* 工具带耐久时把剩余量与上限一起交给界面, 由界面决定怎么画. */
     item::ItemTable::ToolInfo tool;
     if (table.ToolOf(stack.item, tool) && stack.durability >= 0) {

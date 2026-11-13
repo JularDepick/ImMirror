@@ -2967,6 +2967,7 @@ void GameShell::RenderScene() {
             frame.slotTone[slot] = static_cast<uint8_t>(items.Info(stack.item).category);
         }
         /* 工具带耐久时把剩余量与上限一起交给界面, 由界面在格底画耐久条. */
+        frame.slotEnchanted[slot] = stack.enchantId != 0;
         frame.slotDurability[slot] = stack.durability;
         frame.slotMaxDurability[slot] = 0;
         if (!stack.Empty()) {
