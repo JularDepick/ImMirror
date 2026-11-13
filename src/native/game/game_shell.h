@@ -148,6 +148,12 @@ public:
      * 每次方块改动后按改动点上方一列处理, 只落不改其它方块.
      */
     void SettleGravityAt(int32_t x, int32_t y, int32_t z);
+
+    /*
+     * 流体流动: 改动点周围有重力方式为 2 的液体时, 液体向相邻空格蔓延,
+     * 单次最多 24 格, 半径 3 格, 避免挖开一片水域时整片灌满.
+     */
+    void SettleFluidAt(int32_t x, int32_t y, int32_t z);
     /* 上一轮下发的远端玩家数, 用于只在数量变化时打日志. */
     int32_t lastRemoteCount_ = -1;
     int32_t SelectedSlot() const { return selectedSlot_; }

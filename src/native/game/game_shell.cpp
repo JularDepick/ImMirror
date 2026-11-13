@@ -982,8 +982,9 @@ void GameShell::ApplyRemoteBlockEdits(const std::string& json) {
         }
         if (world_->SetBlock(x, y, z, static_cast<voxel::BlockId>(block))) {
             ++applied;
-            /* 远端改动同样触发沉降: 别人挖掉沙下的方块时, 沙子也要落. */
+            /* 远端改动同样触发沉降与流动: 别人挖掉沙下或水边的方块时也要有反馈. */
             SettleGravityAt(x, y, z);
+            SettleFluidAt(x, y, z);
         }
     }
     if (applied > 0) {
@@ -1586,8 +1587,9 @@ void GameShell::AdvanceEditMining(double deltaSeconds) {
                                      static_cast<float>(tick.blockPos.y) + 0.5f,
                                      static_cast<float>(tick.blockPos.z) + 0.5f);
     CollectDrop(tick.block);
-    /* 破坏点上方若有重力方块, 失去支撑后落下来. */
+    /* 破坏点上方若有重力方块, 失去支撑后落下来; 水边破坏则触发流动. */
     SettleGravityAt(tick.blockPos.x, tick.blockPos.y, tick.blockPos.z);
+    SettleFluidAt(tick.blockPos.x, tick.blockPos.y, tick.blockPos.z);
     /*
      * 挖掉一格扣一次手持工具耐久, 耗尽时工具消失并提示.
      * 徒手与方块类手持物不带耐久, 这里会直接返回 false.
@@ -1798,6 +1800,68 @@ void GameShell::SettleGravityAt(int32_t x, int32_t y, int32_t z) {
     }
 }
 
+/*
+ * 流体流动.
+ * 以改动点为起点做一次有界广度优先: 空格若与液体相邻就填成同种液体,
+ * 优先向下方扩散, 其次水平, 最后向上, 这样水面会先铺平再抬升.
+ * 单次最多填 24 格, 半径 3 格, 避免挖开水域时整片灌满.
+ */
+void GameShell::SettleFluidAt(int32_t x, int32_t y, int32_t z) {
+    constexpr int32_t kMaxCells = 24;
+    constexpr int32_t kRadius = 3;
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    const auto isFluid = [&registry](voxel::BlockId id) {
+        return id != voxel::block::Air && registry.Info(id).gravity == 2;
+    };
+    /*
+     * 蔓延方向: 先向下, 再水平. 不做向上蔓延,
+     * 否则水会顺着空格一格一格爬上墙, 观感明显不对.
+     */
+    constexpr int32_t kOffsets[5][3] = {
+        {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1},
+    };
+    std::vector<voxel::BlockPos> queue;
+    queue.push_back(voxel::BlockPos{x, y, z});
+    size_t head = 0;
+    int32_t filled = 0;
+    while (head < queue.size() && filled < kMaxCells) {
+        const voxel::BlockPos cell = queue[head];
+        ++head;
+        if (cell.x < x - kRadius || cell.x > x + kRadius || cell.z < z - kRadius ||
+            cell.z > z + kRadius || cell.y < y - kRadius || cell.y > y + kRadius) {
+            continue;
+        }
+        if (cell.y < 0 || cell.y >= voxel::kWorldHeight) {
+            continue;
+        }
+        if (world_->GetBlock(cell.x, cell.y, cell.z) != voxel::block::Air) {
+            continue;
+        }
+        /* 找一格相邻液体作为水源; 找不到就不填, 也不继续扩散. */
+        voxel::BlockId source = voxel::block::Air;
+        for (const auto& offset : kOffsets) {
+            const voxel::BlockId neighbour =
+                world_->GetBlock(cell.x + offset[0], cell.y + offset[1], cell.z + offset[2]);
+            if (isFluid(neighbour)) {
+                source = neighbour;
+                break;
+            }
+        }
+        if (source == voxel::block::Air) {
+            continue;
+        }
+        world_->SetBlock(cell.x, cell.y, cell.z, source);
+        ++filled;
+        for (const auto& offset : kOffsets) {
+            queue.push_back(voxel::BlockPos{cell.x + offset[0], cell.y + offset[1],
+                                             cell.z + offset[2]});
+        }
+    }
+    if (filled > 0) {
+        IM_LOGI(kTag, "fluid spread=%d at %d,%d,%d", filled, x, y, z);
+    }
+}
+
 bool GameShell::TryPlaceSelectedBlock() {
     const item::ItemTable& items = item::ItemTable::Instance();
     const item::ItemStack stack = inventory_.Slot(selectedSlot_);
@@ -1825,6 +1889,7 @@ bool GameShell::TryPlaceSelectedBlock() {
     {
         const voxel::BlockPos placed = player_->LastPlacedPos();
         SettleGravityAt(placed.x, placed.y, placed.z);
+        SettleFluidAt(placed.x, placed.y, placed.z);
     }
     IM_LOGI(kTag, "block placed slot=%d item=%s block=%s remain=%d", selectedSlot_,
             items.Info(stack.item).key, voxel::BlockRegistry::Instance().Info(block).name,
