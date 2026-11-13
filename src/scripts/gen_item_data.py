@@ -37,6 +37,7 @@ ASSETS_CSV = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "proj
 ITEMDEF_PATH = os.path.join(ASSETS_CSV, "autogen", "itemdef.csv")
 CRAFTING_PATH = os.path.join(ASSETS_CSV, "crafting.csv")
 BLOCKDEF_PATH = os.path.join(ASSETS_CSV, "blockdef.csv")
+FURNACE_PATH = os.path.join(ASSETS_CSV, "furnace.csv")
 BLOCK_DATA_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "block_data_gen.h")
 OUT_ITEM_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "item_data_gen.h")
 OUT_RECIPE_PATH = os.path.join(SRC_ROOT, "native", "game", "generated", "recipe_data_gen.h")
@@ -163,6 +164,52 @@ def item_usable(row, source_id):
     return True
 
 
+def load_crafting_sources():
+    """合成表引用的物品 ID: 材料列与产出列, 用于把配方所需物品补进物品表."""
+    if not os.path.isfile(CRAFTING_PATH):
+        return set()
+    import io
+    rows = list(csv.reader(io.StringIO(
+        open(CRAFTING_PATH, "rb").read().decode("utf-8-sig"))))
+    if len(rows) < 2:
+        return set()
+    col = {name: index for index, name in enumerate(rows[1])}
+    result = set()
+    for row in rows[2:]:
+        for column, index in col.items():
+            if not column.startswith(("Material", "Result")):
+                continue
+            if index >= len(row):
+                continue
+            text = row[index].strip()
+            if text.isdigit() and text != "0":
+                result.add(int(text))
+    return result
+
+
+def load_furnace_sources():
+    """熔炼表引用的物品 ID: 材料列与产出列, 用于把熔炉配方所需的物品补进物品表."""
+    if not os.path.isfile(FURNACE_PATH):
+        return set()
+    import io
+    rows = list(csv.reader(io.StringIO(
+        open(FURNACE_PATH, "rb").read().decode("utf-8-sig"))))
+    if len(rows) < 2:
+        return set()
+    col = {name: index for index, name in enumerate(rows[1])}
+    if "MaterialID" not in col or "Result" not in col:
+        return set()
+    result = set()
+    for row in rows[2:]:
+        if len(row) <= max(col["MaterialID"], col["Result"]):
+            continue
+        for column in ("MaterialID", "Result"):
+            text = row[col[column]].strip()
+            if text and text != "0":
+                result.add(int(text))
+    return result
+
+
 def compute_closure(recipes, seed_sources):
     """以方块为原料逐层展开可合成闭包, 无序口径: 材料齐备即可合成."""
     available = set(seed_sources)
@@ -233,6 +280,29 @@ def main():
         selected.append(source)
         tool_added += 1
     emit("工具类追加 %d 种" % tool_added)
+    # 熔炉引用追加: 熔炼表的材料与产出若不在物品表内, 熔炉配方就挂不上条目.
+    # 追加在工具之后, 已有物品 id 不变, 旧存档仍然可用.
+    furnace_added = 0
+    for source in sorted(load_furnace_sources()):
+        if source <= 0 or source in selected:
+            continue
+        row = items_by_id.get(source)
+        if row is None or not item_usable(row, source):
+            continue
+        selected.append(source)
+        furnace_added += 1
+    emit("熔炉引用追加 %d 种" % furnace_added)
+    # 配方引用追加: 合成表的材料与产出补齐后, 生成配方时才能挂上物品 id.
+    recipe_added = 0
+    for source in sorted(load_crafting_sources()):
+        if source <= 0 or source in selected:
+            continue
+        row = items_by_id.get(source)
+        if row is None or not item_usable(row, source):
+            continue
+        selected.append(source)
+        recipe_added += 1
+    emit("配方引用追加 %d 种" % recipe_added)
     emit("可合成闭包 %d 种, 展开 %d 层; 物品表共 %d 种"
          % (len(closure), len(rounds), len(selected)))
 
