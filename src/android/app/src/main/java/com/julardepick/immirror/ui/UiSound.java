@@ -42,6 +42,8 @@ public final class UiSound {
     private static final String PICKUP_ASSET = "sounds/ui_info_experience_star.ogg";
     /* 合成失败音: 物品栏放不下时播放. */
     private static final String CRAFT_FAIL_ASSET = "sounds/ui_info_crafting_error.ogg";
+    /* 进食音. */
+    private static final String EAT_ASSET = "sounds/misc_eat1.ogg";
     /* 界面音并发上限: 连点也不会互相打断. */
     private static final int MAX_STREAMS = 4;
 
@@ -138,6 +140,11 @@ public final class UiSound {
     /* 合成失败音: 物品栏放不下时调用. */
     public static void craftFailed(Context context) {
         play(context, CRAFT_FAIL_ASSET);
+    }
+
+    /* 进食音: 吃下食物时调用. */
+    public static void eat(Context context) {
+        play(context, EAT_ASSET);
     }
 
     /*

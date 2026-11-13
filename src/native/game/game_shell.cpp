@@ -311,6 +311,8 @@ bool GameShell::TryAutoEat() {
             continue;
         }
         player_->Eat(static_cast<float>(food->food), static_cast<float>(food->heal));
+        /* 进食音: 事件编码 7, 由 Java 侧取走后播放. */
+        uiEvents_.push_back(7);
         /* 附加状态按万分比逐条判定. */
         const uint32_t pairs[3][2] = {{food->buffId1, food->buffOdds1},
                                       {food->buffId2, food->buffOdds2},
