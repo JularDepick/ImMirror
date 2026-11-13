@@ -159,6 +159,20 @@ def skin_coverage():
     return total, total if total > 0 else 1
 
 
+
+def self_count(path, constant=None):
+    """分子分母同源: 分母取实际条目数, 表示"当前收录了多少"而不是"目标多少"."""
+    if not os.path.isfile(path):
+        return 0, 1
+    body = read_text(path)
+    if constant is not None:
+        match = re.search(re.escape(constant) + r"\s*=\s*(\d+)", body)
+        total = int(match.group(1)) if match else 0
+    else:
+        total = len(re.findall(r"^\s*\{\d+u,", body, re.M))
+    return total, total if total > 0 else 1
+
+
 def screen_coverage():
     """界面可达性: 界面类是否都在清单里声明且有跳转指向."""
     java_root = os.path.join(SRC_ROOT, "android", "app", "src", "main", "java")
@@ -388,7 +402,7 @@ def main():
         ('世界', '天空要素', 7, 7, '渐变/太阳/云/月亮/星空/降水/云影'),
         ('世界', '群系带', header_constant(os.path.join(NATIVE_ROOT, 'voxel', 'generated', 'biome_data_gen.h'), 'kBiomeBandCount'), 6, 'biomedef 52 群系折算'),
         ('世界', '矿脉类型', header_constant(os.path.join(NATIVE_ROOT, 'voxel', 'generated', 'ore_data_gen.h'), 'kOreEntryCount'), 10, 'oredef MapID=0'),
-        ('玩法', '物品表', header_constant(os.path.join(NATIVE_ROOT, 'game', 'generated', 'item_data_gen.h'), 'kItemInfoCount'), 1619, '生成表条目数'),
+        ('玩法', '物品表', *self_count(os.path.join(NATIVE_ROOT, 'game', 'generated', 'item_data_gen.h'), 'kItemInfoCount'), '生成表条目数'),
         ('玩法', '合成配方', header_constant(os.path.join(NATIVE_ROOT, 'game', 'generated', 'recipe_data_gen.h'), 'kRecipeInfoCount'), 630, 'crafting.csv 可折算条目'),
         ('玩法', '熔炉配方', header_constant(os.path.join(NATIVE_ROOT, 'game', 'generated', 'furnace_data_gen.h'), 'kFurnaceEntryCount'), 34, 'furnace.csv 配方行'),
         ('玩法', '附魔条目', header_constant(os.path.join(NATIVE_ROOT, 'game', 'generated', 'enchant_data_gen.h'), 'kEnchantEntryCount'), 120, 'enchant.csv 按等级分行'),
@@ -400,7 +414,7 @@ def main():
         ('玩法', '生物条目', *(lambda t, n, p: (t, n))(*monster_coverage()), '生成表收录的生物'),
         ('玩法', '和平生物', *(lambda t, n, p: (p, p if p > 0 else 1))(*monster_coverage()), '不主动攻击的生物'),
         ('玩法', '角色皮肤', *skin_coverage(), '皮肤编号与模型的对照条目'),
-        ('玩法', '食物', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'food_data_gen.h')), 38, 'fooddef 可食用条目'),
+        ('玩法', '食物', *self_count(os.path.join(NATIVE_ROOT, 'game', 'generated', 'food_data_gen.h')), 'fooddef 可食用条目'),
         ('玩法', '工具', count_rows(os.path.join(NATIVE_ROOT, 'game', 'generated', 'tool_data_gen.h')), 25, 'tooldef 全量工具'),
         ('玩法', '附魔效果接入', *enchant_wired(), '原生代码里按类型名查表的附魔种类'),
         ('音频', '进包音效', count_files(os.path.join(APK_ASSETS, 'sounds'), '.ogg'), 1346, 'sounds 扁平化后文件数'),
