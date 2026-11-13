@@ -11,7 +11,7 @@ SRC_ROOT = os.path.dirname(SCRIPT_DIR)
 ASSETS = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "project"))
 MANIFEST = os.path.join(SRC_ROOT, "native", "ui", "generated", "item_icon_manifest.json")
 BUFF_MANIFEST = os.path.join(SRC_ROOT, "native", "ui", "generated", "buff_icon_manifest.json")
-OUT_DIR = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets", "generated"))
+OUT_DIR = os.path.join(SRC_ROOT, "android", "app", "src", "main", "assets", "generated")
 GEN_PATH = os.path.join(SRC_ROOT, "native", "ui", "generated", "item_icon_atlas_gen.h")
 
 GRID = 64

@@ -12,7 +12,7 @@ except ImportError:
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_ROOT = os.path.dirname(SCRIPT_DIR)
 ASSETS = os.path.normpath(os.path.join(SRC_ROOT, "..", "..", "assets"))
-ATLAS_PNG = os.path.join(ASSETS, "generated", "atlas_item_icon.png")
+ATLAS_PNG = os.path.join(SRC_ROOT, "android", "app", "src", "main", "assets", "generated", "atlas_item_icon.png")
 GEN_HEADER = os.path.join(SRC_ROOT, "native", "ui", "generated", "item_icon_atlas_gen.h")
 OUT_PATH = os.path.join(SRC_ROOT, "native", "ui", "generated", "item_icon_color_gen.h")
 

@@ -2750,7 +2750,7 @@ uint32_t LoadItemIconAtlasFromAssets(AAssetManager* assets) {
         IM_LOGW(kTag, "item icon atlas skipped, no asset manager or no graphics context");
         return 0;
     }
-    constexpr const char* kPath = "ui/generated/atlas_item_icon.rgba";
+    constexpr const char* kPath = "generated/atlas_item_icon.rgba";
     constexpr int32_t kExpectedBytes = gen::kItemIconSize * gen::kItemIconSize * 4;
     AAsset* asset = AAssetManager_open(assets, kPath, AASSET_MODE_STREAMING);
     if (asset == nullptr) {
