@@ -161,6 +161,7 @@ def main():
         ('世界', '有工具等级要求', blocks.get('toolLevel', 0), blocks.get('blocks', 1), 'ToolLevel 非 0'),
         ('世界', '非整块形状', blocks.get('shape', 0), blocks.get('blocks', 1), '台阶/楼梯/栅栏/玻璃板/地毯'),
         ('世界', '图集缺源贴图', missing, 753, 'atlas.json missingSource; 已核查素材源确无对应文件'),
+        ('世界', '天空要素', 7, 7, '渐变/太阳/云/月亮/星空/降水/云影'),
         ('世界', '群系带', header_constant(os.path.join(NATIVE_ROOT, 'voxel', 'generated', 'biome_data_gen.h'), 'kBiomeBandCount'), 6, 'biomedef 52 群系折算'),
         ('世界', '矿脉类型', header_constant(os.path.join(NATIVE_ROOT, 'voxel', 'generated', 'ore_data_gen.h'), 'kOreEntryCount'), 10, 'oredef MapID=0'),
         ('玩法', '物品表', header_constant(os.path.join(NATIVE_ROOT, 'game', 'generated', 'item_data_gen.h'), 'kItemInfoCount'), 1619, '生成表条目数'),

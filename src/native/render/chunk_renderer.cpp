@@ -67,11 +67,30 @@ layout(location = 3) in vec3 aTint;
 uniform mat4 uViewProjection;
 uniform vec3 uChunkOrigin;
 uniform vec3 uCameraPosition;
+/* 云影: 用与天空云层同一套噪声与尺度, 在地面压出缓慢移动的暗斑. */
+uniform float uCloudTime;
+uniform float uCloudStrength;
 
 out vec2 vTexCoord;
 out float vShade;
 out vec3 vTint;
 out float vViewDistance;
+
+/* 与天空通道一致的二维值噪声, 两层叠加即可看出云的团块. */
+float cloudHash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float cloudNoise(vec2 p) {
+    vec2 cell = floor(p);
+    vec2 weight = fract(p);
+    weight = weight * weight * (3.0 - 2.0 * weight);
+    float v00 = cloudHash(cell);
+    float v10 = cloudHash(cell + vec2(1.0, 0.0));
+    float v01 = cloudHash(cell + vec2(0.0, 1.0));
+    float v11 = cloudHash(cell + vec2(1.0, 1.0));
+    return mix(mix(v00, v10, weight.x), mix(v01, v11, weight.x), weight.y);
+}
 
 void main() {
     vTexCoord = aTexCoord;
@@ -79,6 +98,17 @@ void main() {
     vTint = aTint;
     /* 网格顶点是区块局部坐标, 逐个区块加上世界原点后再变换. */
     vec3 worldPosition = aPosition + uChunkOrigin;
+    /*
+     * 云影: 与天空云层用同一套尺度与漂移, 地面上的暗斑因此与天上的云对应;
+     * 强度为 0 时完全不算, 夜间由强度归零自动关掉.
+     */
+    if (uCloudStrength > 0.001) {
+        vec2 cloudPoint = worldPosition.xz * 0.0045;
+        cloudPoint += vec2(uCloudTime * 0.006, uCloudTime * 0.0035);
+        float density = cloudNoise(cloudPoint) * 0.65 + cloudNoise(cloudPoint * 2.03) * 0.35;
+        float cover = smoothstep(0.42, 0.72, density);
+        vShade *= mix(1.0, 0.74, cover * uCloudStrength);
+    }
     /* 视距在顶点算好传给片元, 片元只做雾混合, 避免逐片元求长度. */
     vViewDistance = length(worldPosition - uCameraPosition);
     gl_Position = uViewProjection * vec4(worldPosition, 1.0);
@@ -841,6 +871,8 @@ bool ChunkRenderer::Initialize(AAssetManager* assets) {
     uniformFogColor_ = glGetUniformLocation(program_, "uFogColor");
     uniformBrightness_ = glGetUniformLocation(program_, "uBrightness");
     uniformSkyFactor_ = glGetUniformLocation(program_, "uSkyFactor");
+    uniformCloudTime_ = glGetUniformLocation(program_, "uCloudTime");
+    uniformCloudStrength_ = glGetUniformLocation(program_, "uCloudStrength");
     if (uniformViewProjection_ < 0 || uniformAtlas_ < 0 || uniformChunkOrigin_ < 0 ||
         uniformCameraPosition_ < 0 || uniformFogDensity_ < 0 || uniformFogColor_ < 0 ||
         uniformBrightness_ < 0) {
@@ -928,6 +960,8 @@ void ChunkRenderer::Shutdown() {
     uniformFogColor_ = -1;
     uniformBrightness_ = -1;
     uniformSkyFactor_ = -1;
+    uniformCloudTime_ = -1;
+    uniformCloudStrength_ = -1;
     fogDensity_ = 0.0f;
     brightness_ = 1.0f;
     syncedWorld_ = nullptr;
@@ -1197,6 +1231,14 @@ void ChunkRenderer::Draw() {
     glUniform1f(uniformFogDensity_, fogDensity_);
     glUniform3f(uniformFogColor_, kFogRed, kFogGreen, kFogBlue);
     glUniform1f(uniformBrightness_, brightness_);
+    /* 云影: 时间与天空云层同源; 强度随天光因子与降水变化, 夜里与阴天自然减弱. */
+    if (uniformCloudTime_ >= 0) {
+        glUniform1f(uniformCloudTime_, skyTimeSeconds_);
+    }
+    if (uniformCloudStrength_ >= 0) {
+        const float strength = skyFactor_ * (1.0f - 0.5f * weatherIntensity_);
+        glUniform1f(uniformCloudStrength_, strength < 0.0f ? 0.0f : strength);
+    }
     glUniform1f(uniformSkyFactor_, skyFactor_);
     glUniform3f(uniformCameraPosition_, cameraPosition_[0], cameraPosition_[1], cameraPosition_[2]);
 

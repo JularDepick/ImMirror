@@ -121,6 +121,9 @@ private:
     int32_t uniformFogColor_ = -1;
     int32_t uniformBrightness_ = -1;
     int32_t uniformSkyFactor_ = -1;
+    /* 云影: 时间与强度, 顶点着色器按世界坐标采样云层噪声. */
+    int32_t uniformCloudTime_ = -1;
+    int32_t uniformCloudStrength_ = -1;
     float fogDensity_ = 0.0f;
     float brightness_ = 1.0f;
     float skyFactor_ = 1.0f;
