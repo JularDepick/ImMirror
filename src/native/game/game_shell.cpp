@@ -713,6 +713,8 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     if (crafted > 0) {
         progressCounters_.crafts += crafted;
         progress::ProgressHub::Instance().OnCraft(static_cast<int32_t>(crafted));
+        /* 合成成功音: 事件编码 1, 由 Java 侧取走后播放. */
+        uiEvents_.push_back(1);
     }
     RefreshSelectedItem();
     /* 生物在玩家之后推进: 位置与朝向都取本帧最新的玩家状态. */
@@ -1855,12 +1857,41 @@ void GameShell::UpdateEntities(double deltaSeconds) {
                 static_cast<double>(stats.playerDamage),
                 static_cast<double>(player_->Health()));
     }
+    /*
+     * 死亡沿: 本帧从存活变为死亡时记一条界面事件 (编码 0), 由 Java 侧播放死亡音.
+     * 重生后存活状态复位, 下一次死亡会再次触发.
+     */
+    if (lastPlayerAlive_ && !player_->Alive()) {
+        uiEvents_.push_back(0);
+        IM_LOGI(kTag, "ui event death");
+    }
+    lastPlayerAlive_ = player_->Alive();
     CollectCreatureDrops();
     if (stats.spawned > 0 || stats.deaths > 0 || stats.despawned > 0) {
         IM_LOGD(kTag, "entities spawned=%d deaths=%d despawned=%d alive=%d awake=%d",
                 stats.spawned, stats.deaths, stats.despawned, entities_.Count(),
                 entities_.AwakeCount());
     }
+}
+
+/*
+ * 取走界面事件队列.
+ * 编码用逗号拼成字符串: 0 死亡, 1 合成成功. 取走后队列清空,
+ * Java 侧按自己的节拍轮询, 事件不会重复播放.
+ */
+std::string GameShell::TakeUiEvents() {
+    if (uiEvents_.empty()) {
+        return "";
+    }
+    std::string out;
+    for (size_t index = 0; index < uiEvents_.size(); ++index) {
+        if (index > 0) {
+            out += ",";
+        }
+        out += std::to_string(static_cast<int32_t>(uiEvents_[index]));
+    }
+    uiEvents_.clear();
+    return out;
 }
 
 void GameShell::CollectCreatureDrops() {

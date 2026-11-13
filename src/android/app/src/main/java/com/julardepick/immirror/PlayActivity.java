@@ -92,6 +92,8 @@ public final class PlayActivity extends NativeActivity {
     /* 成就统计的上报周期. */
     private static final long PROGRESS_REPORT_INTERVAL_MS = 30000L;
     private static final long PRESENCE_INTERVAL_MS = 10000L;
+    /* 界面事件轮询周期: 死亡与合成成功这类提示音要跟得上手感, 取半秒. */
+    private static final long UI_EVENT_INTERVAL_MS = 500L;
     private PresenceApi presenceApi;
     /* 方块改动同步: 与位置轮询同一节拍, 一次调用完成上报与拉取. */
     private BlockSyncApi blockSyncApi;
@@ -108,6 +110,9 @@ public final class PlayActivity extends NativeActivity {
     private AmbientAudioManager ambientManager;
     private Handler presenceHandler;
     private Runnable presenceRunnable;
+    /* 界面事件轮询: 原生侧产生的死亡与合成事件, 由 Java 侧配音. */
+    private Handler uiEventHandler;
+    private Runnable uiEventRunnable;
     private Session presenceSession;
 
     private SoundPool soundPool;
@@ -153,6 +158,7 @@ public final class PlayActivity extends NativeActivity {
         NativeBridge.start();
         startProgressReporting();
         startPresenceReporting();
+        startUiEventPolling();
         /*
          * 环境音与背景音乐: 进游戏自动播放, 退出时释放.
          * 音量与音乐开关从设置层取值 (音量为 0 到 100 的滑杆值), 长音频通道
@@ -234,6 +240,49 @@ public final class PlayActivity extends NativeActivity {
             }
         };
         presenceHandler.postDelayed(presenceRunnable, PRESENCE_INTERVAL_MS);
+    }
+
+    /* 界面事件轮询: 半秒一次取走原生事件队列并播放对应提示音. */
+    private void startUiEventPolling() {
+        if (uiEventHandler == null) {
+            uiEventHandler = new Handler(Looper.getMainLooper());
+        }
+        uiEventRunnable = new Runnable() {
+            @Override
+            public void run() {
+                drainUiEvents();
+                uiEventHandler.postDelayed(this, UI_EVENT_INTERVAL_MS);
+            }
+        };
+        uiEventHandler.postDelayed(uiEventRunnable, UI_EVENT_INTERVAL_MS);
+    }
+
+    private void stopUiEventPolling() {
+        if (uiEventHandler != null && uiEventRunnable != null) {
+            uiEventHandler.removeCallbacks(uiEventRunnable);
+        }
+        uiEventRunnable = null;
+    }
+
+    /* 事件编码: 0 死亡, 1 合成成功; 未知编码忽略, 只记一条日志. */
+    private void drainUiEvents() {
+        final String events = NativeBridge.takeUiEvents();
+        if (events == null || events.isEmpty()) {
+            return;
+        }
+        for (String part : events.split(",")) {
+            final String code = part.trim();
+            if (code.isEmpty()) {
+                continue;
+            }
+            if ("0".equals(code)) {
+                com.julardepick.immirror.ui.UiSound.death(this);
+            } else if ("1".equals(code)) {
+                com.julardepick.immirror.ui.UiSound.craftSuccess(this);
+            } else {
+                Log.w(TAG, "unknown ui event " + code);
+            }
+        }
     }
 
     private void stopPresenceReporting() {
@@ -473,6 +522,7 @@ public final class PlayActivity extends NativeActivity {
          */
         stopProgressReporting();
         stopPresenceReporting();
+        stopUiEventPolling();
         if (ambientManager != null) {
             ambientManager.releaseAll();
         }

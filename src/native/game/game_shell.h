@@ -182,6 +182,16 @@ public:
     /* 连续在水下的秒数, 用于溺水判定. */
     double drownSeconds_ = 0.0;
 
+    /*
+     * 界面事件队列: 原生侧发生的、需要界面层配音的事件 (死亡, 合成成功).
+     * 事件用单字节编码, 由 Java 侧低频取走并播放对应界面音.
+     */
+    std::string TakeUiEvents();
+
+    /* 上一帧玩家是否存活, 用于识别死亡沿. */
+    bool lastPlayerAlive_ = true;
+    std::vector<uint8_t> uiEvents_;
+
     /* 战斗框目标: 最近攻击过的生物标识与显示截止时刻. */
     entity::EntityId battleTargetId_ = 0;
     double battleTargetUntil_ = 0.0;

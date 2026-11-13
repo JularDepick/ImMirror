@@ -30,6 +30,10 @@ public final class UiSound {
     private static final String ACHIEVEMENT_REACH_ASSET = "sounds/ui_info_achievement_reach.ogg";
     /* 签到音: 签到成功后播放. */
     private static final String EXPERIENCE_STAR_ASSET = "sounds/ui_info_experience_star.ogg";
+    /* 死亡音: 玩家死亡时播放. */
+    private static final String DEATH_ASSET = "sounds/ui_info_death.ogg";
+    /* 合成成功音: 合成动作完成后播放. */
+    private static final String CRAFT_SUCCESS_ASSET = "sounds/ui_info_crafting_success.ogg";
     /* 界面音并发上限: 连点也不会互相打断. */
     private static final int MAX_STREAMS = 4;
 
@@ -96,6 +100,16 @@ public final class UiSound {
     /* 签到音: 签到成功后调用. */
     public static void experienceStar(Context context) {
         play(context, EXPERIENCE_STAR_ASSET);
+    }
+
+    /* 死亡音: 玩家死亡时调用. */
+    public static void death(Context context) {
+        play(context, DEATH_ASSET);
+    }
+
+    /* 合成成功音: 合成动作完成后调用. */
+    public static void craftSuccess(Context context) {
+        play(context, CRAFT_SUCCESS_ASSET);
     }
 
     /*

@@ -187,6 +187,14 @@ public final class NativeBridge {
         nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
     }
 
+    /* 取走原生界面事件: 逗号分隔的编码, 空串表示没有事件. */
+    public static String takeUiEvents() {
+        if (!ensureLoaded()) {
+            return "";
+        }
+        return nativeTakeUiEvents();
+    }
+
     /* 生物快照导出: 房主侧每轮上报前调用, 返回 JSON 数组文本. */
     public static String takeCreatureSnapshot() {
         if (!ensureLoaded()) {
@@ -283,6 +291,8 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native String nativeTakeUiEvents();
 
     private static native String nativeTakeCreatureSnapshot();
 

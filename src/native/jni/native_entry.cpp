@@ -155,6 +155,17 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeChooseWorldSeed(JNIEnv* 
     }
 }
 
+/* Java 侧低频入口: 取走原生界面事件队列, 编码用逗号分隔. */
+JNIEXPORT jstring JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeUiEvents(JNIEnv* env, jclass clazz) {
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return env->NewStringUTF("");
+    }
+    return env->NewStringUTF(shell->TakeUiEvents().c_str());
+}
+
 /* Java 侧低频入口: 导出当前生物快照, 供房主上行到房间. */
 JNIEXPORT jstring JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeTakeCreatureSnapshot(JNIEnv* env,
