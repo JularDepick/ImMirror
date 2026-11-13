@@ -77,6 +77,33 @@ def item_icon_coverage():
     return total, total if total > 0 else 1
 
 
+def screen_coverage():
+    """界面可达性: 界面类是否都在清单里声明且有跳转指向."""
+    java_root = os.path.join(SRC_ROOT, "android", "app", "src", "main", "java")
+    manifest_path = os.path.join(SRC_ROOT, "android", "app", "src", "main", "AndroidManifest.xml")
+    if not os.path.isdir(java_root) or not os.path.isfile(manifest_path):
+        return 0, 1
+    activities = []
+    chunks = []
+    for root, _dirs, files in os.walk(java_root):
+        for name in files:
+            if not name.endswith(".java"):
+            
+                continue
+            path = os.path.join(root, name)
+            body = read_text(path)
+            chunks.append(body)
+            if name.endswith("Activity.java") and "extends Activity" in body:
+                activities.append(name[:-5])
+    manifest = read_text(manifest_path)
+    blob = "\n".join(chunks)
+    ok = 0
+    for activity in activities:
+        if activity in manifest and re.search(r"\b" + activity + r"\.class", blob):
+            ok += 1
+    return ok, len(activities) if activities else 1
+
+
 def ui_chain_coverage():
     """界面链路环节: 每一环都要在原生侧找到对应实现文件."""
     stages = [
@@ -303,6 +330,7 @@ def main():
         ('界面', 'HUD 组件', *hud_components(), '绘制函数数, 含 Boss 血条与充能球'),
         ('联机', '房间接口', len(re.findall(r'app\.(?:get|post|patch)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 9, '建房/列表/加入/离房/状态/踢人/改信息/拾取'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
+        ('界面', '界面可达', *screen_coverage(), '清单声明且存在跳转指向的界面'),
         ('界面', '物品图标可接入', *item_icon_coverage(), '图标名能对上素材文件的物品'),
         ('接线', '界面链路环节', *ui_chain_coverage(), '布局/锚点/控件/求值/宿主/绘制/顶点'),
         ('接线', '离线断言组', *assertion_group_count(), '每条自查都能独立输出结论'),
