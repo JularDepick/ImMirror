@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "ui/script/lua_vm.h"
+#include "ui/script/ui_data_source.h"
 #include "ui/widget_tree.h"
 
 namespace immirror::ui::script {
@@ -44,6 +45,12 @@ public:
      * 返回成功调用到的处理函数个数.
      */
     int32_t DispatchEvent(const std::string& name, const std::vector<Value>& args);
+
+    /*
+     * 绑定数据源: 之后脚本可以读取背包, 玩家状态, 世界信息与进度统计.
+     * 数据源由调用方持有, 生命周期必须覆盖宿主.
+     */
+    void BindDataSource(UiDataSource* source);
 
     /* 某事件当前有多少个控件订阅, 供统计与调试. */
     int32_t SubscriberCount(const std::string& name) const;

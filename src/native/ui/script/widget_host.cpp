@@ -59,6 +59,20 @@ const Value& ArgAt(const std::vector<Value>& args, size_t index) {
     return actual < args.size() ? args[actual] : kEmpty;
 }
 
+/*
+ * 普通函数调用没有 self, 实参从零开始.
+ * 数据源绑定都是全局函数, 必须用这一组; 控件方法才用上面那组.
+ */
+double PlainNumberAt(const std::vector<Value>& args, size_t index, double fallback) {
+    return index < args.size() && args[index].kind == Value::Kind::kNumber ? args[index].number
+                                                                           : fallback;
+}
+
+const Value& PlainArgAt(const std::vector<Value>& args, size_t index) {
+    static const Value kEmpty;
+    return index < args.size() ? args[index] : kEmpty;
+}
+
 }  /* namespace */
 
 bool WidgetHost::Load(const char* layoutText, size_t length) {
@@ -213,6 +227,55 @@ bool WidgetHost::RunScript(const char* source, size_t length, const LayoutRect& 
     /* 脚本改过尺寸与锚点后再解算, 因此解算必须排在执行之后. */
     tree_.Resolve(screen);
     return true;
+}
+
+void WidgetHost::BindDataSource(UiDataSource* source) {
+    if (source == nullptr) {
+        return;
+    }
+    /*
+     * 数据读取一律走宿主函数: 脚本不直接持有游戏对象, 因此界面可以先用假数据跑通,
+     * 接入游戏时只换数据源实现.
+     */
+    vm_.RegisterNative("BagSlotCount", [source](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Number(static_cast<double>(source->BagSlotCount()))};
+    });
+    vm_.RegisterNative("BagSlotName", [source](const std::vector<Value>& args) {
+        const int32_t slot = static_cast<int32_t>(PlainNumberAt(args, 0, 0.0));
+        return std::vector<Value>{Value::Str(source->BagSlotName(slot))};
+    });
+    vm_.RegisterNative("BagSlotCountAt", [source](const std::vector<Value>& args) {
+        const int32_t slot = static_cast<int32_t>(PlainNumberAt(args, 0, 0.0));
+        return std::vector<Value>{Value::Number(static_cast<double>(source->BagSlotCountAt(slot)))};
+    });
+    vm_.RegisterNative("BagSlotDurability", [source](const std::vector<Value>& args) {
+        const int32_t slot = static_cast<int32_t>(PlainNumberAt(args, 0, 0.0));
+        return std::vector<Value>{
+            Value::Number(static_cast<double>(source->BagSlotDurability(slot)))};
+    });
+    vm_.RegisterNative("PlayerHealth", [source](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Number(static_cast<double>(source->Health()))};
+    });
+    vm_.RegisterNative("PlayerHunger", [source](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Number(static_cast<double>(source->Hunger()))};
+    });
+    vm_.RegisterNative("PlayerStamina", [source](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Number(static_cast<double>(source->Stamina()))};
+    });
+    vm_.RegisterNative("WorldName", [source](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Str(source->WorldName())};
+    });
+    vm_.RegisterNative("WorldTime", [source](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Number(static_cast<double>(source->WorldTimeSeconds()))};
+    });
+    vm_.RegisterNative("ProgressValue", [source](const std::vector<Value>& args) {
+        const Value& key = PlainArgAt(args, 0);
+        if (key.kind != Value::Kind::kString) {
+            return std::vector<Value>{Value::Number(0.0)};
+        }
+        return std::vector<Value>{
+            Value::Number(static_cast<double>(source->ProgressValue(key.text)))};
+    });
 }
 
 int32_t WidgetHost::SubscriberCount(const std::string& name) const {
