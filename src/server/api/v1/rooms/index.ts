@@ -62,6 +62,8 @@ interface Room {
   creatures: RoomCreature[];
   /* 生物快照版本号, 每次房主上报自增; 客人据此判断是否需要重绘. */
   creatureSeq: number;
+  /* 地面掉落物: 房主每轮上报当前地上的掉落物, 客人只做展示. */
+  drops: RoomDrop[];
 }
 
 /** 对外房间摘要, 不含成员位置. */
@@ -101,6 +103,15 @@ interface RoomCreature {
   hp: number;
 }
 
+/** 房间内一个地面掉落物的快照, 由房主上报, 服务端只做转发. */
+interface RoomDrop {
+  id: number;
+  block: number;
+  x: number;
+  y: number;
+  z: number;
+}
+
 /** 对外生物快照. */
 export interface RoomCreatureSnapshot {
   id: number;
@@ -135,6 +146,8 @@ const MAX_BATCH = 128;
 const MAX_FETCH = 512;
 /** 单轮上报的生物快照条数上限. */
 const MAX_CREATURES = 64;
+/** 单轮上报的地面掉落物条数上限. */
+const MAX_DROPS = 64;
 /** 房间人数下限与上限. */
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 16;
@@ -372,6 +385,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       passwordHash: password === "" ? "" : sha256Hex(password),
       creatures: [],
       creatureSeq: 0,
+      drops: [],
     };
     /* 房间名缺省时用房间号补位, 保证列表里每一项都能被区分. */
     if (name === "") {
@@ -630,6 +644,41 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       }
     }
 
+    /* 地面掉落物: 与生物快照同一套房主权威口径, 客人上报按拒绝计数. */
+    let rejectedDrops = 0;
+    const rawDrops = body.drops;
+    if (rawDrops !== undefined) {
+      if (!Array.isArray(rawDrops)) {
+        throw new AppError("BAD_REQUEST", "掉落物列表必须为数组");
+      }
+      if (rawDrops.length > MAX_DROPS) {
+        throw new AppError("BAD_REQUEST", "单次掉落物快照过多");
+      }
+      if (room.ownerUserId !== auth.user.id) {
+        rejectedDrops = rawDrops.length;
+      } else {
+        const next: RoomDrop[] = [];
+        for (const raw of rawDrops) {
+          if (typeof raw !== "object" || raw === null) {
+            continue;
+          }
+          const item = raw as Record<string, unknown>;
+          const values = ["id", "block", "x", "y", "z"].map((key) => item[key]);
+          if (values.some((value) => typeof value !== "number" || !Number.isFinite(value))) {
+            continue;
+          }
+          next.push({
+            id: Math.trunc(values[0] as number),
+            block: Math.trunc(values[1] as number),
+            x: values[2] as number,
+            y: values[3] as number,
+            z: values[4] as number,
+          });
+        }
+        room.drops = next;
+      }
+    }
+
     const rawSince = body.since;
     const since = typeof rawSince === "number" && Number.isFinite(rawSince) ? Math.trunc(rawSince) : 0;
     return ok({
@@ -638,8 +687,10 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       edits: editsSince(room, since > 0 ? since : 0),
       creatures: room.creatures,
       creatureSeq: room.creatureSeq,
+      drops: room.drops,
       rejectedEdits,
       rejectedCreatures,
+      rejectedDrops,
       serverTime: now,
     });
   });
@@ -666,6 +717,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       edits: editsSince(room, base),
       creatures: room.creatures,
       creatureSeq: room.creatureSeq,
+      drops: room.drops,
       serverTime: now,
     });
   });

@@ -309,6 +309,38 @@ describe("房间通道", () => {
     expect(replaced.creatures).toHaveLength(1);
   });
 
+  it("房主上报的地面掉落物被转发给客人, 客人的上报被拒", async () => {
+    const owner = await registerCasePlayer("drops", 1);
+    const guest = await registerCasePlayer("drops", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    const drops = [
+      { id: 1, block: 3, x: 8.5, y: 74, z: 4.5 },
+      { id: 2, block: 4, x: 9.5, y: 74, z: 5.5 },
+    ];
+    const reported = expectOk<{ drops: unknown[]; rejectedDrops: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { drops }, owner.token),
+    );
+    expect(reported.rejectedDrops).toBe(0);
+    expect(reported.drops).toHaveLength(2);
+
+    const seen = expectOk<{ drops: { id: number; block: number }[] }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(seen.drops.map((item) => item.id)).toEqual([1, 2]);
+
+    /* 客人上报被拒, 快照保持不变. */
+    const rejected = expectOk<{ rejectedDrops: number }>(
+      await app.post(
+        `/api/v1/rooms/${room.id}/state`,
+        { drops: [{ id: 9, block: 1, x: 0, y: 0, z: 0 }] },
+        guest.token,
+      ),
+    );
+    expect(rejected.rejectedDrops).toBe(1);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);
