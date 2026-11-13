@@ -1801,7 +1801,12 @@ void GameShell::UpdateProjectiles(double deltaSeconds) {
 
 void GameShell::SetGuestMode(bool guest) {
     /* 客人的方块改动服务端会拒绝, 本地也就不要再改, 否则画面与世界不一致. */
-    blocksEditable_ = !guest;
+    /*
+     * 方块改动房主与客人都可以: 房间是协作建造.
+     * 客人侧只关掉本地生成与本地权威内容, 不动编辑权限.
+     */
+    blocksEditable_ = true;
+    isHost_ = !guest;
     entities_.SetSpawnEnabled(!guest);
     if (guest) {
         entities_.DespawnAll();
@@ -2208,12 +2213,6 @@ float GameShell::MiningSpeedAgainst(voxel::BlockId block) const {
 }
 
 bool GameShell::BeginEditMining() {
-    /* 客人没有改方块权限: 起手就拒掉, 不进入挖掘进度. */
-    if (!blocksEditable_) {
-        ShowTip("HOST ONLY");
-        IM_LOGI(kTag, "mine rejected, guest has no block permission");
-        return false;
-    }
     if (!player_->BeginMining(*world_)) {
         /* 起手失败要区分原因: 射线没命中, 还是命中的方块不可破坏. */
         const core::Vec3 feet = player_->Position();
@@ -3291,7 +3290,7 @@ void GameShell::UpdateDrops(double deltaSeconds) {
          * 客人侧: 掉落物由房主维护, 本地不直接拾取, 而是记一条申报请求,
          * 由服务端裁定归属后再入背包, 避免两人同时捡到同一件.
          */
-        if (near && !blocksEditable_) {
+        if (near && !isHost_) {
             pendingPickups_.push_back(static_cast<int32_t>(drop.id));
             continue;
         }
@@ -3624,11 +3623,6 @@ bool GameShell::TryPlaceSelectedBlock() {
     if (block == voxel::block::Air) {
         ShowTip("NOT A BLOCK");
         IM_LOGD(kTag, "place rejected, item=%s has no block", items.Info(stack.item).key);
-        return false;
-    }
-    /* 客人没有改方块权限: 换装已在上方放行, 这里只拦方块改动. */
-    if (!blocksEditable_) {
-        ShowTip("HOST ONLY");
         return false;
     }
     if (!player_->PlaceBlock(*world_, block)) {

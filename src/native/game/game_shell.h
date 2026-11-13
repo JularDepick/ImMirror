@@ -316,6 +316,8 @@ public:
     /* 本端是否允许改动方块; 房间客人没有改方块权限, 世界内容以房主为准. */
     bool BlocksEditable() const { return blocksEditable_; }
     bool blocksEditable_ = true;
+    /* 本端是否房主: 掉落物拾取与内容上报按它判断, 与编辑权限无关. */
+    bool isHost_ = true;
 
     void TogglePauseMenu() { pauseMenuOpen_ = !pauseMenuOpen_; }
     bool PauseMenuOpen() const { return pauseMenuOpen_; }
