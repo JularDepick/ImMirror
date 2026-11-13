@@ -1360,6 +1360,8 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
  * 无论哪种情况都标记认领, 避免同一次点击又落到挖掘或放置上.
  */
 void GameShell::SetGuestMode(bool guest) {
+    /* 客人的方块改动服务端会拒绝, 本地也就不要再改, 否则画面与世界不一致. */
+    blocksEditable_ = !guest;
     entities_.SetSpawnEnabled(!guest);
     if (guest) {
         entities_.DespawnAll();
@@ -1743,6 +1745,12 @@ float GameShell::MiningSpeedAgainst(voxel::BlockId block) const {
 }
 
 bool GameShell::BeginEditMining() {
+    /* 客人没有改方块权限: 起手就拒掉, 不进入挖掘进度. */
+    if (!blocksEditable_) {
+        ShowTip("HOST ONLY");
+        IM_LOGI(kTag, "mine rejected, guest has no block permission");
+        return false;
+    }
     if (!player_->BeginMining(*world_)) {
         /* 起手失败要区分原因: 射线没命中, 还是命中的方块不可破坏. */
         const core::Vec3 feet = player_->Position();
@@ -2620,6 +2628,11 @@ void GameShell::SettleFluidAt(int32_t x, int32_t y, int32_t z) {
 }
 
 bool GameShell::TryPlaceSelectedBlock() {
+    /* 客人没有改方块权限: 直接给提示, 不消耗物品也不改动世界. */
+    if (!blocksEditable_) {
+        ShowTip("HOST ONLY");
+        return false;
+    }
     const item::ItemTable& items = item::ItemTable::Instance();
     const item::ItemStack stack = inventory_.Slot(selectedSlot_);
     if (stack.Empty()) {

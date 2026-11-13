@@ -251,6 +251,10 @@ public:
      */
     void SetGuestMode(bool guest);
 
+    /* 本端是否允许改动方块; 房间客人没有改方块权限, 世界内容以房主为准. */
+    bool BlocksEditable() const { return blocksEditable_; }
+    bool blocksEditable_ = true;
+
     void TogglePauseMenu() { pauseMenuOpen_ = !pauseMenuOpen_; }
     bool PauseMenuOpen() const { return pauseMenuOpen_; }
 
