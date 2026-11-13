@@ -52,6 +52,8 @@ public final class MultiplayerLobbyActivity extends Activity {
     private boolean busy;
     /* 带密码房间的输入框: 平时隐藏, 点到有密码的房间时展开. */
     private EditText passwordField;
+    /* 按房间号加入: 房间号输入框与加入按钮, 与列表点选互为补充. */
+    private EditText codeField;
 
     /* 最近一次拉取到的房间, 供列表重绘与加入时取房间号. */
     private final List<RoomApi.Room> rooms = new ArrayList<>();
@@ -98,6 +100,25 @@ public final class MultiplayerLobbyActivity extends Activity {
         roomListHost.setOrientation(LinearLayout.VERTICAL);
         roomListHost.addView(roomEmptyView);
         column.addView(roomListHost, AccountTheme.block(this, 12f));
+
+        /*
+         * 按房间号加入: 房间号与密码两个输入框, 密码框与"点有密码的房间"共用,
+         * 因此两种加入方式的手感一致.
+         */
+        final LinearLayout codeRow = new LinearLayout(this);
+        codeRow.setOrientation(LinearLayout.HORIZONTAL);
+        codeField = AccountTheme.field(this, getString(R.string.lobby_room_code_hint),
+                AccountTheme.TEXT_SIZE_BODY);
+        codeRow.addView(codeField, new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 2f));
+        final Button joinButton = AccountTheme.outlineButton(this, getString(R.string.lobby_room_join),
+                AccountTheme.COLOR_ACCENT);
+        joinButton.setOnClickListener(view -> joinByCode());
+        final LinearLayout.LayoutParams joinParams = new LinearLayout.LayoutParams(0,
+                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f);
+        joinParams.leftMargin = AccountTheme.dp(this, 10f);
+        codeRow.addView(joinButton, joinParams);
+        column.addView(codeRow, AccountTheme.block(this, 8f));
 
         passwordField = AccountTheme.field(this, getString(R.string.lobby_room_password_hint),
                 AccountTheme.TEXT_SIZE_BODY);
@@ -204,6 +225,56 @@ public final class MultiplayerLobbyActivity extends Activity {
 
         card.setOnClickListener(view -> joinRoom(room));
         return card;
+    }
+
+    /*
+     * 按房间号加入: 房间号来自输入框, 密码取同一个密码框.
+     * 房间号为空只在页内提示, 不发请求.
+     */
+    private void joinByCode() {
+        if (busy) {
+            return;
+        }
+        final String code = codeField.getText().toString().trim();
+        if (code.isEmpty()) {
+            showNotice(getString(R.string.lobby_room_code_required), AccountTheme.COLOR_WARNING);
+            return;
+        }
+        if (session == null || !session.isUsable()) {
+            showNotice(getString(R.string.lobby_room_join_failed), AccountTheme.COLOR_WARNING);
+            return;
+        }
+        busy = true;
+        showNotice(getString(R.string.lobby_room_joining));
+        final String password = passwordField.getText().toString().trim();
+        roomApi.join(session, code, password, new RoomApi.JoinCallback() {
+            @Override
+            public void onSuccess(RoomApi.Room joined, long seq) {
+                busy = false;
+                Log.i(TAG, "room joined by code, code=" + joined.code);
+                openPlay(joined);
+            }
+
+            @Override
+            public void onFailure(ApiException error) {
+                busy = false;
+                Log.w(TAG, "room join by code failed: " + error.code() + " " + error.detail());
+                if ("ROOM_PASSWORD_REQUIRED".equals(error.code())
+                        || "ROOM_PASSWORD_INVALID".equals(error.code())) {
+                    passwordField.setVisibility(View.VISIBLE);
+                    passwordField.requestFocus();
+                    showNotice(getString("ROOM_PASSWORD_REQUIRED".equals(error.code())
+                                    ? R.string.lobby_room_password_required
+                                    : R.string.lobby_room_password_invalid),
+                            AccountTheme.COLOR_WARNING);
+                    return;
+                }
+                showNotice("ROOM_NOT_FOUND".equals(error.code())
+                                ? getString(R.string.lobby_room_missing)
+                                : getString(R.string.lobby_room_join_failed),
+                        AccountTheme.COLOR_WARNING);
+            }
+        });
     }
 
     /* 加入房间: 成功后带房间标识进入对局, 失败按错误码给提示. */

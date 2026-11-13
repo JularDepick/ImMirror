@@ -65,9 +65,13 @@
     <string name="lobby_room_players_format">%1$d/%2$d 人</string>
     <string name="lobby_room_ping_format">%1$d ms</string>
     <string name="achievement_claim_all">全部领取</string>
+    <string name="lobby_room_code_hint">输入房间号</string>
+    <string name="lobby_room_join">加入</string>
+    <string name="lobby_room_code_required">请输入房间号</string>
     <string name="lobby_room_code_format">房间号 %1$s</string>
     <string name="lobby_room_joining">正在加入房间...</string>
     <string name="lobby_room_join_failed">加入房间失败</string>
+    <string name="lobby_room_missing">房间不存在或已关闭</string>
     <string name="lobby_room_create_failed">创建房间失败</string>
     <string name="lobby_room_list_failed">房间列表读取失败</string>
     <string name="lobby_room_count_format">共 %1$d 个房间</string>
