@@ -181,6 +181,54 @@ void WalkVisible(const LayoutFrame& frame, const std::unordered_map<const Layout
 
 }  /* namespace */
 
+namespace {
+
+void HitWalk(LayoutFrame& frame, std::unordered_map<const LayoutFrame*, Widget*>& map, float x,
+             float y, Widget*& found) {
+    const auto entry = map.find(&frame);
+    Widget* widget = entry == map.end() ? nullptr : entry->second;
+    if (widget != nullptr && !widget->shown) {
+        return;
+    }
+    /* 子帧先测, 同级按图层从顶到底, 因此用逆序. */
+    std::vector<LayoutFrame*> ordered;
+    ordered.reserve(frame.children.size());
+    for (LayoutFrame* child : frame.children) {
+        if (child != nullptr) {
+            ordered.push_back(child);
+        }
+    }
+    std::stable_sort(ordered.begin(), ordered.end(),
+                     [](const LayoutFrame* left, const LayoutFrame* right) {
+                         return static_cast<int32_t>(left->layer) >
+                                static_cast<int32_t>(right->layer);
+                     });
+    for (LayoutFrame* child : ordered) {
+        HitWalk(*child, map, x, y, found);
+        if (found != nullptr) {
+            return;
+        }
+    }
+    if (widget == nullptr) {
+        return;
+    }
+    const LayoutRect& rect = frame.rect;
+    if (x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height) {
+        found = widget;
+    }
+}
+
+}  /* namespace */
+
+Widget* WidgetTree::HitTest(float x, float y) {
+    if (root_ == nullptr) {
+        return nullptr;
+    }
+    Widget* found = nullptr;
+    HitWalk(*root_, byFrame_, x, y, found);
+    return found;
+}
+
 int32_t WidgetTree::CollectDrawCommands(std::vector<LayoutDrawCommand>& out) const {
     out.clear();
     if (root_ == nullptr) {

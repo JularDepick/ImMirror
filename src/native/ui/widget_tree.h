@@ -83,6 +83,12 @@ public:
     /* 展开成绘制命令: 隐藏的控件连同其子树一起跳过, 置灰的控件压暗. */
     int32_t CollectDrawCommands(std::vector<LayoutDrawCommand>& out) const;
 
+    /*
+     * 命中测试: 返回覆盖该点的最上层控件, 没有命中返回空.
+     * 层级顺序与绘制相反 (绘制先底后顶, 命中先顶后底), 隐藏控件的子树不参与.
+     */
+    Widget* HitTest(float x, float y);
+
     int32_t WidgetCount() const { return static_cast<int32_t>(widgets_.size()); }
     const std::string& Error() const { return document_.Error(); }
 

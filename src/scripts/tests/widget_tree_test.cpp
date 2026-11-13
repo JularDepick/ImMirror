@@ -181,6 +181,20 @@ int main(int argc, char** argv) {
     near("设锚点后 x", box->frame->rect.x, 40.0f);
     near("设锚点后 y", box->frame->rect.y, 60.0f);
 
+    /* 命中测试: 屏幕坐标点落到控件上. */
+    tree.SetSize(box, 400.0f, 200.0f);
+    tree.SetPoint(box, AnchorPoint::kTopLeft, AnchorPoint::kTopLeft, 0.0f, 0.0f);
+    tree.Resolve(screen);
+    Widget* hit = tree.HitTest(200.0f, 100.0f);
+    check("命中测试返回控件", hit != nullptr);
+    check("命中落在容器内", hit == box || hit->frame->parent != nullptr);
+    check("屏幕外不命中", tree.HitTest(-50.0f, -50.0f) == nullptr);
+
+    /* 隐藏后其子树不再参与命中. */
+    tree.Hide(box);
+    check("隐藏后父帧不命中", tree.HitTest(200.0f, 100.0f) != box);
+    tree.Show(box);
+
     std::printf("failures=%d\n", failures);
     return failures == 0 ? 0 : 1;
 }
