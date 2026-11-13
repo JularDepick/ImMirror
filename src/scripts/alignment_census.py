@@ -70,6 +70,16 @@ def block_stats():
     return {'blocks': rows, 'drop': drop, 'gravity': gravity, 'toolLevel': tool_level, 'shape': shape}
 
 
+def _manifest_entries():
+    """界面素材清单的条目列表, 读不到返回空表."""
+    path = os.path.join(SRC_ROOT, 'assets', 'ui', 'ui_manifest.json')
+    try:
+        import json
+        return json.load(open(path, encoding='utf-8')).get('assets', [])
+    except (OSError, ValueError):
+        return []
+
+
 def java_file_count():
     total = 0
     for _root, _dirs, files in os.walk(JAVA_ROOT):
@@ -112,7 +122,8 @@ def main():
         ('音频', '音乐曲目', len(re.findall(r'"sounds/music/', read_text(audio_java))), 25, '背景音乐曲池'),
         ('音频', '生物音效', len(re.findall(r'"sounds/ent_', read_text(os.path.join(NATIVE_ROOT, 'entity', 'generated', 'entity_sound_gen.h')))), 183, '68 生物四类动作'),
         ('界面', 'Java 类', java_file_count(), 81, 'Java 侧 .java 总数'),
-        ('界面', '界面素材', count_files(os.path.join(APK_ASSETS, 'ui'), '.png', recursive=True), 391, 'ui_manifest 登记数'),
+        ('界面', '界面素材', count_files(os.path.join(APK_ASSETS, 'ui'), '.png', recursive=True),
+         len(_manifest_entries()), 'ui_manifest 登记数'),
         ('界面', 'HUD 组件', 6, 8, '已接: 状态条/快捷栏/摇杆/跳跃/准星与进度环/罗盘/战斗框/状态图标; 未接: Boss 血条/充能球'),
         ('联机', '房间接口', len(re.findall(r'app\.(?:get|post)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 7, '建房/列表/加入/离房/状态/踢人'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
