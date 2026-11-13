@@ -657,6 +657,10 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     if (sneaking_) {
         ratio *= survival::kMoveSneakRatio;
     }
+    /* 蜂蜜: 泡在液体蜂蜜里速度压到十分之一, 与游泳倍率叠加. */
+    if (InHoney(world)) {
+        ratio *= survival::kMoveHoneyRatio;
+    }
     /* 状态效果最后乘: 加速与减速都按百分比作用在最终移动倍率上. */
     ratio *= buffs_.SpeedMultiplier();
     if (ratio < survival::kMoveRatioMin) {
@@ -1030,6 +1034,42 @@ bool PlayerController::InWater(const world::World& world) const {
     const voxel::BlockId mid = world.GetBlock(bodyX, midY, bodyZ);
     const voxel::BlockId foot = world.GetBlock(bodyX, footY, bodyZ);
     return mid == voxel::block::Water || foot == voxel::block::Water;
+}
+
+/*
+ * 浸蜂蜜判定.
+ * 与浸水同一取格方式, 只看液体的蜂蜜 (honey_still / honey_flow / honey),
+ * 蜂蜜块, 蜂巢块一类实心方块不算, 否则站在建筑上也会被拖慢.
+ */
+bool PlayerController::InHoney(const world::World& world) const {
+    const int32_t bodyX = FloorToInt(position_.x);
+    const int32_t bodyZ = FloorToInt(position_.z);
+    const int32_t midY = FloorToInt(position_.y + kHeight * 0.5f);
+    const int32_t footY = FloorToInt(position_.y + 0.1f);
+    const voxel::BlockRegistry& registry = voxel::BlockRegistry::Instance();
+    const auto isHoneyLiquid = [&registry](voxel::BlockId id) {
+        if (id == voxel::block::Air) {
+            return false;
+        }
+        const char* name = registry.Info(id).name;
+        if (name == nullptr) {
+            return false;
+        }
+        if (std::strcmp(name, "honey") == 0) {
+            return true;
+        }
+        const size_t length = std::strlen(name);
+        const char* still = "_still";
+        const char* flow = "_flow";
+        const bool stillMatch = length > 6 && std::strcmp(name + length - 6, still) == 0;
+        const bool flowMatch = length > 5 && std::strcmp(name + length - 5, flow) == 0;
+        if (!stillMatch && !flowMatch) {
+            return false;
+        }
+        return std::strstr(name, "honey") != nullptr;
+    };
+    return isHoneyLiquid(world.GetBlock(bodyX, midY, bodyZ)) ||
+           isHoneyLiquid(world.GetBlock(bodyX, footY, bodyZ));
 }
 
 void PlayerController::TickSurvival(float seconds) {

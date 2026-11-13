@@ -317,6 +317,9 @@ private:
     /* 判定脚部或身体是否浸在水中 (游泳倍率与游泳消耗的共用判定). */
     bool InWater(const world::World& world) const;
 
+    /* 判定身体中段或脚部是否浸在蜂蜜里 (蜂蜜移动倍率的判定). */
+    bool InHoney(const world::World& world) const;
+
     /* 回到出生点并清空运动状态. */
     void Respawn();
 

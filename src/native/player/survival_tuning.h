@@ -53,7 +53,7 @@ constexpr float kMoveBackwardRatio = 0.8f;   /* 第 17 行 houtui_yidong_beilv *
 constexpr float kMoveSneakRatio = 0.5f;      /* 第 18 行 sneaking_yidong_beilv */
 constexpr float kMoveSprintRatio = 1.3f;     /* 第 19 行 chongci_yidong_beilv */
 constexpr float kMoveSwimRatio = 0.25f;      /* 第 20 行 swimming_yidong_beilv */
-constexpr float kMoveHoneyRatio = 0.1f;      /* 第 21 行 swimming_honey_yidong_beilv, 未接入 */
+constexpr float kMoveHoneyRatio = 0.1f;      /* 第 21 行 swimming_honey_yidong_beilv */
 constexpr float kMoveChargeRatio = 0.5f;     /* 第 22 行 xuli_yidong_beilv, 挖掘中 */
 constexpr float kMovePhysSprintRatio = 2.3f; /* 第 24 行 chongci_phys_yidong_beilv, 未接入 */
 
