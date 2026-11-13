@@ -279,6 +279,9 @@ public:
     /* 界面层给一条提示: 与内部提示同一通道, 供网络状态一类的低频事件使用. */
     void ShowTipFromUi(const char* text) { ShowTip(text); }
 
+    /* 供界面层查询当前是否潜水: 环境音压减按它判断. */
+    bool IsUnderwater() const { return wasInWater_; }
+
     /* 世界时间: 总秒数, 供房间同步昼夜; 客人侧写入房主的时间. */
     float WorldTimeSeconds() const;
     void SetWorldTimeSeconds(float seconds);
@@ -306,6 +309,8 @@ public:
      */
     float rainSoundSeconds_ = 0.0f;
     float thunderSoundSeconds_ = 0.0f;
+    /* 上一帧是否浸水: 用于识别入水与出水的瞬间各播一次溅水音. */
+    bool wasInWater_ = false;
 
     /* 伤害飘字: 文案与剩余显示秒数; 受设置里的"伤害数值显示"开关控制. */
     char damageText_[16] = {};

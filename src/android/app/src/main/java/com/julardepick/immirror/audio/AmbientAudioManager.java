@@ -118,6 +118,11 @@ public final class AmbientAudioManager {
     private boolean musicEnabled = true;
     private float masterVolume = 1.0f;
     /*
+     * 水下压减: 潜入水中时环境音与音乐整体压到三成, 与画面上的水下冷色滤镜配套,
+     * 出水后恢复. 用系数而不是改主音量, 因此设置里的滑杆仍然生效.
+     */
+    private boolean underwater = false;
+    /*
      * 昼夜相位: true 昼表, false 夜表; 默认取昼.
      * 相位接线标记: 场景侧首次调用 setDayPhase 即视为相位源已接入,
      * 之后音乐按时段表取曲; 未接线时保持通用表, 避免单侧接线导致曲风单一.
@@ -276,6 +281,11 @@ public final class AmbientAudioManager {
      * 音量取 0 到 1 的线性系数, 音乐开关关闭时立即停曲, 打开时按需重播;
      * 环境音作为氛围通道跟随音乐开关, 与设置界面"音乐开关"单一语义保持一致.
      */
+    /* 潜水状态变化时调用: 只改系数, 下一次调音量时自然生效. */
+    public void setUnderwater(boolean value) {
+        underwater = value;
+    }
+
     public void syncSettings(float volume, boolean musicOn) {
         setMasterVolume(volume);
         if (!musicOn) {
@@ -321,7 +331,9 @@ public final class AmbientAudioManager {
     private void applyVolume(MediaPlayer player) {
         final float left = masterVolume;
         final float right = masterVolume;
-        player.setVolume(left, right);
+        /* 水下时整体压到三成, 出水恢复. */
+        final float muffle = underwater ? 0.3f : 1.0f;
+        player.setVolume(left * muffle, right * muffle);
     }
 
     /* 释放当前环境音并按当前分组重播; 分组切换路径专用. */

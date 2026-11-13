@@ -77,6 +77,7 @@ public final class PlayActivity extends NativeActivity {
         {"walk_ladder", "4", null},
         {"env_rain", "4", null},
         {"env_thunder", "1", null},
+        {"env_splash", "1", null},
     };
 
     private static final String TAG = "ImMirrorPlay";
@@ -518,6 +519,8 @@ public final class PlayActivity extends NativeActivity {
         /* 日相与环境音: 顺带查询游戏内昼夜, 切换昼/夜环境音轨. */
         if (ambientManager != null) {
             ambientManager.setDayPhase(NativeBridge.getDayPhase());
+            /* 潜水状态: 环境音与音乐随之压减, 出水恢复. */
+            ambientManager.setUnderwater(NativeBridge.isUnderwater());
             ambientManager.setAmbientGroup(ambientGroupOf(NativeBridge.getAmbientContext()));
         }
         /*

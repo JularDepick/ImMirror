@@ -169,6 +169,9 @@ public:
     /* 攀爬速度倍率: 由总装按手持物附魔注入, 缺省 1 表示不加成. */
     void SetClimbScale(float scale) { climbScale_ = scale > 0.0f ? scale : 1.0f; }
 
+    /* 对外暴露浸水判定: 入出水音效与水下压减都按它判断. */
+    bool InWaterPublic(const world::World& world) const { return InWater(world); }
+
     /* 护甲套装: 穿戴与减伤都在这里, 外部只通过它读写四个部位. */
     game::ArmorSet& Armor() { return armor_; }
     const game::ArmorSet& Armor() const { return armor_; }

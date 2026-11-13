@@ -187,6 +187,14 @@ public final class NativeBridge {
         nativeChooseWorldSeed(worldName == null ? "" : worldName, seed);
     }
 
+    /* 当前是否潜水: 环境音与音乐按它压减. */
+    public static boolean isUnderwater() {
+        if (!ensureLoaded()) {
+            return false;
+        }
+        return nativeIsUnderwater();
+    }
+
     /* 由界面层给一条 HUD 提示; 文案只支持拉丁字母. */
     public static void showTip(String text) {
         if (!ensureLoaded() || text == null) {
@@ -403,6 +411,8 @@ public final class NativeBridge {
     private static native void nativeChooseWorld(String worldName);
 
     private static native void nativeChooseWorldSeed(String worldName, int seed);
+
+    private static native boolean nativeIsUnderwater();
 
     private static native void nativeShowTip(String text);
 

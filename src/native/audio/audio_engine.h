@@ -36,6 +36,8 @@ enum class SoundId {
     /* 天气环境音: 降水循环与雷声. */
     kRain,
     kThunder,
+    /* 入水与出水的一次性溅水音. */
+    kSplash,
     kCount,
 };
 

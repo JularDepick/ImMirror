@@ -133,7 +133,7 @@ def sound_coverage():
     java = read_text(os.path.join(JAVA_ROOT, 'com', 'julardepick', 'immirror', 'PlayActivity.java'))
     families = set(re.findall(r'\{"([a-z_0-9]+)",', java))
     # 少数几项的资源名与枚举名不成规则对应, 单独列表.
-    aliases = {'Rain': 'env_rain', 'Thunder': 'env_thunder'}
+    aliases = {'Rain': 'env_rain', 'Thunder': 'env_thunder', 'Splash': 'env_splash'}
     covered = []
     for name in names:
         family = aliases.get(name, re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower())

@@ -219,6 +219,18 @@ Java_com_julardepick_immirror_bridge_NativeBridge_nativeSetWeatherState(JNIEnv* 
     shell->SetWeatherState(static_cast<int32_t>(kind), static_cast<float>(intensity));
 }
 
+/* Java 侧低频入口: 当前是否潜水, 供环境音压减. */
+JNIEXPORT jboolean JNICALL
+Java_com_julardepick_immirror_bridge_NativeBridge_nativeIsUnderwater(JNIEnv* env, jclass clazz) {
+    (void)env;
+    (void)clazz;
+    auto* shell = immirror::platform::RuntimeHostShell();
+    if (shell == nullptr) {
+        return JNI_FALSE;
+    }
+    return shell->IsUnderwater() ? JNI_TRUE : JNI_FALSE;
+}
+
 /* Java 侧低频入口: 由界面层给一条 HUD 提示, 文案为拉丁字母. */
 JNIEXPORT void JNICALL
 Java_com_julardepick_immirror_bridge_NativeBridge_nativeShowTip(JNIEnv* env, jclass clazz,

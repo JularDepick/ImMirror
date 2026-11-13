@@ -2530,6 +2530,19 @@ void GameShell::UpdateEntities(double deltaSeconds) {
         }
     }
 
+    /*
+     * 入水与出水: 只在状态翻转的那一帧播一次溅水音, 持续泡在水里不重复播.
+     * 判定与游泳倍率同一取格方式, 因此手感与移动一致.
+     */
+    {
+        const bool inWater = player_->InWaterPublic(*world_);
+        if (inWater != wasInWater_) {
+            audio::AudioEngine::Instance().Play(audio::SoundId::kSplash);
+            wasInWater_ = inWater;
+            IM_LOGI(kTag, "water state changed to %d", inWater ? 1 : 0);
+        }
+    }
+
     UpdateEnvironmentDamage(deltaSeconds);
     /*
      * 远程生物: 先决定是否改为投射物出手, 再决定是否直接扣血.
