@@ -1,5 +1,6 @@
 #include "ui/script/lua_parser.h"
 
+#include <cstdio>
 #include <cstring>
 
 #include "ui/script/lua_token.h"
@@ -33,6 +34,23 @@ int32_t PrecedenceOf(const std::string& op) {
     if (op == "*" || op == "/" || op == "%") {
         return 6;
     }
+    /* 幂运算优先级最高, 且右结合. */
+    if (op == "^") {
+        return 8;
+    }
+    /* 按位运算: 与比较同级以下, 界面脚本里用于位掩码. */
+    if (op == "&") {
+        return 4;
+    }
+    if (op == "|") {
+        return 3;
+    }
+    if (op == "~") {
+        return 4;
+    }
+    if (op == "<<" || op == ">>") {
+        return 5;
+    }
     return 0;
 }
 
@@ -47,8 +65,7 @@ public:
             return false;
         }
         if (Peek().kind != Token::Kind::kEnd) {
-            *error_ = "语句结束后仍有多余内容";
-            return false;
+            return Fail("语句结束后仍有多余内容");
         }
         return true;
     }
@@ -77,6 +94,20 @@ private:
         }
         position_ += 1;
         return true;
+    }
+
+    /* 统一的错误出口: 把当前记号的行号拼进信息, 便于按行定位. */
+    bool Fail(const char* message) {
+        char buffer[160];
+        std::snprintf(buffer, sizeof(buffer), "第 %d 行: %s", Peek().line, message);
+        *error_ = buffer;
+        return false;
+    }
+
+    /* 表达式侧的错误出口: 与语句侧同一格式, 返回空指针. */
+    NodePtr FailExpr(const char* message) {
+        Fail(message);
+        return nullptr;
     }
 
     bool ParseBlock(std::vector<NodePtr>& out, bool stopAtUntil) {
@@ -111,8 +142,7 @@ private:
             NodePtr node = Make(Node::Kind::kLocal);
             if (AcceptKeyword("function")) {
                 if (Peek().kind != Token::Kind::kName) {
-                    *error_ = "local function 缺少名字";
-                    return false;
+                    return Fail("local function 缺少名字");
                 }
                 node->text = Peek().text;
                 node->names.push_back(Peek().text);
@@ -127,8 +157,7 @@ private:
             }
             while (true) {
                 if (Peek().kind != Token::Kind::kName) {
-                    *error_ = "local 后必须是名字";
-                    return false;
+                    return Fail("local 后必须是名字");
                 }
                 node->names.push_back(Peek().text);
                 position_ += 1;
@@ -149,8 +178,7 @@ private:
             position_ += 1;
             NodePtr node = Make(Node::Kind::kFunction);
             if (Peek().kind != Token::Kind::kName) {
-                *error_ = "function 缺少名字";
-                return false;
+                return Fail("function 缺少名字");
             }
             node->text = Peek().text;
             position_ += 1;
@@ -162,8 +190,7 @@ private:
                 methodStyle = CheckSymbol(":");
                 position_ += 1;
                 if (Peek().kind != Token::Kind::kName) {
-                    *error_ = "函数名后缀必须是名字";
-                    return false;
+                    return Fail("函数名后缀必须是名字");
                 }
                 NodePtr key = Make(Node::Kind::kString);
                 key->text = Peek().text;
@@ -187,8 +214,7 @@ private:
             while (true) {
                 NodePtr condition = ParseExpression();
                 if (condition == nullptr || !AcceptKeyword("then")) {
-                    *error_ = "if 缺少 then";
-                    return false;
+                    return Fail("if 缺少 then");
                 }
                 node->list.push_back(condition);
                 std::vector<NodePtr> block;
@@ -207,8 +233,7 @@ private:
                     node->blocks.push_back(elseBlock);
                 }
                 if (!AcceptKeyword("end")) {
-                    *error_ = "if 缺少 end";
-                    return false;
+                    return Fail("if 缺少 end");
                 }
                 out.push_back(node);
                 return true;
@@ -220,8 +245,7 @@ private:
             NodePtr node = Make(Node::Kind::kWhile);
             NodePtr condition = ParseExpression();
             if (condition == nullptr || !AcceptKeyword("do")) {
-                *error_ = "while 缺少 do";
-                return false;
+                return Fail("while 缺少 do");
             }
             node->list.push_back(condition);
             std::vector<NodePtr> block;
@@ -229,8 +253,7 @@ private:
                 return false;
             }
             if (!AcceptKeyword("end")) {
-                *error_ = "while 缺少 end";
-                return false;
+                return Fail("while 缺少 end");
             }
             node->blocks.push_back(block);
             out.push_back(node);
@@ -247,8 +270,7 @@ private:
                 return false;
             }
             if (!AcceptKeyword("until")) {
-                *error_ = "repeat 缺少 until";
-                return false;
+                return Fail("repeat 缺少 until");
             }
             NodePtr condition = ParseExpression();
             if (condition == nullptr) {
@@ -263,16 +285,14 @@ private:
         if (CheckKeyword("for")) {
             position_ += 1;
             if (Peek().kind != Token::Kind::kName) {
-                *error_ = "for 缺少循环变量";
-                return false;
+                return Fail("for 缺少循环变量");
             }
             std::vector<std::string> names;
             names.push_back(Peek().text);
             position_ += 1;
             while (AcceptSymbol(",")) {
                 if (Peek().kind != Token::Kind::kName) {
-                    *error_ = "for 变量表不合法";
-                    return false;
+                    return Fail("for 变量表不合法");
                 }
                 names.push_back(Peek().text);
                 position_ += 1;
@@ -286,16 +306,14 @@ private:
                     return false;
                 }
                 if (!AcceptKeyword("do")) {
-                    *error_ = "for 缺少 do";
-                    return false;
+                    return Fail("for 缺少 do");
                 }
                 std::vector<NodePtr> block;
                 if (!ParseBlock(block, false)) {
                     return false;
                 }
                 if (!AcceptKeyword("end")) {
-                    *error_ = "for 缺少 end";
-                    return false;
+                    return Fail("for 缺少 end");
                 }
                 node->blocks.push_back(block);
                 out.push_back(node);
@@ -304,13 +322,11 @@ private:
             NodePtr node = Make(Node::Kind::kNumericFor);
             node->names = names;
             if (!AcceptSymbol("=")) {
-                *error_ = "for 缺少等号";
-                return false;
+                return Fail("for 缺少等号");
             }
             NodePtr start = ParseExpression();
             if (start == nullptr || !AcceptSymbol(",")) {
-                *error_ = "for 起始值不合法";
-                return false;
+                return Fail("for 起始值不合法");
             }
             NodePtr stop = ParseExpression();
             if (stop == nullptr) {
@@ -326,16 +342,14 @@ private:
                 node->list.push_back(step);
             }
             if (!AcceptKeyword("do")) {
-                *error_ = "for 缺少 do";
-                return false;
+                return Fail("for 缺少 do");
             }
             std::vector<NodePtr> block;
             if (!ParseBlock(block, false)) {
                 return false;
             }
             if (!AcceptKeyword("end")) {
-                *error_ = "for 缺少 end";
-                return false;
+                return Fail("for 缺少 end");
             }
             node->blocks.push_back(block);
             out.push_back(node);
@@ -351,8 +365,7 @@ private:
                 return false;
             }
             if (!AcceptKeyword("end")) {
-                *error_ = "do 缺少 end";
-                return false;
+                return Fail("do 缺少 end");
             }
             node->blocks.push_back(block);
             out.push_back(node);
@@ -377,21 +390,18 @@ private:
         /* 标签 ::name:: 与 goto name: 界面脚本里偶有使用, 解析阶段直接跳过. */
         if (AcceptSymbol("::")) {
             if (Peek().kind != Token::Kind::kName) {
-                *error_ = "标签缺少名字";
-                return false;
+                return Fail("标签缺少名字");
             }
             position_ += 1;
             if (!AcceptSymbol("::")) {
-                *error_ = "标签未闭合";
-                return false;
+                return Fail("标签未闭合");
             }
             return true;
         }
         if (CheckKeyword("goto")) {
             position_ += 1;
             if (Peek().kind != Token::Kind::kName) {
-                *error_ = "goto 缺少标签";
-                return false;
+                return Fail("goto 缺少标签");
             }
             position_ += 1;
             return true;
@@ -406,8 +416,7 @@ private:
         /* 赋值或调用语句. */
         NodePtr first = ParseSuffixedExpression();
         if (first == nullptr) {
-            *error_ = "无法解析的语句";
-            return false;
+            return Fail("无法解析的语句");
         }
         if (CheckSymbol("=") || CheckSymbol(",")) {
             NodePtr node = Make(Node::Kind::kAssign);
@@ -420,8 +429,7 @@ private:
                 node->list.push_back(target);
             }
             if (!AcceptSymbol("=")) {
-                *error_ = "赋值缺少等号";
-                return false;
+                return Fail("赋值缺少等号");
             }
             std::vector<NodePtr> values;
             if (!ParseExpressionList(values)) {
@@ -457,8 +465,7 @@ private:
             stats_->functions += 1;
         }
         if (!AcceptSymbol("(")) {
-            *error_ = "函数缺少参数表";
-            return false;
+            return Fail("函数缺少参数表");
         }
         if (methodStyle) {
             node.names.push_back("self");
@@ -473,8 +480,7 @@ private:
                 node.names.push_back("...");
             } else {
                 if (Peek().kind != Token::Kind::kName) {
-                    *error_ = "函数参数必须是名字";
-                    return false;
+                    return Fail("函数参数必须是名字");
                 }
                 node.names.push_back(Peek().text);
                 position_ += 1;
@@ -484,16 +490,14 @@ private:
             }
         }
         if (!AcceptSymbol(")")) {
-            *error_ = "函数参数表未闭合";
-            return false;
+            return Fail("函数参数表未闭合");
         }
         std::vector<NodePtr> body;
         if (!ParseBlock(body, false)) {
             return false;
         }
         if (!AcceptKeyword("end")) {
-            *error_ = "函数缺少 end";
-            return false;
+            return Fail("函数缺少 end");
         }
         node.blocks.push_back(body);
         return true;
@@ -517,10 +521,10 @@ private:
             }
             const std::string op = token.text;
             position_ += 1;
-            NodePtr right = ParseBinary(precedence + 1);
+            /* 幂运算右结合, 其余左结合. */
+            NodePtr right = ParseBinary(op == "^" ? precedence : precedence + 1);
             if (right == nullptr) {
-                *error_ = "运算符右侧缺少表达式";
-                return nullptr;
+                return FailExpr("运算符右侧缺少表达式");
             }
             NodePtr node = Make(Node::Kind::kBinary);
             node->op = op;
@@ -535,7 +539,7 @@ private:
     }
 
     NodePtr ParseUnary() {
-        if (CheckKeyword("not") || CheckSymbol("-") || CheckSymbol("#")) {
+        if (CheckKeyword("not") || CheckSymbol("-") || CheckSymbol("#") || CheckSymbol("~")) {
             const std::string op = Peek().text;
             position_ += 1;
             NodePtr operand = ParseUnary();
@@ -631,15 +635,13 @@ private:
         NodePtr node = Make(Node::Kind::kTable);
         while (!CheckSymbol("}")) {
             if (Peek().kind == Token::Kind::kEnd) {
-                *error_ = "表构造未闭合";
-                return nullptr;
+                return FailExpr("表构造未闭合");
             }
             if (CheckSymbol("[")) {
                 position_ += 1;
                 NodePtr key = ParseExpression();
                 if (key == nullptr || !AcceptSymbol("]") || !AcceptSymbol("=")) {
-                    *error_ = "表的键写法不合法";
-                    return nullptr;
+                    return FailExpr("表的键写法不合法");
                 }
                 NodePtr value = ParseExpression();
                 if (value == nullptr) {
@@ -659,8 +661,7 @@ private:
             } else {
                 NodePtr value = ParseExpression();
                 if (value == nullptr) {
-                    *error_ = "表的数组项不合法";
-                    return nullptr;
+                    return FailExpr("表的数组项不合法");
                 }
                 node->list.push_back(value);
             }
@@ -669,8 +670,7 @@ private:
             }
         }
         if (!AcceptSymbol("}")) {
-            *error_ = "表构造未闭合";
-            return nullptr;
+            return FailExpr("表构造未闭合");
         }
         return node;
     }
@@ -681,8 +681,7 @@ private:
             if (CheckSymbol(".")) {
                 position_ += 1;
                 if (Peek().kind != Token::Kind::kName) {
-                    *error_ = "点号后必须是名字";
-                    return nullptr;
+                    return FailExpr("点号后必须是名字");
                 }
                 NodePtr key = Make(Node::Kind::kString);
                 key->text = Peek().text;
@@ -708,8 +707,7 @@ private:
             if (CheckSymbol(":")) {
                 position_ += 1;
                 if (Peek().kind != Token::Kind::kName) {
-                    *error_ = "冒号后必须是方法名";
-                    return nullptr;
+                    return FailExpr("冒号后必须是方法名");
                 }
                 NodePtr node = Make(Node::Kind::kMethodCall);
                 node->text = Peek().text;
@@ -732,8 +730,7 @@ private:
                     }
                     node->list.push_back(arg);
                 } else {
-                    *error_ = "方法调用缺少实参";
-                    return nullptr;
+                    return FailExpr("方法调用缺少实参");
                 }
                 current = node;
                 continue;
@@ -777,8 +774,7 @@ private:
 
     bool ParseCallArguments(std::vector<NodePtr>& out) {
         if (!AcceptSymbol("(")) {
-            *error_ = "调用缺少参数表";
-            return false;
+            return Fail("调用缺少参数表");
         }
         while (!CheckSymbol(")")) {
             NodePtr arg = ParseExpression();
@@ -791,8 +787,7 @@ private:
             }
         }
         if (!AcceptSymbol(")")) {
-            *error_ = "调用参数表未闭合";
-            return false;
+            return Fail("调用参数表未闭合");
         }
         return true;
     }

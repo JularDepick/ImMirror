@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
     const char* directory = argc > 1 ? argv[1] : "../../assets/project/ui/mobile";
     int files = 0;
     int parsed = 0;
+    int skipped = 0;
     int64_t statements = 0;
     int64_t functions = 0;
     int64_t tables = 0;
@@ -40,6 +41,14 @@ int main(int argc, char** argv) {
             failures.push_back(entry.path().filename().string() + " :: 读不到");
             continue;
         }
+        /*
+         * 少数 .lua 文件其实是编码后的数据块而不是源码: 单行, 无换行, 只有字母数字与
+         * 少量符号. 这类文件单独计数, 不计入解析失败.
+         */
+        if (text.find('\n') == std::string::npos && text.size() > 64) {
+            skipped += 1;
+            continue;
+        }
         ParseStats stats;
         std::string error;
         const std::vector<NodePtr> nodes = ParseScript(text.data(), text.size(), &stats, &error);
@@ -52,7 +61,7 @@ int main(int argc, char** argv) {
         functions += stats.functions;
         tables += stats.tables;
     }
-    std::printf("脚本文件 %d, 解析成功 %d, 失败 %d\n", files, parsed,
+    std::printf("脚本文件 %d, 解析成功 %d, 非源码 %d, 失败 %d\n", files, parsed, skipped,
                 static_cast<int>(failures.size()));
     std::printf("语句 %lld, 函数 %lld, 表 %lld\n", static_cast<long long>(statements),
                 static_cast<long long>(functions), static_cast<long long>(tables));

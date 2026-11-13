@@ -1,5 +1,6 @@
 #include "ui/script/lua_token.h"
 
+#include <cctype>
 #include <cstdlib>
 
 namespace immirror::ui::script {
@@ -37,7 +38,12 @@ public:
     bool Run(std::vector<Token>& out, std::string* error) {
         while (index_ < length_) {
             const char value = source_[index_];
-            if (value == ' ' || value == '\t' || value == '\r' || value == '\n') {
+            if (value == '\n') {
+                ++line_;
+                ++index_;
+                continue;
+            }
+            if (value == ' ' || value == '\t' || value == '\r') {
                 ++index_;
                 continue;
             }
@@ -55,6 +61,37 @@ public:
                 Token token;
                 token.text = std::string(source_ + begin, index_ - begin);
                 token.kind = IsKeyword(token.text) ? Token::Kind::kKeyword : Token::Kind::kName;
+                token.line = line_;
+        out.push_back(token);
+                continue;
+            }
+            /*
+             * 十六进制与二进制常量: 界面脚本把位运算常量写成 0x 形式,
+             * 不支持会把条件表达式切错, 表现为"if 缺少 then"一类看似无关的错误.
+             */
+            if (value == '0' && index_ + 1 < length_ &&
+                (source_[index_ + 1] == 'x' || source_[index_ + 1] == 'X' ||
+                 source_[index_ + 1] == 'b' || source_[index_ + 1] == 'B')) {
+                const bool hex = source_[index_ + 1] == 'x' || source_[index_ + 1] == 'X';
+                const size_t begin = index_;
+                index_ += 2;
+                const size_t digitsBegin = index_;
+                while (index_ < length_) {
+                    const char current = source_[index_];
+                    const bool valid = hex ? std::isxdigit(static_cast<unsigned char>(current)) != 0
+                                           : (current == '0' || current == '1');
+                    if (!valid) {
+                        break;
+                    }
+                    ++index_;
+                }
+                Token token;
+                token.kind = Token::Kind::kNumber;
+                token.text = std::string(source_ + begin, index_ - begin);
+                token.number = static_cast<double>(std::strtoull(
+                    std::string(source_ + digitsBegin, index_ - digitsBegin).c_str(), nullptr,
+                    hex ? 16 : 2));
+                token.line = line_;
                 out.push_back(token);
                 continue;
             }
@@ -79,7 +116,8 @@ public:
                 token.kind = Token::Kind::kNumber;
                 token.text = std::string(source_ + begin, index_ - begin);
                 token.number = std::atof(token.text.c_str());
-                out.push_back(token);
+                token.line = line_;
+        out.push_back(token);
                 continue;
             }
             if (value == '"' || value == '\'') {
@@ -118,10 +156,12 @@ public:
             Token token;
             token.kind = Token::Kind::kSymbol;
             token.text = symbol;
-            out.push_back(token);
+            token.line = line_;
+        out.push_back(token);
         }
         Token end;
         end.kind = Token::Kind::kEnd;
+        end.line = line_;
         out.push_back(end);
         return true;
     }
@@ -188,6 +228,7 @@ private:
         Token token;
         token.kind = Token::Kind::kString;
         token.text = text;
+        token.line = line_;
         out.push_back(token);
         return true;
     }
@@ -201,6 +242,7 @@ private:
         Token token;
         token.kind = Token::Kind::kString;
         token.text = std::string(source_ + index_, end - index_);
+        token.line = line_;
         out.push_back(token);
         index_ = end + closing.size();
         return true;
@@ -209,6 +251,7 @@ private:
     const char* source_ = nullptr;
     size_t length_ = 0;
     size_t index_ = 0;
+    int32_t line_ = 1;
 };
 
 }  /* namespace */

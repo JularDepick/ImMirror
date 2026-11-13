@@ -12,6 +12,8 @@ struct Token {
     Kind kind = Kind::kEnd;
     std::string text;
     double number = 0.0;
+    /* 所在行号, 从 1 起; 语法错误按它定位. */
+    int32_t line = 0;
 };
 
 /* 词法分析: 成功返回 true 并填满 tokens, 末尾追加一个 kEnd. */
