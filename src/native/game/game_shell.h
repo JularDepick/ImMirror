@@ -10,6 +10,8 @@
 #include "core/vec3.h"
 #include "entity/entity_manager.h"
 #include "entity/projectile.h"
+#include "game/ui_data_source_game.h"
+#include "ui/script/widget_host.h"
 #include "game/containers.h"
 #include "game/container_screen.h"
 #include "game/inventory.h"
@@ -282,6 +284,9 @@ public:
     /* 供界面层查询当前是否潜水: 环境音压减按它判断. */
     bool IsUnderwater() const { return wasInWater_; }
 
+    /* 把游戏状态接到界面宿主上; 界面脚本因此能读到背包与玩家数据. */
+    void BindUiDataSource(ui::script::WidgetHost& host);
+
     /* 世界时间: 总秒数, 供房间同步昼夜; 客人侧写入房主的时间. */
     float WorldTimeSeconds() const;
     void SetWorldTimeSeconds(float seconds);
@@ -469,6 +474,14 @@ private:
 
     std::unique_ptr<world::World> world_;
     std::unique_ptr<world::WorldTime> worldTime_;
+
+    /*
+     * 界面数据源: 把背包, 玩家, 世界与进度接到界面脚本上.
+     * 用指针是因为它需要引用上述对象, 而这些对象在构造期之后才就位.
+     */
+    std::unique_ptr<GameUiDataSource> uiDataSource_;
+    /* 当前世界名, 界面显示与数据源都用它. */
+    std::string worldName_ = "default";
     /* 天气状态机: 按玩家所在群系的权重周期重抽, 结果下发给渲染侧. */
     world::Weather weather_;
     world::WeatherKind lastWeatherKind_ = world::WeatherKind::kClear;

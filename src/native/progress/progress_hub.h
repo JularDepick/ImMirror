@@ -65,6 +65,9 @@ public:
     /* 每帧调用: 累计在线时长与行走距离, 处理跨日与低频落盘. */
     void Tick(double deltaSeconds, float distanceMeters);
 
+    /* 按统计键名取累计值; 未收录的名字返回零. 供界面读取. */
+    int64_t StatTotal(const char* key) const;
+
     /* 立即落盘, 离开游戏前调用. */
     void Flush();
 

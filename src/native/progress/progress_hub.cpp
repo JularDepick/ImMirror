@@ -1,5 +1,7 @@
 #include "progress/progress_hub.h"
 
+#include <cstring>
+
 #include <algorithm>
 #include <cstdio>
 
@@ -245,6 +247,30 @@ void ProgressHub::EnsureDayLocked() {
         IM_LOGI(kTag, "daily tasks refreshed date=%s", today.c_str());
     }
     dirty_ = true;
+}
+
+int64_t ProgressHub::StatTotal(const char* key) const {
+    if (key == nullptr) {
+        return 0;
+    }
+    /* 名字表与统计键一一对应, 界面用名字读取, 避免暴露枚举序号. */
+    struct Entry {
+        const char* name;
+        StatKind kind;
+    };
+    static const Entry kEntries[] = {
+        {"breakBlocks", StatKind::kBlockBreak},   {"placeBlocks", StatKind::kBlockPlace},
+        {"pickItems", StatKind::kItemPick},       {"walkDistance", StatKind::kWalkDistance},
+        {"onlineSeconds", StatKind::kOnlineSeconds}, {"checkin", StatKind::kCheckin},
+        {"onlineDays", StatKind::kOnlineDays},    {"craft", StatKind::kCraft},
+        {"smelt", StatKind::kSmelt},              {"kill", StatKind::kKill},
+    };
+    for (const Entry& entry : kEntries) {
+        if (std::strcmp(entry.name, key) == 0) {
+            return stats_.Get(entry.kind);
+        }
+    }
+    return 0;
 }
 
 void ProgressHub::AddOnlineLocked(double deltaSeconds) {

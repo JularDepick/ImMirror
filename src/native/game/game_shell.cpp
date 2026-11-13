@@ -564,6 +564,7 @@ void GameShell::SaveWorld() {
         fileName.resize(fileName.size() - 6);
     }
     state.worldName = fileName.empty() ? "default" : fileName;
+    worldName_ = state.worldName;
     state.lastPlayed = static_cast<uint64_t>(std::time(nullptr));
     state.timeOfDaySeconds = worldTime_->TotalSeconds();
     const bool saved = world_->SaveToFile(savePath_.c_str(), state);
@@ -1390,6 +1391,15 @@ void GameShell::UpdateHudButtons(platform::InputSnapshot& input, double deltaSec
  * 命中面板交给背包界面处理, 点在面板以外则关闭面板并把合成材料退回物品栏;
  * 无论哪种情况都标记认领, 避免同一次点击又落到挖掘或放置上.
  */
+void GameShell::BindUiDataSource(ui::script::WidgetHost& host) {
+    if (uiDataSource_ == nullptr) {
+        uiDataSource_.reset(
+            new GameUiDataSource(inventory_, *player_, *world_, *worldTime_));
+    }
+    uiDataSource_->SetWorldName(worldName_);
+    host.BindDataSource(uiDataSource_.get());
+}
+
 float GameShell::WorldTimeSeconds() const {
     return worldTime_ != nullptr ? worldTime_->TotalSeconds() : 0.0f;
   }
