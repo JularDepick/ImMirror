@@ -458,6 +458,56 @@ describe("房间通道", () => {
     expect(ignored.timeOfDay).toBe(720.5);
   });
 
+  it("房主上报的天气下发给客人, 客人上报被忽略", async () => {
+    const owner = await registerCasePlayer("weather", 1);
+    const guest = await registerCasePlayer("weather", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    const reported = expectOk<{ weatherKind: number; weatherIntensity: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`,
+        { weatherKind: 2, weatherIntensity: 0.75 }, owner.token),
+    );
+    expect(reported.weatherKind).toBe(2);
+    expect(reported.weatherIntensity).toBeCloseTo(0.75, 3);
+
+    const seen = expectOk<{ weatherKind: number; weatherIntensity: number }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(seen.weatherKind).toBe(2);
+
+    /* 客人的上报不生效. */
+    const ignored = expectOk<{ weatherKind: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { weatherKind: 0 }, guest.token),
+    );
+    expect(ignored.weatherKind).toBe(2);
+  });
+
+  it("房主上报的天气下发给客人, 客人上报被忽略", async () => {
+    const owner = await registerCasePlayer("weather", 1);
+    const guest = await registerCasePlayer("weather", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    const reported = expectOk<{ weatherKind: number; weatherIntensity: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`,
+        { weatherKind: 2, weatherIntensity: 0.75 }, owner.token),
+    );
+    expect(reported.weatherKind).toBe(2);
+    expect(reported.weatherIntensity).toBeCloseTo(0.75, 3);
+
+    const seen = expectOk<{ weatherKind: number; weatherIntensity: number }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(seen.weatherKind).toBe(2);
+
+    /* 客人的上报不生效. */
+    const ignored = expectOk<{ weatherKind: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { weatherKind: 0 }, guest.token),
+    );
+    expect(ignored.weatherKind).toBe(2);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);

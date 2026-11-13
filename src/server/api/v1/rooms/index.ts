@@ -70,6 +70,9 @@ interface Room {
   furnaces: RoomFurnace[];
   /* 世界时间总秒数: 房主上行, 客人据此对齐昼夜, 0 表示尚未上报. */
   timeOfDay: number;
+  /* 天气编号与强度: 房主上行, 客人据此对齐降水与天色. */
+  weatherKind: number;
+  weatherIntensity: number;
 }
 
 /** 对外房间摘要, 不含成员位置. */
@@ -412,6 +415,8 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       chests: [],
       furnaces: [],
       timeOfDay: 0,
+      weatherKind: 0,
+      weatherIntensity: 0,
     };
     /* 房间名缺省时用房间号补位, 保证列表里每一项都能被区分. */
     if (name === "") {
@@ -845,6 +850,17 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       room.timeOfDay = rawTime;
     }
 
+    /* 天气: 与时间同一条路, 只有房主的设定生效. */
+    const rawWeatherKind = body.weatherKind;
+    const rawWeatherIntensity = body.weatherIntensity;
+    if (room.ownerUserId === auth.user.id &&
+        typeof rawWeatherKind === "number" && Number.isFinite(rawWeatherKind) &&
+        rawWeatherKind >= 0 && rawWeatherKind <= 3 &&
+        typeof rawWeatherIntensity === "number" && Number.isFinite(rawWeatherIntensity)) {
+      room.weatherKind = Math.trunc(rawWeatherKind);
+      room.weatherIntensity = Math.max(0, Math.min(1, rawWeatherIntensity));
+    }
+
     const rawSince = body.since;
     const since = typeof rawSince === "number" && Number.isFinite(rawSince) ? Math.trunc(rawSince) : 0;
     return ok({
@@ -857,6 +873,8 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       chests: room.chests,
       furnaces: room.furnaces,
       timeOfDay: room.timeOfDay,
+      weatherKind: room.weatherKind,
+      weatherIntensity: room.weatherIntensity,
       rejectedEdits,
       rejectedCreatures,
       rejectedDrops,
@@ -892,6 +910,8 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       chests: room.chests,
       furnaces: room.furnaces,
       timeOfDay: room.timeOfDay,
+      weatherKind: room.weatherKind,
+      weatherIntensity: room.weatherIntensity,
       serverTime: now,
     });
   });
