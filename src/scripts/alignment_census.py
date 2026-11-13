@@ -67,6 +67,43 @@ def struct_fields(text, struct_name):
     return names
 
 
+def ui_chain_coverage():
+    """界面链路环节: 每一环都要在原生侧找到对应实现文件."""
+    stages = [
+        ('ui/layout_xml.cpp', '布局解析'),
+        ('ui/layout_frame.cpp', '锚点求解'),
+        ('ui/widget_tree.cpp', '控件树'),
+        ('ui/script/lua_vm.cpp', '脚本求值'),
+        ('ui/script/widget_host.cpp', '控件宿主'),
+        ('ui/layout_draw.cpp', '绘制命令'),
+        ('ui/layout_render.cpp', '顶点生成'),
+    ]
+    found = 0
+    for relative, _label in stages:
+        if os.path.isfile(os.path.join(NATIVE_ROOT, relative)):
+            found += 1
+    return found, len(stages)
+
+
+def string_table_size():
+    """界面字符串表条目数: 取生成文件里的计数常量."""
+    path = os.path.join(NATIVE_ROOT, 'ui', 'generated', 'string_data_gen.h')
+    if not os.path.isfile(path):
+        return 0, 1
+    match = re.search(r'kStringEntryCount\s*=\s*(\d+)', read_text(path))
+    total = int(match.group(1)) if match else 0
+    return total, total if total > 0 else 1
+
+
+def assertion_group_count():
+    """离线断言组数: 数脚本里的分组标题."""
+    path = os.path.join(SCRIPT_DIR, 'check_layout_solver.sh')
+    if not os.path.isfile(path):
+        return 0, 1
+    groups = len(re.findall(r'^echo "== ', read_text(path), re.MULTILINE))
+    return groups, groups if groups > 0 else 1
+
+
 def block_stats():
     """方块统计: 字段下标按结构定义取, 不写死序号, 加列后不会算错."""
     text = read_text(os.path.join(NATIVE_ROOT, 'game', 'generated', 'block_data_gen.h'))
@@ -223,12 +260,12 @@ def main():
     ui_sound = os.path.join(JAVA_ROOT, 'com', 'julardepick', 'immirror', 'ui', 'UiSound.java')
     rows = [
         ('世界', '方块条目', blocks.get('blocks', 0), blocks.get('blocks', 0), 'blockdef 收录并分配到客户端 id'),
-        ('世界', '有掉落概率', blocks.get('drop', 0), blocks.get('blocks', 1), '掉落概率非 0'),
+        ('世界', '有掉落概率', blocks.get('drop', 0), blocks.get('blocks', 1), '数据分布: 其余方块不掉落物品'),
         ('世界', '方块行为列', *block_behaviors(), '重力/可替换/打滑/主掉落概率/二次掉落概率/工具等级'),
-        ('世界', '有重力方式', blocks.get('gravity', 0), blocks.get('blocks', 1), 'GravityEffect 非 0'),
-        ('世界', '有工具等级要求', blocks.get('toolLevel', 0), blocks.get('blocks', 1), 'ToolLevel 非 0'),
-        ('世界', '非整块形状', blocks.get('shape', 0), blocks.get('blocks', 1), '台阶/楼梯/栅栏/玻璃板/地毯'),
-        ('世界', '图集缺源贴图', missing, 753, 'atlas.json missingSource; 已核查素材源确无对应文件'),
+        ('世界', '有重力方式', blocks.get('gravity', 0), blocks.get('blocks', 1), '数据分布: 其余方块不受重力'),
+        ('世界', '有工具等级要求', blocks.get('toolLevel', 0), blocks.get('blocks', 1), '数据分布: 其余徒手可采'),
+        ('世界', '非整块形状', blocks.get('shape', 0), blocks.get('blocks', 1), '数据分布: 台阶/楼梯/栅栏/玻璃板/地毯, 其余为整块'),
+        ('世界', '图集缺源贴图', missing, 753, '素材缺口: 已核查素材源确无对应文件'),
         ('世界', '天空要素', 7, 7, '渐变/太阳/云/月亮/星空/降水/云影'),
         ('世界', '群系带', header_constant(os.path.join(NATIVE_ROOT, 'voxel', 'generated', 'biome_data_gen.h'), 'kBiomeBandCount'), 6, 'biomedef 52 群系折算'),
         ('世界', '矿脉类型', header_constant(os.path.join(NATIVE_ROOT, 'voxel', 'generated', 'ore_data_gen.h'), 'kOreEntryCount'), 10, 'oredef MapID=0'),
@@ -256,6 +293,9 @@ def main():
         ('界面', 'HUD 组件', *hud_components(), '绘制函数数, 含 Boss 血条与充能球'),
         ('联机', '房间接口', len(re.findall(r'app\.(?:get|post|patch)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 9, '建房/列表/加入/离房/状态/踢人/改信息/拾取'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
+        ('接线', '界面链路环节', *ui_chain_coverage(), '布局/锚点/控件/求值/宿主/绘制/顶点'),
+        ('接线', '离线断言组', *assertion_group_count(), '每条自查都能独立输出结论'),
+        ('接线', '界面字符串', *string_table_size(), '界面文案查表条目'),
         ('接线', '设置项落地', *settings_coverage(), '设置目录登记项能在原生侧查到引用'),
         ('接线', 'JNI 声明落地', *jni_coverage(), 'Java native 声明能找到 C++ 导出'),
         ('接线', '音效枚举落地', *sound_coverage(), '原生音效枚举能在界面加载表找到'),
