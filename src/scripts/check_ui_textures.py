@@ -81,6 +81,18 @@ def referenced():
     return used
 
 
+INDEX_HEADER = os.path.join(
+    SCRIPT_DIR, "..", "native", "ui", "generated", "ui_sprite_index_gen.h")
+
+
+def index_names():
+    """从生成的索引头文件里取出全部精灵名."""
+    path = os.path.normpath(INDEX_HEADER)
+    if not os.path.isfile(path):
+        return set()
+    return set(re.findall(r'^\s*\{"([^"]+)",', read(path), re.M))
+
+
 def main():
     atlases = load_atlases()
     templates = load_templates()
@@ -117,6 +129,26 @@ def main():
           % (len(atlases), len(templates), len(used)))
     print("引用无定义 %d 个: %s"
           % (len(undefined), ", ".join(undefined[:5]) or "无"))
+    # 生成的索引必须覆盖所有带贴图的模板, 否则运行期按名字取不到矩形.
+    indexed = index_names()
+    if indexed:
+        missingIndex = []
+        # 子图集本身就缺失的条目已在上一步计入, 这里不重复统计.
+        alreadyMissing = {name for name, _ in missingAtlas}
+        for name in used:
+            entry = templates.get(name)
+            if entry is None or not entry[1] or name in alreadyMissing:
+                continue
+            sprite = entry[1][:-4] if entry[1].endswith(".png") else entry[1]
+            if sprite not in indexed:
+                missingIndex.append(name)
+        print("索引未覆盖 %d 个: %s"
+              % (len(missingIndex), ", ".join(missingIndex[:5]) or "无"))
+        if missingIndex:
+            unresolved.append(("索引未覆盖", missingIndex[0]))
+    else:
+        print("索引未生成, 跳过覆盖核对")
+
     print("不带贴图 %d 个, 精灵能查到 %d 个, 子图集缺失 %d 个, 精灵查不到 %d 个: %s"
           % (noSprite, resolved, len(missingAtlas), len(unresolved),
              ", ".join(name for name, _ in unresolved[:5]) or "无"))
