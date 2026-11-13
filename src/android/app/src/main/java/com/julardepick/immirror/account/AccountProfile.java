@@ -8,11 +8,18 @@ public final class AccountProfile {
     private final String uid;
     private final String email;
     private final long balance;
+    /* 角色皮肤编号, 0 表示默认外观. */
+    private final int skinId;
 
-    public AccountProfile(String uid, String email, long balance) {
+    public AccountProfile(String uid, String email, long balance, int skinId) {
         this.uid = uid;
         this.email = email;
         this.balance = balance;
+        this.skinId = skinId;
+    }
+
+    public int skinId() {
+        return skinId;
     }
 
     public String uid() {

@@ -295,6 +295,7 @@ public final class ApiClient {
     private static AccountProfile parseProfile(JSONObject data) {
         JSONObject wallet = data.optJSONObject("wallet");
         long balance = wallet == null ? 0L : wallet.optLong("balance", 0L);
-        return new AccountProfile(data.optString("uid", ""), data.optString("email", ""), balance);
+        return new AccountProfile(data.optString("uid", ""), data.optString("email", ""), balance,
+                data.optInt("skinId", 0));
     }
 }

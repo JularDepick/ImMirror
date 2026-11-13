@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.julardepick.immirror.account.AccountProfile;
 import com.julardepick.immirror.account.ApiClient;
 import com.julardepick.immirror.lobby.MainLobbyActivity;
 import com.julardepick.immirror.account.Session;
@@ -147,6 +148,11 @@ public final class PlayActivity extends NativeActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         /* 设置目录与存档目录同源, 都取应用内部存储根目录; 先初始化再启动主循环. */
         NativeBridge.initSettings(getFilesDir().getAbsolutePath());
+        /*
+         * 角色皮肤: 账号里存着选择结果, 进入对局时下发给原生, 随位姿同步给房间里的人.
+         * 取不到时保持默认外观, 不阻断进游戏.
+         */
+        syncSkinFromAccount();
         NativeBridge.onDeviceProfile(DeviceProfile.obtain(this).toNativePayload());
         /* 试玩参数: 从编辑器进入时携带工程名, 原生侧据此加载导出的世界存档. */
         final String playtestProject = getIntent().getStringExtra(EditorBridge.EXTRA_PLAYTEST);
@@ -582,6 +588,27 @@ public final class PlayActivity extends NativeActivity {
                         }
                     }
                 });
+    }
+
+    /* 从账号资料取角色皮肤编号并下发原生; 失败时保持默认外观. */
+    private void syncSkinFromAccount() {
+        final Session session = SessionStore.load(this);
+        if (session == null || !session.isUsable()) {
+            return;
+        }
+        final ApiClient api = new ApiClient(this);
+        api.fetchProfile(session, new ApiClient.Callback<AccountProfile>() {
+            @Override
+            public void onSuccess(AccountProfile profile) {
+                NativeBridge.setSkinId(profile.skinId());
+                Log.i(TAG, "skin applied: " + profile.skinId());
+            }
+
+            @Override
+            public void onFailure(com.julardepick.immirror.account.ApiException error) {
+                Log.w(TAG, "skin fetch failed: " + error.code());
+            }
+        });
     }
 
     /* 取改动数组里最大的序号; 解析失败时返回原序号, 不推进. */
