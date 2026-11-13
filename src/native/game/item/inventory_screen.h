@@ -43,6 +43,16 @@ public:
 
     bool Carrying() const { return !carry_.Empty(); }
 
+    /*
+     * 取走手上的携带堆叠, 供"拖出面板即丢弃"使用.
+     * 取走后手上为空, 调用方负责把它变成地面掉落物.
+     */
+    ItemStack TakeCarried() {
+        const ItemStack stack = carry_;
+        carry_.Clear();
+        return stack;
+    }
+
     /* 把合成网格与携带物全部退回物品栏, 面板关闭与退出游戏时调用. */
     void ReturnAllToInventory(Inventory& inventory);
 

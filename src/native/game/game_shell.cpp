@@ -1451,6 +1451,20 @@ void GameShell::UpdateInventoryPanel(platform::InputSnapshot& input) {
             }
             const ui::InventoryHit hit = hud_.HitTestInventory(pointer.x, pointer.y);
             if (hit.region == ui::InventoryRegion::kNone) {
+                /*
+                 * 手上有东西时点到面板外视为丢弃: 堆叠落到玩家面前的地面,
+                 * 空手点到面板外才是关闭面板. 两者都不消耗物品数量以外的状态.
+                 */
+                const item::ItemStack carried = inventoryScreen_.TakeCarried();
+                if (!carried.Empty()) {
+                    const core::Vec3 forward = player_->LookDirection();
+                    const core::Vec3 at = player_->Position();
+                    SpawnDrop(carried.item, carried.count,
+                              item::ItemTable::Instance().BlockOf(carried.item),
+                              at.x + forward.x * 1.2f, at.y + 1.0f, at.z + forward.z * 1.2f);
+                    IM_LOGI(kTag, "drop discarded item=%u count=%d",
+                            static_cast<uint32_t>(carried.item), carried.count);
+                }
                 inventoryScreen_.SetOpen(false, inventory_);
                 uiEvents_.push_back(3);
                 continue;
