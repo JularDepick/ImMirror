@@ -98,6 +98,14 @@ public:
     std::vector<SoundEvent> TakeSoundEvents();
 
     int32_t Count() const { return static_cast<int32_t>(creatures_.size()); }
+
+    /* 按下标取生物, 越界返回空; 供只读遍历使用. */
+    const CreatureEntity* At(int32_t index) const {
+        if (index < 0 || index >= static_cast<int32_t>(creatures_.size())) {
+            return nullptr;
+        }
+        return creatures_[static_cast<size_t>(index)].get();
+    }
     int32_t AwakeCount() const { return awake_; }
     /* 同时存在的生物上限. */
     int32_t Capacity() const;

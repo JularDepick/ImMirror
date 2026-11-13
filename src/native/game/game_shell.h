@@ -250,6 +250,8 @@ public:
     double battleTargetUntil_ = 0.0;
     /* 战斗框上的血量数值文本, 形如 "18/20". */
     char battleTargetLabel_[24] = {};
+    /* Boss 血条上的血量数值文本, 与战斗框同一格式. */
+    char bossLabel_[24] = {};
     /*
      * 暂停菜单: 打开期间世界时间, 天气, 世界与玩家推进全部冻结,
      * 只保留面板按钮的指针处理. 由 Java 侧返回键触发切换.

@@ -3434,6 +3434,46 @@ void GameShell::RenderScene() {
      */
     ui::HudFrame frame;
     frame.pauseMenuVisible = pauseMenuOpen_;
+    /*
+     * Boss 血条: 取视野内最近的 Boss 类生物. 生物类别 6 是 Boss,
+     * 只显示最近的一只, 避免多只 Boss 抢同一条血条.
+     */
+    {
+        const entity::CreatureEntity* boss = nullptr;
+        float bestDistance = 1.0e9f;
+        const core::Vec3 feet = player_->Position();
+        const core::Vec3 eye = core::Vec3{feet.x, feet.y + 1.62f, feet.z};
+        for (int32_t index = 0; index < entities_.Count(); ++index) {
+            const entity::CreatureEntity* creature = entities_.At(index);
+            if (creature == nullptr || creature->Removed() ||
+                creature->Definition().type != 6) {
+                continue;
+            }
+            const core::Vec3 delta = creature->Position() - eye;
+            const float distance = delta.Length();
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                boss = creature;
+            }
+        }
+        if (boss != nullptr && bestDistance < 48.0f) {
+            frame.bossVisible = true;
+            frame.bossHealth = boss->HealthRatio();
+            /*
+             * 名称: 生物名是中文, 点阵字没有对应字形, 因此改用血量数值,
+             * 与战斗框同一处理方式.
+             */
+            std::snprintf(bossLabel_, sizeof(bossLabel_), "%d/%d",
+                          static_cast<int32_t>(boss->Health() + 0.5f),
+                          static_cast<int32_t>(boss->Definition().life + 0.5f));
+            frame.bossName = bossLabel_;
+        }
+    }
+    /* 充能球: 挖掘进度作为蓄力指示, 与准星进度环同一数据来源. */
+    if (player_->Mining()) {
+        frame.chargeVisible = true;
+        frame.chargeProgress = player_->MiningProgress();
+    }
     /* 死亡遮罩: 血量归零到复活之间显示, 进度按剩余等待秒数折算. */
     if (player_->Dying()) {
         const float remaining = player_->DeathRemaining();

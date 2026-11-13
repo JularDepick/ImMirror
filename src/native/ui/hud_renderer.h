@@ -164,6 +164,18 @@ struct HudFrame {
     float damageAnchorX = 0.5f;
     float damageAnchorY = 0.30f;
 
+    /*
+     * Boss 血条: 视野内存在 Boss 时在屏幕上方显示其名称与血量比例.
+     * bossName 只放 ASCII 文本, 点阵字没有中文字形.
+     */
+    bool bossVisible = false;
+    const char* bossName = nullptr;
+    float bossHealth = 1.0f;
+
+    /* 充能球: 使用蓄力类物品时的进度指示, 0 到 1. */
+    bool chargeVisible = false;
+    float chargeProgress = 0.0f;
+
     /* 暂停面板: 为真时整屏压暗并显示两个按钮, 世界推进由总装冻结. */
     bool pauseMenuVisible = false;
 

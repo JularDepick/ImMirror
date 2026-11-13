@@ -1572,6 +1572,78 @@ void DrawPauseMenu(float* out, int32_t& offset, const HudLayout& layout, float s
 }
 
 /*
+ * Boss 血条: 屏幕上方一条宽底槽加一层前景, 上方一行名称.
+ * 只在视野内存在 Boss 时绘制, 与普通战斗框互不影响.
+ */
+void DrawBossBar(float* out, int32_t& offset, const HudLayout& layout, const HudFrame& frame,
+                 float scale) {
+    if (!frame.bossVisible) {
+        return;
+    }
+    constexpr float kCenterYNorm = 0.905f;
+    constexpr float kHalfWidthNorm = 0.30f;
+    constexpr float kHalfHeightNorm = 0.012f;
+    const float x = layout.DesignX(0.0f);
+    const float y = layout.DesignY(kCenterYNorm);
+    const float halfWidth = layout.DesignLength(kHalfWidthNorm);
+    const float halfHeight = layout.DesignLength(kHalfHeightNorm);
+
+    const float track[4] = {0.0f, 0.0f, 0.0f, 0.55f};
+    PushRect(out, offset, x, y, halfWidth, halfHeight, scale, track);
+
+    float ratio = frame.bossHealth;
+    if (ratio < 0.0f) {
+        ratio = 0.0f;
+    }
+    if (ratio > 1.0f) {
+        ratio = 1.0f;
+    }
+    if (ratio > 0.0f) {
+        /* 血量越低越偏红, 与状态条同一套配色思路. */
+        const float fill[4] = {0.82f, 0.22f + 0.5f * ratio, 0.24f, 0.95f};
+        PushRect(out, offset, x - halfWidth + halfWidth * ratio, y, halfWidth * ratio, halfHeight,
+                 scale, fill);
+    }
+    if (frame.bossName != nullptr) {
+        const float label[4] = {1.0f, 0.96f, 0.9f, 0.95f};
+        PushCenteredText(out, offset, x, y + layout.DesignLength(0.028f), layout.DesignLength(0.0016f),
+                         frame.bossName, scale, label);
+    }
+}
+
+/*
+ * 充能球: 准星下方一个小圆环, 用扇形填充表示蓄力进度.
+ * 只用矩形近似圆环, 与其它组件同一套纯色图元.
+ */
+void DrawChargeOrb(float* out, int32_t& offset, const HudLayout& layout, const HudFrame& frame,
+                   float scale) {
+    if (!frame.chargeVisible) {
+        return;
+    }
+    constexpr float kCenterYNorm = -0.045f;
+    constexpr float kHalfNorm = 0.026f;
+    const float x = layout.DesignX(0.0f);
+    const float y = layout.DesignY(kCenterYNorm);
+    const float half = layout.DesignLength(kHalfNorm);
+
+    const float track[4] = {0.0f, 0.0f, 0.0f, 0.45f};
+    PushRect(out, offset, x, y, half, half, scale, track);
+    float ratio = frame.chargeProgress;
+    if (ratio < 0.0f) {
+        ratio = 0.0f;
+    }
+    if (ratio > 1.0f) {
+        ratio = 1.0f;
+    }
+    if (ratio > 0.0f) {
+        const float fill[4] = {0.30f, 0.78f, 0.92f, 0.92f};
+        /* 自下而上填充: 底边固定在中心下方, 高度按进度. */
+        const float height = half * 2.0f * ratio;
+        PushRect(out, offset, x, y - half + height * 0.5f, half, height * 0.5f, scale, fill);
+    }
+}
+
+/*
  * 死亡遮罩: 整屏压一层暗红, 中间两行字与一条倒计时条.
  * 点阵字只有 ASCII, 因此用两行英文标签.
  */
@@ -2065,6 +2137,10 @@ void HudRenderer::Render(const HudFrame& frame) {
         glBindTexture(GL_TEXTURE_2D, uiAtlasTexture_);
         glUniform1i(uniformSpriteLocation_, 1);
     }
+    /* Boss 血条与充能球属于常规 HUD, 先画在遮罩之下. */
+    DrawBossBar(vertices, offset, layout_, frame, scale);
+    DrawChargeOrb(vertices, offset, layout_, frame, scale);
+
     /* 死亡遮罩压在常规 HUD 之上, 暂停面板再压在它之上. */
     DrawDeathOverlay(vertices, offset, layout_, frame, scale);
 
