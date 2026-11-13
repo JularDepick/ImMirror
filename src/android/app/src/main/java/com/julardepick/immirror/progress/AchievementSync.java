@@ -76,6 +76,21 @@ public final class AchievementSync {
         });
     }
 
+    /* 批量领取: 一次领完所有可领奖励, 回调里带回本次入账总额. */
+    public void claimAll(Session session, final Handler<JSONObject> handler) {
+        api.claimAllRewards(session, new ApiClient.Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject value) {
+                handler.onSuccess(value);
+            }
+
+            @Override
+            public void onFailure(ApiException error) {
+                handler.onFailure(error);
+            }
+        });
+    }
+
     public void claimDaily(Session session, int slot, final Handler<JSONObject> handler) {
         api.claimDailyTask(session, slot, new ApiClient.Callback<JSONObject>() {
             @Override

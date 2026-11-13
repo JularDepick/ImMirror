@@ -112,6 +112,11 @@ public final class ApiClient {
                 makeBody("id", String.valueOf(achievementId)), tokenOf(session)));
     }
 
+    /* 批量领取: 一次领完所有已完成未领取的成就与当日任务. */
+    public void claimAllRewards(Session session, Callback<JSONObject> callback) {
+        submit(callback, () -> send("POST", "/achievements/claim-all", null, tokenOf(session)));
+    }
+
     /* 领取单条每日任务奖励. */
     public void claimDailyTask(Session session, int slot, Callback<JSONObject> callback) {
         submit(callback, () -> send("POST", "/achievements/daily/claim",

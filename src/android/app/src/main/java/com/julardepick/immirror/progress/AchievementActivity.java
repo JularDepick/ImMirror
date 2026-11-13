@@ -49,6 +49,8 @@ public final class AchievementActivity extends Activity {
 
     private TextView tabAchievements;
     private TextView tabDaily;
+    /* 批量领取按钮, 与刷新/筛选同一行. */
+    private android.widget.Button claimAllButton;
     private TextView summaryView;
     private TextView noticeView;
     private NoticeBar noticeBar;
@@ -154,6 +156,14 @@ public final class AchievementActivity extends Activity {
                 AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f);
         filterParams.leftMargin = AccountTheme.dp(this, 10f);
         actionRow.addView(filterButton, filterParams);
+        /* 批量领取: 一次领完所有可领奖励, 省去逐条点击. */
+        claimAllButton = AccountTheme.outlineButton(this,
+                getString(R.string.achievement_claim_all), AccountTheme.COLOR_ACCENT);
+        claimAllButton.setOnClickListener(view -> claimAll());
+        final LinearLayout.LayoutParams claimAllParams = new LinearLayout.LayoutParams(0,
+                AccountTheme.dp(this, AccountTheme.BUTTON_HEIGHT_DP), 1f);
+        claimAllParams.leftMargin = AccountTheme.dp(this, 10f);
+        actionRow.addView(claimAllButton, claimAllParams);
         card.addView(actionRow, AccountTheme.block(this, 10f));
 
         listContainer = new LinearLayout(this);
@@ -389,6 +399,48 @@ public final class AchievementActivity extends Activity {
         hint.setGravity(Gravity.CENTER);
         hint.setPadding(0, AccountTheme.dp(this, 12f), 0, AccountTheme.dp(this, 12f));
         return hint;
+    }
+
+    /* 批量领取: 成功后按本次入账总额提示并刷新整页. */
+    private void claimAll() {
+        if (busy || session == null) {
+            return;
+        }
+        setBusy(true);
+        sync.claimAll(session, new AchievementSync.Handler<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject value) {
+                setBusy(false);
+                if (isFinishing()) {
+                    return;
+                }
+                int coins = 0;
+                if (value != null) {
+                    final org.json.JSONArray granted = value.optJSONArray("granted");
+                    if (granted != null) {
+                        for (int index = 0; index < granted.length(); index++) {
+                            final org.json.JSONObject entry = granted.optJSONObject(index);
+                            coins += entry == null ? 0 : entry.optInt("coins", 0);
+                        }
+                    }
+                }
+                if (coins > 0) {
+                    com.julardepick.immirror.ui.UiSound.achievementComplete(AchievementActivity.this);
+                }
+                showNotice(String.format(ProgressText.EARNED_FORMAT, coins),
+                        coins > 0 ? AccountTheme.COLOR_SUCCESS : AccountTheme.COLOR_TEXT_MUTED);
+                refresh();
+            }
+
+            @Override
+            public void onFailure(ApiException error) {
+                setBusy(false);
+                if (isFinishing()) {
+                    return;
+                }
+                handleClaimFailure(error);
+            }
+        });
     }
 
     private void claimAchievement(final AchievementBoard.Item item) {
