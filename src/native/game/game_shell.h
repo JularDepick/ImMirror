@@ -9,6 +9,7 @@
 #include "audio/audio_engine.h"
 #include "core/vec3.h"
 #include "entity/entity_manager.h"
+#include "entity/projectile.h"
 #include "game/containers.h"
 #include "game/container_screen.h"
 #include "game/inventory.h"
@@ -252,6 +253,16 @@ public:
     char battleTargetLabel_[24] = {};
     /* Boss 血条上的血量数值文本, 与战斗框同一格式. */
     char bossLabel_[24] = {};
+
+    /* 飞行物: 箭一类投射物, 与生物管理器并列由总装逐帧推进. */
+    entity::ProjectileSystem projectiles_;
+    /* 最近一次射击后的冷却, 避免一次按键连发. */
+    float shotCooldown_ = 0.0f;
+
+    /* 发射一发箭: 手持弓且有箭时消耗一支并生成飞行物. */
+    bool TryShootArrow();
+    /* 推进飞行物并结算命中. */
+    void UpdateProjectiles(double deltaSeconds);
     /*
      * 暂停菜单: 打开期间世界时间, 天气, 世界与玩家推进全部冻结,
      * 只保留面板按钮的指针处理. 由 Java 侧返回键触发切换.

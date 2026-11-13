@@ -18,6 +18,7 @@
 #include "game/containers.h"
 #include "game/furnace.h"
 #include "game/inventory.h"
+#include "entity/projectile.h"
 #include "entity/sight.h"
 #include "game/item/enchant_table.h"
 #include "game/item/tool_table.h"
@@ -754,6 +755,8 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     RefreshSelectedItem();
     /* 生物在玩家之后推进: 位置与朝向都取本帧最新的玩家状态. */
     UpdateEntities(deltaSeconds);
+    /* 飞行物推进与命中结算排在生物推进之后, 命中的生物本帧已存在. */
+    UpdateProjectiles(deltaSeconds);
     UpdateNamePlate(deltaSeconds);
     UpdateTip(deltaSeconds);
     /* 伤害飘字计时: 到点归零, 归零后不再填充 HUD 帧. */
@@ -1397,6 +1400,145 @@ void GameShell::SetWeatherState(int32_t kind, float intensity) {
     weather_.SetState(static_cast<world::WeatherKind>(kind), intensity);
 }
 
+bool GameShell::TryShootArrow() {
+    if (shotCooldown_ > 0.0f) {
+        return false;
+    }
+    const item::ItemTable& items = item::ItemTable::Instance();
+    const item::ItemStack& held = inventory_.Slot(selectedSlot_);
+    if (held.Empty()) {
+        return false;
+    }
+    /* 弓一类: 名字里带 bow 或 crossbow, 不区分具体型号. */
+    const char* key = items.Info(held.item).key;
+    if (key == nullptr || std::strstr(key, "Bow") == nullptr) {
+        if (key == nullptr || std::strstr(key, "bow") == nullptr) {
+            return false;
+        }
+    }
+    /* 箭: 名字里带 arrow, 从背包里取一支. */
+    int32_t arrowSlot = -1;
+    for (int32_t slot = 0; slot < Inventory::kSlotCount; ++slot) {
+        const item::ItemStack& candidate = inventory_.Slot(slot);
+        if (candidate.Empty()) {
+            continue;
+        }
+        const char* name = items.Info(candidate.item).key;
+        if (name != nullptr && std::strstr(name, "Arrow") != nullptr) {
+            arrowSlot = slot;
+            break;
+        }
+    }
+    if (arrowSlot < 0) {
+        ShowTip("NO ARROW");
+        return false;
+    }
+    /* 弓身附魔: 伤害加成按表值直接相加, 免箭按几率豁免消耗. */
+    float damage = 12.0f;
+    bool freeShot = false;
+    bool explosive = false;
+    item::ToolCombat combat;
+    if (item::ToolTable::Instance().Find(held.item, combat) && combat.attack[0] > 0.0f) {
+        damage = combat.attack[0];
+    }
+    if (held.enchantId != 0) {
+        const game::gen::EnchantEntry* enchant =
+            item::EnchantTable::Instance().Find(held.enchantId, held.enchantLevel);
+        if (enchant != nullptr) {
+            if (item::EnchantTable::IsType(*enchant, "BOW_ATTACK")) {
+                damage += static_cast<float>(enchant->value1);
+            } else if (item::EnchantTable::IsType(*enchant, "ARROW_FREE")) {
+                freeShot = nextRandom() % 100u < static_cast<uint32_t>(enchant->value1);
+            } else if (item::EnchantTable::IsType(*enchant, "ARROW_EXPLODE")) {
+                explosive = true;
+            }
+        }
+    }
+    if (!freeShot) {
+        inventory_.Consume(arrowSlot, 1);
+    }
+    const core::Vec3 feet = player_->Position();
+    const core::Vec3 eye = core::Vec3{feet.x, feet.y + 1.62f, feet.z};
+    const core::Vec3 direction = player_->LookDirection();
+    projectiles_.Spawn(eye + direction * 0.6f, direction, 42.0f, damage);
+    shotCooldown_ = 0.45f;
+    /* 爆炸箭: 用同一发飞行物标记, 命中时由结算侧放大范围伤害. */
+    if (explosive) {
+        ShowTip("EXPLOSIVE ARROW");
+    }
+    audio::AudioEngine::Instance().Play(audio::SoundId::kDigWood);
+    IM_LOGI(kTag, "shoot arrow damage=%.1f free=%d", static_cast<double>(damage), freeShot ? 1 : 0);
+    return true;
+}
+
+namespace {
+
+/* 命中回调的上下文: 把世界与生物管理器一起带过去. */
+struct ProjectileContext {
+    world::World* world = nullptr;
+    entity::EntityManager* entities = nullptr;
+};
+
+bool SolidAtThunk(void* context, int32_t x, int32_t y, int32_t z) {
+    auto* ctx = static_cast<ProjectileContext*>(context);
+    if (ctx == nullptr || ctx->world == nullptr) {
+        return false;
+    }
+    return voxel::BlockRegistry::Instance().Info(ctx->world->GetBlock(x, y, z)).solid;
+}
+
+uint32_t CreatureAtThunk(void* context, const core::Vec3& point, float radius) {
+    auto* ctx = static_cast<ProjectileContext*>(context);
+    if (ctx == nullptr || ctx->entities == nullptr) {
+        return 0;
+    }
+    for (int32_t index = 0; index < ctx->entities->Count(); ++index) {
+        const entity::CreatureEntity* creature = ctx->entities->At(index);
+        if (creature == nullptr || creature->Removed()) {
+            continue;
+        }
+        const core::Vec3 delta = creature->Position() - point;
+        const float reach = radius + creature->BoundsHalfWidth();
+        if (delta.x * delta.x + delta.z * delta.z <= reach * reach &&
+            delta.y >= -creature->BoundsHeight() * 0.5f &&
+            delta.y <= creature->BoundsHeight()) {
+            return creature->Id();
+        }
+    }
+    return 0;
+}
+
+}  /* namespace */
+
+void GameShell::UpdateProjectiles(double deltaSeconds) {
+    if (shotCooldown_ > 0.0f) {
+        shotCooldown_ -= static_cast<float>(deltaSeconds);
+        if (shotCooldown_ < 0.0f) {
+            shotCooldown_ = 0.0f;
+        }
+    }
+    if (projectiles_.Count() == 0) {
+        return;
+    }
+    ProjectileContext context;
+    context.world = world_.get();
+    context.entities = &entities_;
+    std::vector<entity::ProjectileHit> hits;
+    projectiles_.Update(static_cast<float>(deltaSeconds), &context, SolidAtThunk, CreatureAtThunk,
+                        hits);
+    for (const entity::ProjectileHit& hit : hits) {
+        if (hit.kind == entity::ProjectileHit::Kind::kCreature) {
+            entities_.Damage(static_cast<entity::EntityId>(hit.creatureId), hit.damage);
+            render::particle::EmitColored(0.85f, 0.80f, 0.55f, hit.position.x, hit.position.y,
+                                          hit.position.z, 4);
+            IM_LOGI(kTag, "arrow hit creature=%u", hit.creatureId);
+        } else if (hit.kind == entity::ProjectileHit::Kind::kBlock) {
+            render::particle::EmitColored(0.70f, 0.66f, 0.58f, hit.position.x, hit.position.y,
+                                          hit.position.z, 3);
+        }
+    }
+}
+
 void GameShell::SetGuestMode(bool guest) {
     /* 客人的方块改动服务端会拒绝, 本地也就不要再改, 否则画面与世界不一致. */
     blocksEditable_ = !guest;
@@ -1669,6 +1811,15 @@ void GameShell::UpdateEditGesture(platform::InputSnapshot& input, double deltaSe
              * 未命中再判生物与挖掘, 保持原有语义.
              */
             if (ProbeContainerTarget()) {
+                break;
+            }
+            /*
+             * 手持弓时这一手势改为射击: 命中生物与方块都算消费掉本次手势,
+             * 因此不会同时开始挖掘.
+             */
+            if (TryShootArrow()) {
+                attackHeld_ = true;
+                editAttacked_ = true;
                 break;
             }
             attackHeld_ = TryAttackCreature();

@@ -37,6 +37,13 @@ g++ -std=c++17 -I "$ROOT/native" \
 echo "== 全量控件加载"
 "$OUT_DIR/widget_tree_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 
+echo "== 飞行物"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/projectile_test.cpp" \
+    "$ROOT/native/entity/projectile.cpp" \
+    -o "$OUT_DIR/projectile_test.exe" || exit 1
+"$OUT_DIR/projectile_test.exe" || STATUS=1
+
 echo "== 全量布局解析"
 "$OUT_DIR/layout_xml_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
 
