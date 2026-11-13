@@ -198,6 +198,7 @@ g++ -std=c++17 -I "$ROOT/native" \
     "$ROOT/native/ui/layout_frame.cpp" \
     "$ROOT/native/ui/layout_xml.cpp" \
     "$ROOT/native/ui/layout_draw.cpp" \
+    "$ROOT/native/ui/layout_render.cpp" \
     "$ROOT/native/ui/widget_tree.cpp" \
     "$ROOT/scripts/tests/log_stub.cpp" \
     -o "$OUT_DIR/ui_batch.exe" || exit 1
@@ -206,5 +207,12 @@ g++ -std=c++17 -I "$ROOT/native" \
 
 echo "== 全量布局解析"
 "$OUT_DIR/layout_xml_test.exe" --batch "$ROOT/../../assets/project/data/xml/ui" || STATUS=1
+
+echo "== 界面纹理容器"
+g++ -std=c++17 -I "$ROOT/native" \
+    "$ROOT/scripts/tests/ui_texture_ktx_test.cpp" \
+    "$ROOT/native/ui/ui_texture_ktx.cpp" \
+    -o "$OUT_DIR/ktx_test.exe" || exit 1
+"$OUT_DIR/ktx_test.exe" "$ROOT/../../assets/project/ui/mobile/texture2" || STATUS=1
 
 exit $STATUS
