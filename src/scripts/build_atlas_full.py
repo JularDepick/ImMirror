@@ -163,8 +163,15 @@ def main():
         else:
             missing_source.append(name)
 
+    """
+ 数据表占位名: 纯数字的贴图名不是素材名 (blockdef 里未填贴图时写 0),
+ 单独统计, 不计入缺源, 否则缺源数字会长期挂着一个永远补不上的条目.
+    """
+    placeholders = [name for name in missing_source if name.isdigit()]
+    missing_source = [name for name in missing_source if not name.isdigit()]
+
     missing_slot = next_slot
-    for name in missing_source:
+    for name in missing_source + placeholders:
         slot_of[name] = missing_slot
 
     atlas = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
@@ -231,7 +238,7 @@ def main():
             handle.write(chr(10))
 
     print("图集生成: %d 贴图名, %d 格位, %d 张源图绘制" % (len(names), len(slot_of), drawn))
-    print("缺源回落: %d 个" % len(missing_source))
+    print("缺源回落: %d 个, 数据表占位名: %d 个" % (len(missing_source), len(placeholders)))
     print("图集: %dx%d, 格 %dx%d" % (SIZE, SIZE, CELL, CELL))
     return 0
 

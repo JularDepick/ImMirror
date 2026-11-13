@@ -764,7 +764,6 @@ constexpr AtlasSlot kAtlasSlots[] = {
     {"yanhua5", 731},
     {"yanhua6", 732},
     {"yellowelder", 733},
-    {"0", 734},
     {"Planet_toolbox", 734},
     {"balloon0", 734},
     {"fluorescent", 734},
@@ -773,6 +772,7 @@ constexpr AtlasSlot kAtlasSlots[] = {
     {"mecha_wp4", 734},
     {"piston_top_normal", 734},
     {"rawtree", 734},
+    {"0", 734},
 };
 
 constexpr int32_t kAtlasSlotCount = 756;
