@@ -237,6 +237,38 @@ public final class RoomApi {
         });
     }
 
+    /* 房主改名或改人数上限; 两者都为空时不下发请求. */
+    public void update(final Session session, final String roomId, final String name,
+                       final int maxPlayers, final RoomCallback callback) {
+        if (!usable(session) || roomId == null || roomId.isEmpty()) {
+            callback.onFailure(new ApiException("AUTH_UNAUTHORIZED", "no session"));
+            return;
+        }
+        executor.execute(() -> {
+            try {
+                final JSONObject body = new JSONObject();
+                if (name != null && !name.isEmpty()) {
+                    body.put("name", name);
+                }
+                if (maxPlayers > 0) {
+                    body.put("maxPlayers", maxPlayers);
+                }
+                final JSONObject data = request("POST", "/rooms/" + roomId + "/update", session, body);
+                final JSONObject raw = data.optJSONObject("room");
+                if (raw == null) {
+                    throw new ApiException(ApiException.CODE_PROTOCOL, "missing room");
+                }
+                final Room room = parseRoom(raw);
+                mainHandler.post(() -> callback.onSuccess(room));
+            } catch (ApiException error) {
+                mainHandler.post(() -> callback.onFailure(error));
+            } catch (JSONException | RuntimeException error) {
+                mainHandler.post(() -> callback.onFailure(
+                        new ApiException(ApiException.CODE_PROTOCOL, String.valueOf(error))));
+            }
+        });
+    }
+
     /* 离房; 房主离开时服务端把房主身份移交给最早加入的在线成员. */
     public void leave(final Session session, final String roomId, final SimpleCallback callback) {
         if (!usable(session) || roomId == null || roomId.isEmpty()) {
