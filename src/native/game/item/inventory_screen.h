@@ -59,6 +59,13 @@ public:
      * 面板内的合成完成计数: 每次成功合成累加本次产出件数,
      * 由总装逐帧取走清零, 折算成成就事件. 只增不减, 溢出量级远超实际游玩.
      */
+    /* 合成失败计数: 物品栏放不下时累加, 由总装取走播放失败音. */
+    int64_t TakeCraftFailEventCount() {
+        const int64_t value = craftFailEvents_;
+        craftFailEvents_ = 0;
+        return value;
+    }
+
     /* 附魔完成计数: 每次成功附魔累加一次, 由总装取走折算成界面事件. */
     int64_t TakeEnchantEventCount() {
         const int64_t value = enchantEvents_;
@@ -89,6 +96,8 @@ private:
     uint32_t enchantRandom_ = 0x6d2b79f5u;
     /* 附魔成功次数, 由总装取走. */
     int64_t enchantEvents_ = 0;
+    /* 合成失败次数, 由总装取走. */
+    int64_t craftFailEvents_ = 0;
 
     /* 网格变化后重算候选; 候选顺序与配方表顺序一致. */
     void EnsureCandidates();

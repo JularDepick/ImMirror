@@ -315,6 +315,7 @@ bool InventoryScreen::CraftOnce(Inventory& inventory) {
     /* 先确认产物放得下, 再扣材料, 避免材料被扣掉而产物丢失. */
     if (inventory.RoomFor(recipe->result) < recipe->resultCount) {
         IM_LOGW(kTag, "craft rejected, bag full result=%u", static_cast<uint32_t>(recipe->result));
+        craftFailEvents_ += 1;
         return false;
     }
     if (!crafting::RecipeMatcher::ConsumeFromGrid(grid_, *recipe)) {

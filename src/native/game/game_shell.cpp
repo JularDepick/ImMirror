@@ -722,6 +722,10 @@ void GameShell::Update(double deltaSeconds, const platform::InputSnapshot& input
     if (inventoryScreen_.TakeEnchantEventCount() > 0) {
         uiEvents_.push_back(4);
     }
+    /* 合成失败 (物品栏放不下): 事件编码 6. */
+    if (inventoryScreen_.TakeCraftFailEventCount() > 0) {
+        uiEvents_.push_back(6);
+    }
     RefreshSelectedItem();
     /* 生物在玩家之后推进: 位置与朝向都取本帧最新的玩家状态. */
     UpdateEntities(deltaSeconds);

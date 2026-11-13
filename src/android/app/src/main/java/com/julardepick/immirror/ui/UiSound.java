@@ -40,6 +40,8 @@ public final class UiSound {
     private static final String ENCHANT_ASSET = "sounds/ui_info_book_unlock.ogg";
     /* 拾取音: 地面掉落物入包时播放. */
     private static final String PICKUP_ASSET = "sounds/ui_info_experience_star.ogg";
+    /* 合成失败音: 物品栏放不下时播放. */
+    private static final String CRAFT_FAIL_ASSET = "sounds/ui_info_crafting_error.ogg";
     /* 界面音并发上限: 连点也不会互相打断. */
     private static final int MAX_STREAMS = 4;
 
@@ -131,6 +133,11 @@ public final class UiSound {
     /* 拾取音: 掉落物入包时调用. */
     public static void pickup(Context context) {
         play(context, PICKUP_ASSET);
+    }
+
+    /* 合成失败音: 物品栏放不下时调用. */
+    public static void craftFailed(Context context) {
+        play(context, CRAFT_FAIL_ASSET);
     }
 
     /*
