@@ -20,6 +20,7 @@
 #include "game/inventory.h"
 #include "entity/sight.h"
 #include "game/item/enchant_table.h"
+#include "game/item/tool_table.h"
 #include "game/item/inventory_screen.h"
 #include "game/item/item_table.h"
 #include "player/input_tuning.h"
@@ -1983,12 +1984,21 @@ bool GameShell::TryAttackCreature() {
             return false;
         }
     }
-    /* 手持物取快捷栏当前格: 空手按拳击, 手持方块按该方块的硬度加成. */
+    /*
+     * 手持物取快捷栏当前格. 装备数值表里有近战攻击的按表取值 (武器与工具),
+     * 其余按方块硬度加成折算, 空手取拳击值.
+     */
     const ItemId heldItem = inventory_.ItemAt(selectedSlot_);
     const bool holding = heldItem != item::kNone;
-    const voxel::BlockId heldBlock = item::ItemTable::Instance().BlockOf(heldItem);
-    const float hardness = voxel::BlockRegistry::Instance().Info(heldBlock).hardness;
-    const float damage = entity::tuning::HeldAttackDamage(holding, hardness);
+    item::ToolCombat tool;
+    float damage = 0.0f;
+    if (item::ToolTable::Instance().Find(heldItem, tool) && tool.attackPunch > 0.0f) {
+        damage = tool.attackPunch;
+    } else {
+        const voxel::BlockId heldBlock = item::ItemTable::Instance().BlockOf(heldItem);
+        const float hardness = voxel::BlockRegistry::Instance().Info(heldBlock).hardness;
+        damage = entity::tuning::HeldAttackDamage(holding, hardness);
+    }
     /* 记下战斗框目标: 命中后 4 秒内显示其血量, 致死一击同样显示到超时. */
     battleTargetId_ = target->Id();
     battleTargetUntil_ = elapsedSeconds_ + 4.0;
