@@ -354,6 +354,8 @@ private:
 
     /* 生命值状态: 当前血量, 受击反馈计时, 免伤窗口与死亡等待计时. */
     float health_ = kMaxHealth;
+    /* 摔落伤害: 空中记录最高点, 落地按落差结算. */
+    float fallPeakY_ = 0.0f;
     float hurtSeconds_ = 0.0f;
     float hurtCooldown_ = 0.0f;
     float deathSeconds_ = 0.0f;

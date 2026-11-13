@@ -96,6 +96,12 @@ constexpr float kStaminaActionFloor = 100.0f;
  * 饥饿归零每秒扣 5% 最大血量 (饿死), 饥饿高于 80 每秒回 2% (吃饱回血),
  * 与food2hp 的"吃饱才回血"语义一致.
  */
+/*
+ * 被动饥饿 (未给出, 自定, 注明): 站着不动也会缓慢变饿, 每秒 0.4 点,
+ * 满饥饿约 250 秒见底; 动作消耗在体力折算里另计.
+ */
+constexpr float kHungerDrainPerSecond = 0.4f;
+
 constexpr float kStarveDamagePerSecond = 0.05f;
 constexpr float kWellFedHealPerSecond = 0.02f;
 constexpr float kWellFedHungerFloor = 80.0f;

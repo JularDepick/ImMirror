@@ -26,6 +26,9 @@ constexpr float kGravity = -24.0f;            /* 重力加速度 */
 constexpr float kMoveSpeed = 4.5f;            /* 水平移动速度 */
 constexpr float kJumpSpeed = 8.0f;            /* 起跳初速度 */
 constexpr float kFallSpeedLimit = -58.0f;     /* 下落速度上限, 控制单帧位移量 */
+/* 摔落伤害: 3 格以内不受伤, 之后每格 5 点 (未给出, 自定注明). */
+constexpr float kFallSafeDistance = 3.0f;
+constexpr float kFallDamagePerBlock = 5.0f;
 
 /*
  * 碰撞盒与视点高度统一取 PlayerController 的类内常量,
@@ -727,6 +730,23 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
         MoveAxis(0, delta.x * slice, world);
         MoveAxis(2, delta.z * slice, world);
     }
+
+    /*
+     * 摔落伤害: 空中持续记录最高点, 落地时按落差结算.
+     * 3 格以内不受伤 (普通起跳落地不扣血), 之后每格 5 点.
+     */
+    if (onGround_) {
+        const float drop = fallPeakY_ - position_.y;
+        if (drop > kFallSafeDistance) {
+            const float damage = (drop - kFallSafeDistance) * kFallDamagePerBlock;
+            ApplyDamage(damage);
+            IM_LOGI(kTag, "fall damage=%.1f drop=%.2f", static_cast<double>(damage),
+                    static_cast<double>(drop));
+        }
+        fallPeakY_ = position_.y;
+    } else if (position_.y > fallPeakY_) {
+        fallPeakY_ = position_.y;
+    }
 }
 
 bool PlayerController::MoveAxis(int32_t axis, float amount, const world::World& world) {
@@ -1033,6 +1053,12 @@ void PlayerController::TickSurvival(float seconds) {
         stamina_ = survival::kStaminaMax;
     }
 
+    /* 被动饥饿: 时间推进, 静止也会缓慢变饿; 动作消耗在体力折算里另计. */
+    hunger_ -= survival::kHungerDrainPerSecond * seconds;
+    if (hunger_ < 0.0f) {
+        hunger_ = 0.0f;
+    }
+
     /* 饥饿驱动的血量节奏: 归零饿死, 高位吃饱回血; 直接改 health_, 不触发免伤窗口. */
     if (hunger_ <= 0.0f) {
         health_ -= survival::kStarveDamagePerSecond * survival::kMaxHealth * seconds;
@@ -1066,6 +1092,8 @@ void PlayerController::Respawn() {
     velocity_ = core::Vec3{};
     onGround_ = false;
     jumpRequested_ = false;
+    /* 重生是一次传送, 不按传送落差结算摔落伤害. */
+    fallPeakY_ = position_.y;
     /* 回到出生点即视为脱离险境, 血量与受击状态一并复位. */
     health_ = kMaxHealth;
     hurtSeconds_ = 0.0f;
@@ -1204,6 +1232,8 @@ void PlayerController::SetPose(const core::Vec3& position, float yaw, float pitc
     yaw_ = yaw;
     pitch_ = pitch;
     onGround_ = false;
+    /* 读档落位同样是一次传送, 重置摔落基线. */
+    fallPeakY_ = position_.y;
     spawned_ = true;
     spawnPending_ = false;
     /* 读档落位视为满状态复活, 不把上一份存档的受伤状态带进来. */
