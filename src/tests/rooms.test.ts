@@ -167,6 +167,32 @@ describe("房间通道", () => {
     expect(guestView.edits.map((edit) => edit.block).sort()).toEqual([3, 5]);
   });
 
+  it("增量被单次上限截断时给出标记", async () => {
+    const owner = await registerCasePlayer("truncate", 1);
+    const room = await createRoom(owner.token);
+    /* 单次上报有批量上限, 因此分多轮累计出超过一次拉取上限的改动. */
+    for (let round = 0; round < 6; round += 1) {
+      const edits = [];
+      for (let index = 0; index < 100; index += 1) {
+        edits.push({ x: round * 100 + index, y: 64, z: 0, block: 1 });
+      }
+      await app.post(`/api/v1/rooms/${room.id}/state`, { edits }, owner.token);
+    }
+    /* 从零开始拉取, 待拉取 600 条超过 512 上限, 应当标记截断. */
+    const first = expectOk<{ edits: RoomEditSnapshot[]; editsTruncated: boolean }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, owner.token),
+    );
+    expect(first.edits.length).toBe(512);
+    expect(first.editsTruncated).toBe(true);
+    /* 按本批最后一条推进后, 剩余部分仍能继续拉到. */
+    const lastSeq = first.edits[first.edits.length - 1]?.seq ?? 0;
+    const second = expectOk<{ edits: RoomEditSnapshot[]; editsTruncated: boolean }>(
+      await app.get(`/api/v1/rooms/${room.id}/state?since=${lastSeq}`, owner.token),
+    );
+    expect(second.edits.length).toBeGreaterThan(0);
+    expect(second.editsTruncated).toBe(false);
+  });
+
   it("改动超出上限时丢弃最早的格并计数", async () => {
     const owner = await registerCasePlayer("trim", 1);
     const room = await createRoom(owner.token);

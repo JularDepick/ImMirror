@@ -258,6 +258,26 @@ function appendEdit(room: Room, x: number, y: number, z: number, block: number, 
 }
 
 /** 取序号大于 since 的改动, 按序号升序. */
+/*
+ * 增量拉取: 单次最多返回 MAX_FETCH 条.
+ * 返回被截断时调用方不能把"已同步到房间最新序号"写回客户端,
+ * 否则被截掉的中间部分会永久缺失; 调用方应改为推进到本批最后一条的序号, 下一轮继续拉.
+ */
+/* 待拉取的增量是否超过单次上限: 超过时本批只覆盖前 MAX_FETCH 条. */
+function isEditsTruncated(room: Room, since: number): boolean {
+  let pending = 0;
+  for (const edit of room.edits) {
+    if (edit.seq <= since) {
+      continue;
+    }
+    pending += 1;
+    if (pending > MAX_FETCH) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function editsSince(room: Room, since: number): RoomEditSnapshot[] {
   const result: RoomEditSnapshot[] = [];
   for (const edit of room.edits) {
@@ -932,6 +952,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       /* 请求者当前是否房主: 房主移交后客人需要据此切换上报身份. */
       owner: room.ownerUserId === auth.user.id,
       edits: editsSince(room, since > 0 ? since : 0),
+      editsTruncated: isEditsTruncated(room, since > 0 ? since : 0),
       contentSeq: room.contentSeq,
       contentChanged,
       creatures: contentChanged ? room.creatures : undefined,
@@ -984,6 +1005,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       /* 请求者当前是否房主: 房主移交后客人需要据此切换上报身份. */
       owner: room.ownerUserId === auth.user.id,
       edits: editsSince(room, base),
+      editsTruncated: isEditsTruncated(room, base),
       contentSeq: room.contentSeq,
       contentChanged,
       creatures: contentChanged ? room.creatures : undefined,
