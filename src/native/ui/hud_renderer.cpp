@@ -1512,17 +1512,18 @@ void DrawDamagePopup(float* out, int32_t& offset, const HudLayout& layout, const
     if (!frame.damageVisible || frame.damageText == nullptr) {
         return;
     }
-    constexpr float kStartYNorm = 0.045f;
-    constexpr float kRiseNorm = 0.030f;
+    constexpr float kRiseNorm = 0.055f;
     const float progress = frame.damageProgress < 0.0f
                                ? 0.0f
                                : (frame.damageProgress > 1.0f ? 1.0f : frame.damageProgress);
-    const float y = layout.DesignY(kStartYNorm - kRiseNorm * progress);
+    /* 从命中点起向上飘, 坐标由总装按世界投影给出. */
+    const float x = layout.DesignX(frame.damageAnchorX);
+    const float y = layout.DesignY(frame.damageAnchorY - kRiseNorm * progress);
     /* 后三分之一淡出, 前段保持清晰. */
     const float alpha = progress > 0.66f ? (1.0f - progress) / 0.34f : 1.0f;
     const float color[4] = {1.0f, 0.86f, 0.40f, alpha < 0.0f ? 0.0f : alpha};
     const float textSize = layout.DesignLength(0.0022f);
-    PushCenteredText(out, offset, 0.0f, y, textSize, frame.damageText, scale, color);
+    PushCenteredText(out, offset, x, y, textSize, frame.damageText, scale, color);
 }
 
 /*

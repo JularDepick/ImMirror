@@ -157,6 +157,12 @@ struct HudFrame {
     bool damageVisible = false;
     const char* damageText = nullptr;
     float damageProgress = 0.0f;
+    /*
+     * 飘字锚点: 命中点的屏幕归一化坐标, 由总装把世界坐标投影后填入.
+     * 缺省落在屏幕中心偏上, 供没有锚点时的回落.
+     */
+    float damageAnchorX = 0.5f;
+    float damageAnchorY = 0.30f;
 
     /* 左上角状态图标上限, 与 BuffState::kMaxActive 一致. */
     static constexpr int32_t kMaxBuffIcons = 8;

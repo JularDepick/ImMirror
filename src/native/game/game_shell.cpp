@@ -1843,6 +1843,9 @@ bool GameShell::TryAttackCreature() {
     std::snprintf(damageText_, sizeof(damageText_), "%d",
                   static_cast<int32_t>(damage < 0.0f ? 0.0f : damage + 0.5f));
     damagePopupSeconds_ = kDamagePopupSeconds;
+    /* 飘字锚点: 命中生物胸口稍上方, 与目标血条一起落在同一只生物身上. */
+    const core::Vec3 hitPos = target->Position();
+    damageAnchor_ = core::Vec3{hitPos.x, hitPos.y + target->BoundsHeight() * 0.85f, hitPos.z};
     const bool killed = entities_.Damage(target->Id(), damage);
     if (killed) {
         /* 致死一击计一次击败事件, 并入上报增量与本地成就进度. */
@@ -3052,6 +3055,21 @@ void GameShell::RenderScene() {
     }
     /* 伤害飘字: 开关打开且未过显示期时填充, 进度用于上飘与淡出. */
     if (damagePopupSeconds_ > 0.0f && settings_->Get(settings::Key::kDamageSwitch) != 0) {
+        /*
+         * 锚点投影: 列主序矩阵把世界点变到裁剪空间, 再折算成归一化屏幕坐标.
+         * 命中点在相机背后时 w 非正, 此时退回屏幕中心偏上, 不画到反方向去.
+         */
+        const float* m = viewProjection;
+        const float px = damageAnchor_.x;
+        const float py = damageAnchor_.y;
+        const float pz = damageAnchor_.z;
+        const float clipX = m[0] * px + m[4] * py + m[8] * pz + m[12];
+        const float clipY = m[1] * px + m[5] * py + m[9] * pz + m[13];
+        const float clipW = m[3] * px + m[7] * py + m[11] * pz + m[15];
+        if (clipW > 0.0001f) {
+            frame.damageAnchorX = 0.5f + (clipX / clipW) * 0.5f;
+            frame.damageAnchorY = 0.5f - (clipY / clipW) * 0.5f;
+        }
         frame.damageVisible = true;
         frame.damageText = damageText_;
         frame.damageProgress = 1.0f - damagePopupSeconds_ / kDamagePopupSeconds;

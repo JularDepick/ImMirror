@@ -244,6 +244,8 @@ public:
     /* 伤害飘字: 文案与剩余显示秒数; 受设置里的"伤害数值显示"开关控制. */
     char damageText_[16] = {};
     float damagePopupSeconds_ = 0.0f;
+    /* 飘字的世界锚点, 取命中生物胸口位置, 每帧投影成屏幕坐标. */
+    core::Vec3 damageAnchor_;
 
     /*
      * 远端生物插值状态: 每只生物保存上一轮位置与目标位置, 渲染时按
