@@ -2281,6 +2281,10 @@ void GameShell::UpdateEntities(double deltaSeconds) {
             dealtType = game::DamageType::kBurn;
         }
         player_->ApplyDamage(stats.playerDamage, dealtType);
+        /* 受击磨损: 四个部位各掉一点耐久, 归零自动卸下. */
+        if (player_->Armor().WearOnHit() > 0) {
+            ShowTip("ARMOR BROKEN");
+        }
         /* 攻击附带状态效果: 命中时挂上, 重复命中由效果集合自己刷新时长. */
         if (striker != nullptr && striker->Definition().buffId != 0) {
             player_->ApplyBuff(striker->Definition().buffId);
@@ -3102,11 +3106,6 @@ void GameShell::SettleFluidAt(int32_t x, int32_t y, int32_t z) {
 }
 
 bool GameShell::TryPlaceSelectedBlock() {
-    /* 客人没有改方块权限: 直接给提示, 不消耗物品也不改动世界. */
-    if (!blocksEditable_) {
-        ShowTip("HOST ONLY");
-        return false;
-    }
     const item::ItemTable& items = item::ItemTable::Instance();
     const item::ItemStack stack = inventory_.Slot(selectedSlot_);
     if (stack.Empty()) {
@@ -3120,9 +3119,35 @@ bool GameShell::TryPlaceSelectedBlock() {
      * 这时不消耗物品, 只给出提示.
      */
     const voxel::BlockId block = items.BlockOf(stack.item);
+    /*
+     * 护甲穿戴入口: 手持护甲时放置键改为穿上, 原先那一件回到背包.
+     * 这样不需要额外的装备界面就能换装, 与"拾取空位自动穿上"互补.
+     */
+    const int32_t armorSlot = game::ArmorSet::SlotOf(stack.item);
+    if (armorSlot >= 0) {
+        const item::ItemStack previous = player_->Armor().Equip(stack);
+        inventory_.Consume(selectedSlot_, 1);
+        if (!previous.Empty()) {
+            /*
+             * 换下的装备优先放回原格: 整份写回, 附魔与耐久一并保留,
+             * 不走按编号累加的通道, 否则换装一次就把附魔洗掉了.
+             */
+            inventory_.SetSlot(selectedSlot_, previous);
+            IM_LOGI(kTag, "worn armor returned to slot %d", selectedSlot_);
+        }
+        ShowTip("EQUIPPED");
+        IM_LOGI(kTag, "equip armor slot=%d item=%u", armorSlot,
+                static_cast<uint32_t>(stack.item));
+        return true;
+    }
     if (block == voxel::block::Air) {
         ShowTip("NOT A BLOCK");
         IM_LOGD(kTag, "place rejected, item=%s has no block", items.Info(stack.item).key);
+        return false;
+    }
+    /* 客人没有改方块权限: 换装已在上方放行, 这里只拦方块改动. */
+    if (!blocksEditable_) {
+        ShowTip("HOST ONLY");
         return false;
     }
     if (!player_->PlaceBlock(*world_, block)) {
@@ -3512,6 +3537,14 @@ void GameShell::RenderScene() {
      */
     ui::HudFrame frame;
     frame.pauseMenuVisible = pauseMenuOpen_;
+    /*
+     * 护甲指示: 取八类减伤里的打击一档作为代表, 换算成 0 到 1 的比例;
+     * 全减伤封顶八成, 因此除以上限而不是除以一百.
+     */
+    {
+        const float reduction = player_->Armor().ReductionPercent(game::DamageType::kPunch);
+        frame.armor = reduction / game::ArmorSet::kMaxReduction;
+    }
     /*
      * Boss 血条: 取视野内最近的 Boss 类生物. 生物类别 6 是 Boss,
      * 只显示最近的一只, 避免多只 Boss 抢同一条血条.

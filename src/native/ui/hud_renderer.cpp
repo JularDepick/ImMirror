@@ -1572,6 +1572,34 @@ void DrawPauseMenu(float* out, int32_t& offset, const HudLayout& layout, float s
 }
 
 /*
+ * 护甲指示: 血条右侧一排小方块, 每块代表两成减伤, 满减伤显示五块.
+ * 只画纯色矩形, 不依赖界面图集.
+ */
+void DrawArmorPips(float* out, int32_t& offset, const HudLayout& layout, const HudFrame& frame,
+                   float scale) {
+    if (!(frame.armor > 0.01f)) {
+        return;
+    }
+    constexpr float kStartXNorm = 0.30f;
+    constexpr float kStepXNorm = 0.018f;
+    constexpr float kCenterYNorm = 0.185f;
+    constexpr float kHalfNorm = 0.007f;
+    const int32_t filled = frame.armor > 1.0f ? 5 : static_cast<int32_t>(frame.armor * 5.0f + 0.5f);
+    for (int32_t index = 0; index < 5; ++index) {
+        const float x = layout.DesignX(kStartXNorm + kStepXNorm * static_cast<float>(index));
+        const float y = layout.DesignY(kCenterYNorm);
+        const float half = layout.DesignLength(kHalfNorm);
+        if (index < filled) {
+            const float on[4] = {0.62f, 0.78f, 0.92f, 0.95f};
+            PushRect(out, offset, x, y, half, half, scale, on);
+        } else {
+            const float off[4] = {0.0f, 0.0f, 0.0f, 0.35f};
+            PushRect(out, offset, x, y, half, half, scale, off);
+        }
+    }
+}
+
+/*
  * Boss 血条: 屏幕上方一条宽底槽加一层前景, 上方一行名称.
  * 只在视野内存在 Boss 时绘制, 与普通战斗框互不影响.
  */
@@ -2137,6 +2165,9 @@ void HudRenderer::Render(const HudFrame& frame) {
         glBindTexture(GL_TEXTURE_2D, uiAtlasTexture_);
         glUniform1i(uniformSpriteLocation_, 1);
     }
+    /* 护甲指示与状态条同区, 先于其它常规组件绘制. */
+    DrawArmorPips(vertices, offset, layout_, frame, scale);
+
     /* Boss 血条与充能球属于常规 HUD, 先画在遮罩之下. */
     DrawBossBar(vertices, offset, layout_, frame, scale);
     DrawChargeOrb(vertices, offset, layout_, frame, scale);

@@ -106,6 +106,21 @@ float ArmorSet::MoveSpeedPercent() const {
     return total > 50.0f ? 50.0f : total;
 }
 
+int32_t ArmorSet::WearOnHit() {
+    int32_t broken = 0;
+    for (int32_t slot = 0; slot < kSlotCount; ++slot) {
+        if (slots_[slot].Empty() || slots_[slot].durability < 0) {
+            continue;
+        }
+        slots_[slot].durability = static_cast<int16_t>(slots_[slot].durability - 1);
+        if (slots_[slot].durability <= 0) {
+            slots_[slot].Clear();
+            broken += 1;
+        }
+    }
+    return broken;
+}
+
 void ArmorSet::Clear() {
     for (int32_t slot = 0; slot < kSlotCount; ++slot) {
         slots_[slot].Clear();

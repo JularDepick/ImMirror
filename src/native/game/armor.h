@@ -65,6 +65,12 @@ public:
     /* 移动速度加成百分比: 四个部位装备表数值之和, 封顶 50%. */
     float MoveSpeedPercent() const;
 
+    /*
+     * 受击磨损: 四个部位的耐久各减一点, 归零的部位直接卸下.
+     * 返回因耐久耗尽而卸下的部位数量.
+     */
+    int32_t WearOnHit();
+
     void Clear();
 
 private:

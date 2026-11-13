@@ -19,6 +19,11 @@ struct ToolCombat {
     float armor[8] = {};
     /* 移动速度加成百分比, 穿戴类装备用. */
     float moveSpeed = 0.0f;
+    /* 其余五类攻击值: 远程, 爆炸, 混沌, 燃烧, 剧毒. */
+    float attack[5] = {};
+    /* 修理配方: 六组材料与数量, 编号 0 表示该组不用. */
+    ItemId repairItem[6] = {};
+    int32_t repairAmount[6] = {};
 };
 
 /*

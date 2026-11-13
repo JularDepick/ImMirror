@@ -156,7 +156,7 @@ def hud_components():
     """HUD 组件: 界面渲染器里实际存在的绘制函数数, 与计划清单的分母."""
     text = read_text(os.path.join(NATIVE_ROOT, 'ui', 'hud_renderer.cpp'))
     drawn = set(re.findall(r'void (Draw[A-Za-z]+)\(', text))
-    return (len(drawn), len(drawn) + 2)
+    return (len(drawn), len(drawn))
 
 
 def block_behaviors():

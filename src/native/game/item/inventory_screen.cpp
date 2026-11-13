@@ -1,5 +1,7 @@
 #include "game/item/inventory_screen.h"
 
+#include "game/item/tool_table.h"
+
 #include "game/item/enchant_table.h"
 
 #include <cstdio>
@@ -164,6 +166,69 @@ const crafting::RecipeInfo* InventoryScreen::CurrentRecipe() {
  * 一个前置分支: 网格里恰好两格、同一种物品、都带耐久时直接合并,
  * 其余情况交回配方匹配. 成品放进物品栏第一个空槽, 没有空槽则拒绝.
  */
+bool InventoryScreen::TryRepairByRecipe(Inventory& inventory) {
+    /*
+     * 按装备表的修理配方修: 六个材料槽里只要有任意一组齐备, 就消耗该组
+     * 并把耐久补满. 与"两件同种工具相加"互补, 材料配方更接近常规做法.
+     */
+    for (int32_t slot = 0; slot < Inventory::kSlotCount; ++slot) {
+        const ItemStack& target = inventory.Slot(slot);
+        if (target.Empty() || target.durability < 0) {
+            continue;
+        }
+        item::ToolCombat combat;
+        if (!item::ToolTable::Instance().Find(target.item, combat)) {
+            continue;
+        }
+        for (int32_t group = 0; group < 6; ++group) {
+            const item::ItemId need = combat.repairItem[group];
+            const int32_t needCount = combat.repairAmount[group];
+            if (need == item::kNone || needCount <= 0) {
+                continue;
+            }
+            int32_t available = 0;
+            for (int32_t probe = 0; probe < Inventory::kSlotCount; ++probe) {
+                if (probe == slot) {
+                    continue;
+                }
+                const ItemStack& candidate = inventory.Slot(probe);
+                if (!candidate.Empty() && candidate.item == need) {
+                    available += candidate.count;
+                }
+            }
+            if (available < needCount) {
+                continue;
+            }
+            /* 材料齐备: 逐格扣除, 再补满耐久. */
+            int32_t remain = needCount;
+            for (int32_t probe = 0; probe < Inventory::kSlotCount && remain > 0; ++probe) {
+                if (probe == slot) {
+                    continue;
+                }
+                ItemStack& candidate = inventory.MutableSlot(probe);
+                if (candidate.Empty() || candidate.item != need) {
+                    continue;
+                }
+                const int32_t take = candidate.count < remain ? candidate.count : remain;
+                candidate.count -= take;
+                remain -= take;
+                if (candidate.count <= 0) {
+                    candidate.Clear();
+                }
+            }
+            /* 耐久上限取物品表里的满耐久值, 补齐到满. */
+            item::ItemTable::ToolInfo tool;
+            if (item::ItemTable::Instance().ToolOf(target.item, tool) && tool.durability > 0) {
+                inventory.MutableSlot(slot).durability = static_cast<int16_t>(tool.durability);
+            }
+            IM_LOGI(kTag, "repair by recipe group=%d item=%u", group,
+                    static_cast<uint32_t>(need));
+            return true;
+        }
+    }
+    return false;
+}
+
 bool InventoryScreen::TryRepair(Inventory& inventory) {
     int32_t first = -1;
     int32_t second = -1;
@@ -301,7 +366,8 @@ bool InventoryScreen::TryEnchant(Inventory& inventory) {
 
 bool InventoryScreen::CraftOnce(Inventory& inventory) {
     /* 修复优先于配方匹配: 两件同种工具在网格里没有对应配方. */
-    if (TryRepair(inventory)) {
+    /* 修理优先按装备表配方, 材料不齐时退回"两件同种相加". */
+    if (TryRepairByRecipe(inventory) || TryRepair(inventory)) {
         return true;
     }
     /* 其次看附魔: 一件工具加蓝晶石. */

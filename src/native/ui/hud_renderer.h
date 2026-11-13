@@ -135,6 +135,11 @@ struct HudFrame {
      */
     float hunger = 1.0f;
     float stamina = 1.0f;
+    /*
+     * 护甲: 四个部位的减伤合计折算成 0 到 1 的比例, 供血条右侧的护甲格显示;
+     * 0 表示没有穿戴任何护甲.
+     */
+    float armor = 0.0f;
     float mineProgress = 0.0f; /* 破坏进度, 0 到 1, 归零时不绘制进度环 */
     /*
      * 玩家朝向, 弧度. 0 对应引擎的 -Z 方向 (记为北), 增大为左转;

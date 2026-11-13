@@ -37,6 +37,15 @@ bool ToolTable::Find(ItemId id, ToolCombat& out) const {
             out.armor[6] = data.armorBurn;
             out.armor[7] = data.armorToxin;
             out.moveSpeed = data.moveSpeed;
+            out.attack[0] = data.attackRange;
+            out.attack[1] = data.attackExplosion;
+            out.attack[2] = data.attackChaos;
+            out.attack[3] = data.attackBurn;
+            out.attack[4] = data.attackToxin;
+            for (int32_t slot = 0; slot < 6; ++slot) {
+                out.repairItem[slot] = static_cast<ItemId>(data.repairItem[slot]);
+                out.repairAmount[slot] = static_cast<int32_t>(data.repairAmount[slot]);
+            }
             return true;
         }
         if (data.id < key) {

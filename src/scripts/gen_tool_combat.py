@@ -41,6 +41,15 @@ struct ToolCombatData {
     float armorBurn;
     float armorToxin;
     float moveSpeed;
+    /* 其余六类攻击值: 远程, 爆炸, 混沌, 燃烧, 剧毒, 法术. */
+    float attackRange;
+    float attackExplosion;
+    float attackChaos;
+    float attackBurn;
+    float attackToxin;
+    /* 修理配方: 六组材料与数量, 物品编号 0 表示该组不用. */
+    uint16_t repairItem[6];
+    uint16_t repairAmount[6];
 };
 """
 
@@ -60,7 +69,10 @@ def main():
         return 1
     header = rows[1]
     index = {name: position for position, name in enumerate(header)}
-    needed = ["ID", "Type", "Level", "AttackPunch", "Enchant", "MoveSpeed"] + [c for _f, c in ARMOR_COLUMNS]
+    needed = ["ID", "Type", "Level", "AttackPunch", "Enchant", "MoveSpeed", "AttackRange",
+              "AttackExplosion", "AttackChaos", "AttackBurn", "AttackToxin"] + \
+             ["RepairID%d" % i for i in range(1, 7)] + \
+             ["RepairAmount%d" % i for i in range(1, 7)] + [c for _f, c in ARMOR_COLUMNS]
     missing = [name for name in needed if name not in index]
     if missing:
         print("装备表缺少列: %s" % missing)
@@ -85,9 +97,17 @@ def main():
             "attack": cell("AttackPunch"),
             "enchant": cell("Enchant"),
             "moveSpeed": cell("MoveSpeed"),
+            "attackRange": cell("AttackRange"),
+            "attackExplosion": cell("AttackExplosion"),
+            "attackChaos": cell("AttackChaos"),
+            "attackBurn": cell("AttackBurn"),
+            "attackToxin": cell("AttackToxin"),
         }
         for field, column in ARMOR_COLUMNS:
             entry[field] = cell(column)
+        for slot in range(6):
+            entry["repairItem%d" % slot] = cell("RepairID%d" % (slot + 1))
+            entry["repairAmount%d" % slot] = cell("RepairAmount%d" % (slot + 1))
         entries.append(entry)
     entries.sort(key=lambda item: item["id"])
 
@@ -96,10 +116,16 @@ def main():
     out.append("constexpr ToolCombatData kToolCombat[kToolCombatCount] = {")
     for e in entries:
         out.append(
-            "    {%du, %du, %du, %du, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff},"
+            "    {%du, %du, %du, %du, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %.1ff, "
+            "%.1ff, %.1ff, %.1ff, %.1ff, %.1ff, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du, %du},"
             % (e["id"], e["type"], e["level"], e["enchant"], e["attack"], e["armorPhysics"],
                e["armorPunch"], e["armorRange"], e["armorExplosion"], e["armorMagic"],
-               e["armorChaos"], e["armorBurn"], e["armorToxin"], e["moveSpeed"]))
+               e["armorChaos"], e["armorBurn"], e["armorToxin"], e["moveSpeed"],
+               e["attackRange"], e["attackExplosion"], e["attackChaos"], e["attackBurn"],
+               e["attackToxin"],
+               e["repairItem0"], e["repairAmount0"], e["repairItem1"], e["repairAmount1"],
+               e["repairItem2"], e["repairAmount2"], e["repairItem3"], e["repairAmount3"],
+               e["repairItem4"], e["repairAmount4"], e["repairItem5"], e["repairAmount5"]))
     out.append("};")
     out.append("")
     out.append("}  // namespace immirror::game::gen")

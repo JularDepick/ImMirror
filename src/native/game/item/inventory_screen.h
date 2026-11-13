@@ -96,6 +96,9 @@ private:
      */
     bool TryRepair(Inventory& inventory);
 
+    /* 按装备表的修理配方修复: 消耗一组材料把耐久补满. */
+    bool TryRepairByRecipe(Inventory& inventory);
+
     /*
      * 附魔: 网格里一件工具加至少三块蓝晶石时, 给工具挂一条适用于该工具族的
      * 采集速度附魔, 等级随机 1 到 5; 已经带附魔的工具不重复附魔.
