@@ -214,6 +214,13 @@ public:
      */
     std::string TakeDropSnapshot() const;
     void ApplyRemoteDrops(const std::string& json);
+
+    /*
+     * 储物箱内容快照: 房主上行, 客人据此把本地箱子填成房主的内容.
+     * 键沿用容器坐标编码的十进制串, 两端编码一致, 不需要额外对表.
+     */
+    std::string TakeChestSnapshot() const;
+    void ApplyRemoteChests(const std::string& json);
     /* 当前显示的远端掉落物标识, 用于下一轮差集删除. */
     std::vector<int32_t> remoteDropIds_;
     void UpdateDrops(double deltaSeconds);

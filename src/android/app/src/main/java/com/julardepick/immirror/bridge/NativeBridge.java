@@ -195,6 +195,22 @@ public final class NativeBridge {
         return nativeTakeUiEvents();
     }
 
+    /* 储物箱内容快照: 房主侧每轮上报前调用, 返回 JSON 数组文本. */
+    public static String takeChestSnapshot() {
+        if (!ensureLoaded()) {
+            return "[]";
+        }
+        return nativeTakeChestSnapshot();
+    }
+
+    /* 远端储物箱内容: 客人侧收到房主下发的列表后调用. */
+    public static void applyRemoteChests(String json) {
+        if (!ensureLoaded()) {
+            return;
+        }
+        nativeApplyRemoteChests(json == null ? "[]" : json);
+    }
+
     /* 地面掉落物快照: 房主侧每轮上报前调用, 返回 JSON 数组文本. */
     public static String takeDropSnapshot() {
         if (!ensureLoaded()) {
@@ -309,6 +325,10 @@ public final class NativeBridge {
     private static native void nativeChooseWorldSeed(String worldName, int seed);
 
     private static native String nativeTakeUiEvents();
+
+    private static native String nativeTakeChestSnapshot();
+
+    private static native void nativeApplyRemoteChests(String json);
 
     private static native String nativeTakeDropSnapshot();
 

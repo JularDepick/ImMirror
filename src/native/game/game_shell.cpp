@@ -2019,6 +2019,134 @@ void GameShell::ApplyRemoteDrops(const std::string& json) {
 }
 
 /*
+ * 储物箱内容快照: 只带非空格, 单次最多 8 个箱子, 每个箱子最多 64 格.
+ * 键是容器坐标编码的十进制串, 两端用同一套编码, 不需要额外的坐标对表.
+ */
+std::string GameShell::TakeChestSnapshot() const {
+    std::string out = "[";
+    bool firstChest = true;
+    int32_t chests = 0;
+    for (const auto& entry : chests_) {
+        if (chests >= 8) {
+            break;
+        }
+        std::string slots;
+        bool firstSlot = true;
+        for (int32_t index = 0; index < ChestState::kSlots; ++index) {
+            const item::ItemStack& stack = entry.second.Slot(index);
+            if (stack.Empty()) {
+                continue;
+            }
+            char buffer[128];
+            std::snprintf(buffer, sizeof(buffer), "%s{\"i\":%d,\"item\":%u,\"c\":%d}",
+                          firstSlot ? "" : ",", index, static_cast<unsigned>(stack.item),
+                          stack.count);
+            slots += buffer;
+            firstSlot = false;
+        }
+        if (firstSlot) {
+            continue;
+        }
+        char head[96];
+        std::snprintf(head, sizeof(head), "%s{\"key\":\"%llu\",\"slots\":[",
+                      firstChest ? "" : ",", static_cast<unsigned long long>(entry.first));
+        out += head;
+        out += slots;
+        out += "]}";
+        firstChest = false;
+        ++chests;
+    }
+    out += "]";
+    return out;
+}
+
+/*
+ * 应用房主下发的储物箱内容.
+ * 整表替换: 客人本地箱子以房主为准, 避免两边各改一半后对不上.
+ */
+void GameShell::ApplyRemoteChests(const std::string& json) {
+    chests_.clear();
+    size_t cursor = json.find('[');
+    if (cursor == std::string::npos) {
+        return;
+    }
+    cursor += 1;
+    int32_t applied = 0;
+    while (applied < 8) {
+        const size_t open = json.find('{', cursor);
+        if (open == std::string::npos) {
+            break;
+        }
+        const size_t close = json.find('}', open);
+        if (close == std::string::npos) {
+            break;
+        }
+        const std::string obj = json.substr(open, close - open + 1);
+        cursor = close + 1;
+        const size_t keyPos = obj.find("\"key\":\"");
+        if (keyPos == std::string::npos) {
+            continue;
+        }
+        const size_t keyStart = keyPos + 7;
+        const size_t keyEnd = obj.find('"', keyStart);
+        if (keyEnd == std::string::npos) {
+            continue;
+        }
+        const uint64_t key =
+            std::strtoull(obj.substr(keyStart, keyEnd - keyStart).c_str(), nullptr, 10);
+        ChestState& chest = chests_[key];
+        /* slots 数组的起止: 从 "slots":[ 之后找到配对的 ]. */
+        const size_t slotsPos = obj.find("\"slots\":[");
+        if (slotsPos == std::string::npos) {
+            ++applied;
+            continue;
+        }
+        const size_t slotsBegin = slotsPos + 9;
+        const size_t slotsEnd = obj.rfind(']');
+        if (slotsEnd == std::string::npos || slotsEnd <= slotsBegin) {
+            ++applied;
+            continue;
+        }
+        const std::string slots = obj.substr(slotsBegin, slotsEnd - slotsBegin);
+        size_t slotCursor = 0;
+        while (true) {
+            const size_t slotOpen = slots.find('{', slotCursor);
+            if (slotOpen == std::string::npos) {
+                break;
+            }
+            const size_t slotClose = slots.find('}', slotOpen);
+            if (slotClose == std::string::npos) {
+                break;
+            }
+            const std::string slot = slots.substr(slotOpen, slotClose - slotOpen + 1);
+            slotCursor = slotClose + 1;
+            const size_t indexPos = slot.find("\"i\":");
+            const size_t itemPos = slot.find("\"item\":");
+            const size_t countPos = slot.find("\"c\":");
+            if (indexPos == std::string::npos || itemPos == std::string::npos ||
+                countPos == std::string::npos) {
+                continue;
+            }
+            const int32_t index =
+                static_cast<int32_t>(std::strtol(slot.c_str() + indexPos + 4, nullptr, 10));
+            const uint32_t itemId =
+                static_cast<uint32_t>(std::strtoul(slot.c_str() + itemPos + 7, nullptr, 10));
+            const int32_t count =
+                static_cast<int32_t>(std::strtol(slot.c_str() + countPos + 4, nullptr, 10));
+            if (index < 0 || index >= ChestState::kSlots || count <= 0 || itemId == 0) {
+                continue;
+            }
+            item::ItemStack& stack = chest.MutableSlot(index);
+            stack.item = static_cast<item::ItemId>(itemId);
+            stack.count = count;
+            stack.durability = -1;
+        }
+        ++applied;
+    }
+    IM_LOGI(kTag, "remote chests applied=%d", applied);
+}
+
+/*
  * 掉落物推进: 重力下落, 落到实心方块表面停住; 玩家靠近且物品栏放得下就拾取.
  * 超过保留时长自动消失, 避免长期堆积占内存与顶点.
  */

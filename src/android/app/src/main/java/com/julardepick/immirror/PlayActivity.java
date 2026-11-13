@@ -379,7 +379,9 @@ public final class PlayActivity extends NativeActivity {
         /* 房主每轮导出本地生物, 客人传空数组只拉取. */
         final String creatures = roomOwner ? NativeBridge.takeCreatureSnapshot() : "[]";
         final String drops = roomOwner ? NativeBridge.takeDropSnapshot() : "[]";
-        roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, creatures, drops, roomSeq,
+        final String chests = roomOwner ? NativeBridge.takeChestSnapshot() : "[]";
+        roomApi.sync(session, roomId, x, y, z, yaw, pitch, localEdits, creatures, drops, chests,
+                roomSeq,
                 new RoomApi.StateCallback() {
                     @Override
                     public void onSuccess(RoomApi.State state) {
@@ -407,6 +409,7 @@ public final class PlayActivity extends NativeActivity {
                         if (!roomOwner) {
                             NativeBridge.applyRemoteCreatures(state.creaturesJson);
                             NativeBridge.applyRemoteDrops(state.dropsJson);
+                            NativeBridge.applyRemoteChests(state.chestsJson);
                         }
                         if (state.creatureSeq != roomCreatureSeq) {
                             roomCreatureSeq = state.creatureSeq;
