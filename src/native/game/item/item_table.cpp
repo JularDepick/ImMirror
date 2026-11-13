@@ -1,5 +1,7 @@
 #include "game/item/item_table.h"
 
+#include "ui/generated/item_icon_atlas_gen.h"
+
 #include <cstring>
 
 #include "game/generated/block_data_gen.h"
@@ -116,6 +118,10 @@ char ItemTable::Initial(ItemId id) const {
         initial = static_cast<char>(initial - 'a' + 'A');
     }
     return initial;
+}
+
+int32_t ItemTable::IconCellOf(ItemId id) const {
+    return ui::gen::ItemIconSlot(static_cast<uint32_t>(id));
 }
 
 int32_t ItemTable::AtlasCellOf(ItemId id) const {

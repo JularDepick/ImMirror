@@ -113,6 +113,15 @@ def collect_ui_atlas_entries():
     return entries
 
 
+def collect_item_icon_atlas_entries():
+    """物品图标图集: 生成器产出的裸 RGBA, 复制到 assets/ui/generated."""
+    entries = []
+    source = os.path.join(ASSETS_ROOT, "generated", "atlas_item_icon.rgba")
+    if os.path.exists(source):
+        entries.append((source, "ui/generated/atlas_item_icon.rgba"))
+    return entries
+
+
 def collect_lobby_entries():
     """大厅素材: 模板图与补充图, 按 assets/ui/lobby 下的目录结构整体复制."""
     entries = []
@@ -162,7 +171,8 @@ def main() -> int:
     copied = 0
     missing = []
     entries = (collect_sound_entries() + collect_ui_entries()
-               + collect_ui_atlas_entries() + collect_lobby_entries()
+               + collect_ui_atlas_entries() + collect_item_icon_atlas_entries()
+               + collect_lobby_entries()
                + collect_hud_entries() + collect_item_entries())
     for source, target_rel in entries:
         target = os.path.join(TARGET_ROOT, target_rel)

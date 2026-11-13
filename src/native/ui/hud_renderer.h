@@ -48,6 +48,8 @@ constexpr int32_t kInventoryHotbarSlots = 9;
 struct InventorySlotView {
     bool hasItem = false;
     int32_t atlasCell = -1;
+    /* 图标图集格序号: 非方块物品用它画图标, 没有图标为 -1. */
+    int32_t iconCell = -1;
     char initial = '?';
     uint8_t tone = 0;
     int32_t count = 0;
@@ -335,6 +337,12 @@ struct RemoteMarkerView {
 /* hps 可为空, 为空时不画血条. */
 /* 界面图集是否已就位: 未就位时界面贴图退化为纯色块. */
 bool UiAtlasReady();
+
+/*
+ * 载入物品图标图集并上传为纹理, 返回句柄; 资产缺失或损坏返回 0,
+ * 此时物品栏的非方块物品回落为色块加首字母.
+ */
+uint32_t LoadItemIconAtlasFromAssets(AAssetManager* assets);
 
 void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, const float* hps,
                          int32_t count, const float* viewProjection, int32_t width,

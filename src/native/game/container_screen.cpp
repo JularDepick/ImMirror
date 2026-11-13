@@ -18,6 +18,7 @@ void FillSlotView(ui::InventorySlotView& view, const ItemStack& stack) {
     const item::ItemInfo& info = table.Info(stack.item);
     view.hasItem = true;
     view.atlasCell = table.AtlasCellOf(stack.item);
+    view.iconCell = table.IconCellOf(stack.item);
     view.initial = table.Initial(stack.item);
     view.tone = static_cast<uint8_t>(info.category);
     view.count = stack.count;

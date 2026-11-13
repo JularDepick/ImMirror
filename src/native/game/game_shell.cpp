@@ -510,6 +510,10 @@ void GameShell::OnSurfaceReady(AAssetManager* assets, const char* dataPath) {
         ShowTip("UI TEXTURES MISSING");
         IM_LOGW(kTag, "ui atlas unavailable, interface sprites fall back to solid color");
     }
+    /* 物品图标图集: 缺失时非方块物品回落为色块加首字母, 不影响其余界面. */
+    if (ui::LoadItemIconAtlasFromAssets(assets) == 0) {
+        IM_LOGW(kTag, "item icon atlas unavailable, item icons fall back to solid color");
+    }
     /* 生物形象程序与几何在上下文就绪后初始化, 失败只记日志, 生物退回无形象. */
     render::creature::Initialize();
     IM_LOGI(kTag, "game shell ready, chunks=%d fov=%.0f", world_->LoadedChunkCount(),

@@ -1,5 +1,6 @@
 #include "ui/hud_renderer.h"
 
+#include "ui/generated/item_icon_atlas_gen.h"
 #include "ui/layout_render.h"
 
 #include <EGL/egl.h>
@@ -356,6 +357,50 @@ void PushTriangle(float* out, int32_t& offset, float centerX, float centerY, flo
 }
 
 /* 带图集纹理的矩形, cell 为图集格序号. */
+/*
+ * 图标通道: 非方块物品的图标取自独立图集, 与方块图集不是同一张纹理,
+ * 因此顶点单独收集, 在主绘制之后用另一张贴图再提交一次.
+ */
+constexpr int32_t kIconVertexCapacity = 8192;
+float g_iconVertices[kIconVertexCapacity * kFloatsPerVertex];
+int32_t g_iconOffset = 0;
+/* 图标图集纹理句柄, 由装配时载入; 为 0 时图标通道整段跳过. */
+GLuint g_itemIconTexture = 0;
+bool g_itemIconReady = false;
+
+void PushItemIcon(float* /*out*/, int32_t& /*offset*/, float centerX, float centerY,
+                  float halfSize, float scale, int32_t cell, const float color[4]) {
+    if (!g_itemIconReady || g_iconOffset + 6 > kIconVertexCapacity) {
+        return;
+    }
+    const float left = centerX - halfSize;
+    const float bottom = centerY - halfSize;
+    const float right = centerX + halfSize;
+    const float top = centerY + halfSize;
+    const float grid = static_cast<float>(gen::kItemIconGrid);
+    const float column = static_cast<float>(cell % gen::kItemIconGrid);
+    const float row = static_cast<float>(cell / gen::kItemIconGrid);
+    const float u0 = column / grid;
+    const float u1 = (column + 1.0f) / grid;
+    const float v0 = row / grid;
+    const float v1 = (row + 1.0f) / grid;
+    const float positions[4][2] = {{left, bottom}, {right, bottom}, {right, top}, {left, top}};
+    const float uvs[4][2] = {{u0, v0}, {u1, v0}, {u1, v1}, {u0, v1}};
+    const int32_t order[6] = {0, 1, 2, 0, 2, 3};
+    for (int32_t index = 0; index < 6; ++index) {
+        float* vertex = g_iconVertices + static_cast<size_t>(g_iconOffset) * kFloatsPerVertex;
+        vertex[0] = positions[order[index]][0] * scale;
+        vertex[1] = positions[order[index]][1];
+        vertex[2] = uvs[order[index]][0];
+        vertex[3] = uvs[order[index]][1];
+        vertex[4] = color[0];
+        vertex[5] = color[1];
+        vertex[6] = color[2];
+        vertex[7] = color[3];
+        g_iconOffset += 1;
+    }
+}
+
 void PushSprite(float* out, int32_t& offset, float centerX, float centerY, float halfSize,
                 float scale, int32_t cell, const float color[4]) {
     if (!HasRoom(offset, 6)) {
@@ -895,6 +940,13 @@ void PushInventorySlot(float* out, int32_t& offset, float centerX, float centerY
         if (view.atlasCell >= 0) {
             PushSprite(out, offset, centerX, centerY, half, scale, view.atlasCell,
                        view.highlight ? kPanelTextColor : kSlotTintColor);
+        } else if (view.iconCell >= 0) {
+            /*
+             * 非方块物品: 图标来自图标图集, 与方块图集不是同一张纹理,
+             * 因此这里只登记格位, 由图标通道单独提交.
+             */
+            PushItemIcon(out, offset, centerX, centerY, half * 0.82f, scale, view.iconCell,
+                         view.highlight ? kPanelTextColor : kSlotTintColor);
         } else {
             const float tileHalf = half * 0.72f;
             PushRect(out, offset, centerX, centerY, tileHalf, tileHalf, scale,
@@ -1815,6 +1867,8 @@ void HudRenderer::Render(const HudFrame& frame) {
     if (!ready_ || !layout_.Valid()) {
         return;
     }
+    /* 图标通道每帧重新收集, 避免上一帧的残留顶点被重复提交. */
+    g_iconOffset = 0;
     const float scale = layout_.Scale();
     static float vertices[kVertexCapacity * kFloatsPerVertex];
     int32_t offset = 0;
@@ -2253,6 +2307,44 @@ void HudRenderer::Render(const HudFrame& frame) {
                     static_cast<GLsizeiptr>(offset) * kFloatsPerVertex * sizeof(float), vertices);
     glDrawArrays(GL_TRIANGLES, 0, offset);
     glBindVertexArray(0);
+    /*
+     * 图标通道: 用图标图集再提交一遍, 只画物品栏与容器里的非方块物品.
+     * 图标图集的 uv 是普通归一化坐标, 因此这里不叠加界面图集的通道偏移,
+     * 并把精灵采样通道关掉, 避免采到界面图集.
+     */
+    if (g_itemIconReady && g_iconOffset > 0) {
+        GLuint iconVbo = 0;
+        GLuint iconVao = 0;
+        glGenVertexArrays(1, &iconVao);
+        glGenBuffers(1, &iconVbo);
+        glBindVertexArray(iconVao);
+        glBindBuffer(GL_ARRAY_BUFFER, iconVbo);
+        glBufferData(GL_ARRAY_BUFFER,
+                     static_cast<GLsizeiptr>(g_iconOffset) * kFloatsPerVertex * sizeof(float),
+                     g_iconVertices, GL_STREAM_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float), nullptr);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float),
+                              reinterpret_cast<const void*>(2 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, kFloatsPerVertex * sizeof(float),
+                              reinterpret_cast<const void*>(4 * sizeof(float)));
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, g_itemIconTexture);
+        const GLint atlasLocation = glGetUniformLocation(program_, "uAtlas");
+        if (atlasLocation >= 0) {
+            glUniform1i(atlasLocation, 0);
+        }
+        glDrawArrays(GL_TRIANGLES, 0, g_iconOffset);
+        glBindVertexArray(0);
+        glDeleteBuffers(1, &iconVbo);
+        glDeleteVertexArrays(1, &iconVao);
+        /* 恢复方块图集绑定, 后续绘制仍按主通道. */
+        glBindTexture(GL_TEXTURE_2D, atlasTexture_);
+        g_iconOffset = 0;
+    }
+
     /* 把激活单元还原到 0 号, 后续渲染代码默认在 0 号单元上取纹理. */
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -2395,6 +2487,7 @@ void RenderRemoteMarkers(const float* xs, const float* ys, const float* zs, cons
 
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
+
 
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
@@ -2643,6 +2736,51 @@ constexpr size_t kUiAtlasBytes =
 
 bool UiAtlasReady() {
     return uiAtlasAvailable;
+}
+
+uint32_t LoadItemIconAtlasFromAssets(AAssetManager* assets) {
+    if (assets == nullptr || !HasCurrentContext()) {
+        IM_LOGW(kTag, "item icon atlas skipped, no asset manager or no graphics context");
+        return 0;
+    }
+    constexpr const char* kPath = "ui/generated/atlas_item_icon.rgba";
+    constexpr int32_t kExpectedBytes = gen::kItemIconSize * gen::kItemIconSize * 4;
+    AAsset* asset = AAssetManager_open(assets, kPath, AASSET_MODE_STREAMING);
+    if (asset == nullptr) {
+        IM_LOGW(kTag, "item icon atlas '%s' missing, item icons fall back to solid color", kPath);
+        return 0;
+    }
+    const off64_t length = AAsset_getLength64(asset);
+    if (length != static_cast<off64_t>(kExpectedBytes)) {
+        IM_LOGW(kTag, "item icon atlas size mismatch: got %lld want %d",
+                static_cast<long long>(length), kExpectedBytes);
+        AAsset_close(asset);
+        return 0;
+    }
+    std::vector<uint8_t> pixels(static_cast<size_t>(kExpectedBytes));
+    const int32_t got = AAsset_read(asset, pixels.data(), kExpectedBytes);
+    AAsset_close(asset);
+    if (got != kExpectedBytes) {
+        IM_LOGW(kTag, "item icon atlas read short: %d", got);
+        return 0;
+    }
+    GLuint texture = 0;
+    glGenTextures(1, &texture);
+    if (texture == 0) {
+        return 0;
+    }
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, gen::kItemIconSize, gen::kItemIconSize, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, pixels.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    g_itemIconTexture = texture;
+    g_itemIconReady = true;
+    IM_LOGI(kTag, "item icon atlas loaded: %d px", gen::kItemIconSize);
+    return static_cast<uint32_t>(texture);
 }
 
 uint32_t LoadUiAtlasFromAssets(AAssetManager* assets) {

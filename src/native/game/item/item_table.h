@@ -62,6 +62,12 @@ public:
      */
     int32_t AtlasCellOf(ItemId id) const;
 
+    /*
+     * 图标图集格序号: 非方块物品用它取图标; 没有图标返回 -1.
+     * 与 AtlasCellOf 分开是因为两者取自不同的图集.
+     */
+    int32_t IconCellOf(ItemId id) const;
+
     /* 界面占位用的首字母, 取英文键首字符并转大写, 空键返回问号. */
     char Initial(ItemId id) const;
 
