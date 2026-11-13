@@ -373,6 +373,44 @@ describe("房间通道", () => {
     expect(rejected.rejectedChests).toBe(1);
   });
 
+  it("房主上报的熔炉内容被转发给客人, 客人的上报被拒", async () => {
+    const owner = await registerCasePlayer("furnace", 1);
+    const guest = await registerCasePlayer("furnace", 2);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    const furnaces = [
+      {
+        key: "987654",
+        slots: [
+          { i: 0, item: 106, c: 8 },
+          { i: 1, item: 206, c: 2 },
+          { i: 2, item: 547, c: 3 },
+        ],
+      },
+    ];
+    const reported = expectOk<{ furnaces: unknown[]; rejectedFurnaces: number }>(
+      await app.post(`/api/v1/rooms/${room.id}/state`, { furnaces }, owner.token),
+    );
+    expect(reported.rejectedFurnaces).toBe(0);
+    expect(reported.furnaces).toHaveLength(1);
+
+    const seen = expectOk<{ furnaces: { key: string; slots: { i: number; item: number }[] }[] }>(
+      await app.get(`/api/v1/rooms/${room.id}/state`, guest.token),
+    );
+    expect(seen.furnaces[0]?.key).toBe("987654");
+    expect(seen.furnaces[0]?.slots).toHaveLength(3);
+
+    const rejected = expectOk<{ rejectedFurnaces: number }>(
+      await app.post(
+        `/api/v1/rooms/${room.id}/state`,
+        { furnaces: [{ key: "1", slots: [{ i: 0, item: 1, c: 1 }] }] },
+        guest.token,
+      ),
+    );
+    expect(rejected.rejectedFurnaces).toBe(1);
+  });
+
   it("无密码房间的 hasPassword 为假", async () => {
     const owner = await registerCasePlayer("nopass", 1);
     const room = await createRoom(owner.token);

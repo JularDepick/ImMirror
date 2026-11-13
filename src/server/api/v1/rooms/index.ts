@@ -66,6 +66,8 @@ interface Room {
   drops: RoomDrop[];
   /* 储物箱内容: 房主上行, 客人只读展示; 客人开箱看到的是房主的箱子. */
   chests: RoomChest[];
+  /* 熔炉内容: 与箱子同口径, 只同步三个格, 燃烧计时仍由房主自己推进. */
+  furnaces: RoomFurnace[];
 }
 
 /** 对外房间摘要, 不含成员位置. */
@@ -120,6 +122,12 @@ interface RoomChest {
   slots: { i: number; c: number }[];
 }
 
+/** 房间内一个熔炉的内容快照: 位置键 + 三个格 (0 输入 1 燃料 2 产出). */
+interface RoomFurnace {
+  key: string;
+  slots: { i: number; item: number; c: number }[];
+}
+
 /** 对外生物快照. */
 export interface RoomCreatureSnapshot {
   id: number;
@@ -159,6 +167,8 @@ const MAX_DROPS = 64;
 /** 单轮上报的储物箱数量上限与单箱格数上限. */
 const MAX_CHESTS = 8;
 const MAX_CHEST_SLOTS = 64;
+/** 单轮上报的熔炉数量上限. */
+const MAX_FURNACES = 8;
 /** 房间人数下限与上限. */
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 16;
@@ -398,6 +408,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       creatureSeq: 0,
       drops: [],
       chests: [],
+      furnaces: [],
     };
     /* 房间名缺省时用房间号补位, 保证列表里每一项都能被区分. */
     if (name === "") {
@@ -734,6 +745,51 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       }
     }
 
+    /* 熔炉内容: 与箱子同一套房主权威口径, 只同步三个格. */
+    let rejectedFurnaces = 0;
+    const rawFurnaces = body.furnaces;
+    if (rawFurnaces !== undefined) {
+      if (!Array.isArray(rawFurnaces)) {
+        throw new AppError("BAD_REQUEST", "熔炉列表必须为数组");
+      }
+      if (rawFurnaces.length > MAX_FURNACES) {
+        throw new AppError("BAD_REQUEST", "单次熔炉快照过多");
+      }
+      if (room.ownerUserId !== auth.user.id) {
+        rejectedFurnaces = rawFurnaces.length;
+      } else {
+        const next: RoomFurnace[] = [];
+        for (const raw of rawFurnaces) {
+          if (typeof raw !== "object" || raw === null) {
+            continue;
+          }
+          const item = raw as Record<string, unknown>;
+          const key = typeof item.key === "string" ? item.key : "";
+          if (key === "" || !Array.isArray(item.slots)) {
+            continue;
+          }
+          const slots: { i: number; item: number; c: number }[] = [];
+          for (const rawSlot of item.slots.slice(0, 3)) {
+            if (typeof rawSlot !== "object" || rawSlot === null) {
+              continue;
+            }
+            const slot = rawSlot as Record<string, unknown>;
+            const index = slot.i;
+            const itemId = slot.item;
+            const count = slot.c;
+            if (typeof index !== "number" || !Number.isFinite(index) ||
+                typeof itemId !== "number" || !Number.isFinite(itemId) ||
+                typeof count !== "number" || !Number.isFinite(count) || count <= 0) {
+              continue;
+            }
+            slots.push({ i: Math.trunc(index), item: Math.trunc(itemId), c: Math.trunc(count) });
+          }
+          next.push({ key, slots });
+        }
+        room.furnaces = next;
+      }
+    }
+
     const rawSince = body.since;
     const since = typeof rawSince === "number" && Number.isFinite(rawSince) ? Math.trunc(rawSince) : 0;
     return ok({
@@ -744,10 +800,12 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       creatureSeq: room.creatureSeq,
       drops: room.drops,
       chests: room.chests,
+      furnaces: room.furnaces,
       rejectedEdits,
       rejectedCreatures,
       rejectedDrops,
       rejectedChests,
+      rejectedFurnaces,
       serverTime: now,
     });
   });
@@ -776,6 +834,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       creatureSeq: room.creatureSeq,
       drops: room.drops,
       chests: room.chests,
+      furnaces: room.furnaces,
       serverTime: now,
     });
   });
