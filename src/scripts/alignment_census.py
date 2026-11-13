@@ -162,7 +162,7 @@ def hud_components():
 def block_behaviors():
     """方块行为列: 生成器实际读取的行为列数, 分母是本轮确定的行为列清单."""
     source = read_text(os.path.join(SRC_ROOT, 'scripts', 'gen_block_data.py'))
-    columns = ['GravityEffect', 'Replaceable', 'Slipperiness', 'ToolMineProb', 'ToolLevel']
+    columns = ['GravityEffect', 'Replaceable', 'Slipperiness', 'ToolMineProb1', 'ToolLevel']
     read = [name for name in columns if ('"%s"' % name) in source]
     return (len(read), len(columns))
 
