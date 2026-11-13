@@ -25,6 +25,8 @@ export const ERROR_DEFINITIONS = {
   ROOM_NOT_FOUND: { code: "ROOM_NOT_FOUND", status: 404, message: "房间不存在或已关闭" },
   ROOM_FULL: { code: "ROOM_FULL", status: 409, message: "房间人数已满" },
   ROOM_FORBIDDEN: { code: "ROOM_FORBIDDEN", status: 403, message: "不在该房间内" },
+  ROOM_PASSWORD_REQUIRED: { code: "ROOM_PASSWORD_REQUIRED", status: 403, message: "房间需要密码" },
+  ROOM_PASSWORD_INVALID: { code: "ROOM_PASSWORD_INVALID", status: 403, message: "房间密码不正确" },
   ACHIEVEMENT_NOT_FOUND: { code: "ACHIEVEMENT_NOT_FOUND", status: 404, message: "成就不存在" },
   ACHIEVEMENT_NOT_COMPLETED: { code: "ACHIEVEMENT_NOT_COMPLETED", status: 409, message: "成就尚未完成" },
   ACHIEVEMENT_ALREADY_CLAIMED: { code: "ACHIEVEMENT_ALREADY_CLAIMED", status: 409, message: "奖励已领取" },

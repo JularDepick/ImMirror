@@ -6,6 +6,7 @@
  */
 
 import { randomInt } from "node:crypto";
+import { sha256Hex } from "../../../utils/random";
 import type { FastifyInstance } from "fastify";
 import { createAuthGuard } from "../../../fastify/auth-guard";
 import type { AppContext } from "../../../fastify/context";
@@ -52,6 +53,8 @@ interface Room {
   edits: RoomEdit[];
   latestByCell: Map<string, RoomEdit>;
   members: Map<number, RoomMember>;
+  /* 房间密码摘要; 空串表示无密码. 只存摘要, 与账号密码同口径. */
+  passwordHash: string;
 }
 
 /** 对外房间摘要, 不含成员位置. */
@@ -65,6 +68,8 @@ export interface RoomSummary {
   seed: number;
   worldName: string;
   createdAt: number;
+  /* 是否有房间密码, 列表里据此显示锁标记; 密码本身不外发. */
+  hasPassword: boolean;
 }
 
 /** 对外成员快照, owner 标记房主身份. */
@@ -104,6 +109,8 @@ const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 16;
 /** 房间名长度上限. */
 const NAME_MAX = 24;
+/** 房间密码长度上限. */
+const PASSWORD_MAX = 16;
 /** 房间号位数与字符集: 去掉 0/O 与 1/I 等易混字符, 便于口头分享. */
 const CODE_LENGTH = 6;
 const CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -247,6 +254,7 @@ function summarize(room: Room): RoomSummary {
     seed: room.seed,
     worldName: room.worldName,
     createdAt: room.createdAt,
+    hasPassword: room.passwordHash !== "",
   };
 }
 
@@ -309,6 +317,11 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       : randomInt(1, 0x7fffffff);
     const rawWorld = body.worldName;
     const worldName = typeof rawWorld === "string" ? rawWorld.trim().slice(0, NAME_MAX) : "";
+    const rawPassword = body.password;
+    const password = typeof rawPassword === "string" ? rawPassword.trim() : "";
+    if (password.length > PASSWORD_MAX) {
+      throw new AppError("BAD_REQUEST", `房间密码不得超过 ${PASSWORD_MAX} 个字符`);
+    }
 
     const room: Room = {
       id: allocateRoomId(),
@@ -325,6 +338,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       edits: [],
       latestByCell: new Map<string, RoomEdit>(),
       members: new Map<number, RoomMember>(),
+      passwordHash: password === "" ? "" : sha256Hex(password),
     };
     /* 房间名缺省时用房间号补位, 保证列表里每一项都能被区分. */
     if (name === "") {
@@ -377,6 +391,17 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
       throw new AppError("ROOM_NOT_FOUND");
     }
     const room = requireRoom(roomId);
+    /* 房间密码: 只比对摘要, 明文不进内存表也不回包. */
+    if (room.passwordHash !== "") {
+      const rawPassword = body.password;
+      const password = typeof rawPassword === "string" ? rawPassword.trim() : "";
+      if (password === "") {
+        throw new AppError("ROOM_PASSWORD_REQUIRED");
+      }
+      if (sha256Hex(password) !== room.passwordHash) {
+        throw new AppError("ROOM_PASSWORD_INVALID");
+      }
+    }
     const existing = room.members.get(auth.user.id);
     if (!existing && room.members.size >= room.maxPlayers) {
       throw new AppError("ROOM_FULL");
@@ -421,6 +446,44 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     room.updatedAt = now;
     sweepRooms(now);
     return ok({ left: true, room: rooms.has(id) ? summarize(room) : null });
+  });
+
+  /** 踢人: 只有房主可以踢, 被踢成员立即移出房间, 房主自己不能被踢. */
+  app.post("/api/v1/rooms/:id/kick", { preHandler: guard }, async (request) => {
+    const auth = request.auth;
+    if (!auth) {
+      throw new AppError("AUTH_UNAUTHORIZED");
+    }
+    const params = request.params as Record<string, unknown>;
+    const id = typeof params.id === "string" ? params.id : "";
+    const body = requireObjectBody(request.body);
+    const targetUid = typeof body.uid === "string" ? body.uid.trim() : "";
+    if (targetUid === "") {
+      throw new AppError("BAD_REQUEST", "目标玩家缺失");
+    }
+    const now = ctx.now();
+    sweepRooms(now);
+    const room = requireRoom(id);
+    requireMember(room, auth.user.id);
+    if (room.ownerUserId !== auth.user.id) {
+      throw new AppError("ROOM_FORBIDDEN", "只有房主可以踢人");
+    }
+    if (targetUid === room.ownerUid) {
+      throw new AppError("BAD_REQUEST", "不能踢出房主");
+    }
+    let removed = false;
+    for (const [userId, member] of room.members) {
+      if (member.uid === targetUid) {
+        room.members.delete(userId);
+        removed = true;
+        break;
+      }
+    }
+    if (!removed) {
+      throw new AppError("ROOM_FORBIDDEN", "该玩家不在房间内");
+    }
+    room.updatedAt = now;
+    return ok({ kicked: targetUid, room: summarize(room) });
   });
 
   /**

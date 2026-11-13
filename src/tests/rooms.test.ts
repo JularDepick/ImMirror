@@ -236,4 +236,82 @@ describe("房间通道", () => {
     const closed = expectOk<{ rooms: RoomSummary[] }>(await app.get("/api/v1/rooms", guest.token));
     expect(closed.rooms).toEqual([]);
   });
+
+  it("房间密码: 无密码与错密码都被拒, 正确密码可加入", async () => {
+    const owner = await registerCasePlayer("pass", 1);
+    const guest = await registerCasePlayer("pass", 2);
+    const room = await createRoom(owner.token, { password: "room-1234" });
+    expect(room.hasPassword).toBe(true);
+
+    const missing = await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+    expect(missing.status).toBe(403);
+    expectFail(missing, "ROOM_PASSWORD_REQUIRED");
+
+    const wrong = await app.post(
+      "/api/v1/rooms/join",
+      { code: room.code, password: "nope" },
+      guest.token,
+    );
+    expect(wrong.status).toBe(403);
+    expectFail(wrong, "ROOM_PASSWORD_INVALID");
+
+    const joined = expectOk<{ room: RoomSummary }>(
+      await app.post("/api/v1/rooms/join", { code: room.code, password: "room-1234" }, guest.token),
+    );
+    expect(joined.room.memberCount).toBe(2);
+  });
+
+  it("无密码房间的 hasPassword 为假", async () => {
+    const owner = await registerCasePlayer("nopass", 1);
+    const room = await createRoom(owner.token);
+    expect(room.hasPassword).toBe(false);
+  });
+
+  it("房主可以踢人, 非房主与被踢对象受限", async () => {
+    const owner = await registerCasePlayer("kick", 1);
+    const guest = await registerCasePlayer("kick", 2);
+    const outsider = await registerCasePlayer("kick", 3);
+    const room = await createRoom(owner.token);
+    await app.post("/api/v1/rooms/join", { code: room.code }, guest.token);
+
+    /* 客人不能踢人. */
+    const byGuest = await app.post(
+      `/api/v1/rooms/${room.id}/kick`,
+      { uid: owner.uid },
+      guest.token,
+    );
+    expect(byGuest.status).toBe(403);
+    expectFail(byGuest, "ROOM_FORBIDDEN");
+
+    /* 房主不能踢自己. */
+    const self = await app.post(
+      `/api/v1/rooms/${room.id}/kick`,
+      { uid: owner.uid },
+      owner.token,
+    );
+    expect(self.status).toBe(400);
+
+    /* 不在房间内的玩家按无权处理. */
+    const stranger = await app.post(
+      `/api/v1/rooms/${room.id}/kick`,
+      { uid: outsider.uid },
+      owner.token,
+    );
+    expect(stranger.status).toBe(403);
+
+    const kicked = expectOk<{ kicked: string; room: RoomSummary }>(
+      await app.post(`/api/v1/rooms/${room.id}/kick`, { uid: guest.uid }, owner.token),
+    );
+    expect(kicked.kicked).toBe(guest.uid);
+    expect(kicked.room.memberCount).toBe(1);
+
+    /* 被踢后不能再上报状态. */
+    const after = await app.post(
+      `/api/v1/rooms/${room.id}/state`,
+      { x: 1, y: 2, z: 3 },
+      guest.token,
+    );
+    expect(after.status).toBe(403);
+    expectFail(after, "ROOM_FORBIDDEN");
+  });
 });
