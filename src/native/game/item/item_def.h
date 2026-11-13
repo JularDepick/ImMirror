@@ -51,6 +51,12 @@ struct ItemStack {
      * 工具进背包时由物品栏按物品表填满耐久. 工具不堆叠, 一格一把.
      */
     int16_t durability = -1;
+    /*
+     * 附魔: enchantId 为附魔表编号, 0 表示没有附魔; enchantLevel 为该编号的等级.
+     * 物品栏不进存档, 因此不涉及存档格式.
+     */
+    uint16_t enchantId = 0;
+    uint8_t enchantLevel = 0;
 
     bool Empty() const { return item == kNone || count <= 0; }
 

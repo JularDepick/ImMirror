@@ -52,6 +52,20 @@ int32_t EnchantTable::CountOfType(const char* type) const {
     return total;
 }
 
+bool EnchantTable::AllowsFamily(const gen::EnchantEntry& entry, ToolFamily family) {
+    return AllowsToolType(entry, static_cast<uint8_t>(family));
+}
+
+int32_t EnchantTable::CountForFamily(ToolFamily family) const {
+    int32_t total = 0;
+    for (int32_t index = 0; index < gen::kEnchantEntryCount; ++index) {
+        if (AllowsFamily(gen::kEnchantEntries[index], family)) {
+            total += 1;
+        }
+    }
+    return total;
+}
+
 bool EnchantTable::AllowsToolType(const gen::EnchantEntry& entry, uint8_t toolType) {
     if (entry.toolMask == 0) {
         return true;

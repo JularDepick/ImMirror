@@ -72,6 +72,15 @@ private:
      */
     bool TryRepair(Inventory& inventory);
 
+    /*
+     * 附魔: 网格里一件工具加至少三块蓝晶石时, 给工具挂一条适用于该工具族的
+     * 采集速度附魔, 等级随机 1 到 5; 已经带附魔的工具不重复附魔.
+     */
+    bool TryEnchant(Inventory& inventory);
+
+    /* 附魔等级的轻量伪随机状态, 与其它模块同一套 xorshift. */
+    uint32_t enchantRandom_ = 0x6d2b79f5u;
+
     /* 网格变化后重算候选; 候选顺序与配方表顺序一致. */
     void EnsureCandidates();
 

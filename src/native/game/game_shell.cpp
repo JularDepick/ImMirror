@@ -18,6 +18,7 @@
 #include "game/containers.h"
 #include "game/furnace.h"
 #include "game/inventory.h"
+#include "game/item/enchant_table.h"
 #include "game/item/inventory_screen.h"
 #include "game/item/item_table.h"
 #include "player/input_tuning.h"
@@ -1653,6 +1654,21 @@ float GameShell::MiningSpeedAgainst(voxel::BlockId block) const {
     if (required > 0 && requiredLevel > 0 && static_cast<int32_t>(tool.level) < requiredLevel) {
         speed *= 0.1f;
     }
+    /*
+     * 附魔: 采集速度按等级折算, 与描述里的 30/70/120/180/250 百分比一致.
+     * 只认 DIG_SPEED 一类, 其余附魔类型先带在物品上不做折算.
+     */
+    const item::ItemStack& heldStack = inventory_.Slot(selectedSlot_);
+    if (heldStack.enchantId != 0) {
+        const game::gen::EnchantEntry* enchant =
+            item::EnchantTable::Instance().Find(heldStack.enchantId, heldStack.enchantLevel);
+        if (enchant != nullptr && item::EnchantTable::IsType(*enchant, "DIG_SPEED")) {
+            static constexpr int32_t kDigSpeedPercent[5] = {30, 70, 120, 180, 250};
+            const int32_t index =
+                enchant->level >= 1 && enchant->level <= 5 ? enchant->level - 1 : 0;
+            speed *= 1.0f + static_cast<float>(kDigSpeedPercent[index]) / 100.0f;
+        }
+    }
     return speed > 0.05f ? speed : 0.05f;
 }
 
@@ -1692,12 +1708,14 @@ bool GameShell::BeginEditMining() {
         heldId != item::kNone && item::ItemTable::Instance().ToolOf(heldId, heldTool);
     /* 等级两列一并打出来: 等级不足时速度按十分之一折算, 掉落也会被拦下. */
     IM_LOGI(kTag,
-            "mine begin block=%s hardness=%.2f material=%d need=%.2fs dig=%d needLevel=%u heldLevel=%d",
+            "mine begin block=%s hardness=%.2f material=%d need=%.2fs dig=%d needLevel=%u heldLevel=%d enchant=%u@%u",
             info.name, static_cast<double>(info.hardness), static_cast<int32_t>(info.material),
             static_cast<double>(player_->MiningDuration()),
             static_cast<int32_t>(DigSoundOf(info.material)),
             static_cast<unsigned>(info.toolLevel),
-            hasHeldTool ? static_cast<int32_t>(heldTool.level) : 0);
+            hasHeldTool ? static_cast<int32_t>(heldTool.level) : 0,
+            static_cast<unsigned>(inventory_.Slot(selectedSlot_).enchantId),
+            static_cast<unsigned>(inventory_.Slot(selectedSlot_).enchantLevel));
     return true;
 }
 

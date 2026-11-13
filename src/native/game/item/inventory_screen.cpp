@@ -1,5 +1,7 @@
 #include "game/item/inventory_screen.h"
 
+#include "game/item/enchant_table.h"
+
 #include <cstdio>
 
 #include "core/log.h"
@@ -220,9 +222,88 @@ bool InventoryScreen::TryRepair(Inventory& inventory) {
     return true;
 }
 
+/*
+ * 附魔.
+ * 原版附魔要附魔台与货币, 这里先用"工具 + 三块蓝晶石"的合成口径占位:
+ * 只挂采集速度一类附魔, 等级随机 1 到 5, 已经带附魔的工具不重复附魔.
+ * 判定与修复同一套网格语义: 网格里恰好两格, 一格工具一格蓝晶石.
+ */
+bool InventoryScreen::TryEnchant(Inventory& inventory) {
+    constexpr int32_t kGemCost = 3;
+    constexpr uint32_t kDigSpeedId = 25; /* enchant 表里 DIG_SPEED 的编号 */
+    const item::ItemTable& items = item::ItemTable::Instance();
+    const item::ItemId gem = items.FindByKey("Kyanite");
+    if (gem == item::kNone) {
+        return false;
+    }
+    int32_t toolSlot = -1;
+    int32_t gemSlot = -1;
+    int32_t filled = 0;
+    for (int32_t index = 0; index < crafting::kGridSlotCount; ++index) {
+        const ItemStack& stack = grid_.Slot(index);
+        if (stack.Empty()) {
+            continue;
+        }
+        filled += 1;
+        if (stack.item == gem) {
+            gemSlot = index;
+            continue;
+        }
+        item::ItemTable::ToolInfo info;
+        if (items.ToolOf(stack.item, info)) {
+            toolSlot = index;
+        }
+    }
+    if (filled != 2 || toolSlot < 0 || gemSlot < 0) {
+        return false;
+    }
+    ItemStack tool = grid_.Slot(toolSlot);
+    if (tool.enchantId != 0) {
+        return false;
+    }
+    if (grid_.Slot(gemSlot).count < kGemCost) {
+        return false;
+    }
+    item::ItemTable::ToolInfo info;
+    if (!items.ToolOf(tool.item, info)) {
+        return false;
+    }
+    item::ToolFamily family = item::ToolFamily::kPickaxe;
+    if (info.harvest == static_cast<uint8_t>(voxel::HarvestTool::kAxe)) {
+        family = item::ToolFamily::kAxe;
+    } else if (info.harvest == static_cast<uint8_t>(voxel::HarvestTool::kShovel)) {
+        family = item::ToolFamily::kShovel;
+    }
+    const item::EnchantTable& table = item::EnchantTable::Instance();
+    /* 该工具族适用的采集速度附魔编号应当就是 25; 不适用则不改动网格. */
+    const game::gen::EnchantEntry* base = table.Find(kDigSpeedId, 1);
+    if (base == nullptr || !table.AllowsFamily(*base, family)) {
+        return false;
+    }
+    /* 等级随机 1 到 5, 与数据表里的五档一致. */
+    enchantRandom_ ^= enchantRandom_ << 13;
+    enchantRandom_ ^= enchantRandom_ >> 17;
+    enchantRandom_ ^= enchantRandom_ << 5;
+    const uint8_t level = static_cast<uint8_t>(1 + enchantRandom_ % 5u);
+    tool.enchantId = static_cast<uint16_t>(kDigSpeedId);
+    tool.enchantLevel = level;
+    grid_.SetSlot(toolSlot, tool);
+    ItemStack gems = grid_.Slot(gemSlot);
+    gems.count -= kGemCost;
+    grid_.SetSlot(gemSlot, gems.count > 0 ? gems : ItemStack{});
+    gridDirty_ = true;
+    IM_LOGI(kTag, "enchant ok item=%u level=%u gems_left=%d",
+            static_cast<uint32_t>(tool.item), static_cast<unsigned>(level), gems.count);
+    return true;
+}
+
 bool InventoryScreen::CraftOnce(Inventory& inventory) {
     /* 修复优先于配方匹配: 两件同种工具在网格里没有对应配方. */
     if (TryRepair(inventory)) {
+        return true;
+    }
+    /* 其次看附魔: 一件工具加蓝晶石. */
+    if (TryEnchant(inventory)) {
         return true;
     }
     const crafting::RecipeInfo* recipe = CurrentRecipe();
