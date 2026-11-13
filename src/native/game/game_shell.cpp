@@ -318,6 +318,28 @@ bool GameShell::TryAutoEat() {
             continue;
         }
         player_->Eat(static_cast<float>(food->food), static_cast<float>(food->heal));
+        /*
+         * 食物附带状态效果: 每个槽位按万分比独立判定, 命中就挂上并播音效.
+         * 判定用掉落同一套轻量伪随机, 不引入新的随机源.
+         */
+        const uint32_t foodBuffIds[3] = {food->buffId1, food->buffId2, food->buffId3};
+        const uint16_t foodBuffOdds[3] = {food->buffOdds1, food->buffOdds2, food->buffOdds3};
+        for (int32_t slot = 0; slot < 3; ++slot) {
+            if (foodBuffIds[slot] == 0 || foodBuffOdds[slot] == 0) {
+                continue;
+            }
+            dropRandom_ ^= dropRandom_ << 13;
+            dropRandom_ ^= dropRandom_ >> 17;
+            dropRandom_ ^= dropRandom_ << 5;
+            const int32_t roll = static_cast<int32_t>(dropRandom_ % 10000u);
+            if (roll >= static_cast<int32_t>(foodBuffOdds[slot])) {
+                continue;
+            }
+            const char* buffSound = player_->ApplyBuff(foodBuffIds[slot]);
+            if (buffSound != nullptr && buffSound[0] != '\0') {
+                audio::AudioEngine::Instance().PlayCreatureAsset(buffSound);
+            }
+        }
         /* 使用音: 食物物品若配了使用音则播它, 否则交给界面事件走通用进食音. */
         {
             item::ToolCombat foodTool;
