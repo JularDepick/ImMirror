@@ -2054,6 +2054,39 @@ bool GameShell::TryAttackCreature() {
         const float scale = 1.0f - (armorPercent > 95.0f ? 95.0f : armorPercent) / 100.0f;
         finalDamage *= scale < 0.05f ? 0.05f : scale;
     }
+    /*
+     * 击退与击飞: 表里给的是额外推开的格数与抬升高度, 按方向折算成速度.
+     * 未被击退抵抗抵消时生效; 抵抗数值按百分比折减推开距离.
+     */
+    {
+        const item::ItemStack& knockStack = inventory_.Slot(selectedSlot_);
+        if (knockStack.enchantId != 0) {
+            const game::gen::EnchantEntry* knock =
+                item::EnchantTable::Instance().Find(knockStack.enchantId, knockStack.enchantLevel);
+            if (knock != nullptr) {
+                const core::Vec3 fromPlayer = core::Vec3{
+                    target->Position().x - player_->Position().x, 0.0f,
+                    target->Position().z - player_->Position().z};
+                const core::Vec3 pushDir =
+                    fromPlayer.Length() > 1.0e-4f ? fromPlayer.Normalized() : core::Vec3{0.0f, 0.0f, 1.0f};
+                if (item::EnchantTable::IsType(*knock, "KNOCK") && knock->value1 > 0) {
+                    /* 每格按每米 3 米每秒折算, 击退持续 0.35 秒. */
+                    const float speed = static_cast<float>(knock->value1) * 3.0f;
+                    entities_.ApplyImpulse(
+                        target->Id(), core::Vec3{pushDir.x * speed, 0.0f, pushDir.z * speed}, 0.35f,
+                        0.0f);
+                    IM_LOGI(kTag, "knockback cells=%d", knock->value1);
+                } else if (item::EnchantTable::IsType(*knock, "KNOCKUP") && knock->value1 > 0) {
+                    /* 击飞: 抬升初速按格数折算, 水平方向同时带一点推力. */
+                    const float lift = 4.5f + static_cast<float>(knock->value1) * 1.2f;
+                    entities_.ApplyImpulse(
+                        target->Id(), core::Vec3{pushDir.x * 2.5f, 0.0f, pushDir.z * 2.5f}, 0.5f,
+                        lift);
+                    IM_LOGI(kTag, "knockup cells=%d", knock->value1);
+                }
+            }
+        }
+    }
     const bool killed = entities_.Damage(target->Id(), finalDamage);
     if (killed) {
         /* 击败特效: 在尸体位置撒一组暗红碎块, 与碎屑共用同一粒子通道. */
@@ -2201,6 +2234,21 @@ void GameShell::UpdateEntities(double deltaSeconds) {
                 ? static_cast<game::DamageType>(dealtIndex)
                 : game::DamageType::kPunch;
         player_->ApplyDamage(stats.playerDamage, dealtType);
+        /*
+         * 受击位移: 近战命中时沿攻击者指向玩家的方向推开一段距离,
+         * 推开格数由击退抗性附魔抵扣, 抵扣完则不推.
+         */
+        if (dealtType == game::DamageType::kPunch && stats.playerDamageSource != 0) {
+            const entity::CreatureEntity* source =
+                entities_.FindById(static_cast<entity::EntityId>(stats.playerDamageSource));
+            if (source != nullptr) {
+                const core::Vec3 away = core::Vec3{player_->Position().x - source->Position().x, 0.0f,
+                                                   player_->Position().z - source->Position().z};
+                const core::Vec3 dir =
+                    away.Length() > 1.0e-4f ? away.Normalized() : core::Vec3{0.0f, 0.0f, 1.0f};
+                player_->ApplyKnockback(dir, 2.0f);
+            }
+        }
         /*
          * 反击: 被近战打中时按附魔给定的几率与伤害值回打攻击者.
          * 只对近战伤害触发, 远程与爆炸不回打, 与描述里的"被近战攻击"一致.
@@ -2791,7 +2839,21 @@ void GameShell::CollectDrop(voxel::BlockId brokenBlock, const voxel::BlockPos& p
     }
     /* 方块掉落规则在物品表里统一折算: 方块 -> 掉落方块 -> 掉落物品, 只此一份. */
     const item::ItemTable& items = item::ItemTable::Instance();
-    const item::ItemId dropItem = items.DropOfBlock(brokenBlock);
+    /*
+     * 精准采集: 手持物带该附魔时直接掉方块本体, 而不是方块折算出来的产物.
+     * 先把本格方块换成可拾取的方块物品, 再走原来的掉落流程.
+     */
+    bool precise = false;
+    {
+        const item::ItemStack& heldStack = inventory_.Slot(selectedSlot_);
+        if (heldStack.enchantId != 0) {
+            const game::gen::EnchantEntry* enchant =
+                item::EnchantTable::Instance().Find(heldStack.enchantId, heldStack.enchantLevel);
+            precise = enchant != nullptr && item::EnchantTable::IsType(*enchant, "DIG_PRECISE");
+        }
+    }
+    const item::ItemId dropItem =
+        precise ? items.ItemOfBlock(brokenBlock) : items.DropOfBlock(brokenBlock);
     if (dropItem == item::kNone) {
         IM_LOGI(kTag, "block has no drop, block=%u", static_cast<uint32_t>(brokenBlock));
         return;
@@ -2823,7 +2885,29 @@ void GameShell::CollectDrop(voxel::BlockId brokenBlock, const voxel::BlockPos& p
      * 掉落物落到破坏点上方一点点, 带一点水平初速, 走近再拾取.
      * 计数与进度在破坏时已结算, 拾取只负责把物品放进物品栏.
      */
-    SpawnDrop(dropItem, 1, brokenBlock, static_cast<float>(position.x) + 0.5f,
+    /*
+     * 挖掘幸运: 采集时按附魔给的几率额外补一份. 触发几率按等级从 16% 起步,
+     * 与描述里的"16% 几率获得双倍"一致; 倍率上限取表里的第一个数值.
+     */
+    int32_t extraCount = 0;
+    {
+        const item::ItemStack& heldStack = inventory_.Slot(selectedSlot_);
+        if (heldStack.enchantId != 0) {
+            const game::gen::EnchantEntry* enchant =
+                item::EnchantTable::Instance().Find(heldStack.enchantId, heldStack.enchantLevel);
+            if (enchant != nullptr && item::EnchantTable::IsType(*enchant, "DIG_PROB")) {
+                static constexpr uint32_t kLuckyChance[5] = {16u, 16u, 20u, 22u, 24u};
+                const int32_t index =
+                    enchant->level >= 1 && enchant->level <= 5 ? enchant->level - 1 : 0;
+                if (nextRandom() % 100u < kLuckyChance[index]) {
+                    extraCount = 1;
+                    IM_LOGI(kTag, "lucky dig triggered level=%u",
+                            static_cast<unsigned>(enchant->level));
+                }
+            }
+        }
+    }
+    SpawnDrop(dropItem, 1 + extraCount, brokenBlock, static_cast<float>(position.x) + 0.5f,
               static_cast<float>(position.y) + 0.5f, static_cast<float>(position.z) + 0.5f);
     IM_LOGI(kTag, "drop spawned from=%s item=%s at=%d,%d,%d", broken.name,
             items.Info(dropItem).key, position.x, position.y, position.z);

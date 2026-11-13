@@ -669,8 +669,22 @@ void PlayerController::StepMotion(double dt, const world::World& world) {
     if (ratio > survival::kMoveRatioMax) {
         ratio = survival::kMoveRatioMax;
     }
-    velocity_.x = wish.x * kMoveSpeed * ratio;
-    velocity_.z = wish.z * kMoveSpeed * ratio;
+    if (knockSeconds_ > 0.0f) {
+        /* 受击位移期间保留推开速度并逐步衰减, 自主移动不参与改写. */
+        knockSeconds_ -= seconds;
+        const float decay = 1.0f - (seconds > 0.0f ? seconds / 0.35f : 0.0f);
+        const float factor = decay < 0.0f ? 0.0f : decay;
+        knockVelocity_.x *= factor;
+        knockVelocity_.z *= factor;
+        if (knockSeconds_ < 0.0f) {
+            knockSeconds_ = 0.0f;
+        }
+        velocity_.x = knockVelocity_.x;
+        velocity_.z = knockVelocity_.z;
+    } else {
+        velocity_.x = wish.x * kMoveSpeed * ratio;
+        velocity_.z = wish.z * kMoveSpeed * ratio;
+    }
 
     if (jumpRequested_ && onGround_) {
         /* 体力低于下限禁止起跳; 冲刺中起跳按快跑跳扣更多体力 (分组语义). */
@@ -973,6 +987,25 @@ bool PlayerController::CastRay(const world::World& world, RayHit& hit) const {
 float PlayerController::HealthRatio() const {
     const float ratio = health_ / kMaxHealth;
     return ratio > 1.0f ? 1.0f : ratio;
+}
+
+void PlayerController::ApplyKnockback(const core::Vec3& direction, float cells) {
+    if (!(cells > 0.0f)) {
+        return;
+    }
+    /* 击退抗性按格数直接抵扣, 抵扣完就不推. */
+    const int32_t resist = armor_.EnchantValue("KNOCK_RESIST");
+    float remain = cells - static_cast<float>(resist);
+    if (remain <= 0.0f) {
+        return;
+    }
+    if (remain > 6.0f) {
+        remain = 6.0f;
+    }
+    /* 每格折算成每米 3 米每秒的初速, 持续 0.3 秒. */
+    const float speed = remain * 3.0f;
+    knockVelocity_ = core::Vec3{direction.x * speed, 0.0f, direction.z * speed};
+    knockSeconds_ = 0.3f;
 }
 
 void PlayerController::ApplyDamage(float amount, game::DamageType type) {

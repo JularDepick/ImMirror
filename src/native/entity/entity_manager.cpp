@@ -298,6 +298,15 @@ void EntityManager::DespawnAll() {
     soundEvents_.clear();
 }
 
+void EntityManager::ApplyImpulse(EntityId id, const core::Vec3& impulse, float seconds,
+                                 float liftSpeed) {
+    CreatureEntity* creature = Find(id);
+    if (creature == nullptr) {
+        return;
+    }
+    creature->ApplyImpulse(impulse, seconds, liftSpeed);
+}
+
 void EntityManager::QueueLoot(const CreatureEntity& creature) {
     const MonsterDef& def = creature.Definition();
     if (def.lootBlock == 0 || def.lootCount <= 0) {

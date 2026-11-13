@@ -31,6 +31,9 @@ public:
     /* 物品放置出的客户端方块 id, 不可放置时返回 block::Air. */
     voxel::BlockId BlockOf(ItemId id) const;
 
+    /* 方块到物品的反查: 用于"直接掉落方块本体"一类的采集效果. */
+    ItemId ItemOfBlock(voxel::BlockId block) const;
+
     /*
      * 工具属性查询: 该物品是挖掘类工具时返回条目, 否则返回空指针.
      * 工具表由 scripts/gen_tool_data.py 按名称把工具定义挂到物品上,

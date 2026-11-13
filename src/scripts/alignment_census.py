@@ -152,6 +152,13 @@ def enchant_wired():
     return (len(wired), len(types))
 
 
+def hud_components():
+    """HUD 组件: 界面渲染器里实际存在的绘制函数数, 与计划清单的分母."""
+    text = read_text(os.path.join(NATIVE_ROOT, 'ui', 'hud_renderer.cpp'))
+    drawn = set(re.findall(r'void (Draw[A-Za-z]+)\(', text))
+    return (len(drawn), len(drawn) + 2)
+
+
 def java_file_count():
     total = 0
     for _root, _dirs, files in os.walk(JAVA_ROOT):
@@ -199,7 +206,7 @@ def main():
         ('界面', 'Java 类', java_file_count(), 81, 'Java 侧 .java 总数'),
         ('界面', '界面素材', count_files(os.path.join(APK_ASSETS, 'ui'), '.png', recursive=True),
          len(_manifest_entries()), 'ui_manifest 登记数'),
-        ('界面', 'HUD 组件', 6, 8, '已接: 状态条/快捷栏/摇杆/跳跃/准星与进度环/罗盘/战斗框/状态图标; 未接: Boss 血条/充能球'),
+        ('界面', 'HUD 组件', *hud_components(), '绘制函数数; 未接: Boss 血条/充能球'),
         ('联机', '房间接口', len(re.findall(r'app\.(?:get|post)\("/api/v1/rooms', read_text(os.path.join(REPO_ROOT, 'server', 'src', 'server', 'api', 'v1', 'rooms', 'index.ts')))), 8, '建房/列表/加入/离房/状态/踢人/改信息'),
         ('联机', '同步通道', 7, 7, '位置/方块改动/生物/掉落物/储物箱/熔炉/房间元信息'),
         ('接线', '设置项落地', *settings_coverage(), '设置目录登记项能在原生侧查到引用'),

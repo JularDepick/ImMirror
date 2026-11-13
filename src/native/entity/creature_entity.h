@@ -70,6 +70,12 @@ public:
     float HealthRatio() const;
     float Yaw() const { return yaw_; }
     const core::Vec3& Velocity() const { return body_.velocity; }
+
+    /*
+     * 施加一次外力位移: 速度被直接改成给定值, 并在剩余秒数内不接受自主移动改写,
+     * 否则下一帧的寻路会把击退效果覆盖掉. 同时可按需要抬升一段垂直初速.
+     */
+    void ApplyImpulse(const core::Vec3& impulse, float seconds, float liftSpeed);
     CreatureState State() const { return state_; }
     /* 状态名, 供日志与调试输出. */
     const char* StateName() const;
@@ -86,6 +92,8 @@ private:
     /* 朝指定水平方向转向, 每帧转角受转向速度限制. */
     void FaceDirection(const core::Vec3& direction, float seconds);
 
+    /* 外力位移剩余秒数; 大于零时自主移动不参与速度改写. */
+    float impulseSeconds_ = 0.0f;
     const MonsterDef* def_ = nullptr;
     BoxBody body_;
     float yaw_ = 0.0f;

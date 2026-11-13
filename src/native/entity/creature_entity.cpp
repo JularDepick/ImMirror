@@ -133,10 +133,25 @@ CreatureTick CreatureEntity::Update(double dt, const world::World& world,
             break;
     }
 
-    body_.velocity.x = wish.x * speed;
-    body_.velocity.z = wish.z * speed;
-    if (wish.Length() > 1.0e-4f) {
-        FaceDirection(wish, seconds);
+    if (impulseSeconds_ > 0.0f) {
+        /*
+         * 外力位移期间保留水平速度并让它按比例衰减, 自主移动不参与改写,
+         * 因此击退与击飞能真正把目标推出去而不是被寻路立刻抹平.
+         */
+        impulseSeconds_ -= seconds;
+        const float decay = 1.0f - (seconds > 0.0f ? seconds / 0.45f : 0.0f);
+        const float factor = decay < 0.0f ? 0.0f : decay;
+        body_.velocity.x *= factor;
+        body_.velocity.z *= factor;
+        if (impulseSeconds_ < 0.0f) {
+            impulseSeconds_ = 0.0f;
+        }
+    } else {
+        body_.velocity.x = wish.x * speed;
+        body_.velocity.z = wish.z * speed;
+        if (wish.Length() > 1.0e-4f) {
+            FaceDirection(wish, seconds);
+        }
     }
 
     const BoxStepResult step = StepBox(body_, seconds, world);
@@ -228,6 +243,17 @@ float CreatureEntity::RandomUnit() {
 
 float CreatureEntity::RandomBetween(float low, float high) {
     return low + RandomUnit() * (high - low);
+}
+
+void CreatureEntity::ApplyImpulse(const core::Vec3& impulse, float seconds, float liftSpeed) {
+    body_.velocity.x = impulse.x;
+    body_.velocity.z = impulse.z;
+    if (liftSpeed > 0.0f) {
+        body_.velocity.y = liftSpeed;
+    }
+    if (seconds > impulseSeconds_) {
+        impulseSeconds_ = seconds;
+    }
 }
 
 void CreatureEntity::EnterState(CreatureState state) {

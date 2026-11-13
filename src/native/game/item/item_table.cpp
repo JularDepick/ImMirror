@@ -58,6 +58,20 @@ ItemId ItemTable::OfBlock(voxel::BlockId block) const {
     return gen::kBlockItems[index];
 }
 
+ItemId ItemTable::ItemOfBlock(voxel::BlockId block) const {
+    if (block == voxel::block::Air) {
+        return kNone;
+    }
+    /* 物品表按物品编号升序, 逐条比对关联方块, 命中即返回. */
+    for (int32_t index = 0; index < Count(); ++index) {
+        const ItemInfo& info = Info(static_cast<ItemId>(index + 1));
+        if (info.block >= 0 && static_cast<voxel::BlockId>(info.block) == block) {
+            return static_cast<ItemId>(index + 1);
+        }
+    }
+    return kNone;
+}
+
 voxel::BlockId ItemTable::BlockOf(ItemId id) const {
     const int16_t block = Info(id).block;
     return block < 0 ? voxel::block::Air : static_cast<voxel::BlockId>(block);

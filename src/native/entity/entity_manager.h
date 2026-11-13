@@ -105,6 +105,12 @@ public:
     /* 按标识查生物, 未找到返回空指针; 供战斗框刷新目标血量. */
     const CreatureEntity* FindById(EntityId id) const;
 
+    /*
+     * 对指定生物施加一次外力位移. 生物内部持有速度, 但管理器不暴露可变引用,
+     * 因此击退一类效果统一走这个入口.
+     */
+    void ApplyImpulse(EntityId id, const core::Vec3& impulse, float seconds, float liftSpeed);
+
     /* 只读访问全部生物, 供渲染侧接入生物网格时逐个体取位置, 朝向与状态. */
     const std::vector<std::unique_ptr<CreatureEntity>>& Creatures() const { return creatures_; }
 

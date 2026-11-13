@@ -160,11 +160,20 @@ public:
      */
     void ApplyDamage(float amount, game::DamageType type = game::DamageType::kPhysics);
 
+    /*
+     * 受击位移: 被近战打中时按方向推开一段距离, 期间自主移动不参与速度改写.
+     * cells 为要推开的格数, 会被击退抗性附魔按格数抵扣.
+     */
+    void ApplyKnockback(const core::Vec3& direction, float cells);
+
     /* 护甲套装: 穿戴与减伤都在这里, 外部只通过它读写四个部位. */
     game::ArmorSet& Armor() { return armor_; }
     const game::ArmorSet& Armor() const { return armor_; }
     /* 四个部位的穿戴状态, 随血量一起由对局总装读写. */
     game::ArmorSet armor_;
+    /* 受击位移剩余秒数与速度, 大于零时覆盖自主移动的速度. */
+    float knockSeconds_ = 0.0f;
+    core::Vec3 knockVelocity_;
 
     /* 读档后恢复位置与朝向, 跳过延迟落位. */
     void SetPose(const core::Vec3& position, float yaw, float pitch);
