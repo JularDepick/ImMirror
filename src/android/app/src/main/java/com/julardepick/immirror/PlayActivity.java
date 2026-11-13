@@ -121,6 +121,10 @@ public final class PlayActivity extends NativeActivity {
     private boolean roomOwner;
     /* 改动裁剪提示只弹一次. */
     private boolean roomTrimWarned;
+    /* 上一拍未送达的方块改动, 与下一拍的改动合并后重发. */
+    private String pendingRoomEdits;
+    /* 全局世界同步用的同一份待发改动. */
+    private String pendingWorldEdits;
     private AmbientAudioManager ambientManager;
     private Handler presenceHandler;
     private Runnable presenceRunnable;
@@ -360,7 +364,8 @@ public final class PlayActivity extends NativeActivity {
         if (blockSyncApi == null || session == null) {
             return;
         }
-        final String localEdits = NativeBridge.takeBlockEdits();
+        /* 与房间同步同一处理: 未送达的改动留到下一拍重发. */
+        final String localEdits = mergeEdits(pendingWorldEdits, NativeBridge.takeBlockEdits());
         blockSyncApi.sync(session, localEdits, blockSeq, new BlockSyncApi.Callback() {
             @Override
             public void onSuccess(String editsJson, long seq) {
@@ -368,11 +373,13 @@ public final class PlayActivity extends NativeActivity {
                     NativeBridge.applyBlockEdits(editsJson);
                 }
                 blockSeq = seq;
+                pendingWorldEdits = null;
             }
 
             @Override
             public void onFailure(com.julardepick.immirror.account.ApiException error) {
                 Log.w(TAG, "block sync failed: " + error.code() + " " + error.detail());
+                pendingWorldEdits = localEdits;
             }
         });
     }
@@ -397,7 +404,11 @@ public final class PlayActivity extends NativeActivity {
         if (roomApi == null || roomId == null || roomId.isEmpty()) {
             return;
         }
-        final String localEdits = NativeBridge.takeBlockEdits();
+        /*
+         * 取走本地改动会把原生侧的待发队列清空, 上传失败时这些改动就永久丢了.
+         * 因此未送达的改动留一份, 下一拍与新的改动合并后再发.
+         */
+        final String localEdits = mergeEdits(pendingRoomEdits, NativeBridge.takeBlockEdits());
         float x = 0.0f;
         float y = 0.0f;
         float z = 0.0f;
@@ -432,6 +443,8 @@ public final class PlayActivity extends NativeActivity {
                     public void onSuccess(RoomApi.State state) {
                         roomSeq = state.seq;
                         roomContentSeq = state.contentSeq;
+                        /* 送达即清空待发改动. */
+                        pendingRoomEdits = null;
                         /*
                          * 房主移交: 原房主离开后由服务端把身份交给最早的在线成员.
                          * 接管方要立刻切换成可改动世界的房主身份, 否则新房主
@@ -515,6 +528,12 @@ public final class PlayActivity extends NativeActivity {
                             finish();
                             return;
                         }
+                        /*
+                         * 未送达的改动留到下一拍重发, 避免网络抖动造成建造丢失.
+                         * localEdits 本轮已经并入了上一拍的待发内容, 因此直接整体留用,
+                         * 不能再与 pendingRoomEdits 合并, 否则失败越多次重复越多.
+                         */
+                        pendingRoomEdits = localEdits;
                         roomSyncFailures += 1;
                         if (!roomReconnecting && roomSyncFailures >= ROOM_RECONNECT_THRESHOLD) {
                             roomReconnecting = true;
@@ -524,6 +543,19 @@ public final class PlayActivity extends NativeActivity {
                         }
                     }
                 });
+    }
+
+    /* 合并两份改动数组; 任一侧为空时直接返回另一侧. */
+    private static String mergeEdits(String first, String second) {
+        final boolean hasFirst = first != null && first.length() > 2;
+        final boolean hasSecond = second != null && second.length() > 2;
+        if (!hasFirst) {
+            return hasSecond ? second : null;
+        }
+        if (!hasSecond) {
+            return first;
+        }
+        return first.substring(0, first.length() - 1) + "," + second.substring(1);
     }
 
     /* 客人侧拾取申报: 取走原生侧的申报列表, 逐条提交给服务端裁定. */
