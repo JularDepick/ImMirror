@@ -2105,6 +2105,28 @@ void GameShell::SpawnDrop(item::ItemId item, int32_t count, voxel::BlockId block
     if (item == item::kNone || count <= 0) {
         return;
     }
+    /*
+     * 同种合并: 连续挖同一格方块会产生一串同种掉落物, 逐个占一个实体与一个
+     * 渲染槽不划算. 落点 0.8 米内已有同种且未超过单格堆叠上限时直接并进去,
+     * 合并后刷新渲染位置, 拾取仍按原流程.
+     */
+    for (DroppedItem& existing : droppedItems_) {
+        if (existing.item != item) {
+            continue;
+        }
+        if (existing.count + count > Inventory::kMaxStack) {
+            continue;
+        }
+        const float dx = existing.position.x - x;
+        const float dy = existing.position.y - y;
+        const float dz = existing.position.z - z;
+        if (dx * dx + dy * dy + dz * dz > 0.8f * 0.8f) {
+            continue;
+        }
+        existing.count += count;
+        return;
+    }
+
     DroppedItem drop;
     drop.id = nextDropId_;
     nextDropId_ += 1;
