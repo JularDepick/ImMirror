@@ -75,6 +75,17 @@ public final class CreatureSoundBank {
      * 按资源路径取句柄, 首次调用时加载. 加载失败返回 0 并记住失败结果,
      * 避免每次受击都重复尝试打开同一个缺失文件.
      */
+    /*
+     * 加载失败的音效不写进句柄表.
+     *
+     * 句柄表是永久缓存, 若把失败结果 (0) 也写进去, 一次偶发失败 (例如文件句柄耗尽)
+     * 会让这个音效在整局里彻底静音. 因此失败只累加次数, 下次播放再试;
+     * 连续失败超过上限才放弃, 避免对确实缺失的素材反复尝试.
+     */
+    private static final Map<String, Integer> FAILURES = new HashMap<>();
+
+    private static final int kMaxLoadFailures = 3;
+
     public static int handleFor(String assetPath) {
         if (assetPath == null || assetPath.isEmpty() || pool == null || assets == null) {
             return 0;
@@ -82,6 +93,10 @@ public final class CreatureSoundBank {
         final Integer cached = HANDLES.get(assetPath);
         if (cached != null) {
             return cached;
+        }
+        final int failures = FAILURES.getOrDefault(assetPath, 0);
+        if (failures >= kMaxLoadFailures) {
+            return 0;
         }
         int handle = 0;
         try {
@@ -92,7 +107,17 @@ public final class CreatureSoundBank {
             Log.w(TAG, "creature sound load failed: " + assetPath + " " + error);
             handle = 0;
         }
+        if (handle == 0) {
+            FAILURES.put(assetPath, failures + 1);
+            return 0;
+        }
         HANDLES.put(assetPath, handle);
+        FAILURES.remove(assetPath);
         return handle;
+    }
+
+    /* 加载失败的音效数量, 供诊断; 为零表示当前没有静音的音效. */
+    public static int failedCount() {
+        return FAILURES.size();
     }
 }
