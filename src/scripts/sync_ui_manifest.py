@@ -64,6 +64,9 @@ def main():
             "height": height,
             "category": category,
             "purpose": "",
+            # 没有模板依据的新素材按整体拉伸登记, 与导入脚本的回落口径一致.
+            "draw": "stretch",
+            "insets": {"left": 0, "top": 0, "right": 0, "bottom": 0},
         })
         added.append(rel)
 

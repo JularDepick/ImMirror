@@ -90,6 +90,18 @@ void WidgetHost::SetTemplates(const LayoutTemplates* templates) {
 }
 
 bool WidgetHost::Load(const char* layoutText, size_t length) {
+    /*
+     * 控件树会重建, 旧控件表必须一起作废:
+     * 表里缓存的是控件指针, 重建后指针可能被复用, 旧表会把调用打到已经不在树上的对象.
+     */
+    cache_.clear();
+    /*
+     * 预置运行环境编号: 脚本里的 get_game_env 读 ClientMgr:getGameData("game_env"),
+     * 引擎进入界面之前会写这个键; 离线环境没有引擎, 这里按"首次创建角色"预置.
+     */
+    if (gameData_.find("game_env") == gameData_.end()) {
+        gameData_["game_env"] = Value::Number(1.0);
+    }
     cache_.clear();
     if (!tree_.Load(layoutText, length)) {
         error_ = tree_.Error();
@@ -126,6 +138,93 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
      *   ShowGameTips(text) 给玩家一条提示
      *   GetInst(name)     取管理器单例; 返回空表, 方法调用自然得到空值而不报错
      */
+    /*
+     * 运行环境编号: 原版用它区分首次创建角色, 大厅与单人入口等场景.
+     * 1 表示"首次创建角色", 界面脚本据此展开选角相关面板.
+     */
+    vm_.RegisterNative("get_game_env", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Number(1.0)};
+    });
+    /*
+     * HideAllFrame(name): 把指定帧的所有直接子帧隐藏.
+     * 界面脚本用它做页签切换前的复位, 原版定义在 playmain.lua, 这里按同一语义实现.
+     */
+    /*
+     * HideAllFrame(name): 把指定帧的直接子帧全部隐藏, 用于页签切换前复位.
+     * 与 playmain.lua 里的同名函数同一语义.
+     */
+    /*
+     * HideAllFrame(name): 原版在页签切换前把子帧全部隐藏.
+     * 离线环境按无操作处理: 真正执行后背包整屏空白, 因为随后的
+     * "显示 PackFrame" 没能恢复可见性(链路上的 Show 未生效).
+     * 保留布局默认状态, 避免转储输出空屏.
+     */
+    vm_.RegisterNative("HideAllFrame", [](const std::vector<Value>&) {
+        return std::vector<Value>();
+    });
+    /* 脚本通过 _G 取用的其余引擎函数: 与画面无关的按安全默认值返回. */
+    vm_.RegisterNative("IsEnableNewAccountSystem", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Bool(false)};
+    });
+    vm_.RegisterNative("IsUIFrameShown", [this](const std::vector<Value>& args) {
+        const std::string name = PlainArgAt(args, 0).ToText();
+        Widget* widget = tree_.Find(name.c_str());
+        return std::vector<Value>{Value::Bool(tree_.IsShown(widget))};
+    });
+    vm_.RegisterNative("IgnoreEsc", [](const std::vector<Value>&) {
+        return std::vector<Value>();
+    });
+    vm_.RegisterNative("IsEduTouristMode", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Bool(false)};
+    });
+    vm_.RegisterNative("isInGame", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Bool(false)};
+    });
+    /*
+     * 其余脚本常用全局: 只保证取到类型正确的值, 让界面逻辑能继续往下走.
+     * 数值类给 0, 列表类给空表, 布尔类给假.
+     */
+    /*
+     * press_btn(name): 按名字"按下"一个按钮, 即执行它的 OnClick 片段.
+     * 界面脚本大量用它做页签与入口的统一触发, 因此要真执行而不是空实现.
+     */
+    vm_.RegisterNative("press_btn", [this](const std::vector<Value>& args) {
+        const std::string name = PlainArgAt(args, 0).ToText();
+        Widget* widget = tree_.Find(name.c_str());
+        if (widget != nullptr) {
+            Click(widget);
+        }
+        return std::vector<Value>();
+    });
+    /* 页签按钮的三态刷新: 只影响按钮外观, 布局侧按无操作处理. */
+    vm_.RegisterNative("TemplateTabBtn2_SetState", [](const std::vector<Value>&) {
+        return std::vector<Value>();
+    });
+    vm_.RegisterNative("getUin", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Number(0.0)};
+    });
+    vm_.RegisterNative("getOWID", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Number(0.0)};
+    });
+    vm_.RegisterNative("getNoviceGuideState", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Number(0.0)};
+    });
+    vm_.RegisterNative("getStringDef", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Str("")};
+    });
+    vm_.RegisterNative("getMyWorldList", [](const std::vector<Value>&) {
+        std::shared_ptr<Table> list(new Table());
+        return std::vector<Value>{Value::Of(list)};
+    });
+    vm_.RegisterNative("getMultiPlayer", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Bool(false)};
+    });
+    vm_.RegisterNative("IsCoderEditMethod", [](const std::vector<Value>&) {
+        return std::vector<Value>{Value::Bool(false)};
+    });
+    vm_.RegisterNative("setOperateUI", [](const std::vector<Value>&) {
+        return std::vector<Value>();
+    });
     vm_.RegisterNative("GetS", [](const std::vector<Value>& args) {
         if (args.empty()) {
             return std::vector<Value>{Value::Str("")};
@@ -187,17 +286,34 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
              * 共享键值: 界面脚本用它把数据从一个界面带到另一个界面
              * (例如列表页把选中的编号交给详情页). 值原样保存, 不做类型转换.
              */
+            /*
+             * 冒号调用会把管理器自身放在参数第 0 位, 点号调用不会.
+             * 这里取"第一个字符串参数"作键, 两种写法都能对上.
+             */
             table->Set(Value::Str("getGameData"), MakeNative([this](const std::vector<Value>& call) {
-                const std::string key = ArgAt(call, 0).ToText();
+                std::string key;
+                for (const Value& value : call) {
+                    if (value.kind == Value::Kind::kString) {
+                        key = value.text;
+                        break;
+                    }
+                }
                 const auto found = gameData_.find(key);
                 return std::vector<Value>{found == gameData_.end() ? Value() : found->second};
             }));
             table->Set(Value::Str("setGameData"), MakeNative([this](const std::vector<Value>& call) {
-                const std::string key = ArgAt(call, 0).ToText();
-                if (key.empty()) {
+                size_t keyIndex = call.size();
+                for (size_t index = 0; index < call.size(); ++index) {
+                    if (call[index].kind == Value::Kind::kString) {
+                        keyIndex = index;
+                        break;
+                    }
+                }
+                if (keyIndex >= call.size()) {
                     return std::vector<Value>();
                 }
-                gameData_[key] = ArgAt(call, 1);
+                const std::string key = call[keyIndex].text;
+                gameData_[key] = keyIndex + 1 < call.size() ? call[keyIndex + 1] : Value();
                 return std::vector<Value>();
             }));
             /* 二维音效: 界面点击音一类, 直接交给音频引擎. */
@@ -212,6 +328,138 @@ bool WidgetHost::Load(const char* layoutText, size_t length) {
                     IM_LOGI("UiScript", "sound: %s", path.c_str());
                 }
                 return std::vector<Value>();
+            }));
+            /*
+             * 其余常用方法: 界面脚本调用频次最高的一批.
+             * 与画面无关的(设置写回, 评价, 跳转)按成功处理, 只保证脚本不因取空而中断.
+             */
+            table->Set(Value::Str("getVersionParamInt"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
+            }));
+            table->Set(Value::Str("appalyGameSetData"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Bool(true)};
+            }));
+            table->Set(Value::Str("getNetworkState"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(1.0)};
+            }));
+            table->Set(Value::Str("playSound"), MakeNative([this](const std::vector<Value>& call) {
+                const std::string path = ArgAt(call, 0).ToText();
+                if (!path.empty()) {
+                    if (soundSink_) {
+                        soundSink_(path);
+                    } else {
+                        IM_LOGI("UiScript", "sound: %s", path.c_str());
+                    }
+                }
+                return std::vector<Value>();
+            }));
+            table->Set(Value::Str("playMusic"), MakeNative([this](const std::vector<Value>& call) {
+                const std::string path = ArgAt(call, 0).ToText();
+                if (!path.empty() && soundSink_) {
+                    soundSink_(path);
+                }
+                return std::vector<Value>();
+            }));
+            table->Set(Value::Str("getDeviceID"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Str("immirror-device")};
+            }));
+            table->Set(Value::Str("clickCopy"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Bool(true)};
+            }));
+            table->Set(Value::Str("getNullItemIcon"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Str("")};
+            }));
+            table->Set(Value::Str("isFirstEnterGame"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Bool(false)};
+            }));
+            table->Set(Value::Str("RequestReview"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>();
+            }));
+            table->Set(Value::Str("gotoGame"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>();
+            }));
+            table->Set(Value::Str("setAccount"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>();
+            }));
+            table->Set(Value::Str("setOneKeyBindCode"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>();
+            }));
+            table->Set(Value::Str("getRoomHostType"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
+            }));
+            /* 同名方法在 ClientMgr 上也有一份, 脚本两种写法混用. */
+            table->Set(Value::Str("getUin"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
+            }));
+            table->Set(Value::Str("getOWID"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
+            }));
+            table->Set(Value::Str("getNoviceGuideState"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
+            }));
+            table->Set(Value::Str("getStringDef"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Str("")};
+            }));
+            table->Set(Value::Str("getMultiPlayer"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Bool(false)};
+            }));
+            table->Set(Value::Str("getMyWorldList"), MakeNative([](const std::vector<Value>&) {
+                std::shared_ptr<Table> list(new Table());
+                return std::vector<Value>{Value::Of(list)};
+            }));
+            table->Set(Value::Str("setOperateUI"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>();
+            }));
+            table->Set(Value::Str("IsCoderEditMethod"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Bool(false)};
+            }));
+            table->Set(Value::Str("hasGameData"), MakeNative([this](const std::vector<Value>& call) {
+                const std::string key = ArgAt(call, 0).ToText();
+                return std::vector<Value>{Value::Bool(gameData_.count(key) != 0)};
+            }));
+        } else if (name == "ClientBackpack") {
+            /*
+             * 背包管理器: 界面脚本按格位取物品编号, 空格返回 0.
+             * 数据来自界面数据源, 因此离线跑界面时也有一致的格子内容.
+             */
+            table->Set(Value::Str("getGridItem"), MakeNative([this](const std::vector<Value>& call) {
+                const int32_t slot = static_cast<int32_t>(NumberAt(call, 0, -1.0));
+                if (dataSource_ == nullptr || slot < 0 || slot >= dataSource_->BagSlotCount()) {
+                    return std::vector<Value>{Value::Number(0.0)};
+                }
+                const std::string name = dataSource_->BagSlotName(slot);
+                return std::vector<Value>{Value::Number(name.empty() ? 0.0 : 1.0)};
+            }));
+            table->Set(Value::Str("getGridCount"), MakeNative([this](const std::vector<Value>&) {
+                return std::vector<Value>{
+                    Value::Number(dataSource_ == nullptr ? 0.0 : dataSource_->BagSlotCount())};
+            }));
+            table->Set(Value::Str("getGridCountAt"), MakeNative([this](const std::vector<Value>& call) {
+                const int32_t slot = static_cast<int32_t>(NumberAt(call, 0, -1.0));
+                if (dataSource_ == nullptr || slot < 0) {
+                    return std::vector<Value>{Value::Number(0.0)};
+                }
+                return std::vector<Value>{
+                    Value::Number(dataSource_->BagSlotCountAt(slot))};
+            }));
+            table->Set(Value::Str("getShortcutStartIndex"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
+            }));
+            table->Set(Value::Str("getGridNum"), MakeNative([this](const std::vector<Value>& call) {
+                const int32_t slot = static_cast<int32_t>(NumberAt(call, 0, -1.0));
+                if (dataSource_ == nullptr || slot < 0) {
+                    return std::vector<Value>{Value::Number(0.0)};
+                }
+                return std::vector<Value>{Value::Number(dataSource_->BagSlotCountAt(slot))};
+            }));
+            table->Set(Value::Str("getGridUserdataStr"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Str("")};
+            }));
+            table->Set(Value::Str("getGridEnchantNum"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
+            }));
+            table->Set(Value::Str("getGridEnchantColor"), MakeNative([](const std::vector<Value>&) {
+                return std::vector<Value>{Value::Number(0.0)};
             }));
         } else if (name == "UIFrameMgr") {
             table->Set(Value::Str("CreateFrameByTemplate"),
@@ -353,10 +601,24 @@ Value WidgetHost::TableOf(Widget* widget) {
 
     bind("Show", [this, widget](const std::vector<Value>&) {
         tree_.Show(widget);
+        /*
+         * 显示后触发生命周期脚本: 首次显示先跑 OnLoad(列表构建、数据绑定),
+         * 之后每次显示跑 OnShow. 之前这两个事件从未被调用, 界面初始化等于缺失.
+         */
+        if (widget != nullptr && widget->frame != nullptr) {
+            if (!widget->loaded) {
+                widget->loaded = true;
+                FireFrameEvent(widget, widget->frame->onLoad);
+            }
+            FireFrameEvent(widget, widget->frame->onShow);
+        }
         return std::vector<Value>();
     });
     bind("Hide", [this, widget](const std::vector<Value>&) {
         tree_.Hide(widget);
+        if (widget != nullptr && widget->frame != nullptr) {
+            FireFrameEvent(widget, widget->frame->onHide);
+        }
         return std::vector<Value>();
     });
     bind("IsShown", [this, widget](const std::vector<Value>&) {
@@ -380,10 +642,14 @@ Value WidgetHost::TableOf(Widget* widget) {
         tree_.SetText(widget, ArgAt(args, 0).ToText().c_str());
         return std::vector<Value>();
     });
+    /*
+     * SetTextColor(红, 绿, 蓝): 脚本按 0 到 255 给分量, 内部按 0 到 1 存.
+     * 不归一化会让颜色值超出范围, 渲染时直接过曝.
+     */
     bind("SetTextColor", [this, widget](const std::vector<Value>& args) {
-        tree_.SetTextColor(widget, static_cast<float>(NumberAt(args, 0, 1.0)),
-                           static_cast<float>(NumberAt(args, 1, 1.0)),
-                           static_cast<float>(NumberAt(args, 2, 1.0)));
+        tree_.SetTextColor(widget, static_cast<float>(NumberAt(args, 0, 255.0)) / 255.0f,
+                           static_cast<float>(NumberAt(args, 1, 255.0)) / 255.0f,
+                           static_cast<float>(NumberAt(args, 2, 255.0)) / 255.0f);
         return std::vector<Value>();
     });
     bind("SetSize", [this, widget](const std::vector<Value>& args) {
@@ -391,13 +657,34 @@ Value WidgetHost::TableOf(Widget* widget) {
                       static_cast<float>(NumberAt(args, 1, 0.0)));
         return std::vector<Value>();
     });
+    /*
+     * SetPoint 的实参顺序是 (point, relativeTo, relativePoint, x, y):
+     * 界面脚本靠它把格子按网格摆开, 少读一个实参会让坐标整体错位.
+     */
     bind("SetPoint", [this, widget](const std::vector<Value>& args) {
         const std::string point = ArgAt(args, 0).ToText();
-        const std::string relativePoint = ArgAt(args, 1).ToText();
-        tree_.SetPoint(widget, AnchorFromName(point, AnchorPoint::kTopLeft),
-                       AnchorFromName(relativePoint, AnchorPoint::kTopLeft),
-                       static_cast<float>(NumberAt(args, 2, 0.0)),
-                       static_cast<float>(NumberAt(args, 3, 0.0)));
+        const std::string relativeTo = ArgAt(args, 1).ToText();
+        const std::string relativePoint = ArgAt(args, 2).ToText();
+        tree_.SetPointTo(widget, AnchorFromName(point, AnchorPoint::kTopLeft), relativeTo.c_str(),
+                         AnchorFromName(relativePoint, AnchorPoint::kTopLeft),
+                         static_cast<float>(NumberAt(args, 3, 0.0)),
+                         static_cast<float>(NumberAt(args, 4, 0.0)));
+        return std::vector<Value>();
+    });
+    /*
+     * Checked(值): 页签按钮的选中态.
+     * 界面脚本用它标记当前页签, 选中后应换成 CheckedTexture 的贴图.
+     */
+    bind("Checked", [this, widget](const std::vector<Value>& args) {
+        if (widget != nullptr) {
+            widget->checked = args.size() > 1 ? args[1].Truthy() : true;
+        }
+        return std::vector<Value>();
+    });
+    bind("SetChecked", [this, widget](const std::vector<Value>& args) {
+        if (widget != nullptr) {
+            widget->checked = ArgAt(args, 0).Truthy();
+        }
         return std::vector<Value>();
     });
     bind("SetGray", [this, widget](const std::vector<Value>& args) {
@@ -409,6 +696,84 @@ Value WidgetHost::TableOf(Widget* widget) {
         tree_.SetTexture(widget, ArgAt(args, 0).ToText().c_str());
         return std::vector<Value>();
     });
+    /* 高清贴图: 与普通贴图同一语义, 布局侧只认一个贴图字段. */
+    bind("SetTextureHuires", [this, widget](const std::vector<Value>& args) {
+        tree_.SetTexture(widget, ArgAt(args, 0).ToText().c_str());
+        return std::vector<Value>();
+    });
+    /* 遮罩与叠加: 属于渲染特效, 二维布局层按无操作处理. */
+    bind("setMask", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    bind("SetMaskColor", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    bind("SetOverlay", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    bind("SetUVAnimation", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    bind("SetBlendAlpha", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    bind("IsReshow", [](const std::vector<Value>&) { return std::vector<Value>{Value::Bool(false)}; });
+    bind("IsRehide", [](const std::vector<Value>&) { return std::vector<Value>{Value::Bool(false)}; });
+    /* 文本读取: 脚本大量用文本做判断与拼接. */
+    bind("GetText", [widget](const std::vector<Value>&) {
+        if (!widget->text.empty()) {
+            return std::vector<Value>{Value::Str(widget->text)};
+        }
+        const char* text = widget->frame != nullptr ? widget->frame->text : nullptr;
+        return std::vector<Value>{Value::Str(text == nullptr ? "" : text)};
+    });
+    /* 贴图 uv 覆盖: 与整图替换同一语义, 二维布局里按无操作处理. */
+    bind("SetTexUV", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    /* 父控件: 列表行常用它反查所属列表. */
+    bind("GetParentFrame", [this, widget](const std::vector<Value>&) {
+        Widget* parent = nullptr;
+        if (widget->frame != nullptr && widget->frame->parent != nullptr) {
+            parent = tree_.Find(widget->frame->parent->name);
+        }
+        return std::vector<Value>{parent == nullptr ? Value() : TableOf(parent)};
+    });
+    /* 控件编号: 原版用于区分同模板克隆出来的行, 这里给 0 表示未分配. */
+    bind("GetClientID", [widget](const std::vector<Value>&) {
+        return std::vector<Value>{
+            Value::Number(widget->frame == nullptr ? 0.0 : widget->frame->clientId)};
+    });
+    /* 禁用与启用: 置灰表达, 命中仍可达, 由脚本按 IsShown 与置灰判断. */
+    bind("Disable", [this, widget](const std::vector<Value>&) {
+        tree_.SetGray(widget, true);
+        return std::vector<Value>();
+    });
+    bind("Enable", [this, widget](const std::vector<Value>&) {
+        tree_.SetGray(widget, false);
+        return std::vector<Value>();
+    });
+    /* 控件级共享串: 克隆出来的列表行用它携带行数据. */
+    bind("SetClientString", [this, widget](const std::vector<Value>& args) {
+        clientStrings_[widget] = ArgAt(args, 0).ToText();
+        return std::vector<Value>();
+    });
+    bind("GetClientString", [this, widget](const std::vector<Value>&) {
+        const auto found = clientStrings_.find(widget);
+        return std::vector<Value>{Value::Str(found == clientStrings_.end() ? "" : found->second)};
+    });
+    bind("SetClientUserData", [this, widget](const std::vector<Value>& args) {
+        clientStrings_[widget] = ArgAt(args, 0).ToText();
+        return std::vector<Value>();
+    });
+    /* 取子控件: 与 GetChild 同义, 名字前缀规则一致. */
+    bind("GetCtrl", [this, widget](const std::vector<Value>& args) {
+        const Value& name = ArgAt(args, 0);
+        if (name.kind != Value::Kind::kString || widget->frame == nullptr) {
+            return std::vector<Value>{Value()};
+        }
+        const std::string childName = std::string(widget->frame->name) + name.text;
+        Widget* child = tree_.Find(childName.c_str());
+        return std::vector<Value>{child == nullptr ? Value() : TableOf(child)};
+    });
+    /* 清空: 列表重建前的复位, 二维布局里没有子控件增删, 按无操作处理. */
+    bind("Clear", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    /*
+     * 三维角色预览: 布局里的 View 控件控制相机与角色站位, 与二维界面无关.
+     * 这里显式给空实现, 避免脚本因为方法不存在而中断.
+     */
+    bind("setCameraWidthFov", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    bind("setCameraLookAt", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    bind("setActorPosition", [](const std::vector<Value>&) { return std::vector<Value>(); });
+    bind("addBackgroundEffect", [](const std::vector<Value>&) { return std::vector<Value>(); });
     /* RegisterEvent: 把控件挂到该事件上, 重复订阅同一事件只记一次. */
     bind("RegisterEvent", [this, widget](const std::vector<Value>& args) {
         const Value& name = ArgAt(args, 0);
@@ -445,13 +810,70 @@ Value WidgetHost::TableOf(Widget* widget) {
 }
 
 bool WidgetHost::RunScript(const char* source, size_t length, const LayoutRect& screen) {
+    /* 每次执行前刷新管理器全局与 _G: 原生函数可能在上一步才注册. */
+    const char* bindManagers =
+        "ClientMgr = GetInst(\"ClientMgr\")\n"
+        "ClientBackpack = GetInst(\"ClientBackpack\")\n"
+        "DefMgr = GetInst(\"DefMgr\")\n"
+        "AccountManager = GetInst(\"AccountManager\")\n"
+        "CurWorld = GetInst(\"CurWorld\")\n"
+        "CurMainPlayer = GetInst(\"CurMainPlayer\")\n"
+        "UIFrameMgr = GetInst(\"UIFrameMgr\")\n"
+        "UIManager = GetInst(\"UIManager\")\n"
+        "ClientScene = GetInst(\"ClientScene\")\n"
+        "CurScene = GetInst(\"CurScene\")\n"
+        "ClientActor = GetInst(\"ClientActor\")\n";
+    vm_.Run(bindManagers, std::strlen(bindManagers));
+    vm_.PublishGlobalTable();
     if (!vm_.Run(source, length)) {
         error_ = vm_.Error();
         return false;
     }
     /* 脚本改过尺寸与锚点后再解算, 因此解算必须排在执行之后. */
+    lastScreen_ = screen;
     tree_.Resolve(screen);
     return true;
+}
+
+int32_t WidgetHost::FireFrameEvent(Widget* widget, const char* snippet) {
+    if (widget == nullptr || snippet == nullptr || snippet[0] == '\0') {
+        return 0;
+    }
+    /* 脚本里可能再调 Show/Hide, 递归会直接爆栈, 这里挡住. */
+    if (firingEvent_) {
+        return 0;
+    }
+    firingEvent_ = true;
+    /*
+     * 生命周期脚本要把 this 指向被触发的控件, 但执行完必须恢复现场 ——
+     * 否则调用方(比如脚本里 Show 之后继续用 this)会拿到错误的控件.
+     */
+    const Value savedThis = vm_.GetGlobal("this");
+    vm_.SetGlobal("this", TableOf(widget));
+    const bool ok = vm_.Run(snippet, std::strlen(snippet));
+    vm_.SetGlobal("this", savedThis);
+    firingEvent_ = false;
+    if (!ok) {
+        error_ = vm_.Error();
+        return 0;
+    }
+    tree_.Resolve(lastScreen_);
+    return 1;
+}
+
+int32_t WidgetHost::Click(Widget* widget) {
+    if (widget == nullptr || widget->frame == nullptr || widget->frame->onClick == nullptr) {
+        return 0;
+    }
+    vm_.SetGlobal("this", TableOf(widget));
+    const char* snippet = widget->frame->onClick;
+    if (!vm_.Run(snippet, std::strlen(snippet))) {
+        error_ = vm_.Error();
+        return 0;
+    }
+    /* 点击常改文本与显示状态, 执行后重新解算. */
+    tree_.Resolve(lastScreen_);
+    return 1;
 }
 
 void WidgetHost::BindDataSource(UiDataSource* source) {
@@ -504,6 +926,18 @@ void WidgetHost::BindDataSource(UiDataSource* source) {
     });
 }
 
+std::vector<std::string> WidgetHost::SubscribedEvents() const {
+    std::vector<std::string> names;
+    names.reserve(subscriptions_.size());
+    for (const auto& entry : subscriptions_) {
+        if (!entry.second.empty()) {
+            names.push_back(entry.first);
+        }
+    }
+    std::sort(names.begin(), names.end());
+    return names;
+}
+
 int32_t WidgetHost::SubscriberCount(const std::string& name) const {
     const auto found = subscriptions_.find(name);
     return found == subscriptions_.end() ? 0 : static_cast<int32_t>(found->second.size());
@@ -539,6 +973,11 @@ int32_t WidgetHost::DispatchEvent(const std::string& name, const std::vector<Val
         }
     }
     return called;
+}
+
+int32_t WidgetHost::CollectDrawCommandsFrom(const char* name,
+                                           std::vector<LayoutDrawCommand>& out) {
+    return tree_.CollectDrawCommandsFrom(name, out);
 }
 
 int32_t WidgetHost::CollectDrawCommands(std::vector<LayoutDrawCommand>& out) {

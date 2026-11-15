@@ -21,6 +21,12 @@ namespace immirror::ui {
 struct Widget {
     LayoutFrame* frame = nullptr;
     bool shown = true;
+    /* 是否已经跑过 OnLoad: 生命周期脚本只在首次显示时触发一次. */
+    bool loaded = false;
+    /* 选中态: 页签按钮靠它切换贴图, 与临时的按下态分开. */
+    bool checked = false;
+    /* 按下态: 绘制时改用 PushedTexture, 由输入层设置. */
+    bool pressed = false;
     bool grayed = false;
     /* 运行时文本, 空表示沿用布局里的文本 (本实现只存文本, 不做字体排版). */
     std::string text;
@@ -51,6 +57,16 @@ public:
     /* 按屏幕矩形解算; 运行时的尺寸与锚点覆盖会在这里生效. */
     void Resolve(const LayoutRect& screen);
 
+    /* 装入外部模板文档, 让跨文件的模板也能克隆子树. */
+    void SetTemplateDocument(const LayoutDocument* document) {
+        document_.SetTemplateDocument(document);
+    }
+
+    /* 装入参照文档: 跨文件的 relativeTo 靠它找到坐标. */
+    void AddReferenceDocument(const LayoutDocument* document) {
+        document_.AddReferenceDocument(document);
+    }
+
     /* 装入模板表, 之后载入的布局会按继承属性展开外观. */
     void SetTemplates(const LayoutTemplates* templates) { document_.SetTemplates(templates); }
 
@@ -60,6 +76,9 @@ public:
      * 返回新根控件, 参数非法或名字已被占用时返回空.
      */
     Widget* Clone(Widget* source, Widget* parent, const char* newName);
+
+    /* 全部控件的只读视图: 供统计与调试遍历, 不暴露可变句柄. */
+    const std::vector<std::unique_ptr<Widget>>& Widgets() const { return widgets_; }
 
     Widget* Find(const char* name) const {
         const auto found = byName_.find(name == nullptr ? std::string() : std::string(name));
@@ -83,6 +102,12 @@ public:
     void SetSize(Widget* widget, float width, float height);
     void SetPoint(Widget* widget, AnchorPoint point, AnchorPoint relativePoint, float offsetX,
                   float offsetY);
+    /*
+     * 带参照物的锚点设置: 脚本里的 SetPoint 五参数写法会显式给参照物名,
+     * 名字为空时退回父帧, 与不写 relativeTo 的语义一致.
+     */
+    void SetPointTo(Widget* widget, AnchorPoint point, const char* relativeToName,
+                    AnchorPoint relativePoint, float offsetX, float offsetY);
     void SetGray(Widget* widget, bool grayed) {
         if (widget != nullptr) {
             widget->grayed = grayed;
@@ -92,12 +117,24 @@ public:
 
     /* 展开成绘制命令: 隐藏的控件连同其子树一起跳过, 置灰的控件压暗. */
     int32_t CollectDrawCommands(std::vector<LayoutDrawCommand>& out) const;
+    /*
+     * 只收集指定帧子树的绘制命令.
+     * 用于核对子界面: 主帧仍打开(提供锚点参照物), 但统计只算目标子树.
+     */
+    int32_t CollectDrawCommandsFrom(const char* name, std::vector<LayoutDrawCommand>& out) const;
 
     /*
      * 命中测试: 返回覆盖该点的最上层控件, 没有命中返回空.
      * 层级顺序与绘制相反 (绘制先底后顶, 命中先顶后底), 隐藏控件的子树不参与.
      */
     Widget* HitTest(float x, float y);
+
+    /* 按下态: 只影响绘制取哪张态贴图. */
+    void SetPressed(Widget* widget, bool pressed) {
+        if (widget != nullptr) {
+            widget->pressed = pressed;
+        }
+    }
 
     int32_t WidgetCount() const { return static_cast<int32_t>(widgets_.size()); }
 

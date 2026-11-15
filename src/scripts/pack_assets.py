@@ -108,7 +108,8 @@ def collect_ui_atlas_entries():
     generated = os.path.join(ASSETS_ROOT, "ui", "generated")
     if not os.path.isdir(generated):
         return entries
-    for name in ("atlas_ui.rgba", "atlas_ui.json"):
+    # atlas_ui_full.rgba 是界面精灵的 4096 合图, 与 HUD 专用的 atlas_ui.rgba 并存
+    for name in ("atlas_ui.rgba", "atlas_ui.json", "atlas_ui_full.rgba"):
         source = os.path.join(generated, name)
         if os.path.exists(source):
             entries.append((source, "ui/generated/" + name))

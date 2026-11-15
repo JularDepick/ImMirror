@@ -188,6 +188,25 @@ void WidgetTree::SetPoint(Widget* widget, AnchorPoint point, AnchorPoint relativ
     widget->anchor.offsetY = offsetY;
 }
 
+void WidgetTree::SetPointTo(Widget* widget, AnchorPoint point, const char* relativeToName,
+                             AnchorPoint relativePoint, float offsetX, float offsetY) {
+    if (widget == nullptr) {
+        return;
+    }
+    widget->hasAnchor = true;
+    widget->anchor.point = point;
+    const LayoutFrame* target = nullptr;
+    if (relativeToName != nullptr && relativeToName[0] != '\0') {
+        Widget* reference = Find(relativeToName);
+        target = reference != nullptr ? reference->frame : nullptr;
+    }
+    widget->anchor.relativeTo =
+        target != nullptr ? target : (widget->frame != nullptr ? widget->frame->parent : nullptr);
+    widget->anchor.relativePoint = relativePoint;
+    widget->anchor.offsetX = offsetX;
+    widget->anchor.offsetY = offsetY;
+}
+
 void WidgetTree::SetTexture(Widget* widget, const char* texture) {
     if (widget == nullptr) {
         return;
@@ -211,19 +230,67 @@ void WalkVisible(const LayoutFrame& frame, const std::unordered_map<const Layout
         return;
     }
 
+    /* virtual="true" 的帧只是模板, 自身与子树都不绘制. */
+    if (frame.isVirtual) {
+        return;
+    }
+
     const bool sizeOk = frame.rect.width > 0.0f && frame.rect.height > 0.0f;
+    /*
+     * 按钮三态: 按下时优先用 PushedTexture, 否则用普通态;
+     * 元素自身写了贴图的, 以元素为准.
+     */
+    /* 选中态优先于按下态: 页签被选中后应保持选中贴图. */
+    const bool pressed = widget != nullptr && widget->pressed;
+    const bool checked = widget != nullptr && widget->checked && frame.checkedTexture != nullptr;
+    const char* stateTexture = checked ? frame.checkedTexture
+                                       : (pressed ? frame.pushedTexture : frame.normalTexture);
+    const char* stateSprite = checked ? frame.checkedSprite
+                                      : (pressed ? frame.pushedSprite : frame.normalSprite);
+    const char* baseTexture = frame.texture != nullptr ? frame.texture : stateTexture;
+    const char* baseSprite = frame.sprite != nullptr ? frame.sprite : stateSprite;
     const bool hasTexture = widget != nullptr && !widget->texture.empty();
     const bool hasText = widget != nullptr && !widget->text.empty();
-    if (sizeOk && (frame.hasColor || frame.texture != nullptr || hasTexture || hasText)) {
+    /* 布局里的 text 属性是文本控件的初始内容, 运行时没有覆盖时用它. */
+    const bool frameHasText = frame.text != nullptr && frame.text[0] != '\0';
+    if (sizeOk && (frame.hasColor || baseTexture != nullptr || hasTexture || hasText ||
+                   frameHasText)) {
         LayoutDrawCommand command;
         command.rect = frame.rect;
         command.layer = frame.layer;
         command.name = frame.name;
         command.depth = depth;
-        command.texture = hasTexture ? widget->texture.c_str() : frame.texture;
+        command.texture = hasTexture ? widget->texture.c_str() : baseTexture;
         /* 精灵名决定取图集里的哪一格, 必须一并带出去, 否则只能按整图绘制. */
-        command.sprite = frame.sprite;
-        command.text = hasText ? widget->text.c_str() : nullptr;
+        command.sprite = baseSprite;
+        command.fontSize = frame.fontSize;
+        command.justifyH = frame.justifyH;
+        command.justifyV = frame.justifyV;
+        command.lineInterval = frame.lineInterval;
+        /*
+         * 绘制参数必须在这里一并带出去: 控件树这条路径与布局树那条路径
+         * 各产出一份命令, 只在其中一条加字段会让渲染阶段拿不到参数.
+         */
+        command.tileOffsetX = frame.tileOffsetX;
+        command.tileOffsetY = frame.tileOffsetY;
+        command.tileWidth = frame.tileWidth;
+        command.tileHeight = frame.tileHeight;
+        command.outline = frame.outline;
+        command.multiLine = frame.multiLine;
+        command.additive = frame.additive;
+        command.shadowRed = frame.shadowRed;
+        command.shadowGreen = frame.shadowGreen;
+        command.shadowBlue = frame.shadowBlue;
+        command.flipU = frame.flipU;
+        command.flipV = frame.flipV;
+        command.rotateQuarter = frame.rotateQuarter;
+        command.bold = frame.bold;
+        command.strata = frame.strata;
+        command.insetLeft = frame.insetLeft;
+        command.insetRight = frame.insetRight;
+        command.insetTop = frame.insetTop;
+        command.insetBottom = frame.insetBottom;
+        command.text = hasText ? widget->text.c_str() : (frameHasText ? frame.text : nullptr);
         if (hasText) {
             command.red = widget->textRed;
             command.green = widget->textGreen;
@@ -312,10 +379,36 @@ Widget* WidgetTree::HitTest(float x, float y) {
 
 int32_t WidgetTree::CollectDrawCommands(std::vector<LayoutDrawCommand>& out) const {
     out.clear();
+    /* 断行结果的存放区按帧清理, 避免长期运行累积. */
+    ResetTextLinePool();
     if (root_ == nullptr) {
         return 0;
     }
     WalkVisible(*root_, byFrame_, 0, out);
+    /*
+     * 跨主帧层级: 遍历产出的是"按帧递归、同帧内按图层排好"的顺序,
+     * 但不同主帧之间还要按层级分先后 —— 提示层必须压在全屏层之上.
+     * 用稳定排序保住同层内的原有顺序.
+     */
+    std::stable_sort(out.begin(), out.end(),
+                     [](const LayoutDrawCommand& left, const LayoutDrawCommand& right) {
+                         return left.strata < right.strata;
+                     });
+    return static_cast<int32_t>(out.size());
+}
+
+int32_t WidgetTree::CollectDrawCommandsFrom(const char* name,
+                                           std::vector<LayoutDrawCommand>& out) const {
+    out.clear();
+    if (name == nullptr) {
+        return 0;
+    }
+    const Widget* target = Find(name);
+    if (target == nullptr || target->frame == nullptr) {
+        return 0;
+    }
+    ResetTextLinePool();
+    WalkVisible(*target->frame, byFrame_, 0, out);
     return static_cast<int32_t>(out.size());
 }
 

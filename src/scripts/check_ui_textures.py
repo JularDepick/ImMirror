@@ -19,15 +19,19 @@ PROJECT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "..", "..", "assets", 
 UI_ROOT = os.path.join(PROJECT, "ui")
 LAYOUT_ROOT = os.path.join(PROJECT, "data", "xml", "ui", "mobile")
 
-SPRITE = re.compile(r'<sprite\s+n="([^"]+)"\s+x="(\d+)"\s+y="(\d+)"\s+w="(\d+)"\s+h="(\d+)"')
-ATLAS_HEAD = re.compile(r'<TextureAtlas\s+imagePath="([^"]+)"\s+width="(\d+)"\s+height="(\d+)"')
+SPRITE = re.compile(r'<sprite\s+n\s*=\s*"([^"]+)"\s+x\s*=\s*"(\d+)"\s+y\s*=\s*"(\d+)"'
+                     r'\s+w\s*=\s*"(\d+)"\s+h\s*=\s*"(\d+)"')
+ATLAS_HEAD = re.compile(r'<TextureAtlas\s+imagePath\s*=\s*"([^"]+)"\s+width\s*=\s*"(\d+)"'
+                        r'\s+height\s*=\s*"(\d+)"')
+# 注释块里的写法不参与判定, 否则已停用的元素会被当成在用.
+COMMENT = re.compile(r'<!--.*?-->', re.S)
 # 模板可能定义在任何元素上, 因此不限标签名.
 ELEMENT = re.compile(r'<([A-Za-z]+)\s+([^>]*)>')
 
 
 def read(path):
     with open(path, "r", encoding="utf-8", errors="replace") as handle:
-        return handle.read()
+        return COMMENT.sub("", handle.read())
 
 
 def load_atlases():
@@ -60,11 +64,11 @@ def load_templates():
         for match in ELEMENT.finditer(read(path)):
             head = match.group(2)
             # 模板不一定标 virtual: 被别处继承的元素本身就起模板作用.
-            label = re.search(r'name="([^"]+)"', head)
+            label = re.search(r'name\s*=\s*"([^"]+)"', head)
             if label is None:
                 continue
-            fileAttr = re.search(r'file="([^"]+)"', head)
-            uv = re.search(r'uvname="([^"]+)"', head)
+            fileAttr = re.search(r'file\s*=\s*"([^"]+)"', head)
+            uv = re.search(r'uvname\s*=\s*"([^"]+)"', head)
             table.setdefault(label.group(1),
                              (fileAttr.group(1) if fileAttr else "",
                               uv.group(1) if uv else ""))
@@ -75,7 +79,7 @@ def referenced():
     """布局里引用到的模板名 -> 引用次数."""
     used = {}
     for path in layout_files():
-        for match in re.finditer(r'inherits="([^"]+)"', read(path)):
+        for match in re.finditer(r'inherits\s*=\s*"([^"]+)"', read(path)):
             key = match.group(1)
             used[key] = used.get(key, 0) + 1
     return used

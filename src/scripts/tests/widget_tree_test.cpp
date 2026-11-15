@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
     const LayoutRect screen{0.0f, 0.0f, 1280.0f, 720.0f};
     tree.Resolve(screen);
 
-    Widget* box = tree.Find("DropdownBox");
+    Widget* box = tree.Find("AccountLoginFrame");
     check("找到控件", box != nullptr);
     if (box == nullptr) {
         return 1;
@@ -143,13 +143,24 @@ int main(int argc, char** argv) {
     check("重新显示后命令恢复", shown.size() == base.size());
 
     /* 设文本: 文本控件必须带上文本, 且按设置的颜色输出. */
-    Widget* label = tree.Find("DropdownBoxNickname");
+    /*
+     * 文本与置灰用独立夹具: 真实布局里的文本控件都由模板展开, 默认不可见,
+     * 拿它们做基线会把"模板不绘制"这条语义混进来.
+     */
+    const std::string textLayout =
+        "<Ui><Frame name=\"TextHost\"><Size><AbsDimension x=\"200\" y=\"40\"/></Size>"
+        "<FontString name=\"Label\" text=\"X\"><Size><AbsDimension x=\"100\" y=\"20\"/></Size>"
+        "</FontString></Frame></Ui>";
+    WidgetTree textTree;
+    check("载入文本夹具", textTree.Load(textLayout.data(), textLayout.size()));
+    textTree.Resolve(screen);
+    Widget* label = textTree.Find("Label");
     check("找到文本控件", label != nullptr);
     if (label != nullptr) {
-        tree.SetText(label, "HELLO");
-        tree.SetTextColor(label, 0.25f, 0.5f, 0.75f);
+        textTree.SetText(label, "HELLO");
+        textTree.SetTextColor(label, 0.25f, 0.5f, 0.75f);
         std::vector<LayoutDrawCommand> commands;
-        tree.CollectDrawCommands(commands);
+        textTree.CollectDrawCommands(commands);
         bool foundText = false;
         bool colorOk = false;
         for (const LayoutDrawCommand& command : commands) {
@@ -164,8 +175,8 @@ int main(int argc, char** argv) {
         check("文本颜色生效", colorOk);
 
         /* 置灰: 颜色整体压暗. */
-        tree.SetGray(label, true);
-        tree.CollectDrawCommands(commands);
+        textTree.SetGray(label, true);
+        textTree.CollectDrawCommands(commands);
         bool grayed = false;
         for (const LayoutDrawCommand& command : commands) {
             if (command.text != nullptr && std::string(command.text) == "HELLO") {
@@ -173,7 +184,7 @@ int main(int argc, char** argv) {
             }
         }
         check("置灰压暗颜色", grayed);
-        tree.SetGray(label, false);
+        textTree.SetGray(label, false);
     }
 
     /* 设尺寸与设锚点: 解算后必须反映到矩形上. */

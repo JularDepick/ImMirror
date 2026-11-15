@@ -4,6 +4,9 @@
 资源找不到时运行期只写一行日志并静默回落, 因此这条检查是唯一能在不构建的
 情况下发现路径写错的场合. 覆盖三类: 代码里的字面量路径, 生成表里的音效路径,
 图标清单里的素材路径.
+
+界面精灵索引由素材工程的子图集描述文件生成, 每条记录带上描述文件的相对路径.
+该路径只用于追溯来源, 运行期不读取, 因此对这一个头文件按素材工程目录核对.
 """
 
 import json
@@ -20,6 +23,7 @@ CODE_DIRS = [os.path.join(SRC_ROOT, "android", "app", "src", "main", "java"),
 
 LITERAL = re.compile(r'"((?:ui|generated|sounds|xml|data|fonts)/[^"]+\.[a-z0-9]{2,4})"')
 SOUND_LITERAL = re.compile(r'"(sounds/[A-Za-z0-9_]+\.ogg)"')
+SPRITE_INDEX_HEADER = "ui_sprite_index_gen.h"
 
 
 def packaged_files():
@@ -42,6 +46,7 @@ def iter_code():
 def check_literals(available):
     total = 0
     missing = []
+    source_descriptor = 0
     for name, path in iter_code():
         text = open(path, encoding="utf-8", errors="replace").read()
         for match in LITERAL.finditer(text):
@@ -49,9 +54,13 @@ def check_literals(available):
             if "%" in target or "+" in target:
                 continue
             total += 1
-            if target not in available:
-                missing.append((name, target))
-    return total, missing
+            if target in available:
+                continue
+            if name == SPRITE_INDEX_HEADER and os.path.isfile(os.path.join(PROJECT_ROOT, target)):
+                source_descriptor += 1
+                continue
+            missing.append((name, target))
+    return total, missing, source_descriptor
 
 
 def check_generated_sounds(available):
@@ -115,7 +124,10 @@ def main():
         return 1
     available = packaged_files()
     ok = True
-    ok = report("资源字面量", *check_literals(available)) and ok
+    literal_total, literal_missing, literal_source = check_literals(available)
+    ok = report("资源字面量", literal_total, literal_missing) and ok
+    if literal_source > 0:
+        print("  其中 %d 条为素材源描述路径, 已按素材工程核对" % literal_source)
     ok = report("生成表音效", *check_generated_sounds(available)) and ok
     ok = report("图标清单", *check_icon_manifest()) and ok
     ok = report("界面资源", *check_ui_packaging()) and ok

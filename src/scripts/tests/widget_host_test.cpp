@@ -43,10 +43,10 @@ int main(int argc, char** argv) {
     }
     const LayoutRect screen{0.0f, 0.0f, 1280.0f, 720.0f};
 
-    /* 基线: 先把目标控件打开再计数, 该控件在布局里默认隐藏. */
+    /* 基线: 先把目标控件打开再计数. 目标必须是非模板帧, 模板帧(virtual)不参与绘制. */
     WidgetHost host;
     check("载入布局", host.Load(layout.data(), layout.size()));
-    const char* showScript = "local w = getglobal(\"DropdownBox\") if w ~= nil then w:Show() end";
+    const char* showScript = "local w = getglobal(\"AccountLoginFrame\") if w ~= nil then w:Show() end";
     check("打开目标控件", host.RunScript(showScript, std::strlen(showScript), screen));
     std::vector<LayoutDrawCommand> base;
     const int32_t baseCount = host.CollectDrawCommands(base);
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
     /* 脚本按名字取控件并隐藏, 命令数必须减少. */
     WidgetHost hiding;
     check("载入布局(隐藏用例)", hiding.Load(layout.data(), layout.size()));
-    const char* hideScript = "local w = getglobal(\"DropdownBox\") if w ~= nil then w:Hide() end";
+    const char* hideScript = "local w = getglobal(\"AccountLoginFrame\") if w ~= nil then w:Hide() end";
     check("执行隐藏脚本", hiding.RunScript(hideScript, std::strlen(hideScript), screen));
     std::vector<LayoutDrawCommand> hidden;
     const int32_t hiddenCount = hiding.CollectDrawCommands(hidden);

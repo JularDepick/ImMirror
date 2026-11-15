@@ -27,6 +27,34 @@ struct LayoutTemplate {
     std::string sprite;
     float width = 0.0f;
     float height = 0.0f;
+    /*
+     * 拉伸方式: 0 整体拉伸, 1 三片(左右固定, 中间拉伸), 2 九宫.
+     * 三片用 insetLeft/insetRight, 九宫再加 insetTop/insetBottom 与中心块尺寸.
+     */
+    int32_t drawType = 0;
+    float insetLeft = 0.0f;
+    float insetRight = 0.0f;
+    float insetTop = 0.0f;
+    float insetBottom = 0.0f;
+    /* 平铺起始偏移: 决定平铺图案与容器边界如何对齐. */
+    float tileOffsetX = 0.0f;
+    float tileOffsetY = 0.0f;
+    float tileWidth = 0.0f;
+    float tileHeight = 0.0f;
+    /*
+     * 按钮三态贴图: 模板里用 <NormalTexture> / <PushedTexture> / <CheckedTexture> 给出.
+     * 这类标签是结构性元素, 不建帧, 只把贴图写到模板上, 实例继承后才有外观.
+     */
+    std::string normalTexture;
+    std::string normalSprite;
+    std::string pushedTexture;
+    std::string pushedSprite;
+    std::string checkedTexture;
+    std::string checkedSprite;
+    /* 模板自带的点击脚本: 实例没有自己的 OnClick 时继承它. */
+    std::string onClick;
+    /* 模板之间的继承: 例如页签模板继承通用按钮模板. */
+    std::string inherits;
 };
 
 /* 模板表: 名字到条目的映射, 由调用方在解析前装入. */
@@ -38,10 +66,32 @@ using LayoutTemplates = std::unordered_map<std::string, LayoutTemplate>;
  */
 bool ParseTemplates(const char* text, size_t length, LayoutTemplates& out);
 
+/*
+ * 展开模板之间的继承链: 子模板没给的字段从父模板取.
+ * 允许多层, 最多展开 8 层; 出现环时停止, 不报错.
+ */
+void ResolveTemplateInheritance(LayoutTemplates& templates);
+
 class LayoutDocument {
 public:
     /* 装入模板表; 指针须在文档解析与使用期间保持有效, 传空表示不展开继承. */
-    void SetTemplates(const LayoutTemplates* templates) { templates_ = templates; }
+    void SetTemplates(const LayoutTemplates* templates);
+
+    /*
+     * 装入外部模板文档(通常是 uitemplate.xml 解析出的帧树).
+     * 模板定义在别的文件里时, 只有它能提供模板子树供克隆.
+     */
+    void SetTemplateDocument(const LayoutDocument* document) { templateDocument_ = document; }
+
+    /*
+     * 装入参照文档(已解算的布局帧树), 例如游戏内 HUD 布局.
+     * 锚点的 relativeTo 指向别的布局文件里的帧时, 只有它能提供坐标.
+     */
+    void AddReferenceDocument(const LayoutDocument* document) {
+        if (document != nullptr) {
+            referenceDocuments_.push_back(document);
+        }
+    }
 
     /* 解析一段布局文本; 失败时返回 false 并给出原因. */
     bool Parse(const char* text, size_t length);
@@ -68,6 +118,24 @@ private:
     std::deque<std::string> textures_;
     /* 精灵名同理. */
     std::deque<std::string> sprites_;
+    /* 文本控件的文字内容, 与帧同生命周期. */
+    std::deque<std::string> texts_;
+    /* 继承的模板名, 与帧同生命周期. */
+    std::deque<std::string> inherits_;
+    /* 锚点参照物名字, 与帧同生命周期. */
+    std::deque<std::string> anchorNames_;
+    /* 流式布局样式名, 与帧同生命周期. */
+    std::deque<std::string> layoutStyles_;
+    /* 标签名, 与帧同生命周期. */
+    std::deque<std::string> tags_;
+    /* 外部模板文档: 只读引用, 生命周期由调用方保证. */
+    const LayoutDocument* templateDocument_ = nullptr;
+    /* 外部参照文档: 供跨文件的 relativeTo 查找, 生命周期由调用方保证. */
+    std::vector<const LayoutDocument*> referenceDocuments_;
+    /* OnClick 等脚本片段, 与帧同生命周期. */
+    std::deque<std::string> snippets_;
+    /* 精灵名到模板的索引: 直接写 file+uvname 的元素据此拿到切片参数. */
+    std::unordered_map<std::string, const LayoutTemplate*> bySprite_;
     std::vector<std::unique_ptr<LayoutFrame>> pool_;
     LayoutFrame* root_ = nullptr;
     std::string error_;

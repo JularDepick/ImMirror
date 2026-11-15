@@ -90,7 +90,14 @@ bool Interpreter::Run(const char* source, size_t length) {
         return false;
     }
     bool returned = false;
-    ExecBlock(program, global_, returned);
+    /*
+     * 每段脚本在自己的子作用域里执行:
+     * 块级 local 只遮蔽本段, 不能覆盖全局(否则 `local getglobal = _G.getglobal`
+     * 会把宿主注册的同名原生函数抹成 nil);
+     * 未声明的赋值仍由 Scope::Assign 落到最外层, 因此 function X() 依旧是全局.
+     */
+    std::shared_ptr<Scope> chunk(new Scope(global_));
+    ExecBlock(program, chunk, returned);
     return error_.empty();
 }
 
@@ -116,6 +123,21 @@ std::vector<std::string> Interpreter::GlobalFunctionNames() const {
         }
     }
     return out;
+}
+
+void Interpreter::PublishGlobalTable() {
+    std::shared_ptr<Table> table(new Table());
+    const std::vector<std::string> names = GlobalFunctionNames();
+    for (const std::string& name : names) {
+        if (name == "_G") {
+            continue;
+        }
+        table->Set(Value::Str(name), global_->Get(name));
+    }
+    const Value value = Value::Of(table);
+    /* 表里也放自己, 脚本里 `_G._G.getglobal` 这类写法同样成立. */
+    table->Set(Value::Str("_G"), value);
+    global_->Define("_G", value);
 }
 
 Value Interpreter::CallGlobal(const std::string& name, const std::vector<Value>& args) {

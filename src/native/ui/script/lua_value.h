@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <set>
 #include <memory>
 #include <string>
 #include <vector>
@@ -89,12 +90,19 @@ public:
     /* 赋值: 找到已有的那层就改它, 都没有则写在当前层. */
     void Assign(const std::string& name, const Value& value);
 
-    /* 当前层定义的变量名, 供调试与按名字批量调用使用. */
+    /*
+     * 变量名枚举: 沿父作用域一路收集, 内层同名优先.
+     * 只取当前层会漏掉外层定义的全局函数, 调用方据此批量调用 OnLoad 时会少调很多.
+     */
     std::vector<std::string> Names() const {
         std::vector<std::string> out;
-        out.reserve(values_.size());
-        for (const auto& entry : values_) {
-            out.push_back(entry.first);
+        std::set<std::string> seen;
+        for (const Scope* scope = this; scope != nullptr; scope = scope->parent_.get()) {
+            for (const auto& entry : scope->values_) {
+                if (seen.insert(entry.first).second) {
+                    out.push_back(entry.first);
+                }
+            }
         }
         return out;
     }

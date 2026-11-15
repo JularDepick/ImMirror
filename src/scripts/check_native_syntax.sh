@@ -16,7 +16,7 @@ if [ ! -x "$CLANG" ]; then
   exit 2
 fi
 
-EXTRA_INCLUDES=("-I" "$NATIVE_ROOT" "-I" "$NATIVE_ROOT/third_party/android_native_app_glue/include" "-I" "$NATIVE_ROOT/tests")
+EXTRA_INCLUDES=("-I" "$NATIVE_ROOT" "-I" "$NATIVE_ROOT/third_party/android_native_app_glue/include" "-I" "$NATIVE_ROOT/tests" "-I" "$NATIVE_ROOT/script")
 for extra in "$@"; do
   EXTRA_INCLUDES+=("-I" "$extra")
 done

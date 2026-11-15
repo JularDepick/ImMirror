@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     /* 脚本订阅事件, 并定义处理函数把控件隐藏掉. */
     const char* script =
         "function DropdownBox_OnEvent(self, event) "
-        "  if event == \"GE_HIDE\" then self:Hide() end "
+        "  if event == \"GE_HIDE\" then local w = getglobal(\"AccountLoginFrame\") if w ~= nil then w:Hide() end end "
         "end "
         "this:RegisterEvent(\"GE_HIDE\") "
         "this:RegisterEvent(\"GE_HIDE\") ";
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
     /* 派发后控件被隐藏, 绘制命令减少. */
     /* 目标控件在布局里默认隐藏, 先打开再比较, 命令数的变化才有意义. */
-    const char* showScript = "local w = getglobal(\"DropdownBox\") if w ~= nil then w:Show() end";
+    const char* showScript = "local w = getglobal(\"AccountLoginFrame\") if w ~= nil then w:Show() end";
     check("打开目标控件", host.RunScript(showScript, std::strlen(showScript), screen));
     std::vector<LayoutDrawCommand> before;
     const int32_t beforeCount = host.CollectDrawCommands(before);

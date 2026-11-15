@@ -18,8 +18,11 @@ PROJECT = os.path.normpath(os.path.join(ROOT, "..", "..", "assets", "project"))
 UI_ROOT = os.path.join(PROJECT, "ui")
 OUT = os.path.join(ROOT, "native", "ui", "generated", "ui_sprite_index_gen.h")
 
-ATLAS_HEAD = re.compile(r'<TextureAtlas\s+imagePath="([^"]+)"\s+width="(\d+)"\s+height="(\d+)"')
-SPRITE = re.compile(r'<sprite\s+n="([^"]+)"\s+x="(\d+)"\s+y="(\d+)"\s+w="(\d+)"\s+h="(\d+)"')
+ATLAS_HEAD = re.compile(r'<TextureAtlas\s+imagePath\s*=\s*"([^"]+)"\s+width\s*=\s*"(\d+)"'
+                        r'\s+height\s*=\s*"(\d+)"')
+SPRITE = re.compile(r'<sprite\s+n\s*=\s*"([^"]+)"\s+x\s*=\s*"(\d+)"\s+y\s*=\s*"(\d+)"'
+                    r'\s+w\s*=\s*"(\d+)"\s+h\s*=\s*"(\d+)"')
+COMMENT = re.compile(r'<!--.*?-->', re.S)
 
 
 def collect():
@@ -31,7 +34,7 @@ def collect():
                 continue
             path = os.path.join(base, name)
             with open(path, "r", encoding="utf-8", errors="replace") as handle:
-                text = handle.read()
+                text = COMMENT.sub("", handle.read())
             head = ATLAS_HEAD.search(text)
             if head is None:
                 continue
@@ -46,9 +49,59 @@ def collect():
                 y = float(match.group(3))
                 w = float(match.group(4))
                 h = float(match.group(5))
+                # 像素尺寸一并带出: 布局里不给 Size 的元素按精灵原始尺寸补齐.
                 table.setdefault(key, (relative, x / width, y / height,
-                                          (x + w) / width, (y + h) / height))
+                                          (x + w) / width, (y + h) / height, w, h))
     return table
+
+
+KTEX_IDENTIFIER = bytes([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A])
+
+
+def collect_pages():
+    """贴图页尺寸: 直接引用的整图(非子图集精灵)按页面像素尺寸绘制."""
+    pages = {}
+    for base, _dirs, files in os.walk(UI_ROOT):
+        for name in sorted(files):
+            if not name.lower().endswith(".png"):
+                continue
+            path = os.path.join(base, name)
+            try:
+                with open(path, "rb") as handle:
+                    head = handle.read(24)
+            except OSError:
+                continue
+            if len(head) < 24 or head[:8] != b"\x89PNG\r\n\x1a\n":
+                continue
+            width = int.from_bytes(head[16:20], "big")
+            height = int.from_bytes(head[20:24], "big")
+            if width <= 0 or height <= 0:
+                continue
+            relative = os.path.relpath(path, PROJECT).replace(os.sep, "/")
+            pages[relative] = (width, height)
+    # 界面图集多数是 ktx(ETC1 容器), 头部同样带像素宽高.
+    for base, _dirs, files in os.walk(UI_ROOT):
+        for name in sorted(files):
+            if not name.lower().endswith(".ktx"):
+                continue
+            path = os.path.join(base, name)
+            try:
+                with open(path, "rb") as handle:
+                    head = handle.read(64)
+            except OSError:
+                continue
+            if len(head) < 64 or head[:12] != KTEX_IDENTIFIER:
+                continue
+            fields = head[12:]
+            if int.from_bytes(fields[0:4], "little") != 0x04030201:
+                continue
+            width = int.from_bytes(fields[24:28], "little")
+            height = int.from_bytes(fields[28:32], "little")
+            if width <= 0 or height <= 0:
+                continue
+            relative = os.path.relpath(path, PROJECT).replace(os.sep, "/")
+            pages[relative] = (width, height)
+    return pages
 
 
 def escape(text):
@@ -77,6 +130,9 @@ def main():
         "    float v0;",
         "    float u1;",
         "    float v1;",
+        "    /* 精灵在整页里的像素宽高. */",
+        "    float w;",
+        "    float h;",
         "};",
         "",
         "constexpr int32_t kUiSpriteRectCount = %d;" % len(names),
@@ -84,15 +140,43 @@ def main():
         "constexpr UiSpriteRect kUiSpriteRects[kUiSpriteRectCount] = {",
     ]
     for key in names:
-        atlas, u0, v0, u1, v1 = table[key]
-        lines.append('    {"%s", "%s", %.6ff, %.6ff, %.6ff, %.6ff},'
-                     % (escape(key), escape(atlas), u0, v0, u1, v1))
+        atlas, u0, v0, u1, v1, w, h = table[key]
+        lines.append('    {"%s", "%s", %.6ff, %.6ff, %.6ff, %.6ff, %.1ff, %.1ff},'
+                     % (escape(key), escape(atlas), u0, v0, u1, v1, w, h))
     lines += [
         "};",
         "",
         "}  /* namespace immirror::ui::gen */",
         "",
     ]
+    pages = collect_pages()
+    if pages:
+        # 页面尺寸表必须写在命名空间内部, 否则消费方拿不到 gen:: 前缀.
+        block = [
+            "",
+            "/* 整图页尺寸: 直接引用的贴图按这个尺寸绘制. */",
+            "struct UiPageSize {",
+            "    const char* path;",
+            "    float width;",
+            "    float height;",
+            "};",
+            "",
+            "constexpr int32_t kUiPageSizeCount = %d;" % len(pages),
+            "",
+            "constexpr UiPageSize kUiPageSizes[kUiPageSizeCount] = {",
+        ]
+        for key in sorted(pages):
+            width, height = pages[key]
+            block.append('    {"%s", %.1ff, %.1ff},' % (escape(key), float(width), float(height)))
+        block.append("};")
+        block.append("")
+        closeIndex = len(lines)
+        for index, line in enumerate(lines):
+            if line.startswith("}  /* namespace"):
+                closeIndex = index
+                break
+        lines[closeIndex:closeIndex] = block
+
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8", newline="\n") as handle:
         handle.write("\n".join(lines))

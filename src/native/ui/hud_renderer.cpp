@@ -2736,8 +2736,8 @@ InventoryHit HudRenderer::HitTestChest(float normalizedX, float normalizedY) con
  * 界面图集随包路径, 由 gen_atlas_ui.py 生成, pack_assets.py 复制进 APK.
  * 裸 RGBA8 数据, 无文件头, 行序与生成器画布一致.
  */
-constexpr const char* kUiAtlasAssetPath = "ui/generated/atlas_ui.rgba";
-constexpr int32_t kUiAtlasPixels = 2048;
+constexpr const char* kUiAtlasAssetPath = "ui/generated/atlas_ui_full.rgba";
+constexpr int32_t kUiAtlasPixels = 4096;
 constexpr size_t kUiAtlasBytes =
     static_cast<size_t>(kUiAtlasPixels) * static_cast<size_t>(kUiAtlasPixels) * 4u;
 
