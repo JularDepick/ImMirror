@@ -1,5 +1,7 @@
 #include "audio/audio_engine.h"
 
+#include "audio/generated/sound_data_gen.h"
+
 #include <android/log.h>
 
 #include <cstring>
@@ -215,6 +217,25 @@ void AudioEngine::DetachCreatureBank(JNIEnv* env) {
     }
     creatureBankClass_ = nullptr;
     creatureHandleMethod_ = nullptr;
+}
+
+void AudioEngine::PlayBySourceId(uint32_t sourceId, float scale, float pan) {
+    /* 二分查找: 生成表按 sourceId 升序排列. */
+    int32_t low = 0;
+    int32_t high = gen::kSoundEntryCount - 1;
+    while (low <= high) {
+        const int32_t middle = low + (high - low) / 2;
+        const gen::SoundEntry& entry = gen::kSoundEntries[middle];
+        if (entry.sourceId == sourceId) {
+            PlayCreatureAsset(entry.path, scale, pan);
+            return;
+        }
+        if (sourceId < entry.sourceId) {
+            high = middle - 1;
+        } else {
+            low = middle + 1;
+        }
+    }
 }
 
 void AudioEngine::PlayCreatureAsset(const char* assetPath, float scale, float pan) {

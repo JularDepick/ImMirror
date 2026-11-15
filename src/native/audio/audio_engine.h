@@ -107,6 +107,12 @@ public:
      */
     void PlayCreatureAsset(const char* assetPath, float scale = 1.0f, float pan = 0.0f);
 
+    /*
+     * 按 sound.csv 的 ID 播放任意音效.
+     * 路径查 generated/sound_data_gen.h 的定义表, 找不到时静默跳过.
+     */
+    void PlayBySourceId(uint32_t sourceId, float scale = 1.0f, float pan = 0.0f);
+
 private:
     /* 播放需要 JNIEnv, 原生线程首次使用时附加到虚拟机. */
     JNIEnv* CurrentEnv();
